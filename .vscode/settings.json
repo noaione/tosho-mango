@@ -1,0 +1,34 @@
+{
+    "python.linting.flake8Enabled": true,
+    "python.linting.flake8Args": [
+        "--config=.flake8"
+    ],
+    "[python]": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "ms-python.black-formatter",
+    },
+    "editor.rulers": [120],
+    "python.formatting.provider": "none",
+    "python.analysis.diagnosticMode": "workspace",
+    "python.languageServer": "Pylance",
+    "autoDocstring.docstringFormat": "sphinx",
+    "python.linting.enabled": true,
+    "python.analysis.typeCheckingMode": "off",
+    "files.exclude": {
+        "**/.git": true,
+        "**/.svn": true,
+        "**/.hg": true,
+        "**/CVS": true,
+        "**/.DS_Store": true,
+        "**/Thumbs.db": true,
+        "**/.venv": true,
+        "**/__pycache__": true,
+        "**/node_modules": true,
+        "**/.qt_for_python": true,
+    },
+    "black-formatter.importStrategy": "fromEnvironment",
+    "black-formatter.args": [
+        "--config",
+        "pyproject.toml"
+    ]
+}
