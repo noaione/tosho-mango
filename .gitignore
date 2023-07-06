@@ -16,3 +16,7 @@ coverage.*
 
 images/
 DOWNLOADS/
+_dumps/
+_tests/
+_test/
+_data_test/
