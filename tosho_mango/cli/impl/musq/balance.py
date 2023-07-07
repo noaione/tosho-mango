@@ -57,7 +57,9 @@ def musq_balance(account_id: str | None = None):
         return
 
     console.info("Your current point balance:")
-    console.info("  - [bold]Total[/bold]: {0:,}".format(point_bal.total_point))
-    console.info("  - [bold]Paid point[/bold]: {0:,}c".format(point_bal.paid))
-    console.info("  - [bold]Event/XP point[/bold]: {0:,}c".format(point_bal.event))
-    console.info("  - [bold]Free point[/bold]: {0:,}c".format(point_bal.free))
+    console.info("  - [bold]Total[/bold]: [bcyan][highr]{0:,}[/highr]c[/bcyan]".format(point_bal.total_point))
+    console.info("  - [bold]Paid point[/bold]: [gold][highr]{0:,}[/highr]c[/gold]".format(point_bal.paid))
+    console.info(
+        "  - [bold]Event/XP point[/bold]: [highlight][highr]{0:,}[/highr]c[/highlight]".format(point_bal.event)
+    )
+    console.info("  - [bold]Free point[/bold]: [success][highr]{0:,}[/highr]c[/success]".format(point_bal.free))
