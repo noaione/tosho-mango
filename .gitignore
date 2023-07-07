@@ -20,3 +20,6 @@ _dumps/
 _tests/
 _test/
 _data_test/
+
+cookies.txt
+*cookies.txt
