@@ -46,6 +46,11 @@ rich_theme = RichTheme(
         "highlight": "magenta bold",
         "info": "cyan bold",
         "bold": "bold",
+        "r": "reverse",
+        "bcyan": "bright_cyan",
+        "highr": "bold reverse",
+        "blue": "blue",
+        "gray": "grey50",
     }
 )
 AnyType = Union[str, bytes, int, float]
