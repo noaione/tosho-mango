@@ -22,25 +22,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-import click
+from types import ModuleType
+from click import Group
 
-from tosho_mango.cli.impl import musq
-from tosho_mango.cli.importer import auto_import_implementations
-
-__all__ = (
-    "musq_source",
-    "kmkc_source",
-)
+from tosho_mango.cli.base import ToshoMangoCommandHandler
 
 
-@click.group(name="mu", help="Download manga from MU!")
-def musq_source():
-    pass
-
-
-@click.group(name="km", help="Download manga from KM")
-def kmkc_source():
-    pass
-
-
-auto_import_implementations(musq_source, musq)
+def auto_import_implementations(group: Group, modules: ModuleType):
+    for name in dir(modules):
+        if name.startswith("__"):
+            continue
+        command_or = getattr(modules, name)
+        if isinstance(command_or, ToshoMangoCommandHandler):
+            group.add_command(command_or)
