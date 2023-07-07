@@ -50,6 +50,7 @@ console = term.get_console()
 def kmkc_auth_session(cookies: Path):
     console.info("Authenticating your account...")
 
+    all_configs = get_all_config()
     cookie_jar = MozillaCookieJar(cookies)
     cookie_jar.load()
 
@@ -67,7 +68,6 @@ def kmkc_auth_session(cookies: Path):
 
     account = account_resp.account
     console.info(f"Authenticated as [highlight]{account.nickname}[/highlight] ({account.account_id}/{account.user_id})")
-    all_configs = get_all_config()
     old_config: KMConfigWeb | None = None
     for conf in all_configs:
         if not isinstance(conf, KMConfigWeb):
@@ -80,6 +80,10 @@ def kmkc_auth_session(cookies: Path):
                 return
             old_config = conf
 
+    config.account_id = account.account_id
+    config.username = account.nickname
+    config.email = account.email
+    config.device_id = account.user_id
     if old_config is not None:
         config.id = old_config.id
 

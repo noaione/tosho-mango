@@ -25,6 +25,7 @@ SOFTWARE.
 import json
 from dataclasses import dataclass
 from typing import Type, TypedDict
+from urllib.parse import unquote
 from uuid import uuid4
 
 import betterproto
@@ -45,34 +46,38 @@ class KMConfigDeviceType(betterproto.Enum):
 
 
 @dataclass
-class KMConfigBase(betterproto.Message):
+class _KMConfigBase(betterproto.Message):
     """
-    Represents the base config file for KM KC
+    Represents a simple basic KM KC config
     """
 
     id: str = betterproto.string_field(1)
     """The ID for KM KC"""
     type: KMConfigDeviceType = betterproto.enum_field(2)
     """The device type for KM KC"""
-    username: str = betterproto.string_field(20)
-    """The username for KM KC"""
-    email: str = betterproto.string_field(21)
-    """The email for KM KC"""
-    account_id: int = betterproto.uint32_field(22)
-    """The account ID for KM KC"""
-    device_id: int = betterproto.uint32_field(23)
-    """The device ID for KM KC"""
 
 
 @dataclass
-class KMConfigMobile(KMConfigBase):
+class KMConfigMobile(betterproto.Message):
     """
     Represents the config file for KM KC mobile
     """
 
-    user_id: str = betterproto.string_field(3)
+    id: str = betterproto.string_field(1)
+    """The ID for KM KC"""
+    type: KMConfigDeviceType = betterproto.enum_field(2)
+    """The device type for KM KC"""
+    username: str = betterproto.string_field(3)
+    """The username for KM KC"""
+    email: str = betterproto.string_field(4)
+    """The email for KM KC"""
+    account_id: int = betterproto.uint32_field(5)
+    """The account ID for KM KC"""
+    device_id: int = betterproto.uint32_field(6)
+    """The device ID for KM KC"""
+    user_id: str = betterproto.string_field(100)
     """The user ID for KM KC"""
-    user_secret: str = betterproto.string_field(4)
+    user_secret: str = betterproto.string_field(101)
     """The user secret for KM KC"""
 
 
@@ -94,31 +99,43 @@ class KMConfigWebKV(betterproto.Message):
 
     @classmethod
     def from_cookie_dict(cls: Type["KMConfigWebKV"], cookie_dict: _KMConfigWebKVTypes):
-        return cls(value=cookie_dict["value"], expires=int(cookie_dict["expires"]))
+        return cls(value=str(cookie_dict["value"]), expires=int(cookie_dict["expires"]))
 
 
 @dataclass
-class KMConfigWeb(KMConfigBase):
+class KMConfigWeb(betterproto.Message):
     """
     Represents the config file for KM KC web
     """
 
-    uwt: str = betterproto.string_field(3)
+    id: str = betterproto.string_field(1)
+    """The ID for KM KC"""
+    type: KMConfigDeviceType = betterproto.enum_field(2)
+    """The device type for KM KC"""
+    username: str = betterproto.string_field(3)
+    """The username for KM KC"""
+    email: str = betterproto.string_field(4)
+    """The email for KM KC"""
+    account_id: int = betterproto.uint32_field(5)
+    """The account ID for KM KC"""
+    device_id: int = betterproto.uint32_field(6)
+    """The device ID for KM KC"""
+    uwt: str = betterproto.string_field(100)
     """:class:`str`: The auth token for KM KC"""
-    birthday: KMConfigWebKV = betterproto.message_field(4)
+    birthday: KMConfigWebKV = betterproto.message_field(101)
     """:class:`KMConfigWebKV`: Account birthday information"""
-    tos_adult: KMConfigWebKV = betterproto.message_field(5)
+    tos_adult: KMConfigWebKV = betterproto.message_field(102)
     """:class:`KMConfigWebKV`: Account adult information"""
-    privacy: KMConfigWebKV = betterproto.message_field(6)
+    privacy: KMConfigWebKV = betterproto.message_field(103)
     """:class:`KMConfigWebKV`: Account privacy policy information"""
 
     @classmethod
     def from_cookies(cls: Type["KMConfigWeb"], cookies: RequestsCookieJar):
         uwt_cookie = cookies.get("uwt")
         assert uwt_cookie is not None, "`uwt` cookie is not found"
-        birthday_cookie = json.loads(cookies.get("birthday"))
-        tos_adult_cookie = json.loads(cookies.get("terms_of_service_adult"))
-        privacy_cookie = json.loads(cookies.get("privacy_policy"))
+        birthday_cookie = json.loads(unquote(cookies.get("birthday")))
+        tos_adult_cookie = json.loads(unquote(cookies.get("terms_of_service_adult")))
+        privacy_cookie = json.loads(unquote(cookies.get("privacy_policy")))
 
         return cls(
             id=str(uuid4()),
@@ -127,7 +144,7 @@ class KMConfigWeb(KMConfigBase):
             email="temp@kmkc.xyz",
             account_id=0,
             device_id=0,
-            uwt=uwt_cookie,
+            uwt=unquote(uwt_cookie),
             birthday=KMConfigWebKV.from_cookie_dict(birthday_cookie),
             tos_adult=KMConfigWebKV.from_cookie_dict(tos_adult_cookie),
             privacy=KMConfigWebKV.from_cookie_dict(privacy_cookie),
@@ -136,16 +153,16 @@ class KMConfigWeb(KMConfigBase):
     def apply_cookies(self, cookies: RequestsCookieJar):
         uwt_cookie = cookies.get("uwt")
         if uwt_cookie is not None:
-            self.uwt = uwt_cookie
+            self.uwt = unquote(uwt_cookie)
         bdy_cookie = cookies.get("birthday")
         if bdy_cookie is not None:
-            self.birthday = KMConfigWebKV.from_cookie_dict(json.loads(bdy_cookie))
+            self.birthday = KMConfigWebKV.from_cookie_dict(json.loads(unquote(bdy_cookie)))
         tos_adult_cookie = cookies.get("terms_of_service_adult")
         if tos_adult_cookie is not None:
-            self.tos_adult = KMConfigWebKV.from_cookie_dict(json.loads(tos_adult_cookie))
+            self.tos_adult = KMConfigWebKV.from_cookie_dict(json.loads(unquote(tos_adult_cookie)))
         privacy_cookie = cookies.get("privacy_policy")
         if privacy_cookie is not None:
-            self.privacy = KMConfigWebKV.from_cookie_dict(json.loads(privacy_cookie))
+            self.privacy = KMConfigWebKV.from_cookie_dict(json.loads(unquote(privacy_cookie)))
 
 
 def get_config(hex_mode: str) -> KMConfigWeb | KMConfigMobile | None:
@@ -157,12 +174,13 @@ def get_config(hex_mode: str) -> KMConfigWeb | KMConfigMobile | None:
         return None
 
     conf_bita = CONFIG_PATH.read_bytes()
-    conf_temp = KMConfigBase.FromString(conf_bita)
-    if conf_temp.type is KMConfigDeviceType.WEB:
+    conf_temp = _KMConfigBase.FromString(conf_bita)
+    conf_type = KMConfigDeviceType(conf_temp.type)
+    if conf_type is KMConfigDeviceType.WEB:
         return KMConfigWeb.FromString(conf_bita)
-    elif conf_temp.type is KMConfigDeviceType.MOBILE:
+    elif conf_type is KMConfigDeviceType.MOBILE:
         return KMConfigMobile.FromString(conf_bita)
-    raise ValueError(f"Unknown device type {conf_temp.type}")
+    raise ValueError(f"Unknown device type {conf_type!r}")
 
 
 def get_all_config() -> list[KMConfigWeb | KMConfigMobile]:
@@ -172,18 +190,20 @@ def get_all_config() -> list[KMConfigWeb | KMConfigMobile]:
     parsed_conf: list[KMConfigWeb | KMConfigMobile] = []
     for conf in CONFIG_GLOB:
         conf_bita = conf.read_bytes()
-        conf_temp = KMConfigBase.FromString(conf_bita)
-        if conf_temp.type is KMConfigDeviceType.WEB:
+        conf_temp = _KMConfigBase.FromString(conf_bita)
+        conf_type = KMConfigDeviceType(conf_temp.type)
+        if conf_type == KMConfigDeviceType.WEB:
             parsed_conf.append(KMConfigWeb.FromString(conf_bita))
-        elif conf_temp.type is KMConfigDeviceType.MOBILE:
+        elif conf_type == KMConfigDeviceType.MOBILE:
             parsed_conf.append(KMConfigMobile.FromString(conf_bita))
-        raise ValueError(f"Unknown device type {conf_temp.type}")
+        else:
+            raise ValueError(f"Unknown device type {conf_type!r}")
     return parsed_conf
 
 
 def save_config(config: KMConfigWeb | KMConfigMobile):
     USER_PATH.mkdir(parents=True, exist_ok=True)
 
-    CONFIG_PATH = USER_PATH / f"musq.{config.id}.tmconf"
+    CONFIG_PATH = USER_PATH / f"kmkc.{config.id}.tmconf"
 
     CONFIG_PATH.write_bytes(bytes(config))

@@ -160,7 +160,7 @@ class KMClientWeb:
             Cookie(
                 version=0,
                 name="uwt",
-                value=self._config.uwt,
+                value=quote(self._config.uwt),
                 port=None,
                 port_specified=False,
                 domain=f".{BASE_HOST}",
