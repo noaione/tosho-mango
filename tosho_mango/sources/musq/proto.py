@@ -208,6 +208,14 @@ class Chapter(betterproto.Message):
         """:class:`bool`: Whether the chapter is free or not."""
         return self.price == 0
 
+    @property
+    def chapter_title(self):
+        """:class:`str`: A combined chapter title."""
+        ch_title = self.name
+        if self.subtitle:
+            ch_title = f"{ch_title} — {self.subtitle}"
+        return ch_title
+
 
 @dataclass
 class ViewButton(betterproto.Message):
