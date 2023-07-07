@@ -94,4 +94,4 @@ fail_under = 30
 [tool.pytest.ini_options]
 minversion = "6.0"
 testpaths = ["tests"]
-addopts = "-v --cov=tosho_mango --cov-config=pyproject.toml --cov-report=lcov"
+addopts = "-v --cov=tosho_mango --cov-config=pyproject.toml --cov-report=lcov --cov-report=term-missing"
