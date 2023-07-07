@@ -30,13 +30,17 @@ import requests
 
 from tosho_mango import term
 from tosho_mango.cli.base import ToshoMangoCommandHandler
-from tosho_mango.cli.impl.kmkc.common import make_web_client
+from tosho_mango.cli.impl import options
 from tosho_mango.sources.kmkc.config import KMConfigDeviceType, KMConfigWeb, get_all_config, save_config
+from tosho_mango.sources.kmkc.dto import DevicePlatform
 from tosho_mango.sources.kmkc.errors import KMAPIError
+
+from .common import make_web_client, select_single_account
 
 __all__ = (
     "kmkc_auth_session",
     "kmkc_accounts",
+    "kmkc_account_info",
 )
 console = term.get_console()
 
@@ -107,3 +111,43 @@ def kmkc_accounts():
         console.info(
             f"{idx:02d}. {account.id} — [bold]{account.username}[/bold] [{KMConfigDeviceType(account.type).name}]"
         )
+
+
+@click.command(
+    name="account",
+    help="Get account information",
+    cls=ToshoMangoCommandHandler,
+)
+@options.account_id
+def kmkc_account_info(account_id: str | None = None):
+    account = select_single_account(account_id)
+    if account is None:
+        console.warning("Aborted")
+        return
+    if not isinstance(account, KMConfigWeb):
+        console.error("Only web account is supported for now!")
+        return
+
+    console.info(f"Fetching account info for [highlight]{account.id}[/highlight]...")
+    client = make_web_client(account=account)
+
+    try:
+        account_view = client.get_account()
+    except KMAPIError as exc:
+        console.error(f"Failed to get your account: {exc}")
+        return
+
+    acct = account_view.account
+
+    console.info(f"Account info for [highlight]{account.id}[/highlight]:")
+    console.info(f"  [bold]ID:[/bold] {acct.account_id}")
+    console.info(f"  [bold]Device ID:[/bold] {acct.user_id}")
+    console.info(f"  [bold]Username:[/bold] {acct.nickname}")
+    console.info(f"  [bold]Email:[/bold] {acct.email}")
+    console.info(f"  [bold]Registered?[/bold] {bool(acct.is_registerd)!r}")
+    if acct.device_list:
+        console.info("  [bold]Devices:[/bold]")
+        for device in acct.device_list:
+            console.info(
+                f"    - [bold]{device.device_name}[/bold] ({device.user_id}) [{DevicePlatform(device.platform).name}]"
+            )

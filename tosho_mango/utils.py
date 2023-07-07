@@ -24,9 +24,22 @@ SOFTWARE.
 
 from datetime import datetime, timedelta, timezone
 
-__all__ = ("get_dt_now",)
+__all__ = (
+    "get_dt_now",
+    "get_date_from_unix",
+    "format_date",
+)
 
 
 def get_dt_now(tz_shift: int = 0):
     tz = timezone(timedelta(hours=tz_shift))
     return datetime.now(tz)
+
+
+def get_date_from_unix(unix_time: int | float, tz_shift: int = 0):
+    tz = timezone(timedelta(hours=tz_shift))
+    return datetime.fromtimestamp(unix_time, timezone.utc).replace(tzinfo=tz)
+
+
+def format_date(dt: datetime, fmt: str = "%Y-%m-%d %H:%M:%S"):
+    return dt.strftime(fmt)

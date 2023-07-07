@@ -27,13 +27,16 @@ from requests import HTTPError
 
 from tosho_mango import term
 from tosho_mango.cli.base import ToshoMangoCommandHandler
+from tosho_mango.cli.impl import options
 from tosho_mango.sources.musq.config import MUConfig, MUConfigDevice, get_all_config, save_config
+from tosho_mango.utils import format_date, get_date_from_unix
 
-from .common import make_client
+from .common import make_client, select_single_account
 
 __all__ = (
     "musq_auth_session",
     "musq_accounts",
+    "musq_account_info",
 )
 console = term.get_console()
 
@@ -104,3 +107,36 @@ def musq_accounts():
     console.info(f"Found {len(all_configs)} account(s)")
     for idx, account in enumerate(all_configs, 1):
         console.info(f"{idx:02d}. {account.id} [{MUConfigDevice(account.type).name}]")
+
+
+@click.command(
+    name="account",
+    help="Get account information",
+    cls=ToshoMangoCommandHandler,
+)
+@options.account_id
+def musq_account_info(account_id: str | None = None):
+    account = select_single_account(account_id)
+    if account is None:
+        console.warning("Aborted")
+        return
+
+    console.info(f"Fetching account info for [highlight]{account.id}[/highlight]...")
+    client = make_client(account)
+
+    try:
+        account_view = client.get_account()
+    except HTTPError as e:
+        console.error(f"Failed to check balance: {e}")
+        return
+
+    console.info(f"Account info for [highlight]{account.id}[/highlight]:")
+    console.info(f"  [bold]Session:[/bold] {account.session}")
+    console.info(f"  [bold]Type:[/bold] {MUConfigDevice(account.type).name}")
+    console.info(f"  [bold]Registered?[/bold] {account_view.registered!r}")
+    if account_view.devices:
+        console.info("  [bold]Devices:[/bold]")
+        for device in account_view.devices:
+            install_at = format_date(get_date_from_unix(device.install_at, 9))
+            console.info(f"    - [bold]{device.name}[/bold] ({device.id}) [{install_at}]")
+    console.info(f"  [bold]Login Flow:[/bold] {account_view.login_url}")
