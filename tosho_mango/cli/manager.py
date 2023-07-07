@@ -24,7 +24,7 @@ SOFTWARE.
 
 import click
 
-from tosho_mango.cli.impl import musq
+from tosho_mango.cli.impl import kmkc, musq
 from tosho_mango.cli.importer import auto_import_implementations
 
 __all__ = (
@@ -44,3 +44,4 @@ def kmkc_source():
 
 
 auto_import_implementations(musq_source, musq)
+auto_import_implementations(kmkc_source, kmkc)
