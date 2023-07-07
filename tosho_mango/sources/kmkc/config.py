@@ -54,6 +54,14 @@ class KMConfigBase(betterproto.Message):
     """The ID for KM KC"""
     type: KMConfigDeviceType = betterproto.enum_field(2)
     """The device type for KM KC"""
+    username: str = betterproto.string_field(20)
+    """The username for KM KC"""
+    email: str = betterproto.string_field(21)
+    """The email for KM KC"""
+    account_id: int = betterproto.uint32_field(22)
+    """The account ID for KM KC"""
+    device_id: int = betterproto.uint32_field(23)
+    """The device ID for KM KC"""
 
 
 @dataclass
@@ -115,6 +123,10 @@ class KMConfigWeb(KMConfigBase):
         return cls(
             id=str(uuid4()),
             type=KMConfigDeviceType.WEB,
+            username="",
+            email="temp@kmkc.xyz",
+            account_id=0,
+            device_id=0,
             uwt=uwt_cookie,
             birthday=KMConfigWebKV.from_cookie_dict(birthday_cookie),
             tos_adult=KMConfigWebKV.from_cookie_dict(tos_adult_cookie),

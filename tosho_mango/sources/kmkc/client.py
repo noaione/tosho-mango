@@ -30,6 +30,8 @@ from urllib.parse import quote
 import msgspec
 import requests
 
+from tosho_mango.sources.kmkc.config import KMConfigWeb
+
 from .constants import API_HOST, API_UA, BASE_HOST, DEVICE_PLATFORM, DEVICE_VERSION, HASH_HEADER
 from .dto import (
     AccountResponse,
@@ -50,9 +52,8 @@ from .dto import (
     WeeklyListResponse,
 )
 from .errors import KMAPIError, KMNotEnoughPointError
-from .models import KMConfig
 
-__all__ = ("KMClient",)
+__all__ = ("KMClientWeb",)
 
 
 def hash_kv(key: str, value: str):
@@ -64,11 +65,11 @@ def hash_kv(key: str, value: str):
     return f"{key_hash}_{val_hash}"
 
 
-class KMClient:
+class KMClientWeb:
     API_HOST = b64decode("aHR0cHM6Ly9hcGkua21hbmdhLmtvZGFuc2hhLmNvbQ==").decode("utf-8")
     CDN_HOST = b64decode("aHR0cHM6Ly9jZG4ua21hbmdhLmtvZGFuc2hhLmNvbQ==").decode("utf-8")
 
-    def __init__(self, config: KMConfig) -> None:
+    def __init__(self, config: KMConfigWeb) -> None:
         self._config = config
 
         self._client = requests.Session()
@@ -246,9 +247,9 @@ class KMClient:
 
         return parsed.title_list
 
-    def get_web_chapter_viewer(self, episode_id: int):
+    def get_chapter_viewer(self, episode_id: int):
         """
-        Get web chapter viewer from episode ID.
+        Get chapter viewer from episode ID.
         """
 
         params, headers = self._format_request({"episode_id": str(episode_id)})

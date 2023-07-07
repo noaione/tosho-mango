@@ -42,6 +42,8 @@ __all__ = (
     "TitleTicketInfo",
     "TicketInfo",
     "TitleTicketListEntry",
+    "UserAccountDevice",
+    "UserAccount",
     "WeeklyListContent",
     "UserAccountPointResponse",
     "TitleListResponse",
@@ -52,6 +54,7 @@ __all__ = (
     "TitleTicketListResponse",
     "EpisodePurchaseResponse",
     "BulkEpisodePurchaseResponse",
+    "AccountResponse",
     "SearchResponse",
     "WeeklyListResponse",
 )
@@ -505,7 +508,7 @@ class UserAccount(Struct):
     is_registerd: int
     """:class:`int`: Whether the account is registered or not."""
     user_id: int
-    """:class:`int`: The user ID."""
+    """:class:`int`: The user/device ID."""
     nickname: str
     """:class:`str`: User nickname."""
     email: str

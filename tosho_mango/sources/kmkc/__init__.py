@@ -11,4 +11,3 @@ from .client import *
 from .dto import *
 from .errors import *
 from .imaging import *
-from .models import *
