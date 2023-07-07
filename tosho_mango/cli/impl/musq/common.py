@@ -26,8 +26,13 @@ from tosho_mango import term
 from tosho_mango.sources.musq.client import MUClient
 from tosho_mango.sources.musq.config import MUConfig, MUConfigDevice, get_all_config, get_config
 from tosho_mango.sources.musq.constants import DEVICE_CONSTANTS
+from tosho_mango.sources.musq.proto import BadgeManga, MangaListNode
 
-__all__ = ("select_single_account",)
+__all__ = (
+    "select_single_account",
+    "make_client",
+    "do_print_search_information",
+)
 console = term.get_console()
 
 
@@ -58,3 +63,20 @@ def select_single_account(account_id: str | None = None):
 
 def make_client(account: MUConfig):
     return MUClient(account.session, DEVICE_CONSTANTS[account.type])
+
+
+def do_print_search_information(results: list[MangaListNode]):
+    for result in results:
+        badge = BadgeManga(result.badge)
+        manga_url = f"https://global.manga-up.com/manga/{result.id}"
+        text_data = f"[bold][link={manga_url}]{result.name}[/link][/bold] ({result.id})"
+        if badge is badge.NEW:
+            text_data = f"{text_data} [bcyan][highr][NEW][/highr][/bcyan]"
+        elif badge is BadgeManga.UNREAD:
+            text_data = f"{text_data} ([blue][highr]●[/highr][/blue])"
+        elif badge is BadgeManga.UPDATE:
+            text_data = f"{text_data} ([success][highr]UP[/highr][/success])"
+        elif badge is BadgeManga.UPDATE_THIS_WEEK:
+            text_data = f"{text_data} ([warning][highr]UP (Week)[/highr][/warning])"
+        console.info(f"  {text_data}")
+        console.info(f"   {manga_url}")
