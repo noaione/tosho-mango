@@ -30,7 +30,7 @@ from urllib.parse import quote
 import msgspec
 import requests
 
-from tosho_mango.sources.kmkc.config import KMConfigWeb
+from tosho_mango.sources.kmkc.config import KMConfigWeb, save_config
 
 from .constants import API_HOST, API_UA, BASE_HOST, DEVICE_PLATFORM, DEVICE_VERSION, HASH_HEADER
 from .dto import (
@@ -51,7 +51,7 @@ from .dto import (
     WebChapterViewerResponse,
     WeeklyListResponse,
 )
-from .errors import KMAPIError, KMNotEnoughPointError
+from .errors import KMNotEnoughPointError
 
 __all__ = ("KMClientWeb",)
 
@@ -211,21 +211,52 @@ class KMClientWeb:
         }
         return extend_query, extend_headers
 
+    def request(self, method: str, url: str, **kwargs):
+        data = kwargs.pop("data", None)
+        headers = kwargs.pop("headers", None)
+        params = kwargs.pop("params", None)
+
+        fmt_data, fmt_headers = self._format_request(data, headers)
+        fmt_params, _ = self._format_request(params)
+
+        key_param = "data"
+        if data is None and params is None:
+            # Assume params
+            fmt_data = fmt_params
+            key_param = "params"
+        elif data is None and params is not None:
+            # Assume params
+            fmt_data = fmt_params
+            key_param = "params"
+        elif data is not None:
+            # Assume data
+            fmt_data = fmt_data
+            key_param = "data"
+            fmt_headers["Content-Type"] = "application/x-www-form-urlencoded"
+
+        new_kwargs = {
+            **kwargs,
+            key_param: fmt_data,
+            "headers": fmt_headers,
+        }
+        requested = self._client.request(method, url, **new_kwargs)
+        self._config.apply_cookies(requested.cookies)
+        save_config(self._config)
+        return requested
+
     def get_episode_list(self, episodes: list[int]):
         """
         Get episode list from episode ids
         """
 
-        data, headers = self._format_request({"episode_id_list": ",".join(map(str, episodes))})
-        response = self._client.post(
+        response = self.request(
+            "POST",
             f"{self.API_HOST}/episode/list",
-            data=data,
-            headers=headers,
+            data={"episode_id_list": ",".join(map(str, episodes))},
         )
 
         parsed = msgspec.json.decode(response.content, type=EpisodesListResponse)
-        if parsed.status != "success":
-            raise KMAPIError(parsed.response_code, parsed.error_message)
+        parsed.raise_for_status()
 
         return parsed.episode_list
 
@@ -234,16 +265,14 @@ class KMClientWeb:
         Get title list from title IDs.
         """
 
-        data, headers = self._format_request({"title_id_list": ",".join(map(str, titles))})
-        response = self._client.get(
+        response = self.request(
+            "GET",
             f"{self.API_HOST}/title/list",
-            params=data,
-            headers=headers,
+            params={"title_id_list": ",".join(map(str, titles))},
         )
 
         parsed = msgspec.json.decode(response.content, type=TitleListResponse)
-        if parsed.status != "success":
-            raise KMAPIError(parsed.response_code, parsed.error_message)
+        parsed.raise_for_status()
 
         return parsed.title_list
 
@@ -252,30 +281,26 @@ class KMClientWeb:
         Get chapter viewer from episode ID.
         """
 
-        params, headers = self._format_request({"episode_id": str(episode_id)})
-        response = self._client.get(
+        response = self.request(
+            "GET",
             f"{self.API_HOST}/web/episode/viewer",
-            params=params,
-            headers=headers,
+            params={"episode_id": str(episode_id)},
         )
 
         parsed = msgspec.json.decode(response.content, type=WebChapterViewerResponse)
-        if parsed.status != "success":
-            raise KMAPIError(parsed.response_code, parsed.error_message)
+        parsed.raise_for_status()
 
         return parsed
 
     def get_title_ticket(self, title_id: int) -> TitleTicketListEntry:
-        params, headers = self._format_request({"title_id_list": str(title_id)})
-        response = self._client.get(
+        response = self.request(
+            "GET",
             f"{self.API_HOST}/title/ticket/list",
-            params=params,
-            headers=headers,
+            params={"title_id_list": str(title_id)},
         )
 
         parsed = msgspec.json.decode(response.content, type=TitleTicketListResponse)
-        if parsed.status != "success":
-            raise KMAPIError(parsed.response_code, parsed.error_message)
+        parsed.raise_for_status()
 
         return parsed.title_ticket_list[0]
 
@@ -292,21 +317,14 @@ class KMClientWeb:
             form_data["ticket_version"] = "1"
             form_data["ticket_type"] = "99"
 
-        data, headers = self._format_request(
-            form_data,
-            {
-                "Content-Type": "application/x-www-form-urlencoded",
-            },
-        )
-        response = self._client.post(
+        response = self.request(
+            "POST",
             f"{self.API_HOST}/episode/rental/ticket",
-            data=data,
-            headers=headers,
+            data=form_data,
         )
 
         parsed = msgspec.json.decode(response.content, type=StatusResponse)
-        if parsed.status != "success":
-            raise KMAPIError(parsed.response_code, parsed.error_message)
+        parsed.raise_for_status()
 
         return parsed, is_title
 
@@ -318,21 +336,14 @@ class KMClientWeb:
             "episode_id": str(episode.episode_id),
             "check_point": str(episode.point),
         }
-        data, headers = self._format_request(
-            form_data,
-            {
-                "Content-Type": "application/x-www-form-urlencoded",
-            },
-        )
-        response = self._client.post(
+        response = self.request(
+            "POST",
             f"{self.API_HOST}/episode/paid",
-            data=data,
-            headers=headers,
+            data=form_data,
         )
 
         parsed = msgspec.json.decode(response.content, type=EpisodePurchaseResponse)
-        if parsed.status != "success":
-            raise KMAPIError(parsed.response_code, parsed.error_message)
+        parsed.raise_for_status()
 
         wallet.subtract(parsed.paid_point)
         wallet.add(episode.bonus_point)
@@ -356,91 +367,70 @@ class KMClientWeb:
             "paid_point": str(paid_point),
             "point_back": str(bonus_point),
         }
-        data, headers = self._format_request(
-            form_data,
-            {
-                "Content-Type": "application/x-www-form-urlencoded",
-            },
-        )
-        response = self._client.post(
+        response = self.request(
+            "POST",
             f"{self.API_HOST}/episode/paid/bulk",
-            data=data,
-            headers=headers,
+            data=form_data,
         )
 
         parsed = msgspec.json.decode(response.content, type=BulkEpisodePurchaseResponse)
-        if parsed.status != "success":
-            raise KMAPIError(parsed.response_code, parsed.error_message)
+        parsed.raise_for_status()
         wallet.subtract(parsed.paid_point)
         wallet.add(parsed.earned_point_back)
         return wallet
 
     def get_user_point(self):
-        params, headers = self._format_request()
-        response = self._client.get(
+        response = self.request(
+            "GET",
             f"{self.API_HOST}/account/point",
-            params=params,
-            headers=headers,
         )
 
         parsed = msgspec.json.decode(response.content, type=UserAccountPointResponse)
-        if parsed.status != "success":
-            raise KMAPIError(parsed.response_code, parsed.error_message)
+        parsed.raise_for_status()
 
         return parsed
 
     def search(self, keyword: str, limit: int = 99999):
-        params, headers = self._format_request({"keyword": keyword, "limit": str(limit)})
-        response = self._client.get(
+        response = self.request(
+            "GET",
             f"{self.API_HOST}/search/title",
-            params=params,
-            headers=headers,
+            params={"keyword": keyword, "limit": str(limit)},
         )
 
         parsed = msgspec.json.decode(response.content, type=SearchResponse)
-        if parsed.status != "success":
-            raise KMAPIError(parsed.response_code, parsed.error_message)
+        parsed.raise_for_status()
 
         return parsed.title_list
 
     def get_weekly(self):
-        params, headers = self._format_request()
-        responses = self._client.get(
+        response = self.request(
+            "GET",
             f"{self.API_HOST}/title/weekly",
-            params=params,
-            headers=headers,
         )
 
-        parsed = msgspec.json.decode(responses.content, type=WeeklyListResponse)
-        if parsed.status != "success":
-            raise KMAPIError(parsed.response_code, parsed.error_message)
+        parsed = msgspec.json.decode(response.content, type=WeeklyListResponse)
+        parsed.raise_for_status()
 
         return parsed
 
     def get_account(self):
-        params, headers = self._format_request()
-        responses = self._client.get(
+        response = self.request(
+            "GET",
             f"{self.API_HOST}/account",
-            params=params,
-            headers=headers,
         )
 
-        parsed = msgspec.json.decode(responses.content, type=AccountResponse)
-        if parsed.status != "success":
-            raise KMAPIError(parsed.response_code, parsed.error_message)
+        parsed = msgspec.json.decode(response.content, type=AccountResponse)
+        parsed.raise_for_status()
 
         return parsed
 
     def get_purchased(self):
-        params, headers = self._format_request()
-        responses = self._client.get(
+        response = self.request(
+            "GET",
             f"{self.API_HOST}/web/title/purchased",
-            params=params,
-            headers=headers,
         )
 
-        parsed = msgspec.json.decode(responses.content, type=TitleListResponse)
-        if parsed.status != "success":
-            raise KMAPIError(parsed.response_code, parsed.error_message)
+        parsed = msgspec.json.decode(response.content, type=TitleListResponse)
+        parsed.raise_for_status()
 
         return parsed

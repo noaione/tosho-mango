@@ -28,6 +28,8 @@ from typing import List, Optional
 
 from msgspec import Struct, field
 
+from .errors import KMAPIError
+
 __all__ = (
     "EpisodeBadge",
     "EpisodeUseStatus",
@@ -114,6 +116,10 @@ class StatusResponse(Struct):
     """The response code of the response, usually 200 for success."""
     error_message: str
     """The error message of the response, usually empty if success."""
+
+    def raise_for_status(self):
+        if self.status != "success":
+            raise KMAPIError(self.response_code, self.error_message)
 
 
 class UserPoint(Struct):

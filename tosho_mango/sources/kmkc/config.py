@@ -133,6 +133,20 @@ class KMConfigWeb(KMConfigBase):
             privacy=KMConfigWebKV.from_cookie_dict(privacy_cookie),
         )
 
+    def apply_cookies(self, cookies: RequestsCookieJar):
+        uwt_cookie = cookies.get("uwt")
+        if uwt_cookie is not None:
+            self.uwt = uwt_cookie
+        bdy_cookie = cookies.get("birthday")
+        if bdy_cookie is not None:
+            self.birthday = KMConfigWebKV.from_cookie_dict(json.loads(bdy_cookie))
+        tos_adult_cookie = cookies.get("terms_of_service_adult")
+        if tos_adult_cookie is not None:
+            self.tos_adult = KMConfigWebKV.from_cookie_dict(json.loads(tos_adult_cookie))
+        privacy_cookie = cookies.get("privacy_policy")
+        if privacy_cookie is not None:
+            self.privacy = KMConfigWebKV.from_cookie_dict(json.loads(privacy_cookie))
+
 
 def get_config(hex_mode: str) -> KMConfigWeb | KMConfigMobile | None:
     USER_PATH.mkdir(parents=True, exist_ok=True)
