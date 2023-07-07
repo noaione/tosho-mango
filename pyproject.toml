@@ -60,20 +60,12 @@ line_length = 110
 skip_gitignore = true
 
 [tool.pyright]
-include = ["tosho_mango"]
-exclude = [
-    "**/node_modules",
-    "**/__pycache__",
-    "**/.venv",
-    "**/.pytest_cache",
-]
-ignore = ["_dumps", "DOWNLOADS", "venv", ".env"]
-defineConstant = { DEBUG = true }
-# stubPath = "src/stubs"
-venv = "venv"
+include = ["tosho_mango", "pipelines"]
+exclude = ["venv", "env", "node_modules", ".venv", ".env", ".nox", ".pytest_cache", ".mypy_cache", ".tox", "build", "dist", "_build", "**/__pycache__"]
+ignore = ["_testing"]
+stubPath = "./stubs"
 
 reportMissingImports = true
-reportMissingTypeStubs = false
+venv = "."
 
 pythonVersion = "3.10"
-# pythonPlatform = "Linux"
