@@ -207,7 +207,7 @@ class MUClient:
 
     # --> MangaEndpoints.kt
 
-    def get_manga(self, manga_id: int):
+    def get_manga(self, manga_id: int) -> MangaDetail:
         """
         Get manga detail information.
 

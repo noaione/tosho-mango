@@ -51,6 +51,7 @@ __all__ = (
     "WebChapterViewerResponse",
     "TitleTicketListResponse",
     "EpisodePurchaseResponse",
+    "BulkEpisodePurchaseResponse",
     "SearchResponse",
     "WeeklyListResponse",
 )
@@ -86,6 +87,17 @@ class EpisodeUseStatus(int, Enum):
     """Episode is free"""
     TICKET_POINT = 4
     """Episode need to be purhcased"""
+
+
+class DevicePlatform(int, Enum):
+    """
+    The device platform type
+    """
+
+    ANDROID = 2
+    """Is android"""
+    WEB = 3
+    """Is website"""
 
 
 class StatusResponse(Struct):
@@ -135,6 +147,9 @@ class UserPoint(Struct):
 
         pp_min = min(self.paid_point, price - fp_min)
         self.paid_point -= pp_min
+
+    def add(self, bonus: int):
+        self.free_point += bonus
 
 
 class UserTicket(Struct):
@@ -454,6 +469,66 @@ class EpisodePurchaseResponse(StatusResponse):
     """The point left on the account"""
     paid_point: int
     """The point paid for the episode"""
+
+
+class BulkEpisodePurchaseResponse(EpisodePurchaseResponse):
+    """
+    Represents an episode purchase response.
+
+    A subclass of :class:`EpisodePurchaseResponse`.
+    """
+
+    earned_point_back: int
+    """The point earned back from the purchase"""
+
+
+class UserAccountDevice(Struct):
+    """
+    The device info of a user account.
+    """
+
+    user_id: int
+    """:class:`int`: The user ID or device ID."""
+    device_name: str
+    """:class:`str`: The device name."""
+    platform: DevicePlatform
+    """:class:`DevicePlatform`: The device platform."""
+
+
+class UserAccount(Struct):
+    """
+    The user account info.
+    """
+
+    account_id: int
+    """:class:`int`: The account ID."""
+    is_registerd: int
+    """:class:`int`: Whether the account is registered or not."""
+    user_id: int
+    """:class:`int`: The user ID."""
+    nickname: str
+    """:class:`str`: User nickname."""
+    email: str
+    """:class:`str`: User email."""
+    gender: int
+    """:class:`int`: User gender"""
+    birthyear: int
+    """:class:`int`: User birthday year"""
+    device_list: list[UserAccountDevice]
+    """:class:`list[UserAccountDevice]`: The list of registered devices."""
+    days_since_created: int
+    """:class:`int`: The number of days since the account was created."""
+
+
+class AccountResponse(StatusResponse):
+    """
+    Represents an account response.
+
+    A subclass of :class:`StatusResponse`.
+    """
+
+    account: UserAccount
+    """:class:`UserAccount`: The user account."""
 
 
 class SearchResponse(StatusResponse):

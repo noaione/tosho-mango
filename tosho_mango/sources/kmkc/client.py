@@ -32,6 +32,8 @@ import requests
 
 from .constants import API_HOST, API_UA, BASE_HOST, DEVICE_PLATFORM, DEVICE_VERSION, HASH_HEADER
 from .dto import (
+    AccountResponse,
+    BulkEpisodePurchaseResponse,
     EpisodeEntry,
     EpisodePurchaseResponse,
     EpisodesListResponse,
@@ -331,8 +333,45 @@ class KMClient:
         if parsed.status != "success":
             raise KMAPIError(parsed.response_code, parsed.error_message)
 
-        wallet.subtract(episode.point)
-        wallet.paid_point += episode.bonus_point
+        wallet.subtract(parsed.paid_point)
+        wallet.add(episode.bonus_point)
+        return wallet
+
+    def claim_bulk_episode(self, episodes: list[EpisodeEntry], wallet: UserPoint):
+        # Test if all episodes can be purchased
+        wallet_copy = msgspec.json.decode(msgspec.json.encode(wallet), type=UserPoint)
+        paid_point = 0
+        bonus_point = 0
+        for episode in episodes:
+            if not wallet_copy.can_purchase(episode.point):
+                raise KMNotEnoughPointError
+            wallet_copy.subtract(episode.point)
+            paid_point += episode.point
+            wallet_copy.add(episode.bonus_point)
+            bonus_point += episode.bonus_point
+
+        form_data = {
+            "episode_id_list": ",".join(map(lambda x: str(x.episode_id), episodes)),
+            "paid_point": str(paid_point),
+            "point_back": str(bonus_point),
+        }
+        data, headers = self._format_request(
+            form_data,
+            {
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+        )
+        response = self._client.post(
+            f"{self.API_HOST}/episode/paid/bulk",
+            data=data,
+            headers=headers,
+        )
+
+        parsed = msgspec.json.decode(response.content, type=BulkEpisodePurchaseResponse)
+        if parsed.status != "success":
+            raise KMAPIError(parsed.response_code, parsed.error_message)
+        wallet.subtract(parsed.paid_point)
+        wallet.add(parsed.earned_point_back)
         return wallet
 
     def get_user_point(self):
@@ -372,6 +411,34 @@ class KMClient:
         )
 
         parsed = msgspec.json.decode(responses.content, type=WeeklyListResponse)
+        if parsed.status != "success":
+            raise KMAPIError(parsed.response_code, parsed.error_message)
+
+        return parsed
+
+    def get_account(self):
+        params, headers = self._format_request()
+        responses = self._client.get(
+            f"{self.API_HOST}/account",
+            params=params,
+            headers=headers,
+        )
+
+        parsed = msgspec.json.decode(responses.content, type=AccountResponse)
+        if parsed.status != "success":
+            raise KMAPIError(parsed.response_code, parsed.error_message)
+
+        return parsed
+
+    def get_purchased(self):
+        params, headers = self._format_request()
+        responses = self._client.get(
+            f"{self.API_HOST}/web/title/purchased",
+            params=params,
+            headers=headers,
+        )
+
+        parsed = msgspec.json.decode(responses.content, type=TitleListResponse)
         if parsed.status != "success":
             raise KMAPIError(parsed.response_code, parsed.error_message)
 
