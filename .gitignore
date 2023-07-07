@@ -25,3 +25,4 @@ _data_test/
 
 cookies.txt
 *cookies.txt
+tests/fixtures/**/intermediate*
