@@ -36,7 +36,7 @@ __all__ = (
 console = term.get_console()
 
 
-def select_single_account(account_id: str | None = None):
+def select_single_account(account_id: str | None = None) -> MUConfig | None:
     if account_id is not None:
         config = get_config(account_id)
         if config is not None:
@@ -50,10 +50,15 @@ def select_single_account(account_id: str | None = None):
     if len(all_configs) == 1:
         return all_configs[0]
 
+    all_choices = [term.ConsoleChoice(acc.id, f"{acc.id} [{MUConfigDevice(acc.type).name}]") for acc in all_configs]
+    all_choices.append(term.ConsoleChoice("_cancelrino", "Cancel"))
     select = console.choice(
         "Select an account",
-        [term.ConsoleChoice(acc.id, f"{acc.id} [{MUConfigDevice(acc.type).name}]") for acc in all_configs],
+        all_choices,
     )
+
+    if select.name == "_cancelrino":
+        return None
 
     for acc in all_configs:
         if select.name == acc.id:

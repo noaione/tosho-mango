@@ -43,6 +43,9 @@ console = term.get_console()
 @options.account_id
 def musq_balance(account_id: str | None = None):
     account = select_single_account(account_id)
+    if account is None:
+        console.warning("Aborted")
+        return
 
     console.info(f"Checking balance for [highlight]{account.id}[/highlight]...")
     client = make_client(account)

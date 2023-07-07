@@ -46,6 +46,9 @@ console = term.get_console()
 @options.account_id
 def musq_my_favorites(account_id: str | None = None):
     account = select_single_account(account_id)
+    if account is None:
+        console.warning("Aborted")
+        return
 
     console.info(f"Getting favorites list for [highlight]{account.id}[/highlight]...")
     client = make_client(account)
@@ -72,6 +75,9 @@ def musq_my_favorites(account_id: str | None = None):
 @options.account_id
 def musq_my_read_history(account_id: str | None = None):
     account = select_single_account(account_id)
+    if account is None:
+        console.warning("Aborted")
+        return
 
     console.info(f"Getting read history for [highlight]{account.id}[/highlight]...")
     client = make_client(account)

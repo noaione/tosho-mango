@@ -50,6 +50,9 @@ console = term.get_console()
 @options.account_id
 def musq_search_title(title: str, account_id: str | None = None):
     account = select_single_account(account_id)
+    if account is None:
+        console.warning("Aborted")
+        return
 
     console.info(f"Searching for [highlight]{title!r}[/highlight]...")
     client = make_client(account)
@@ -85,6 +88,9 @@ def musq_search_title(title: str, account_id: str | None = None):
 @options.account_id
 def musq_search_weekly(weekday: WeeklyCode | None = None, account_id: str | None = None):
     account = select_single_account(account_id)
+    if account is None:
+        console.warning("Aborted")
+        return
 
     current_day = weekday or WeeklyCode.today()
     console.info(f"Getting weekly manga for weekday [highlight]{current_day.name}[/highlight]...")
@@ -132,6 +138,9 @@ def _fmt_tags(tags_data: list[Tag]) -> str:
 )
 def musq_title_info(title_id: int, account_id: str | None = None, show_chapters: bool = False):
     account = select_single_account(account_id)
+    if account is None:
+        console.warning("Aborted")
+        return
 
     console.info(f"Searching for ID [highlight]{title_id}[/highlight]...")
     client = make_client(account)
