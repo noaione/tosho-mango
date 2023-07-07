@@ -1,12 +1,14 @@
 {
-    "python.linting.flake8Enabled": true,
-    "python.linting.flake8Args": [
-        "--config=.flake8"
-    ],
     "[python]": {
         "editor.formatOnSave": true,
         "editor.defaultFormatter": "ms-python.black-formatter",
+        "editor.codeActionsOnSave": {
+            "source.fixAll": false,
+            "source.organizeImports": true
+        }
     },
+    "ruff.args": ["--config=pyproject.toml"],
+    "ruff.organizeImports": true,
     "editor.rulers": [120],
     "python.formatting.provider": "none",
     "python.analysis.diagnosticMode": "workspace",
