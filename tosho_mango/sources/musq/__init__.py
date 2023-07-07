@@ -8,5 +8,6 @@ Implementation for SQ MU!
 """
 
 from .client import *
+from .config import *
 from .models import *
 from .proto import *

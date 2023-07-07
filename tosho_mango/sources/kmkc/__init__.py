@@ -8,6 +8,7 @@ Implementation for KC KM
 """
 
 from .client import *
+from .config import *
 from .dto import *
 from .errors import *
 from .imaging import *
