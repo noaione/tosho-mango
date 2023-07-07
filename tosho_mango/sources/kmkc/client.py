@@ -25,6 +25,7 @@ SOFTWARE.
 from base64 import b64decode
 from hashlib import sha256, sha512
 from http.cookiejar import Cookie, CookieJar
+from typing import TypeVar
 from urllib.parse import quote
 
 import msgspec
@@ -54,6 +55,7 @@ from .dto import (
 from .errors import KMNotEnoughPointError
 
 __all__ = ("KMClientWeb",)
+DtoT = TypeVar("DtoT", bound="StatusResponse")
 
 
 def hash_kv(key: str, value: str):
@@ -244,6 +246,12 @@ class KMClientWeb:
         save_config(self._config)
         return requested
 
+    def _make_response(self, response: requests.Response, *, type: type[DtoT]) -> DtoT:
+        _temp = msgspec.json.decode(response.content, type=StatusResponse)
+        _temp.raise_for_status()
+        parsed = msgspec.json.decode(response.content, type=type)
+        return parsed
+
     def get_episode_list(self, episodes: list[int]):
         """
         Get episode list from episode ids
@@ -255,9 +263,7 @@ class KMClientWeb:
             data={"episode_id_list": ",".join(map(str, episodes))},
         )
 
-        parsed = msgspec.json.decode(response.content, type=EpisodesListResponse)
-        parsed.raise_for_status()
-
+        parsed = self._make_response(response, type=EpisodesListResponse)
         return parsed.episode_list
 
     def get_title_list(self, titles: list[int]):
@@ -271,9 +277,7 @@ class KMClientWeb:
             params={"title_id_list": ",".join(map(str, titles))},
         )
 
-        parsed = msgspec.json.decode(response.content, type=TitleListResponse)
-        parsed.raise_for_status()
-
+        parsed = self._make_response(response, type=TitleListResponse)
         return parsed.title_list
 
     def get_chapter_viewer(self, episode_id: int):
@@ -287,10 +291,7 @@ class KMClientWeb:
             params={"episode_id": str(episode_id)},
         )
 
-        parsed = msgspec.json.decode(response.content, type=WebChapterViewerResponse)
-        parsed.raise_for_status()
-
-        return parsed
+        return self._make_response(response, type=WebChapterViewerResponse)
 
     def get_title_ticket(self, title_id: int) -> TitleTicketListEntry:
         response = self.request(
@@ -299,9 +300,7 @@ class KMClientWeb:
             params={"title_id_list": str(title_id)},
         )
 
-        parsed = msgspec.json.decode(response.content, type=TitleTicketListResponse)
-        parsed.raise_for_status()
-
+        parsed = self._make_response(response, type=TitleTicketListResponse)
         return parsed.title_ticket_list[0]
 
     def claim_episode_with_ticket(self, episode_id: int, ticket: TitleTicketInfo | PremiumTicketInfo):
@@ -323,10 +322,7 @@ class KMClientWeb:
             data=form_data,
         )
 
-        parsed = msgspec.json.decode(response.content, type=StatusResponse)
-        parsed.raise_for_status()
-
-        return parsed, is_title
+        return self._make_response(response, type=StatusResponse), is_title
 
     def claim_episode_with_point(self, episode: EpisodeEntry, wallet: UserPoint):
         if not wallet.can_purchase(episode.point):
@@ -342,9 +338,7 @@ class KMClientWeb:
             data=form_data,
         )
 
-        parsed = msgspec.json.decode(response.content, type=EpisodePurchaseResponse)
-        parsed.raise_for_status()
-
+        parsed = self._make_response(response, type=EpisodePurchaseResponse)
         wallet.subtract(parsed.paid_point)
         wallet.add(episode.bonus_point)
         return wallet
@@ -373,8 +367,7 @@ class KMClientWeb:
             data=form_data,
         )
 
-        parsed = msgspec.json.decode(response.content, type=BulkEpisodePurchaseResponse)
-        parsed.raise_for_status()
+        parsed = self._make_response(response, type=BulkEpisodePurchaseResponse)
         wallet.subtract(parsed.paid_point)
         wallet.add(parsed.earned_point_back)
         return wallet
@@ -385,10 +378,7 @@ class KMClientWeb:
             f"{self.API_HOST}/account/point",
         )
 
-        parsed = msgspec.json.decode(response.content, type=UserAccountPointResponse)
-        parsed.raise_for_status()
-
-        return parsed
+        return self._make_response(response, type=UserAccountPointResponse)
 
     def search(self, keyword: str, limit: int = 99999):
         response = self.request(
@@ -397,9 +387,7 @@ class KMClientWeb:
             params={"keyword": keyword, "limit": str(limit)},
         )
 
-        parsed = msgspec.json.decode(response.content, type=SearchResponse)
-        parsed.raise_for_status()
-
+        parsed = self._make_response(response, type=SearchResponse)
         return parsed.title_list
 
     def get_weekly(self):
@@ -408,10 +396,7 @@ class KMClientWeb:
             f"{self.API_HOST}/title/weekly",
         )
 
-        parsed = msgspec.json.decode(response.content, type=WeeklyListResponse)
-        parsed.raise_for_status()
-
-        return parsed
+        return self._make_response(response, type=WeeklyListResponse)
 
     def get_account(self):
         response = self.request(
@@ -419,10 +404,7 @@ class KMClientWeb:
             f"{self.API_HOST}/account",
         )
 
-        parsed = msgspec.json.decode(response.content, type=AccountResponse)
-        parsed.raise_for_status()
-
-        return parsed
+        return self._make_response(response, type=AccountResponse)
 
     def get_purchased(self):
         response = self.request(
@@ -430,7 +412,4 @@ class KMClientWeb:
             f"{self.API_HOST}/web/title/purchased",
         )
 
-        parsed = msgspec.json.decode(response.content, type=TitleListResponse)
-        parsed.raise_for_status()
-
-        return parsed
+        return self._make_response(response, type=TitleListResponse)
