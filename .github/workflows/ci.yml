@@ -53,3 +53,12 @@ jobs:
         with:
           venv-path: .venv
           project: pyproject.toml
+
+      - name: Tests
+        run: |
+          pytest
+      
+      - name: Coverage report
+        uses: codecov/codecov-action@v3
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

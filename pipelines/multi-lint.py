@@ -27,7 +27,7 @@ import sys
 from pathlib import Path
 from typing import Optional
 
-to_be_linted = ["tosho_mango"]
+to_be_linted = ["tosho_mango", "tests"]
 
 
 def check_license_header(file: Path) -> bool:
