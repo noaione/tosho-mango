@@ -23,12 +23,20 @@ SOFTWARE.
 """
 
 from types import ModuleType
+
 from click import Group
 
 from tosho_mango.cli.base import ToshoMangoCommandHandler
 
 
 def auto_import_implementations(group: Group, modules: ModuleType):
+    if modules.__file__ is None:
+        raise ValueError("Cannot import module without __file__ attribute")
+
+    mod_path = modules.__file__.replace("\\", "/")
+    if "cli/impl" not in mod_path:
+        raise ValueError("Cannot import module that is not in cli/impl")
+
     for name in dir(modules):
         if name.startswith("__"):
             continue
