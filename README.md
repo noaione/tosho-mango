@@ -2,6 +2,9 @@
 
 A simple downloader for some official mango.
 
+While I did say this is a "downloader", it can also be said it is an almost full-blown replacement of the app/web version
+as a CLI application.
+
 ## Installation
 
 **Requirements**
