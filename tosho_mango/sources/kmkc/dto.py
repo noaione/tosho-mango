@@ -142,6 +142,10 @@ class UserPoint(Struct):
         if self.point_sale_finish_datetime is not None:
             return parse_datetime(self.point_sale_finish_datetime)
 
+    @property
+    def total_point(self) -> int:
+        return self.paid_point + self.free_point
+
     def can_purchase(self, price: int) -> bool:
         total_point = self.paid_point + self.free_point
         return total_point >= price

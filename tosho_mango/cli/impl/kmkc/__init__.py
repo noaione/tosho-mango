@@ -8,3 +8,4 @@ The CLI implementation of KC KM source.
 """
 
 from .accounts import *
+from .balance import *
