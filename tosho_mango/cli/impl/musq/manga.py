@@ -30,7 +30,7 @@ from tosho_mango.cli.base import ToshoMangoCommandHandler
 from tosho_mango.sources.musq.models import WeeklyCode
 from tosho_mango.sources.musq.proto import Tag
 
-from . import options
+from .. import options
 from .common import do_print_search_information, make_client, select_single_account
 
 __all__ = (

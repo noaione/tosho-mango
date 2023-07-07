@@ -28,7 +28,7 @@ from requests import HTTPError
 from tosho_mango import term
 from tosho_mango.cli.base import ToshoMangoCommandHandler
 
-from . import options
+from .. import options
 from .common import make_client, select_single_account
 
 __all__ = ("musq_balance",)
