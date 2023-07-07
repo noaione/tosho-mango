@@ -60,7 +60,7 @@ def musq_auth_session(session_id: str, device_type: str):
         case "ios":
             device_tt = MUConfigDevice.IOS
         case _:
-            raise click.BadParameter("Invalid device type", param="type")
+            raise click.BadParameter("Invalid device type", param_hint="device_type")
 
     all_configs = get_all_config()
     old_config: MUConfig | None = None

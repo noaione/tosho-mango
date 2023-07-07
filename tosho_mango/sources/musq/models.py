@@ -24,6 +24,7 @@ SOFTWARE.
 
 from dataclasses import dataclass
 from enum import Enum
+from typing import cast
 
 from tosho_mango.utils import get_dt_now
 
@@ -56,7 +57,7 @@ class WeeklyCode(str, Enum):
         weekday = now.weekday()
         mem_maps = cls._member_map_
         select = list(mem_maps.keys())[weekday]
-        return mem_maps[select]
+        return cast(WeeklyCode, mem_maps[select])
 
 
 class Quality(str, Enum):

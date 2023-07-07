@@ -192,6 +192,15 @@ class Console:
             return choices[console_choice.index(answers)]
         return answers
 
+    def _internal_validation(self, text_input: str, validation: ValidateFunc | str):
+        if isinstance(validation, str):
+            return validation == text_input
+        try:
+            is_valid = validation(text_input)
+            return bool(is_valid)  # Coerce None to bool to avoid error
+        except Exception:
+            return False
+
     @overload
     def inquire(
         self,
@@ -210,16 +219,9 @@ class Console:
     ) -> AnyType:
         ...
 
-    def _internal_validation(self, text_input: str, validation: ValidateFunc):
-        try:
-            is_valid = validation(text_input)
-            return bool(is_valid)  # Coerce None to bool to avoid error
-        except Exception:
-            return False
-
     def inquire(
-        self, prompt: str, validation: Optional[ValidateFunc] = None, default: Optional[AnyType] = None
-    ) -> AnyType:
+        self, prompt: str, validation: Optional[ValidateFunc | str] = None, default: Optional[AnyType] = None
+    ) -> AnyType | None:
         # Custom inquirer
         inquired_text = default
         while True:
@@ -250,14 +252,14 @@ class Console:
 
     def confirm(self, prompt: Optional[str] = None) -> bool:
         prompt = prompt or "Are you sure?"
-        return inquirer.confirm(prompt, default=False)
+        return bool(inquirer.confirm(prompt, default=False))
 
     @overload
     def select(
         self,
         message: Optional[str] = ...,
         choices: List[AnyType] = ...,
-    ) -> str:
+    ) -> list[AnyType]:
         ...
 
     @overload
@@ -265,31 +267,31 @@ class Console:
         self,
         message: Optional[str] = ...,
         choices: List[ConsoleChoice] = ...,
-    ) -> ConsoleChoice:
+    ) -> list[ConsoleChoice]:
         ...
 
     def select(
         self,
         message: Optional[str] = None,
         choices: Union[List[AnyType], List[ConsoleChoice]] = list(),
-    ) -> Union[AnyType, ConsoleChoice]:
+    ) -> list[ConsoleChoice] | list[AnyType]:
         if not choices:
             raise ValueError("No choices provided")
         message = message or "Please select from the option below"
-        console_choice = []
-        choices_index = []
+        console_choice: list[tuple[AnyType, AnyType]] = []
+        choices_index: list[str] = []
         any_cchoice = False
         for choice in choices:
             if isinstance(choice, ConsoleChoice):
-                console_choice.append((choice.value, choice.name))
+                console_choice.append((cast(str, choice.value), choice.name))
                 choices_index.append(choice.name)
                 any_cchoice = True
             else:
                 console_choice.append((choice, choice))
-                choices_index.append(choice)
-        answers = cast(list[str], inquirer.checkbox(message, choices=console_choice))
+                choices_index.append(cast(str, choice))
+        answers = cast(list[AnyType], inquirer.checkbox(message, choices=console_choice))
         if any_cchoice:
-            return [choices[choices_index.index(answer)] for answer in answers]
+            return [cast(list[ConsoleChoice], choices)[choices_index.index(cast(str, answer))] for answer in answers]
         return answers
 
     def enter(self):

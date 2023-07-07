@@ -263,8 +263,8 @@ class MUClient:
         :exc:`requests.HTTPError`
             If the request failed.
         """
-        if (week := week.lower()) not in WEEKLY_CODE:
-            valid_types = ", ".join(WEEKLY_CODE)
+        if week.value not in WEEKLY_CODE:
+            valid_types: str = ", ".join(WEEKLY_CODE)
             raise ValueError(f"Invalid weekly code: {week}, valid types: {valid_types}")
 
         params = self._build_param(

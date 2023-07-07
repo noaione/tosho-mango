@@ -143,7 +143,7 @@ def get_all_config() -> list[KMConfigWeb | KMConfigMobile]:
     USER_PATH.mkdir(parents=True, exist_ok=True)
 
     CONFIG_GLOB = USER_PATH.glob("kmkc.*.tmconf")
-    parsed_conf: list[KMConfigWeb] = []
+    parsed_conf: list[KMConfigWeb | KMConfigMobile] = []
     for conf in CONFIG_GLOB:
         conf_bita = conf.read_bytes()
         conf_temp = KMConfigBase.FromString(conf_bita)

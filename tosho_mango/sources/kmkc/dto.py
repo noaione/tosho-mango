@@ -291,7 +291,7 @@ class EpisodeEntry(Struct):
 
     def set_available(self) -> None:
         """:class:`None`: Set the episode to available."""
-        self.badge = 3
+        self.badge = EpisodeBadge.PURCHASED
 
 
 class EpisodesListResponse(StatusResponse):

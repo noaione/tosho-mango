@@ -13,7 +13,7 @@
     "python.languageServer": "Pylance",
     "autoDocstring.docstringFormat": "sphinx",
     "python.linting.enabled": true,
-    "python.analysis.typeCheckingMode": "off",
+    "python.analysis.typeCheckingMode": "basic",
     "files.exclude": {
         "**/.git": true,
         "**/.svn": true,

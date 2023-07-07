@@ -25,7 +25,7 @@ SOFTWARE.
 import sys
 import traceback
 from functools import partial
-from typing import TYPE_CHECKING, List, Optional, Tuple, Union, cast
+from typing import TYPE_CHECKING, Callable, List, Optional, Tuple, Union, cast
 
 import click
 from click.core import Context
@@ -117,7 +117,7 @@ class ToshoMangoCommandHandler(click.Command):
                     value: str,
                     state: "ParsingState",
                     upper_opt: ParserOption,
-                    original_func: callable,
+                    original_func: Callable[[str, "ParsingState"], None],
                 ):
                     is_deprecated = cast(bool, getattr(upper_opt.obj, "is_deprecated", False))
                     preferred = cast(List[str], getattr(upper_opt.obj, "preferred", []))

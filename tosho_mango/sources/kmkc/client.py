@@ -81,7 +81,6 @@ class KMClient:
 
     def _create_cookiejar(self) -> CookieJar:
         cookie_jar = CookieJar()
-        cookie_jar.make_cookies()
         birthday = self._config.birthday
         birthday_value = quote(msgspec.json.encode(birthday).decode("utf-8"))
 
@@ -283,7 +282,7 @@ class KMClient:
             "ticket_type": str(ticket.ticket_type),
         }
         is_title = hasattr(ticket, "ticket_version")
-        if is_title:
+        if isinstance(ticket, TitleTicketInfo):
             form_data["ticket_version"] = str(ticket.ticket_version)
         else:
             # Premium Ticket

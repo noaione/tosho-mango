@@ -10,9 +10,9 @@ __all__ = (
 )
 
 
-def calc_block_size(width: int, height: int, rectbox: int) -> tuple[int, int]:
+def calc_block_size(width: int, height: int, rectbox: int) -> tuple[int | None, int | None]:
     if width < rectbox or height < rectbox:
-        return None
+        return None, None
     n = 8
     width = math.floor(width / n) * n
     height = math.floor(height / n) * n
@@ -24,13 +24,13 @@ def uint32(x: int) -> int:
 
 
 def seed_generator(base_seed: int) -> Generator[int, None, None]:
-    t = [uint32(base_seed)]
+    tdata = uint32(base_seed)
     while True:
         # Clamp to unsigned 32-bit integer
-        t[0] = uint32(t[0] ^ uint32(t[0] << 13))
-        t[0] = uint32(t[0] ^ uint32(t[0] >> 17))
-        t[0] = uint32(t[0] ^ uint32(t[0] << 5))
-        yield t
+        tdata = uint32(tdata ^ uint32(tdata << 13))
+        tdata = uint32(tdata ^ uint32(tdata >> 17))
+        tdata = uint32(tdata ^ uint32(tdata << 5))
+        yield tdata
 
 
 def generate_copy_targets(
@@ -71,8 +71,15 @@ def descramble_target(im_source: Image.Image, block_div: int, scramble_seed: int
     -------
     :class:`PIL.Image.Image`
         The descrambled image
+
+    Raises
+    ------
+    :class:`ValueError`
+        If the image is too small
     """
     block_w, block_h = calc_block_size(im_source.width, im_source.height, block_div)
+    if block_w is None or block_h is None:
+        raise ValueError("Image is too small")
     canvas = Image.new("RGB", (block_w * block_div, block_h * block_div))
 
     for (source_x, source_y), (dest_x, dest_y) in generate_copy_targets(block_div, scramble_seed):
