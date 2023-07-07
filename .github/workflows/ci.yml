@@ -56,6 +56,7 @@ jobs:
 
       - name: Tests
         run: |
+          source .venv/bin/activate
           pytest
       
       - name: Coverage report
