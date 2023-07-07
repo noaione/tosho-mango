@@ -30,7 +30,7 @@ CURRENT_DIR = Path(__file__).absolute().parent
 class Fixtureable:
     fixture_name: str | None = None
 
-    def _run_fixture(self):
+    def _get_fixture(self):
         if self.fixture_name is None:
             raise ValueError("Fixture name is not defined")
         fixture_path = CURRENT_DIR / f"{self.fixture_name}"
@@ -44,6 +44,10 @@ class Fixtureable:
         if not expcets.exists():
             raise FileNotFoundError(f"Fixture expects {expcets} is not found")
 
+        return source, expcets
+
+    def _run_fixture(self):
+        source, expcets = self._get_fixture()
         proc_result = self.process(source)
         return proc_result, expcets
 
