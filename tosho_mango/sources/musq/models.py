@@ -59,6 +59,10 @@ class WeeklyCode(str, Enum):
         select = list(mem_maps.keys())[weekday]
         return cast(WeeklyCode, mem_maps[select])
 
+    @property
+    def indexed(self) -> int:
+        return list(self.__class__).index(self)
+
 
 class Quality(str, Enum):
     NORMAL = "middle"

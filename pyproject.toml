@@ -44,7 +44,8 @@ exclude = [
     ".git",
     ".mypy_cache",
     ".vscode",
-    ".ruff_cache"
+    ".ruff_cache",
+    "Lib"
 ]
 
 [tool.ruff.per-file-ignores]

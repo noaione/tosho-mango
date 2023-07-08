@@ -22,6 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+import re
 from datetime import datetime, timezone
 from enum import Enum
 from typing import List, Optional
@@ -32,8 +33,12 @@ from .errors import KMAPIError
 
 __all__ = (
     "EpisodeBadge",
-    "EpisodeUseStatus",
-    "StatusResponse",
+    "DevicePlatform",
+    "GenderType",
+    "PublishCategory",
+    "FavoriteStatus",
+    "SupportStatus",
+    "SimpleId",
     "UserPoint",
     "UserTicket",
     "UserFavoriteList",
@@ -47,6 +52,9 @@ __all__ = (
     "UserAccountDevice",
     "UserAccount",
     "WeeklyListContent",
+    "MagazineCategoryInfo",
+    "GenreNode",
+    "StatusResponse",
     "UserAccountPointResponse",
     "TitleListResponse",
     "UserFavoriteResponse",
@@ -59,6 +67,9 @@ __all__ = (
     "AccountResponse",
     "SearchResponse",
     "WeeklyListResponse",
+    "MagazineCategoryResponse",
+    "GenreSearchResponse",
+    "RankingListResponse",
 )
 
 
@@ -83,17 +94,6 @@ class EpisodeBadge(int, Enum):
     """Episode is on rental"""
 
 
-class EpisodeUseStatus(int, Enum):
-    """
-    How can the episode be viewed.
-    """
-
-    FREE = 3
-    """Episode is free"""
-    TICKET_POINT = 4
-    """Episode need to be purhcased"""
-
-
 class DevicePlatform(int, Enum):
     """
     The device platform type
@@ -103,6 +103,174 @@ class DevicePlatform(int, Enum):
     """Is android"""
     WEB = 3
     """Is website"""
+
+
+class GenderType(int, Enum):
+    MALE = 1
+    FEMALE = 2
+    OTHER = 3
+
+
+class PublishCategory(int, Enum):
+    """
+    The publication category type
+    """
+
+    SERIALIZATION = 1
+    """Series is being serialized"""
+    COMPLETION = 2
+    """Series is completed"""
+    READING_OUT = 3
+    """Series ????"""
+
+
+class MagazineCategory(int, Enum):
+    """
+    The magazine category type
+    """
+
+    Undefined = 0
+    """Unknown magazine"""
+    Original = 1
+    """KM Original series"""
+    WeeklyShounenMagazine = 2
+    """Weekly Shounen Magazine"""
+    BessatsuShounenMagazine = 3
+    """Bessatsu Shounen Magazine, a spin-off WSM (Monthly)"""
+    Gravure = 4
+    """Gravure magazine"""
+    Misc = 5
+    """Misc comic/book"""
+    MiscMagazine = 6
+    """Misc magazine"""
+    OtherCompany = 7
+    """Magazine from other company"""
+    MonthlyShounenSirius = 8
+    """Monthly Shounen Sirius"""
+    SuiyobiShounenSirius = 9
+    """Suiyobi no Sirius, a spin-off MSS, released every Wednesday"""
+    MonthlyShounenMagazine = 10
+    """Monthly Shounen Magazine"""
+    ShounenMagazineR = 11
+    """
+    Shounen Magazine R, a supplement magazine for WSM. (Discontinued)
+
+    Originally a bi-monthly magazine, but now it's a monthly digital-only magazine.
+    """
+    BekkanGetsumaga = 12
+    """Bekkan Getsumaga"""
+    WeeklyYoungMagazine = 13
+    """Weekly Young Magazine, Seinen focused magazine"""
+    WeeklyYoungMagazineThe3rd = 14
+    """Weekly Young Magazine the 3rd, a supplementary for WYM"""
+    MonthlyYoungMagazine = 15
+    """Monthly Young Magazine, a sister magazine of WYM"""
+    ShounenMagazineEdge = 16
+    """Shounen Magazine Edge, a monthly magazine"""
+    Morning = 17
+    """Morning magazine, a weekly seinen magazine"""
+    MorningTwo = 18
+    """Morning Two, a montlhy version of Morning"""
+    Afternoon = 19
+    """Afternoon magazine, a monthly seinen magazine"""
+    GoodAfternoon = 20
+    """Good! Afternoon, sister magazine of Afternoon, a monthly seinen magazine"""
+    Evening = 21
+    """Evening magazine, a bi-weekly seinen magazine, discontinued and moved some to Comic Days"""
+    ComicBombom = 22
+    """Comic BomBom, a monthly kids magazine"""
+    eYoungMagazine = 23
+    """e-Young Magazine, a digital-only of Young magazine which focused on user-submitted serialized content"""
+    DMorning = 24
+    """Digital Morning, a digital-only version of Morning magazine"""
+    ComicDays = 25
+    """Comic Days, a digital-only seinen magazine"""
+    Palcy = 26
+    """Palcy, a digital-only magazine collaboration with Pixiv"""
+    Cycomi = 27
+    """Cycomi, a digital-only magazine collaboration with Cygames"""
+    MangaBox = 28
+    """Manga Box, a mobile app for manga from Kodansha, Shogakukan, and other publishers"""
+    Nakayoshi = 29
+    """Nakayoshi/Good Friend, a monthly shoujo magazine"""
+    BessatsuFriend = 30
+    """Bessatsu Friend, a monthly shoujo magazine"""
+    Dessert = 31
+    """Dessert, a monthly shoujo/josei magazine"""
+    Kiss = 32
+    """Kiss, a monthly josei magazine"""
+    HatsuKiss = 33
+    """Hatsu Kiss, a monthly josei magazine (originally bi-monthly until 2018)"""
+    BeLove = 34
+    """Be Love, a monthly josei magazine"""
+    HoneyMilk = 35
+    """Honey Milk. a web magazine focused on Boys Love"""
+    AneFriend = 36
+    """Ane Friend, a web shoujo/josei magazine"""
+    comic_tint = 37
+    """Comic Tint, a web shoujo/josei magazine"""
+    GakujutsuBunko = 38
+    """Kodansha Gakujutsu Bunko or Kodansha Academic Paperback Library"""
+    Seikaisha = 39
+    """Seikaisha or Star Seas Company, a subsidiary of Kodansha"""
+    BabyMofu = 40
+    """Baby Mofu, a website focused on books and manga related to childcare"""
+    Ichijinsha = 41
+    """
+    Ichijinsha, a subsidiary of Kodansha
+
+    Owns the following:
+    - Febri
+    - Comic Rex (4-koma)
+    - Monthly Comic Zero Sum (Josei focused)
+    - Comic Yuri Hime (Girls Love)
+    - gateau
+    - IDOLM@STER Million Live Magazine Plus+
+    """
+    ComicCreate = 42
+    """Comic Create, a web comic magazine"""
+    ComicBull = 43
+    """Comic Bull, a magazine by Sports Bull"""
+    YoungMagazineWeb = 44
+    """Young Magazine Web, a digital-only magazine for Young Magazine"""
+    WhiteHeart = 45
+    """White Heart, a digital-only magazine for josei manga"""
+    MonthlyMagazineBase = 46
+    """Monthly Magazine Base, a digital-only magazine for shounen manga, replacement for Shounen Magazine R"""
+
+    @property
+    def pretty(self):
+        # Convert to space separated string
+        split_space = re.sub(r"((?<=[a-z])[A-Z]|(?<!\A)[A-Z](?=[a-z])|([\d])+)", r" \1", self.name).strip().split()
+        # Special case
+        join_back = " ".join(split_space)
+        for word in ["The", "A", "An"]:
+            if join_back.startswith(word):
+                continue
+            join_back = join_back.replace(word, word.lower())
+        if len(split_space) > 1:
+            if split_space[0] == "e":
+                return join_back.replace("e ", "e-", 1)
+            elif split_space[0] == "D":
+                return join_back.replace("D ", "Digital ", 1)
+        if "_" in join_back:
+            return join_back.replace("_", " ")
+        return join_back
+
+
+class FavoriteStatus(int, Enum):
+    NONE = 1
+    FAVORITE = 2
+
+
+class SupportStatus(int, Enum):
+    NOT_ALLOWED = 0
+    ALLOWED = 1
+    APPLIED = 2
+
+
+class SimpleId(Struct):
+    id: int
 
 
 class StatusResponse(Struct):
@@ -198,7 +366,7 @@ class UserFavoriteList(Struct):
     """The last updated time of the paid episode."""
     is_unread_free_episode: int
     """Is there any unread free episode."""
-    purchase_status: int
+    purchase_status: EpisodeBadge
     """Purchase status of the manga."""
     ticket_recover_time: str
     """The title ticket recover time."""
@@ -227,10 +395,12 @@ class TitleList(Struct):
     """The current active campaign text."""
     notice_text: str
     """The current notice for the manga."""
-    next_updated_text: str
+    next_updated_text: Optional[str]
     """The next update for the manga."""
     author_text: str
     """The author of the manga."""
+    author_list: List[str]
+    """The author list of the manga."""
     introduction_text: str
     """The description of the manga."""
     short_introduction_text: str
@@ -245,10 +415,15 @@ class TitleList(Struct):
     """The first episode ID."""
     episode_id_list: List[int]
     """The list of episode IDs."""
-    latest_paid_episode_id: int
+    latest_paid_episode_id: List[int]
     """The latest paid episode ID."""
     latest_free_episode_id: int
     """The latest free episode ID."""
+    genre_id_list: List[int]
+    favorite_status: FavoriteStatus
+    support_status: SupportStatus
+    publish_category: PublishCategory
+    magazine_category: MagazineCategory = field(default=MagazineCategory.Undefined)
 
 
 class TitleListResponse(StatusResponse):
@@ -296,7 +471,7 @@ class EpisodeEntry(Struct):
     """The episode purchase point."""
     bonus_point: int
     """The episode bonus point (if read)"""
-    use_status: EpisodeUseStatus
+    use_status: int
     """The episode use status."""
     ticket_rental_enabled: int
     """The episode ticket rental status."""
@@ -304,6 +479,7 @@ class EpisodeEntry(Struct):
     """The title ID."""
     start_time: str
     """The episode start time or release time."""
+    rental_rest_time: Optional[str]
 
     def start_time_datetime(self) -> datetime:
         """:class:`datetime.datetime`: The episode start time or release time as datetime object."""
@@ -588,3 +764,30 @@ class WeeklyListResponse(StatusResponse):
     """The list of weekly list contents."""
     title_list: List[TitleList] = field(default_factory=list)
     """The list of titles."""
+
+
+class MagazineCategoryInfo(Struct):
+    is_purchase: int
+    is_search: int
+    is_subscription: int
+    category_id: int = field(name="magazine_category_id")
+    category_name: str = field(name="magazine_category_name_text")
+    image_url: Optional[str] = field(name="subscription_image_url")
+
+
+class MagazineCategoryResponse(StatusResponse):
+    magazine_category_list: List[MagazineCategoryInfo]
+
+
+class GenreNode(Struct):
+    genre_id: int
+    genre_name: str
+    image_url: str
+
+
+class GenreSearchResponse(StatusResponse):
+    genre_list: list[GenreNode]
+
+
+class RankingListResponse(StatusResponse):
+    ranking_title_list: list[SimpleId]

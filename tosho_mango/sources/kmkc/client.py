@@ -25,7 +25,7 @@ SOFTWARE.
 from base64 import b64decode
 from hashlib import sha256, sha512
 from http.cookiejar import Cookie, CookieJar
-from typing import TypeVar
+from typing import Any, Generator, TypeVar
 from urllib.parse import quote
 
 import msgspec
@@ -40,7 +40,10 @@ from .dto import (
     EpisodeEntry,
     EpisodePurchaseResponse,
     EpisodesListResponse,
+    GenreSearchResponse,
+    MagazineCategoryResponse,
     PremiumTicketInfo,
+    RankingListResponse,
     SearchResponse,
     StatusResponse,
     TitleListResponse,
@@ -219,16 +222,18 @@ class KMClientWeb:
         params = kwargs.pop("params", None)
 
         fmt_data, fmt_headers = self._format_request(data, headers)
-        fmt_params, _ = self._format_request(params)
+        fmt_params, fmt_param_headers = self._format_request(params)
 
         key_param = "data"
         if data is None and params is None:
             # Assume params
             fmt_data = fmt_params
+            fmt_headers = fmt_param_headers
             key_param = "params"
         elif data is None and params is not None:
             # Assume params
             fmt_data = fmt_params
+            fmt_headers = fmt_param_headers
             key_param = "params"
         elif data is not None:
             # Assume data
@@ -251,6 +256,14 @@ class KMClientWeb:
         _temp.raise_for_status()
         parsed = msgspec.json.decode(response.content, type=type)
         return parsed
+
+    def chunk_episodes(self, episode_ids: list[int], *, chunk_size: int = 50) -> Generator[list[int], Any, None]:
+        """
+        Chunk episode ids into a list of lists with the specified chunk size.
+        """
+
+        for i in range(0, len(episode_ids), chunk_size):
+            yield episode_ids[i : i + chunk_size]
 
     def get_episode_list(self, episodes: list[int]):
         """
@@ -413,3 +426,29 @@ class KMClientWeb:
         )
 
         return self._make_response(response, type=TitleListResponse)
+
+    def get_magazines(self):
+        response = self.request(
+            "GET",
+            f"{self.API_HOST}/magazine/category/list",
+            params={"limit": "99999", "offset": "0"},
+        )
+
+        return self._make_response(response, type=MagazineCategoryResponse)
+
+    def get_genre_list(self):
+        response = self.request(
+            "GET",
+            f"{self.API_HOST}/genre/search/list",
+        )
+
+        return self._make_response(response, type=GenreSearchResponse)
+
+    def get_all_rankings(self, ranking_id: int, *, limit: int = 101, offset: int = 0):
+        response = self.request(
+            "GET",
+            f"{self.API_HOST}/ranking/all",
+            params={"ranking_id": str(ranking_id), "offset": str(offset), "limit": str(limit)},
+        )
+
+        return self._make_response(response, type=RankingListResponse)
