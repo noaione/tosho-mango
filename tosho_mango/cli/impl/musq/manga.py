@@ -28,6 +28,7 @@ from requests import HTTPError
 
 from tosho_mango import term
 from tosho_mango.cli.base import ToshoMangoCommandHandler
+from tosho_mango.sources.musq.constants import BASE_HOST
 from tosho_mango.sources.musq.models import WeeklyCode
 from tosho_mango.sources.musq.proto import Tag
 
@@ -116,7 +117,7 @@ def musq_search_weekly(weekday: WeeklyCode | None = None, account_id: str | None
 def _fmt_tags(tags_data: list[Tag]) -> str:
     joined_tags: list[str] = []
     for tag in tags_data:
-        genre_url = f"https://global.manga-up.com/genre/{tag.id}"
+        genre_url = f"https://{BASE_HOST}/genre/{tag.id}"
         text_d = f"[gray][highr][link={genre_url}]{tag.name}[/link][/highr][/gray]"
         joined_tags.append(text_d)
     return ", ".join(joined_tags)
@@ -152,7 +153,7 @@ def musq_title_info(title_id: int, account_id: str | None = None, show_chapters:
         console.error(f"Unable to connect to MU!: {e}")
         return
 
-    manga_url = f"https://global.manga-up.com/manga/{title_id}"
+    manga_url = f"https://{BASE_HOST}/manga/{title_id}"
     console.info(f"Title information for [highlight][link={manga_url}]{result.title}[/link][/highlight]")
 
     console.info(f"  [bold]Author[/bold]: {result.authors}")

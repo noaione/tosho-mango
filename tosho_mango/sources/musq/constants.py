@@ -29,10 +29,16 @@ from typing import TypedDict
 
 
 class ClientConstants(TypedDict):
+    """A dict of client constants."""
+
     _IMAGE_UA: str
+    """:class:`str`: The user-agent for image requests."""
     _API_UA: str
+    """:class:`str`: The user-agent for API requests."""
     OS_VER: str
+    """:class:`str`: The OS version."""
     APP_VER: str
+    """:class:`str`: The app version."""
 
 
 _ANDROID_APP = b64decode("Y29tLnNxdWFyZV9lbml4LmFuZHJvaWRfZ29vZ2xlcGxheS5tYW5nYXVwX2dsb2JhbA==").decode("utf-8")
@@ -60,5 +66,6 @@ DEVICE_CONSTANTS: dict[str | int, ClientConstants] = {
 QUALITY_FORMAT = ["middle", "high"]
 WEEKLY_CODE = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
 
+BASE_HOST = b64decode("Z2xvYmFsLm1hbmdhLXVwLmNvbQ==").decode("utf-8")
 API_HOST = b64decode("Z2xvYmFsLWFwaS5tYW5nYS11cC5jb20=").decode("utf-8")
 IMAGE_HOST = b64decode("Z2xvYmFsLWltZy5tYW5nYS11cC5jb20=").decode("utf-8")

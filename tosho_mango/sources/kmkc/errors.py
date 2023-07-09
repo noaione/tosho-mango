@@ -31,7 +31,18 @@ __all__ = (
 
 
 class KMAPIError(Exception):
+    """A base error for KM KC API."""
+
     def __init__(self, error_code: int, message: str) -> None:
+        """An error occured when using KM KC API.
+
+        Parameters
+        ----------
+        error_code: :class:`int`
+            The error code.
+        message: :class:`str`
+            The error message.
+        """
         self.error_code = error_code
         self.message = message
 
@@ -39,4 +50,6 @@ class KMAPIError(Exception):
 
 
 class KMNotEnoughPointError(Exception):
+    """An error when you don't have enough point to buy a manga."""
+
     pass

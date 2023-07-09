@@ -13,7 +13,7 @@
     "python.formatting.provider": "none",
     "python.analysis.diagnosticMode": "workspace",
     "python.languageServer": "Pylance",
-    "autoDocstring.docstringFormat": "sphinx",
+    "autoDocstring.docstringFormat": "numpy",
     "python.linting.enabled": true,
     "python.linting.flake8Enabled": false,
     "python.linting.pylintEnabled": false,

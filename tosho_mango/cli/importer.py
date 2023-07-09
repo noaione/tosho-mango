@@ -32,8 +32,25 @@ from tosho_mango.cli.base import ToshoMangoCommandHandler
 
 
 def auto_import_implementations(group: Group, modules: ModuleType):
+    """Automatically import all ToshoMangoCommandHandler from a module.
+
+    Parameters
+    ----------
+    group : Group
+        The group to add the command to.
+    modules : ModuleType
+        The module to import from.
+
+    Raises
+    ------
+    AttributeError
+        If the module does not have __file__ attribute.
+    ValueError
+        If the module is not in cli/impl.
+    """
+
     if modules.__file__ is None:
-        raise ValueError("Cannot import module without __file__ attribute")
+        raise AttributeError("Cannot import module without __file__ attribute")
 
     mod_path = modules.__file__.replace("\\", "/")
     if "cli/impl" not in mod_path:

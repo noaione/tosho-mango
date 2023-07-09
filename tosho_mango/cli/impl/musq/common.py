@@ -29,7 +29,7 @@ from msgspec import Struct
 from tosho_mango import term
 from tosho_mango.sources.musq.client import MUClient
 from tosho_mango.sources.musq.config import MUConfig, MUConfigDevice, get_all_config, get_config
-from tosho_mango.sources.musq.constants import DEVICE_CONSTANTS
+from tosho_mango.sources.musq.constants import BASE_HOST, DEVICE_CONSTANTS
 from tosho_mango.sources.musq.proto import BadgeManga, MangaListNode
 
 __all__ = (
@@ -77,7 +77,7 @@ def make_client(account: MUConfig):
 def do_print_search_information(results: list[MangaListNode], *, numbering: bool = False):
     for idx, result in enumerate(results, 1):
         badge = BadgeManga(result.badge)
-        manga_url = f"https://global.manga-up.com/manga/{result.id}"
+        manga_url = f"https://{BASE_HOST}/manga/{result.id}"
         text_data = f"[bold][link={manga_url}]{result.name}[/link][/bold] ({result.id})"
         if badge is badge.NEW:
             text_data = f"{text_data} [bcyan][highr][NEW][/highr][/bcyan]"

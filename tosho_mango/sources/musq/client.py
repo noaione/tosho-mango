@@ -52,6 +52,20 @@ __all__ = ("MUClient",)
 
 
 class MUClient:
+    """The main client for interacting with SQ MU!
+
+    Usage
+    -----
+    ```py
+    from tosho_mango.sources.musq import MUClient
+    from tosho_mango.sources.musq.constants import ANDROID_CONSTANTS
+
+    client = MUClient("123123", ANDROID_CONSTANTS)
+    result = client.get_manga(240)
+    print(result)
+    ```
+    """
+
     BASE_IMG = b64decode("aHR0cHM6Ly9nbG9iYWwtaW1nLm1hbmdhLXVwLmNvbQ==").decode("utf-8")
     BASE_API = b64decode("aHR0cHM6Ly9nbG9iYWwtYXBpLm1hbmdhLXVwLmNvbS9hcGk=").decode("utf-8")
 
@@ -69,6 +83,7 @@ class MUClient:
     # --> Helper Methods
 
     def close(self):
+        """Close the session."""
         self._session.close()
 
     def _build_param(self, base_param: dict):
@@ -82,6 +97,22 @@ class MUClient:
         return base_param
 
     def request(self, method: str, url: str, **kwargs):
+        """Make a request to the API.
+
+        Parameters
+        ----------
+        method: :class:`str`
+            The HTTP method to use.
+        url: :class:`str`
+            The URL to make a request to.
+        kwargs: :class:`dict[str, Any]`
+            The keyword arguments to pass to :meth:`requests.Session.request`.
+
+        Returns
+        -------
+        :class:`requests.Response`
+            The response from the API.
+        """
         return self._session.request(method, url, **kwargs)
 
     def _build_coin(
@@ -295,6 +326,7 @@ class MUClient:
             The manga list.
 
         Raises
+        ------
         :exc:`requests.HTTPError`
             If the request failed.
         """
@@ -324,6 +356,7 @@ class MUClient:
             The matching manga in list.
 
         Raises
+        ------
         :exc:`requests.HTTPError`
             If the request failed.
         """
@@ -453,6 +486,7 @@ class MUClient:
             Your personalized manga list.
 
         Raises
+        ------
         :exc:`requests.HTTPError`
             If the request failed.
         """
@@ -474,6 +508,7 @@ class MUClient:
             Your personalized home view.
 
         Raises
+        ------
         :exc:`requests.HTTPError`
             If the request failed.
         """

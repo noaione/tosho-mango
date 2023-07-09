@@ -27,7 +27,8 @@ from __future__ import annotations
 from tosho_mango import term
 from tosho_mango.sources.kmkc.client import KMClientWeb
 from tosho_mango.sources.kmkc.config import KMConfigDeviceType, KMConfigWeb, get_all_config, get_config
-from tosho_mango.sources.kmkc.dto import TitleList
+from tosho_mango.sources.kmkc.constants import BASE_HOST
+from tosho_mango.sources.kmkc.dto import TitleNode
 
 __all__ = (
     "select_single_account",
@@ -65,9 +66,9 @@ def make_web_client(account: KMConfigWeb):
     return KMClientWeb(account)
 
 
-def do_print_search_information(results: list[TitleList]):
+def do_print_search_information(results: list[TitleNode]):
     for result in results:
-        manga_url = f"https://kmanga.kodansha.com/title/{result.title_id}"
+        manga_url = f"https://{BASE_HOST}/title/{result.title_id}"
         manga_text = f"[bold][link={manga_url}]{result.title_name}[/link][/bold] ({result.title_id})"
         if result.next_updated_text:
             manga_text += f" [[orange]{result.next_updated_text}[/orange]]"

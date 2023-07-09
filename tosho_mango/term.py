@@ -65,10 +65,12 @@ ValidationType = Union[ValidateFunc, str]
 
 @dataclass
 class ConsoleChoice:
+    """A dataclass for console choices."""
+
     name: str
     value: Optional[str] = None
 
-    def __post_init__(self):
+    def __post_init__(self):  # noqa: D105
         self.value = self.value or self.name
 
 
@@ -325,4 +327,5 @@ ROOT_CONSOLE = Console()
 
 
 def get_console():
+    """Get the root console instance."""
     return ROOT_CONSOLE

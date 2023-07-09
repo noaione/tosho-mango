@@ -37,11 +37,13 @@ __all__ = (
 
 @click.group(name="mu", help="Download manga from MU!")
 def musq_source():
+    """Download manga from MU!"""
     pass
 
 
 @click.group(name="km", help="Download manga from KM")
 def kmkc_source():
+    """Download manga from KM."""
     pass
 
 

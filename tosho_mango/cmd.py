@@ -47,9 +47,7 @@ __all__ = ("main",)
 )
 @click.pass_context
 def main(ctx: click.Context):
-    """
-    tosho or tosho-mango is a CLI tool to download manga from various sources.
-    """
+    """Tosho or tosho-mango is a CLI tool to download manga from various sources."""
     pass
 
 

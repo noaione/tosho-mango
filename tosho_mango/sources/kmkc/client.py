@@ -73,6 +73,21 @@ def hash_kv(key: str, value: str):
 
 
 class KMClientWeb:
+    """The main client for interacting with KC KM Web API.
+
+    Usage
+    -----
+    ```py
+    from tosho_mango.sources.kmkc import KMClientWeb
+
+    ...
+
+    client = KMClientWeb(config)
+    results = client.get_title_list([10041])
+    print(results)
+    ```
+    """
+
     API_HOST = b64decode("aHR0cHM6Ly9hcGkua21hbmdhLmtvZGFuc2hhLmNvbQ==").decode("utf-8")
     CDN_HOST = b64decode("aHR0cHM6Ly9jZG4ua21hbmdhLmtvZGFuc2hhLmNvbQ==").decode("utf-8")
 
@@ -188,9 +203,22 @@ class KMClientWeb:
 
     @property
     def client(self):
+        """:class:`requests.Session`: The underlying HTTP client."""
         return self._client
 
-    def _create_request_hash(self, query_params: dict[str, str]):
+    def _create_request_hash(self, query_params: dict[str, str]) -> str:
+        """Create the request hash for the given query parameters.
+
+        Parameters
+        ----------
+        query_params: :class:`dict[str, str]`
+            The query/body parameters to create the hash for.
+
+        Returns
+        -------
+        :class:`str`
+            The request hash.
+        """
         birthday = self._config.birthday.value
         expires = str(self._config.birthday.expires)
 
@@ -207,6 +235,20 @@ class KMClientWeb:
         return merged_hash
 
     def _format_request(self, query: dict[str, str] | None = None, headers: dict[str, str] | None = None):
+        """Format the request with the required headers and query parameters.
+
+        Parameters
+        ----------
+        query: :class:`dict[str, str]` | ``None``
+            The query or body you want to add, by default None
+        headers: :class:`dict[str, str]` | ``None``
+            The headers you want to add, by default None
+
+        Returns
+        -------
+        :class:`tuple[dict[str, str], dict[str, str]]`
+            A tuple containing the formatted query and headers.
+        """
         extend_query = {
             "platform": DEVICE_PLATFORM,
             "version": DEVICE_VERSION,
@@ -219,6 +261,24 @@ class KMClientWeb:
         return extend_query, extend_headers
 
     def request(self, method: str, url: str, **kwargs):
+        """Make a request to the API.
+
+        This request will also automatically apply and save the cookies to the config.
+
+        Parameters
+        ----------
+        method: :class:`str`
+            The HTTP method to use.
+        url: :class:`str`
+            The URL to make the request to.
+        kwargs: :class:`dict[str, Any]`
+            The keyword arguments to pass to the request.
+
+        Returns
+        -------
+        :class:`requests.Response`
+            The response from the API.
+        """
         data = kwargs.pop("data", None)
         headers = kwargs.pop("headers", None)
         params = kwargs.pop("params", None)
@@ -254,22 +314,66 @@ class KMClientWeb:
         return requested
 
     def _make_response(self, response: requests.Response, *, type: type[DtoT]) -> DtoT:
+        """Create a entity response from the given HTTP response.
+
+        Parameters
+        ----------
+        response: :class:`requests.Response`
+            The HTTP response to create the response from.
+        type: :class:`type[DtoT]`
+            The type of response to create.
+
+        Returns
+        -------
+        DtoT
+            The created response.
+
+        Raises
+        ------
+        :exc:`.exceptions.KMAPIError`
+            If the response is not successful.
+        """
         _temp = msgspec.json.decode(response.content, type=StatusResponse)
         _temp.raise_for_status()
         parsed = msgspec.json.decode(response.content, type=type)
         return parsed
 
     def chunk_episodes(self, episode_ids: list[int], *, chunk_size: int = 50) -> Generator[list[int], Any, None]:
-        """
-        Chunk episode ids into a list of lists with the specified chunk size.
+        """Chunk episode ids into a list of lists with the specified chunk size.
+
+        Parameters
+        ----------
+        episode_ids: :class:`list[int]`
+            The episode IDs to chunk.
+        chunk_size: :class:`int`
+            The size of each chunk.
+
+        Returns
+        -------
+        :class:`Generator[list[int], Any, None]`
+            A generator that yields a list of episode IDs.
         """
 
         for i in range(0, len(episode_ids), chunk_size):
             yield episode_ids[i : i + chunk_size]
 
     def get_episode_list(self, episodes: list[int]):
-        """
-        Get episode list from episode ids
+        """Get episode list from episode ids.
+
+        Parameters
+        ----------
+        episodes: :class:`list[int]`
+            The episode IDs to get the list for.
+
+        Returns
+        -------
+        :class:`list[Episode]`
+            The list of episodes.
+
+        Raises
+        ------
+        :exc:`.exceptions.KMAPIError`
+            If the response is not successful.
         """
 
         response = self.request(
@@ -282,8 +386,22 @@ class KMClientWeb:
         return parsed.episode_list
 
     def get_title_list(self, titles: list[int]):
-        """
-        Get title list from title IDs.
+        """Get title list from title IDs.
+
+        Parameters
+        ----------
+        titles: :class:`list[int]`
+            The titles IDs to get the list for.
+
+        Returns
+        -------
+        :class:`list[TitleNode]`
+            The list of titles.
+
+        Raises
+        ------
+        :exc:`.exceptions.KMAPIError`
+            If the response is not successful.
         """
 
         response = self.request(
@@ -296,8 +414,22 @@ class KMClientWeb:
         return parsed.title_list
 
     def get_chapter_viewer(self, episode_id: int):
-        """
-        Get chapter viewer from episode ID.
+        """Get chapter viewer from episode ID.
+
+        Parameters
+        ----------
+        episode_id: :class:`int`
+            The episode ID to get the viewer for.
+
+        Returns
+        -------
+        :class:`WebChapterViewerResponse`
+            The chapter viewer response.
+
+        Raises
+        ------
+        :exc:`.exceptions.KMAPIError`
+            If the response is not successful.
         """
 
         response = self.request(
@@ -309,6 +441,24 @@ class KMClientWeb:
         return self._make_response(response, type=WebChapterViewerResponse)
 
     def get_title_ticket(self, title_id: int) -> TitleTicketListEntry:
+        """Get title ticket from title ID.
+
+        Parameters
+        ----------
+        title_id: :class:`int`
+            The title ID to get the ticket for.
+
+        Returns
+        -------
+        :class:`TitleTicketListEntry`
+            The title ticket.
+
+        Raises
+        ------
+        :exc:`.exceptions.KMAPIError`
+            If the response is not successful.
+        """
+
         response = self.request(
             "GET",
             f"{self.API_HOST}/title/ticket/list",
@@ -319,6 +469,25 @@ class KMClientWeb:
         return parsed.title_ticket_list[0]
 
     def claim_episode_with_ticket(self, episode_id: int, ticket: TitleTicketInfo | PremiumTicketInfo):
+        """Claim or purchase an episode with a ticket.
+
+        Parameters
+        ----------
+        episode_id: :class:`int`
+            The episode ID to claim.
+        ticket: :class:`TitleTicketInfo` | :class:`PremiumTicketInfo`
+            The ticket to use.
+
+        Returns
+        -------
+        :class:`tuple[StatusResponse, bool]`
+            The status response and whether the ticket is a title ticket.
+
+        Raises
+        ------
+        :exc:`.exceptions.KMAPIError`
+            If the response is not successful.
+        """
         form_data = {
             "episode_id": str(episode_id),
             "ticket_type": str(ticket.ticket_type),
@@ -340,6 +509,27 @@ class KMClientWeb:
         return self._make_response(response, type=StatusResponse), is_title
 
     def claim_episode_with_point(self, episode: EpisodeEntry, wallet: UserPoint):
+        """Claim or purchase an episode with a user's point.
+
+        Parameters
+        ----------
+        episode: :class:`EpisodeEntry`
+            The episode to claim.
+        wallet: :class:`UserPoint`
+            The user's point wallet.
+
+        Returns
+        -------
+        :class:`UserPoint`
+            The updated user's point wallet.
+
+        Raises
+        ------
+        :exc:`.exceptions.KMAPIError`
+            If the response is not successful.
+        :exc:`.exceptions.KMNotEnoughPointError`
+            If the user does not have enough points.
+        """
         if not wallet.can_purchase(episode.point):
             raise KMNotEnoughPointError
 
@@ -359,6 +549,28 @@ class KMClientWeb:
         return wallet
 
     def claim_bulk_episode(self, episodes: list[EpisodeEntry], wallet: UserPoint):
+        """Claim or purchase multiple episodes with a user's point.
+
+        Parameters
+        ----------
+        episodes: :class:`list[EpisodeEntry]`
+            The episodes to claim.
+        wallet: :class:`UserPoint`
+            The user's point wallet.
+
+        Returns
+        -------
+        :class:`UserPoint`
+            The updated user's point wallet.
+
+        Raises
+        ------
+        :exc:`.exceptions.KMAPIError`
+            If the response is not successful.
+        :exc:`.exceptions.KMNotEnoughPointError`
+            If the user does not have enough points.
+        """
+
         # Test if all episodes can be purchased
         wallet_copy = msgspec.json.decode(msgspec.json.encode(wallet), type=UserPoint)
         paid_point = 0
@@ -388,6 +600,19 @@ class KMClientWeb:
         return wallet
 
     def get_user_point(self):
+        """Get the user's point wallet.
+
+        Returns
+        -------
+        :class:`UserPointPointResponse`
+            The user's point responses entity.
+
+        Raises
+        ------
+        :exc:`.exceptions.KMAPIError`
+            If the response is not successful.
+        """
+
         response = self.request(
             "GET",
             f"{self.API_HOST}/account/point",
@@ -396,6 +621,26 @@ class KMClientWeb:
         return self._make_response(response, type=UserAccountPointResponse)
 
     def search(self, keyword: str, limit: int = 99999):
+        """Search for manga titles.
+
+        Parameters
+        ----------
+        keyword: :class:`str`
+            The keyword to search for.
+        limit: :class:`int`
+            Limit the response, by default ``99999``
+
+        Returns
+        -------
+        :class:`list[TitleNode]`
+            The list of manga titles.
+
+        Raises
+        ------
+        :exc:`.exceptions.KMAPIError`
+            If the response is not successful.
+        """
+
         response = self.request(
             "GET",
             f"{self.API_HOST}/search/title",
@@ -406,6 +651,19 @@ class KMClientWeb:
         return parsed.title_list
 
     def get_weekly(self):
+        """Get the weekly list.
+
+        Returns
+        -------
+        :class:`WeeklyListResponse`
+            The weekly manga responses entity.
+
+        Raises
+        ------
+        :exc:`.exceptions.KMAPIError`
+            If the response is not successful.
+        """
+
         response = self.request(
             "GET",
             f"{self.API_HOST}/title/weekly",
@@ -414,6 +672,19 @@ class KMClientWeb:
         return self._make_response(response, type=WeeklyListResponse)
 
     def get_account(self):
+        """Get the current user's account information.
+
+        Returns
+        -------
+        :class:`AccountResponse`
+            The user account information.
+
+        Raises
+        ------
+        :exc:`.exceptions.KMAPIError`
+            If the response is not successful.
+        """
+
         response = self.request(
             "GET",
             f"{self.API_HOST}/account",
@@ -422,6 +693,19 @@ class KMClientWeb:
         return self._make_response(response, type=AccountResponse)
 
     def get_purchased(self):
+        """Get the user's purchased titles.
+
+        Returns
+        -------
+        :class:`TitleListResponse`
+            The user's purchased titles responses entity.
+
+        Raises
+        ------
+        :exc:`.exceptions.KMAPIError`
+            If the response is not successful.
+        """
+
         response = self.request(
             "GET",
             f"{self.API_HOST}/web/title/purchased",
@@ -430,6 +714,19 @@ class KMClientWeb:
         return self._make_response(response, type=TitleListResponse)
 
     def get_magazines(self):
+        """Get the magazines list.
+
+        Returns
+        -------
+        :class:`MagazineCategoryResponse`
+            The magazines list responses entity.
+
+        Raises
+        ------
+        :exc:`.exceptions.KMAPIError`
+            If the response is not successful.
+        """
+
         response = self.request(
             "GET",
             f"{self.API_HOST}/magazine/category/list",
@@ -439,6 +736,19 @@ class KMClientWeb:
         return self._make_response(response, type=MagazineCategoryResponse)
 
     def get_genre_list(self):
+        """Get the genre list.
+
+        Returns
+        -------
+        :class:`GenreSearchResponse`
+            The genre list responses entity.
+
+        Raises
+        ------
+        :exc:`.exceptions.KMAPIError`
+            If the response is not successful.
+        """
+
         response = self.request(
             "GET",
             f"{self.API_HOST}/genre/search/list",
@@ -447,6 +757,28 @@ class KMClientWeb:
         return self._make_response(response, type=GenreSearchResponse)
 
     def get_all_rankings(self, ranking_id: int, *, limit: int = 101, offset: int = 0):
+        """Get manga rankings for a specific ranking ID.
+
+        Parameters
+        ----------
+        ranking_id: :class:`int`
+            The ranking ID.
+        limit: :class:`int`
+            Limit the response, by default ``101``
+        offset: :class:`int`
+            Offset the response, basically the pagination, by default ``0``
+
+        Returns
+        -------
+        :class:`RankingListResponse`
+            The ranking list responses entity.
+
+        Raises
+        ------
+        :exc:`.exceptions.KMAPIError`
+            If the response is not successful.
+        """
+
         response = self.request(
             "GET",
             f"{self.API_HOST}/ranking/all",

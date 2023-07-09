@@ -57,9 +57,7 @@ __all__ = (
 
 
 class Status(betterproto.Enum):
-    """
-    Ths status of each request.
-    """
+    """Ths status of each request."""
 
     SUCCESS = 0
     """Success"""
@@ -70,9 +68,7 @@ class Status(betterproto.Enum):
 
 
 class Badge(betterproto.Enum):
-    """
-    The attached badge of the chapter.
-    """
+    """The attached badge of the chapter."""
 
     NONE = 0
     """No badge marking this chapter"""
@@ -85,9 +81,7 @@ class Badge(betterproto.Enum):
 
 
 class BadgeManga(betterproto.Enum):
-    """
-    The attached badge of the manga.
-    """
+    """The attached badge of the manga."""
 
     NONE = 0
     """No badge marking this manga"""
@@ -104,9 +98,7 @@ class BadgeManga(betterproto.Enum):
 
 
 class ConsumptionType(betterproto.Enum):
-    """
-    The type of coin used to read the chapter.
-    """
+    """The type of coin used to read the chapter."""
 
     ANY_ITEMS = 0
     """Any coin type can be used to read this chapter"""
@@ -119,9 +111,7 @@ class ConsumptionType(betterproto.Enum):
 
 
 class SubscriptionStatus(betterproto.Enum):
-    """
-    Subscription status of the user.
-    """
+    """Subscription status of the user."""
 
     NOT_SUBSCRIBED = 0
     """Not subscribed"""
@@ -139,9 +129,7 @@ class SubscriptionStatus(betterproto.Enum):
 
 @dataclass
 class UserPoint(betterproto.Message):
-    """
-    User point information.
-    """
+    """User point information."""
 
     free: int = betterproto.uint64_field(1)
     """:class:`int`: Free/daily coins that you have."""
@@ -152,17 +140,13 @@ class UserPoint(betterproto.Message):
 
     @property
     def total_point(self) -> int:
-        """
-        :class:`int`: Total coins that you have.
-        """
+        """:class:`int`: Total coins that you have."""
         return self.free + self.event + self.paid
 
 
 @dataclass
 class Tag(betterproto.Message):
-    """
-    Tag or genre information.
-    """
+    """Tag or genre information."""
 
     id: int = betterproto.uint64_field(1)
     """:class:`int`: The tag ID."""
@@ -174,9 +158,7 @@ class Tag(betterproto.Message):
 
 @dataclass
 class Chapter(betterproto.Message):
-    """
-    Represents a single chapter.
-    """
+    """Represents a single chapter."""
 
     id: int = betterproto.uint64_field(1)
     """:class:`int`: The chapter ID."""
@@ -221,9 +203,7 @@ class Chapter(betterproto.Message):
 
 @dataclass
 class ViewButton(betterproto.Message):
-    """
-    The button that will be shown in the manga detail page.
-    """
+    """The button that will be shown in the manga detail page."""
 
     chapter: Chapter = betterproto.message_field(1)
     """:class:`Chapter`: The chapter that will be accessed if user click this button."""
@@ -233,8 +213,8 @@ class ViewButton(betterproto.Message):
 
 @dataclass
 class MangaDetail(betterproto.Message):
-    """
-    Manga information response.
+    """Manga information response.
+
     When you click a manga, this is the response you will get.
     """
 
@@ -276,9 +256,7 @@ class MangaDetail(betterproto.Message):
 
 @dataclass
 class ChapterPage(betterproto.Message):
-    """
-    Represents a manga/chapter page.
-    """
+    """Represents a manga/chapter page."""
 
     url: str = betterproto.string_field(1)
     """:class:`str`: The image URL."""
@@ -311,8 +289,8 @@ class ChapterPage(betterproto.Message):
 
 @dataclass
 class ChapterViewer(betterproto.Message):
-    """
-    Represents a chapter viewer response.
+    """Represents a chapter viewer response.
+
     When you click a chapter, this is the response you will get.
     """
 
@@ -335,9 +313,7 @@ class ChapterViewer(betterproto.Message):
 
 @dataclass
 class Subscription(betterproto.Message):
-    """
-    Subscription information.
-    """
+    """Subscription information."""
 
     monthly_id: str = betterproto.string_field(1)
     """:class:`str`: The monthly subscription ID."""
@@ -357,9 +333,7 @@ class Subscription(betterproto.Message):
 
 @dataclass
 class Billing(betterproto.Message):
-    """
-    Billing or whatever coin purchase information.
-    """
+    """Billing or whatever coin purchase information."""
 
     id: str = betterproto.string_field(1)
     """:class:`str`: The billing ID."""
@@ -378,8 +352,8 @@ class Billing(betterproto.Message):
 
 @dataclass
 class PointShopView(betterproto.Message):
-    """
-    The point shop view response.
+    """Represents point shop view response.
+
     The ``Shop`` section in the actual app.
     """
 
@@ -415,8 +389,8 @@ class PointHistory(betterproto.Message):
 
 @dataclass
 class PointShopHistory(betterproto.Message):
-    """
-    The point shop history response.
+    """Represents point shop history response.
+
     The ``Shop`` section in the actual app then the ``Acquisition History`` section.
     """
 
@@ -428,9 +402,7 @@ class PointShopHistory(betterproto.Message):
 
 @dataclass
 class MangaListNode(betterproto.Message):
-    """
-    Simple manga information on the manga list or grouping.
-    """
+    """Simple manga information on the manga list or grouping."""
 
     id: int = betterproto.uint64_field(1)
     """:class:`int`: The manga ID."""
@@ -478,9 +450,7 @@ class MangaGroup(betterproto.Message):
 
 @dataclass
 class MyPageView(betterproto.Message):
-    """
-    Your personalized profile page view response.
-    """
+    """Your personalized profile page view response."""
 
     favorites: List[MangaListNode] = betterproto.message_field(1)
     """:class:`List[MangaListNode]`: The manga list that you bookmarked/favorited."""
@@ -522,9 +492,7 @@ class HomeFeatured(betterproto.Message):
 
 @dataclass
 class HomeView(betterproto.Message):
-    """
-    The personalized home page view response.
-    """
+    """The personalized home page view response."""
 
     user_point: UserPoint = betterproto.message_field(1)
     """:class:`UserPoint`: The user purse or point."""
@@ -569,9 +537,7 @@ class AccountDevice(betterproto.Message):
 
 @dataclass
 class AccountView(betterproto.Message):
-    """
-    The account view response.
-    """
+    """The account view response."""
 
     devices: List[AccountDevice] = betterproto.message_field(1)
     """:class:`List[AccountDevice]`: The list of devices that you have logged in."""
@@ -583,9 +549,7 @@ class AccountView(betterproto.Message):
 
 @dataclass
 class SettingView(betterproto.Message):
-    """
-    The setting view response.
-    """
+    """The setting view response."""
 
     tag_name: str = betterproto.string_field(1)
     """:class:`str`: The bridge tag name."""

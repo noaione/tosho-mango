@@ -37,9 +37,7 @@ from tosho_mango.constants import USER_PATH
 
 
 class KMConfigDeviceType(betterproto.Enum):
-    """
-    Device type for KM KC session
-    """
+    """Device type for KM KC session"""
 
     MOBILE = 1  # Not implemented yet though
     """Mobile device"""
@@ -49,38 +47,34 @@ class KMConfigDeviceType(betterproto.Enum):
 
 @dataclass
 class _KMConfigBase(betterproto.Message):
-    """
-    Represents a simple basic KM KC config
-    """
+    """Represents a simple basic KM KC config"""
 
     id: str = betterproto.string_field(1)
-    """The ID for KM KC"""
+    """:class:`str`: The ID for KM KC"""
     type: KMConfigDeviceType = betterproto.enum_field(2)
-    """The device type for KM KC"""
+    """:class:`KMConfigDeviceType`: The device type for KM KC"""
 
 
 @dataclass
 class KMConfigMobile(betterproto.Message):
-    """
-    Represents the config file for KM KC mobile
-    """
+    """Represents the config file for KM KC mobile"""
 
     id: str = betterproto.string_field(1)
-    """The ID for KM KC"""
+    """:class:`str`: The ID for KM KC"""
     type: KMConfigDeviceType = betterproto.enum_field(2)
-    """The device type for KM KC"""
+    """:class:`KMConfigDeviceType`: The device type for KM KC"""
     username: str = betterproto.string_field(3)
-    """The username for KM KC"""
+    """:class:`str`: The username for KM KC"""
     email: str = betterproto.string_field(4)
-    """The email for KM KC"""
+    """:class:`str`: The email for KM KC"""
     account_id: int = betterproto.uint32_field(5)
-    """The account ID for KM KC"""
+    """:class:`int`: The account ID for KM KC"""
     device_id: int = betterproto.uint32_field(6)
-    """The device ID for KM KC"""
+    """:class:`int`: The device ID for KM KC"""
     user_id: str = betterproto.string_field(100)
-    """The user ID for KM KC"""
+    """:class:`str`: The user ID for KM KC"""
     user_secret: str = betterproto.string_field(101)
-    """The user secret for KM KC"""
+    """:class:`str`: The user secret for KM KC"""
 
 
 class _KMConfigWebKVTypes(Struct):
@@ -90,38 +84,46 @@ class _KMConfigWebKVTypes(Struct):
 
 @dataclass
 class KMConfigWebKV(betterproto.Message):
-    """
-    The key-value cookies pair for KM KC web
-    """
+    """The key-value cookies pair for KM KC web"""
 
     value: str = betterproto.string_field(1)
-    """The value of the cookie"""
+    """:class:`str`: The value of the cookie"""
     expires: int = betterproto.uint64_field(2)
-    """The expiry of the cookie"""
+    """:class:`int`: The expiry of the cookie"""
 
     @classmethod
-    def from_cookie_dict(cls: Type["KMConfigWebKV"], cookie_dict: _KMConfigWebKVTypes):
+    def from_cookie_dict(cls: Type["KMConfigWebKV"], cookie_dict: _KMConfigWebKVTypes) -> "KMConfigWebKV":
+        """Get the config from the cookie dict
+
+        Parameters
+        ----------
+        cookie_dict: :class:`_KMConfigWebKVTypes`
+            The parsed cookie dict
+
+        Returns
+        -------
+        KMConfigWebKV
+            The config from the cookie dict
+        """
         return cls(value=str(cookie_dict.value), expires=int(cookie_dict.expires))
 
 
 @dataclass
 class KMConfigWeb(betterproto.Message):
-    """
-    Represents the config file for KM KC web
-    """
+    """Represents the config file for KM KC web"""
 
     id: str = betterproto.string_field(1)
-    """The ID for KM KC"""
+    """:class:`str`: The ID for KM KC"""
     type: KMConfigDeviceType = betterproto.enum_field(2)
-    """The device type for KM KC"""
+    """:class:`KMConfigDeviceType`: The device type for KM KC"""
     username: str = betterproto.string_field(3)
-    """The username for KM KC"""
+    """:class:`str`: The username for KM KC"""
     email: str = betterproto.string_field(4)
-    """The email for KM KC"""
+    """:class:`str`: The email for KM KC"""
     account_id: int = betterproto.uint32_field(5)
-    """The account ID for KM KC"""
+    """:class:`int`: The account ID for KM KC"""
     device_id: int = betterproto.uint32_field(6)
-    """The device ID for KM KC"""
+    """:class:`int`: The device ID for KM KC"""
     uwt: str = betterproto.string_field(100)
     """:class:`str`: The auth token for KM KC"""
     birthday: KMConfigWebKV = betterproto.message_field(101)
@@ -132,7 +134,24 @@ class KMConfigWeb(betterproto.Message):
     """:class:`KMConfigWebKV`: Account privacy policy information"""
 
     @classmethod
-    def from_cookies(cls: Type["KMConfigWeb"], cookies: RequestsCookieJar):
+    def from_cookies(cls: Type["KMConfigWeb"], cookies: RequestsCookieJar) -> "KMConfigWeb":
+        """Get the config from the cookies responses
+
+        Parameters
+        ----------
+        cookies: :class:`requests.cookies.RequestsCookieJar`
+            The cookies responses
+
+        Returns
+        -------
+        KMConfigWeb
+            The parsed configuration
+
+        Raises
+        ------
+        ValueError
+            If the `uwt` cookie is missing
+        """
         uwt_cookie = cookies.get("uwt")
         if uwt_cookie is None:
             raise ValueError("`uwt` cookie is not found")
@@ -154,6 +173,13 @@ class KMConfigWeb(betterproto.Message):
         )
 
     def apply_cookies(self, cookies: RequestsCookieJar):
+        """Apply new cookies data to the config
+
+        Parameters
+        ----------
+        cookies: :class:`requests.cookies.RequestsCookieJar`
+            The cookies responses
+        """
         uwt_cookie = cookies.get("uwt")
         if uwt_cookie is not None:
             self.uwt = unquote(uwt_cookie)
@@ -173,6 +199,18 @@ class KMConfigWeb(betterproto.Message):
 
 
 def get_config(hex_mode: str) -> KMConfigWeb | KMConfigMobile | None:
+    """Get a single config from the account ID.
+
+    Parameters
+    ----------
+    account_id: :class:`str`
+        The account ID to be fetched.
+
+    Returns
+    -------
+    :class:`KMConfigWeb` | :class:`KMConfigMobile` | None
+        The config if found, else None.
+    """
     USER_PATH.mkdir(parents=True, exist_ok=True)
 
     CONFIG_PATH = USER_PATH / f"kmkc.{hex_mode}.tmconf"
@@ -191,6 +229,13 @@ def get_config(hex_mode: str) -> KMConfigWeb | KMConfigMobile | None:
 
 
 def get_all_config() -> list[KMConfigWeb | KMConfigMobile]:
+    """Get all config from the user path.
+
+    Returns
+    -------
+    :class:`list[KMConfigWeb | KMConfigMobile]`
+        The list of config.
+    """
     USER_PATH.mkdir(parents=True, exist_ok=True)
 
     CONFIG_GLOB = USER_PATH.glob("kmkc.*.tmconf")
@@ -209,6 +254,13 @@ def get_all_config() -> list[KMConfigWeb | KMConfigMobile]:
 
 
 def save_config(config: KMConfigWeb | KMConfigMobile):
+    """Save the config to the user path.
+
+    Parameters
+    ----------
+    config: :class:`KMConfigWeb` | :class:`KMConfigMobile`
+        The config to be saved.
+    """
     USER_PATH.mkdir(parents=True, exist_ok=True)
 
     CONFIG_PATH = USER_PATH / f"kmkc.{config.id}.tmconf"

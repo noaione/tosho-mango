@@ -34,9 +34,7 @@ from tosho_mango.constants import USER_PATH
 
 
 class MUConfigDevice(betterproto.Enum):
-    """
-    Device type for SQ MU session
-    """
+    """Device type for SQ MU session"""
 
     ANDROID = 1
     """Android device"""
@@ -46,23 +44,48 @@ class MUConfigDevice(betterproto.Enum):
 
 @dataclass
 class MUConfig(betterproto.Message):
-    """
-    Represents the config file for SQ MU!
-    """
+    """Represents the config file for SQ MU!"""
 
     id: str = betterproto.string_field(1)
-    """The ID for SQ MU!"""
+    """:class:`str`: The ID for SQ MU!"""
     session: str = betterproto.string_field(2)
-    """The session ID for SQ MU!"""
+    """:class:`str`: The session ID for SQ MU!"""
     type: MUConfigDevice = betterproto.enum_field(3)
-    """The device type for SQ MU!"""
+    """:class:`MUConfigDevice`: The device type for SQ MU!"""
 
     @classmethod
     def from_auth(cls: Type["MUConfig"], session: str, type: MUConfigDevice):
+        """Create the config from the auth session.
+
+        Parameters
+        ----------
+        session: :class:`str`
+            The session ID for SQ MU!
+        type: :class:`MUConfigDevice`
+            The device type for SQ MU!
+
+        Returns
+        -------
+        :class:`MUConfig`
+            The config for SQ MU!
+        """
         return cls(id=str(uuid4()), session=session, type=type)
 
 
 def get_config(account_id: str) -> MUConfig | None:
+    """Get a single config from the account ID.
+
+    Parameters
+    ----------
+    account_id: :class:`str`
+        The account ID to be fetched.
+
+    Returns
+    -------
+    :class:`MUConfig` | None
+        The config if found, else None.
+    """
+
     USER_PATH.mkdir(parents=True, exist_ok=True)
 
     CONFIG_PATH = USER_PATH / f"musq.{account_id}.tmconf"
@@ -75,6 +98,13 @@ def get_config(account_id: str) -> MUConfig | None:
 
 
 def get_all_config() -> list[MUConfig]:
+    """Get all config from the user path.
+
+    Returns
+    -------
+    list[MUConfig]
+        The list of config.
+    """
     USER_PATH.mkdir(parents=True, exist_ok=True)
 
     CONFIG_GLOB = USER_PATH.glob("musq.*.tmconf")
@@ -85,6 +115,13 @@ def get_all_config() -> list[MUConfig]:
 
 
 def save_config(config: MUConfig):
+    """Save the config to the user path.
+
+    Parameters
+    ----------
+    config: :class:`MUConfig`
+        The config to be saved.
+    """
     USER_PATH.mkdir(parents=True, exist_ok=True)
 
     CONFIG_PATH = USER_PATH / f"musq.{config.id}.tmconf"

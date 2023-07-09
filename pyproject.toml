@@ -11,7 +11,7 @@ packages = [{include = "tosho_mango"}]
 python = "^3.10"
 pillow = "^10.0.0"
 msgspec = "^0.16.0"
-betterproto = "^1.2.5"
+betterproto = { version = "2.0.0b6", allow-prereleases = true }
 requests = "^2.31.0"
 click = "^8.1.3"
 rich = "^13.4.2"
@@ -24,6 +24,7 @@ black = "^23.3.0"
 ruff = "^0.0.277"
 pytest = "^7.4.0"
 pytest-cov = "^4.1.0"
+typing-extensions = "^4.7.1"
 
 [tool.poetry.scripts]
 tosho = "tosho_mango.cmd:main"
@@ -33,7 +34,17 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.ruff]
-ignore = ["E203", "F405", "F403", "F722", "N806", "COM812"]
+ignore = [
+    "E203",
+    "F405",
+    "F403",
+    "F722",
+    "N806",
+    "COM812",
+    "D400",  # first line should be period, most of my docstring will be LICENSE header so no thanks
+    "D202",
+    "D401",
+]
 line-length = 120
 extend-exclude = [
     "env",
@@ -61,6 +72,7 @@ select = [
     "B",
     "T",
     "Q",
+    "D",
     "RUF",
     "COM",
     "CPY",
@@ -71,6 +83,7 @@ src = ["tosho_mango", "tests", "pipelines"]
 
 [tool.ruff.pydocstyle]
 convention = "numpy"
+ignore-decorators = ["typing.overload"]
 
 [tool.ruff.isort]
 combine-as-imports = false
@@ -80,11 +93,12 @@ known-first-party = ["tests", "tosho_mango"]
 section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
 
 [tool.ruff.per-file-ignores]
-"__init__.py" = ["F401", "F403", "I002"]
-"tests/*.py" = ["S101", "I002"]  # assert statement used in pytest
-"pipelines/*" = ["T", "I", "S603"]
+"__init__.py" = ["F401", "F403", "I002", "D205"]
+"tests/*.py" = ["S101", "I002", "D"]  # assert statement used in pytest
+"pipelines/*" = ["T", "I", "S603", "D"]
 "tosho_mango/sources/*/config.py" = ["RUF009"]
 "tosho_mango/sources/*/proto.py" = ["RUF009"]
+"tosho_mango/cli/*" = ["D103"]
 
 [tool.black]
 line-length = 120

@@ -34,9 +34,14 @@ __all__ = (
 
 @dataclass
 class RankingTab:
+    """The ranking tab for KM."""
+
     id: int
+    """:class:`int`: The ID of the tab."""
     name: str
+    """:class:`str`: The name of the tab."""
     tab: str
+    """:class:`str`: The tab name when used as :class:`click.Choice`."""
 
 
 RankingTabs = [

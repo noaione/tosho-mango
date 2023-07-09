@@ -24,7 +24,7 @@ SOFTWARE.
 
 from datetime import datetime, timedelta, timezone
 
-from tosho_mango.utils import format_date, get_date_from_unix, get_dt_now
+from tosho_mango.utils import copy_doc, format_date, get_date_from_unix, get_dt_now
 
 JST_TZ = timezone(timedelta(hours=9))
 
@@ -52,3 +52,17 @@ def test_get_dt_now_shift_jst():
 def test_format_date():
     dt = datetime(2023, 1, 1, 0, 0, 0, 0, tzinfo=timezone.utc)
     assert format_date(dt) == "2023-01-01 00:00:00"
+
+
+def _function_a():
+    """This is from function A."""
+    pass
+
+
+@copy_doc(_function_a)
+def _function_b():
+    pass
+
+
+def test_copy_doc():
+    assert _function_b.__doc__ == _function_a.__doc__

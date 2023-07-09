@@ -29,7 +29,8 @@ import click
 from tosho_mango import term
 from tosho_mango.cli.base import ToshoMangoCommandHandler
 from tosho_mango.sources.kmkc.config import KMConfigWeb
-from tosho_mango.sources.kmkc.dto import EpisodeBadge, EpisodeEntry, GenreNode, MagazineCategory, TitleList
+from tosho_mango.sources.kmkc.constants import BASE_HOST
+from tosho_mango.sources.kmkc.dto import EpisodeBadge, EpisodeEntry, GenreNode, MagazineCategory, TitleNode
 from tosho_mango.sources.kmkc.errors import KMAPIError
 from tosho_mango.sources.musq.models import WeeklyCode
 
@@ -122,7 +123,7 @@ def kmkc_search_weekly(weekday: WeeklyCode | None = None, account_id: str | None
         console.error("Unknown weekday provided.")
         return
 
-    title_list: list[TitleList] = []
+    title_list: list[TitleNode] = []
     for title in all_weekly_responses.title_list:
         if title.title_id in title_ids_list:
             title_list.append(title)
@@ -206,7 +207,7 @@ def kmkc_title_info(title_id: int, account_id: str | None = None, show_chapters:
                 console.error(f"Failed to get chapter information: {exc}")
                 return
 
-    manga_url = f"https://kmanga.kodansha.com/title/{title_id}"
+    manga_url = f"https://{BASE_HOST}/title/{title_id}"
     console.info(f"Title information for [highlight][link={manga_url}]{result.title_name}[/link][/highlight]")
 
     console.info(f"  [bold]Author[/bold]: {result.author_text}")

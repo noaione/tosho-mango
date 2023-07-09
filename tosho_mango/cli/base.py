@@ -49,6 +49,20 @@ __all__ = (
 
 
 class WithDeprecatedOption(click.Option):
+    """A click option class that supports deprecated options.
+
+    This would be used for options that are deprecated and will be removed in the future.
+
+    Usages:
+    ```py
+    @click.command()
+    @click.option("--old", deprecated=True, preferred=["--new"])
+    @click.option("--new")
+    def my_command(old, new):
+        ...
+    ```
+    """
+
     def __init__(self, *args, **kwargs):
         self.is_deprecated = bool(kwargs.pop("deprecated", False))
 
@@ -67,6 +81,7 @@ class WithDeprecatedOption(click.Option):
         super(WithDeprecatedOption, self).__init__(*args, **kwargs)
 
     def get_help_record(self, ctx: Context) -> Optional[Tuple[str, str]]:
+        """Format the help record to include the deprecation notice."""
         parent = super().get_help_record(ctx)
         if parent is None:
             return parent
@@ -78,11 +93,14 @@ class WithDeprecatedOption(click.Option):
 
 
 class UnrecoverableToshoMangoError(click.ClickException):
+    """An custom exception formatter that is unrecoverable and will be shown to the user."""
+
     def __init__(self, message, exc_info):
         super().__init__(message)
         self.exc_info = exc_info
 
     def show(self):
+        """Show the error message and traceback."""
         emoji = ""
         if console.is_advanced():
             emoji = "\u274C "
@@ -97,6 +115,12 @@ def _fmt_pref_text(preferred: List[str]):
 
 
 class ToshoMangoCommandHandler(click.Command):
+    """A custom command handler for Tosho Mango CLI.
+
+    This would be used to handle options with deprecated options
+    and also to handle unrecoverable errors.
+    """
+
     def make_parser(self, ctx: Context) -> OptionParser:
         """
         Hook the process of making parser to handle deprecated options.
@@ -155,6 +179,23 @@ class ToshoMangoCommandHandler(click.Command):
         return parser
 
     def invoke(self, ctx: Context):
+        """Invoke the command handler.
+
+        Parameters
+        ----------
+        ctx: :class:`click.core.Context`
+            The click context.
+
+        Returns
+        -------
+        Any
+            The return value of the command handler.
+
+        Raises
+        ------
+        UnrecoverableToshoMangoError
+            When an unrecoverable error occurs while invoking the command handler.
+        """
         try:
             return super().invoke(ctx)
         except Exception as ex:

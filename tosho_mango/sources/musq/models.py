@@ -38,6 +38,11 @@ __all__ = (
 
 
 class WeeklyCode(str, Enum):
+    """Weekly code for manga updates.
+
+    Mainly used at :meth:`MUClient.get_weekly_titles`.
+    """
+
     MONDAY = "mon"
     """Monday"""
     TUESDAY = "tue"
@@ -55,6 +60,15 @@ class WeeklyCode(str, Enum):
 
     @classmethod
     def today(cls) -> "WeeklyCode":
+        """
+        Get the current day of the week and return the corresponding :class:`.WeeklyCode`.
+
+        Returns
+        -------
+        :class:`.WeeklyCode`
+            The current day of the week.
+        """
+
         now = get_dt_now(9)
         weekday = now.weekday()
         mem_maps = cls._member_map_
@@ -63,20 +77,37 @@ class WeeklyCode(str, Enum):
 
     @property
     def indexed(self) -> int:
+        """:class:`int`: The zero-index of this day of the week."""
         return list(self.__class__).index(self)
 
 
 class Quality(str, Enum):
+    """The image quality to be downloaded.
+
+    Mainly used at :meth:`MUClient.get_chapter_images`.
+    """
+
     NORMAL = "middle"
+    """Normal or low quality image."""
     HIGH = "high"
+    """High quality image."""
 
 
 @dataclass
 class ConsumeCoin:
+    """A custom dataclass to store and handle the coins needed to get a chapter.
+
+    Every attribute will by default set to ``0``.
+    """
+
     free: int = 0
+    """:class:`int`: The free coins used to get this chapter."""
     event: int = 0
+    """:class:`int`: The event coins used to get this chapter."""
     paid: int = 0
+    """:class:`int`: The paid coins used to get this chapter."""
     need: int = 0
+    """:class:`int`: The total coins needed to get this chapter."""
 
     def is_possible(self) -> bool:
         """
@@ -94,12 +125,5 @@ class ConsumeCoin:
 
     @property
     def is_free(self) -> bool:
-        """
-        Check if this chapter is free.
-
-        Returns
-        -------
-        :class:`bool`
-            ``True`` if this chapter is free, ``False`` otherwise.
-        """
+        """:class:`bool`: Check if this chapter is free."""
         return self.need == 0
