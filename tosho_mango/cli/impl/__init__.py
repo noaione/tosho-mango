@@ -8,3 +8,4 @@ The CLI implementation of each sources
 """
 
 from . import kmkc, musq
+from .options import *

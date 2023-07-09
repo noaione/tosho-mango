@@ -9,4 +9,5 @@ The CLI code for tosho_mango
 
 from . import impl
 from .base import *
+from .importer import *
 from .manager import *

@@ -75,11 +75,15 @@ script_path = selected_venv_dir / "Scripts" if sys.platform == "win32" else sele
 print(f"[*] Running tests at {current_path}")
 
 print("[*] Running isort test...")
-isort_res = sp.Popen([script_path / "isort", "-c"] + to_be_linted).wait()
+isort_res = sp.Popen(
+    [script_path / "isort", "-c", *to_be_linted],
+).wait()
 print("[*] Running ruff test...")
-ruff_res = sp.Popen([script_path / "ruff", "check", "--statistics", "--show-fixes"] + to_be_linted).wait()
+ruff_res = sp.Popen([script_path / "ruff", "check", "--statistics", "--show-fixes", *to_be_linted]).wait()
+print("[*] Running black test...")
+black_res = sp.Popen([script_path / "black", "--check", *to_be_linted]).wait()
 
-results = [(isort_res, "isort"), (ruff_res, "ruff")]
+results = [(isort_res, "isort"), (ruff_res, "ruff"), (black_res, "black")]
 any_error = False
 
 for res in results:

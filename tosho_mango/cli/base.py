@@ -22,6 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+from __future__ import annotations
+
 import sys
 import traceback
 from functools import partial
@@ -111,7 +113,7 @@ class ToshoMangoCommandHandler(click.Command):
                 continue
 
             def make_process(opt: ParserOption):
-                orig_process = option.process
+                orig_process = option.process  # noqa: B023
 
                 def _process_intercept(
                     value: str,
@@ -157,4 +159,4 @@ class ToshoMangoCommandHandler(click.Command):
             return super().invoke(ctx)
         except Exception as ex:
             # Invoke error handler
-            raise UnrecoverableToshoMangoError(str(ex), sys.exc_info())
+            raise UnrecoverableToshoMangoError(str(ex), sys.exc_info()) from ex

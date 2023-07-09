@@ -22,6 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+from __future__ import annotations
+
 from base64 import b64decode
 from typing import Generator, Optional
 from urllib.parse import urlparse
@@ -60,7 +62,7 @@ class MUClient:
             {
                 "Host": API_HOST,
                 "User-Agent": self._client["_API_UA"],
-            }
+            },
         )
         self._secret = secret
 
@@ -232,7 +234,7 @@ class MUClient:
             {
                 "title_id": str(manga_id),
                 "ui_lang": "en",
-            }
+            },
         )
 
         r = self.request("GET", f"{self.BASE_API}/manga/detail", params=params)
@@ -270,7 +272,7 @@ class MUClient:
         params = self._build_param(
             {
                 "code": week.value,
-            }
+            },
         )
 
         r = self.request("GET", f"{self.BASE_API}/manga/weekly", params=params)
@@ -299,7 +301,7 @@ class MUClient:
         params = self._build_param(
             {
                 "tag_id": tag_id,
-            }
+            },
         )
 
         r = self.request("GET", f"{self.BASE_API}/manga/tag", params=params)
@@ -328,7 +330,7 @@ class MUClient:
         params = self._build_param(
             {
                 "word": query,
-            }
+            },
         )
 
         r = self.request("GET", f"{self.BASE_API}/manga/search", params=params)
@@ -340,7 +342,7 @@ class MUClient:
         self,
         chapter_id: int,
         *,
-        coins: ConsumeCoin = ConsumeCoin(),
+        coins: ConsumeCoin | None = None,
         quality: Quality = Quality.HIGH,
     ) -> ChapterViewer:
         """
@@ -370,6 +372,8 @@ class MUClient:
         :exc:`RuntimeError`
             If the server returns error.
         """
+        if coins is None:
+            coins = ConsumeCoin()
         if quality.value not in QUALITY_FORMAT:
             raise ValueError(f"Invalid quality format: {quality}")
         if not coins.is_possible():
@@ -381,7 +385,7 @@ class MUClient:
                 "event_point": str(coins.event),
                 "paid_point": str(coins.paid),
                 "quality": quality.value,
-            }
+            },
         )
 
         r = self.request("POST", f"{self.BASE_API}/manga/viewer", params=params)
@@ -476,7 +480,7 @@ class MUClient:
         params = self._build_param(
             {
                 "ui_lang": "en",
-            }
+            },
         )
         r = self.request("GET", f"{self.BASE_API}/home_v2", params=params)
         r.raise_for_status()

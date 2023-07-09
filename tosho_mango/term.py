@@ -22,6 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+from __future__ import annotations
+
 import time
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Callable, List, Optional, Union, cast, overload
@@ -54,7 +56,7 @@ rich_theme = RichTheme(
         "orange": "orange1 bold",
         "gold": "gold3 bold",
         "darkb": "dark_blue bold",
-    }
+    },
 )
 AnyType = Union[str, bytes, int, float]
 ValidateFunc = Callable[[str], bool]
@@ -176,7 +178,7 @@ class Console:
     def choice(
         self,
         message: Optional[str] = None,
-        choices: Union[List[AnyType], List[ConsoleChoice]] = list(),
+        choices: List[AnyType] | List[ConsoleChoice] | None = None,
         default: Optional[Union[AnyType, ConsoleChoice]] = None,
     ) -> Union[AnyType, ConsoleChoice]:
         if not choices:
@@ -228,7 +230,10 @@ class Console:
         ...
 
     def inquire(
-        self, prompt: str, validation: Optional[ValidateFunc | str] = None, default: Optional[AnyType] = None
+        self,
+        prompt: str,
+        validation: Optional[ValidateFunc | str] = None,
+        default: Optional[AnyType] = None,
     ) -> AnyType | None:
         # Custom inquirer
         inquired_text = default
@@ -281,7 +286,7 @@ class Console:
     def select(
         self,
         message: Optional[str] = None,
-        choices: Union[List[AnyType], List[ConsoleChoice]] = list(),
+        choices: List[AnyType] | List[ConsoleChoice] | None = None,
     ) -> list[ConsoleChoice] | list[AnyType]:
         if not choices:
             raise ValueError("No choices provided")

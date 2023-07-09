@@ -21,6 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
+from __future__ import annotations
 
 import click
 from requests import HTTPError
@@ -107,7 +108,7 @@ def musq_search_weekly(weekday: WeeklyCode | None = None, account_id: str | None
         return
 
     console.info(
-        f"Weekday [bold]{current_day.name}[/bold] results ([highlight]{len(results.titles)}[/highlight] results):"
+        f"Weekday [bold]{current_day.name}[/bold] results ([highlight]{len(results.titles)}[/highlight] results):",
     )
     do_print_search_information(results.titles)
 

@@ -22,6 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+from __future__ import annotations
+
 import click
 
 from tosho_mango import term
@@ -63,11 +65,11 @@ def kmkc_balance(account_id: str | None = None):
     console.info("Your current point balance:")
     console.info("  - [bold]Total[/bold]: [bcyan][highr]{0:,}[/highr]c[/bcyan]".format(point_bal.point.total_point))
     console.info(
-        "  - [bold]Paid point[/bold]: [success][highr]{0:,}[/highr]c[/success]".format(point_bal.point.paid_point)
+        "  - [bold]Paid point[/bold]: [success][highr]{0:,}[/highr]c[/success]".format(point_bal.point.paid_point),
     )
     console.info("  - [bold]Free point[/bold]: [info][highr]{0:,}[/highr]c[/info]".format(point_bal.point.free_point))
     console.info(
         "  - [bold]Premium ticket[/bold]: [orange][highr]{0:,}[/highr] ticket[/orange]".format(
-            point_bal.ticket.total_num
-        )
+            point_bal.ticket.total_num,
+        ),
     )

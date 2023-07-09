@@ -22,6 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+from __future__ import annotations
+
 import time
 
 import click
@@ -96,7 +98,7 @@ def musq_manga_purchase(title_id: int, account_id: str | None = None):
         if not consume.is_possible():
             console.warning(
                 f"Unable to purchase chapter [highlight]{chapter.chapter_title}[/highlight] (ID: {chapter.id}),"
-                "insufficient point balance"
+                "insufficient point balance",
             )
             failed_chapters.append((chapter, "Insufficient point balance"))
             continue
@@ -107,7 +109,7 @@ def musq_manga_purchase(title_id: int, account_id: str | None = None):
         if not img_chapter.images:
             console.warning(
                 f"Unable to purchase chapter [highlight]{chapter.chapter_title}[/highlight] (ID: {chapter.id}),"
-                "no images available"
+                "no images available",
             )
             failed_chapters.append((chapter, "Failed when claiming"))
             continue

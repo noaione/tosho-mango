@@ -22,13 +22,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+from __future__ import annotations
+
 from pathlib import Path
 
 import click
 
-from ._metadata import __author__
-from ._metadata import __name__ as __appname__
-from ._metadata import __version__
+from ._metadata import __appname__, __author__, __version__
 from .cli.manager import kmkc_source, musq_source
 
 CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])

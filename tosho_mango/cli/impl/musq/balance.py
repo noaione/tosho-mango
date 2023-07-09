@@ -22,6 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+from __future__ import annotations
+
 import click
 from requests import HTTPError
 
@@ -60,6 +62,6 @@ def musq_balance(account_id: str | None = None):
     console.info("  - [bold]Total[/bold]: [bcyan][highr]{0:,}[/highr]c[/bcyan]".format(point_bal.total_point))
     console.info("  - [bold]Paid point[/bold]: [gold][highr]{0:,}[/highr]c[/gold]".format(point_bal.paid))
     console.info(
-        "  - [bold]Event/XP point[/bold]: [highlight][highr]{0:,}[/highr]c[/highlight]".format(point_bal.event)
+        "  - [bold]Event/XP point[/bold]: [highlight][highr]{0:,}[/highr]c[/highlight]".format(point_bal.event),
     )
     console.info("  - [bold]Free point[/bold]: [success][highr]{0:,}[/highr]c[/success]".format(point_bal.free))

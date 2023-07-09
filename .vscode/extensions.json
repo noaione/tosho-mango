@@ -1,0 +1,12 @@
+{
+    "recommendations": [
+        "charliermarsh.ruff",
+        "ms-python.black-formatter",
+        "ms-python.python",
+        "kevinrose.vsc-python-indent",
+        "ms-python.isort"
+    ],
+    "unwantedRecommendations": [
+        "ms-python.flake8"
+    ]
+}

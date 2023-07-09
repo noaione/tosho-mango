@@ -22,6 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+from __future__ import annotations
+
 import re
 from datetime import datetime, timezone
 from enum import Enum
@@ -179,7 +181,7 @@ class MagazineCategory(int, Enum):
     """Evening magazine, a bi-weekly seinen magazine, discontinued and moved some to Comic Days"""
     ComicBombom = 22
     """Comic BomBom, a monthly kids magazine"""
-    eYoungMagazine = 23
+    eYoungMagazine = 23  # noqa: N815
     """e-Young Magazine, a digital-only of Young magazine which focused on user-submitted serialized content"""
     DMorning = 24
     """Digital Morning, a digital-only version of Morning magazine"""

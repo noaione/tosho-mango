@@ -22,13 +22,15 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-import json
+from __future__ import annotations
+
 from dataclasses import dataclass
-from typing import Type, TypedDict
+from typing import Type
 from urllib.parse import unquote
 from uuid import uuid4
 
 import betterproto
+from msgspec import Struct, json
 from requests.cookies import RequestsCookieJar
 
 from tosho_mango.constants import USER_PATH
@@ -81,7 +83,7 @@ class KMConfigMobile(betterproto.Message):
     """The user secret for KM KC"""
 
 
-class _KMConfigWebKVTypes(TypedDict):
+class _KMConfigWebKVTypes(Struct):
     value: str
     expires: str
 
@@ -99,7 +101,7 @@ class KMConfigWebKV(betterproto.Message):
 
     @classmethod
     def from_cookie_dict(cls: Type["KMConfigWebKV"], cookie_dict: _KMConfigWebKVTypes):
-        return cls(value=str(cookie_dict["value"]), expires=int(cookie_dict["expires"]))
+        return cls(value=str(cookie_dict.value), expires=int(cookie_dict.expires))
 
 
 @dataclass
@@ -132,10 +134,11 @@ class KMConfigWeb(betterproto.Message):
     @classmethod
     def from_cookies(cls: Type["KMConfigWeb"], cookies: RequestsCookieJar):
         uwt_cookie = cookies.get("uwt")
-        assert uwt_cookie is not None, "`uwt` cookie is not found"
-        birthday_cookie = json.loads(unquote(cookies.get("birthday")))
-        tos_adult_cookie = json.loads(unquote(cookies.get("terms_of_service_adult")))
-        privacy_cookie = json.loads(unquote(cookies.get("privacy_policy")))
+        if uwt_cookie is None:
+            raise ValueError("`uwt` cookie is not found")
+        birthday_cookie = json.decode(unquote(cookies.get("birthday")), type=_KMConfigWebKVTypes)
+        tos_adult_cookie = json.decode(unquote(cookies.get("terms_of_service_adult")), type=_KMConfigWebKVTypes)
+        privacy_cookie = json.decode(unquote(cookies.get("privacy_policy")), type=_KMConfigWebKVTypes)
 
         return cls(
             id=str(uuid4()),
@@ -156,13 +159,17 @@ class KMConfigWeb(betterproto.Message):
             self.uwt = unquote(uwt_cookie)
         bdy_cookie = cookies.get("birthday")
         if bdy_cookie is not None:
-            self.birthday = KMConfigWebKV.from_cookie_dict(json.loads(unquote(bdy_cookie)))
+            self.birthday = KMConfigWebKV.from_cookie_dict(json.decode(unquote(bdy_cookie), type=_KMConfigWebKVTypes))
         tos_adult_cookie = cookies.get("terms_of_service_adult")
         if tos_adult_cookie is not None:
-            self.tos_adult = KMConfigWebKV.from_cookie_dict(json.loads(unquote(tos_adult_cookie)))
+            self.tos_adult = KMConfigWebKV.from_cookie_dict(
+                json.decode(unquote(tos_adult_cookie), type=_KMConfigWebKVTypes),
+            )
         privacy_cookie = cookies.get("privacy_policy")
         if privacy_cookie is not None:
-            self.privacy = KMConfigWebKV.from_cookie_dict(json.loads(unquote(privacy_cookie)))
+            self.privacy = KMConfigWebKV.from_cookie_dict(
+                json.decode(unquote(privacy_cookie), type=_KMConfigWebKVTypes),
+            )
 
 
 def get_config(hex_mode: str) -> KMConfigWeb | KMConfigMobile | None:

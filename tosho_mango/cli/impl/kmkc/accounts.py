@@ -22,6 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+from __future__ import annotations
+
 from http.cookiejar import MozillaCookieJar
 from pathlib import Path
 
@@ -109,7 +111,7 @@ def kmkc_accounts():
     console.info(f"Found {len(all_configs)} account(s)")
     for idx, account in enumerate(all_configs, 1):
         console.info(
-            f"{idx:02d}. {account.id} — [bold]{account.username}[/bold] [{KMConfigDeviceType(account.type).name}]"
+            f"{idx:02d}. {account.id} — [bold]{account.username}[/bold] [{KMConfigDeviceType(account.type).name}]",
         )
 
 
@@ -149,5 +151,5 @@ def kmkc_account_info(account_id: str | None = None):
         console.info("  [bold]Devices:[/bold]")
         for device in acct.device_list:
             console.info(
-                f"    - [bold]{device.device_name}[/bold] ({device.user_id}) [{DevicePlatform(device.platform).name}]"
+                f"    - [bold]{device.device_name}[/bold] ({device.user_id}) [{DevicePlatform(device.platform).name}]",
             )

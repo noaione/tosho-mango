@@ -22,6 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+from __future__ import annotations
+
 from base64 import b64decode
 from hashlib import sha256, sha512
 from http.cookiejar import Cookie, CookieJar
@@ -83,7 +85,7 @@ class KMClientWeb:
                 "User-Agent": API_UA,
                 "Host": API_HOST,
                 "accept": "application/json",
-            }
+            },
         )
         self._client.cookies.update(self._create_cookiejar())
 
@@ -110,7 +112,7 @@ class KMClientWeb:
                 comment=None,
                 comment_url=None,
                 rest={},
-            )
+            ),
         )
 
         tos_adult = self._config.tos_adult
@@ -134,7 +136,7 @@ class KMClientWeb:
                 comment=None,
                 comment_url=None,
                 rest={},
-            )
+            ),
         )
 
         pri_pol = self._config.privacy
@@ -158,7 +160,7 @@ class KMClientWeb:
                 comment=None,
                 comment_url=None,
                 rest={},
-            )
+            ),
         )
 
         cookie_jar.set_cookie(
@@ -179,7 +181,7 @@ class KMClientWeb:
                 comment=None,
                 comment_url=None,
                 rest={"HTTPOnly": ""},
-            )
+            ),
         )
 
         return cookie_jar

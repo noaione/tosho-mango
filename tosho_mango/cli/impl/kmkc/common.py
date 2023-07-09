@@ -22,6 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+from __future__ import annotations
+
 from tosho_mango import term
 from tosho_mango.sources.kmkc.client import KMClientWeb
 from tosho_mango.sources.kmkc.config import KMConfigDeviceType, KMConfigWeb, get_all_config, get_config

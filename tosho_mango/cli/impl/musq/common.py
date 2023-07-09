@@ -22,6 +22,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+from __future__ import annotations
+
+from msgspec import Struct
+
 from tosho_mango import term
 from tosho_mango.sources.musq.client import MUClient
 from tosho_mango.sources.musq.config import MUConfig, MUConfigDevice, get_all_config, get_config
@@ -87,3 +91,16 @@ def do_print_search_information(results: list[MangaListNode], *, numbering: bool
             text_data = f"[{idx:02d}] {text_data}"
         console.info(f"  {text_data}")
         console.info(f"   {manga_url}")
+
+
+class ChapterDetailDump(Struct, rename="camel", omit_defaults=True):
+    id: int
+    main_name: str
+    available: bool
+    sub_name: str | None = None
+
+
+class MangaDetailDump(Struct, rename="camel"):
+    title_name: str
+    author_name: str
+    chapters: list[ChapterDetailDump]
