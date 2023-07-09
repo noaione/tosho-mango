@@ -9,6 +9,7 @@ The CLI implementation of SQ MU! source.
 
 from .accounts import *
 from .balance import *
+from .download import *
 from .favorites import *
 from .manga import *
 from .purchases import *

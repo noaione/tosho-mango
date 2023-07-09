@@ -89,3 +89,15 @@ class ConsumeCoin:
         """
         # Check if possible to get this chapter
         return self.free + self.event + self.paid >= self.need
+
+    @property
+    def is_free(self) -> bool:
+        """
+        Check if this chapter is free.
+
+        Returns
+        -------
+        :class:`bool`
+            ``True`` if this chapter is free, ``False`` otherwise.
+        """
+        return self.need == 0
