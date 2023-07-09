@@ -90,7 +90,7 @@ for res in results:
         print(f"[+] {res[1]} passed")
 
 
-print("[*] Running license check and future annotations test...")
+print("[*] Running license check test...")
 any_license_error = False
 folder_to_check: list[Path] = []
 for folder in to_be_linted:
