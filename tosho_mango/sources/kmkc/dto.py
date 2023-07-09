@@ -517,6 +517,25 @@ class PageList(Struct):
     image_url: str
     """The page image URL."""
 
+    @property
+    def filename(self) -> str:
+        """:class:`str`: The filename of the image."""
+        return self.image_url.split("/")[-1].split("?")[0]
+
+    @property
+    def stem(self) -> str:
+        """:class:`str`: The stem of the image, without the extension."""
+        return self.filename.rsplit(".", 1)[0]
+
+    @property
+    def extension(self) -> str:
+        """:class:`str`: The extension of the image, without the leading dot."""
+        try:
+            _, ext = self.filename.rsplit(".", 1)
+            return ext
+        except ValueError:
+            return ""
+
 
 class ChapterViewerResponse(StatusResponse):
     """
