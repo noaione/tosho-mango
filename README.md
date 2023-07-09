@@ -7,6 +7,11 @@ A simple downloader for some official mango.
 While I did say this is a "downloader", it can also be said it is an almost full-blown replacement of the app/web version
 as a CLI application.
 
+All of the implementations here are originally a separate script that I made myself, I decide to open source it because
+I'm kinda burned out doing it myself so someone else can do it.
+
+Currently, the authentication system is limited to HTTP Intercepting or downloading cookies.
+
 ## Installation
 
 **Requirements**
