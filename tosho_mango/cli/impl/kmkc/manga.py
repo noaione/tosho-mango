@@ -33,6 +33,7 @@ from tosho_mango.sources.kmkc.constants import BASE_HOST
 from tosho_mango.sources.kmkc.dto import EpisodeBadge, EpisodeEntry, GenreNode, MagazineCategory, TitleNode
 from tosho_mango.sources.kmkc.errors import KMAPIError
 from tosho_mango.sources.musq.models import WeeklyCode
+from tosho_mango.utils import peek_enum_docstring
 
 from .. import options
 from .common import do_print_search_information, make_web_client, select_single_account
@@ -274,5 +275,29 @@ def kmkc_magazines_list(account_id: str | None = None):
         console.error("No result found.")
         return
 
+    total_count = len(MagazineCategory._member_names_)
+    has_undefined = False
     for magazine in search_results.magazine_category_list:
-        console.info(f"[bold]{magazine.category_name}[/bold] ({magazine.category_id})")
+        if magazine.category_id == 0:
+            has_undefined = True
+            continue
+        mag_text = f"[bold]{magazine.category_name}[/bold] ({magazine.category_id})"
+        mag: MagazineCategory | None = None
+        try:
+            mag = MagazineCategory(magazine.category_id)
+        except ValueError:
+            pass
+        if mag is not None:
+            mag_text += f" [bold]({mag.pretty})[/bold]"
+        console.info(mag_text)
+        if mag is not None and (enum_doc := peek_enum_docstring(mag)) is not None:
+            enum_doc = enum_doc.split("\n")[0]
+            console.info(f"  [bold]{enum_doc}[/bold]")
+    if not has_undefined:
+        total_count -= 1
+    if total_count > len(search_results.magazine_category_list):
+        console.enter()
+        console.warning(
+            f"There is {total_count - len(search_results.magazine_category_list)} more magazine(s), "
+            "please contact maintainer to update the list."
+        )

@@ -24,7 +24,9 @@ SOFTWARE.
 
 from __future__ import annotations
 
+import inspect
 from datetime import datetime, timedelta, timezone
+from enum import Enum
 from typing import Any, Callable, TypeAlias, TypeVar
 
 from typing_extensions import ParamSpec
@@ -34,6 +36,7 @@ __all__ = (
     "get_date_from_unix",
     "format_date",
     "copy_doc",
+    "peek_enum_docstring",
 )
 
 T = TypeVar("T")
@@ -117,3 +120,64 @@ def copy_doc(copy_func: Callable[..., Any]) -> WrappedFuncDeco[P, T]:
         return func
 
     return wrapped
+
+
+def peek_enum_docstring(enum_value: Enum) -> str | None:
+    """Get the docstring of an enum value.
+
+    This is a hacky way to get the docstring of an enum value, might break on some edge cases.
+
+    Parameters
+    ----------
+    enum_value: :class:`Enum`
+        The enum value to get the docstring from.
+
+    Returns
+    -------
+    :class:`str` | :class:`None`
+        The docstring of the enum value, or None if it doesn't have any.
+    """
+
+    src_lines, _ = inspect.getsourcelines(enum_value.__class__)
+    end_at = [idx for idx, src in enumerate(src_lines) if src.strip().startswith("@") or src.strip().startswith("def")]
+    if not end_at:
+        end_at = len(src_lines)
+    else:
+        end_at = end_at[0]
+    collected_lines = []
+    start_collect = False
+    multiline = False
+    for idx, src in enumerate(src_lines):
+        if idx >= end_at:
+            break
+        src_s = src.strip()
+        if src_s.startswith(enum_value.name) and not start_collect:
+            act_val = src_s.split("=")[0].strip()
+            if act_val != enum_value.name:
+                break
+
+            start_collect = True
+            collected_lines.append(src_s)
+            if "\n" in src_s:
+                break
+            continue
+        if start_collect and not multiline and not src_s.startswith('"'):
+            break
+
+        if start_collect:
+            if not multiline and src_s == '"""':
+                multiline = True
+                collected_lines.append(src_s)
+                continue
+            elif not multiline and src_s.startswith('"') and src_s.endswith('"'):
+                collected_lines.append(src_s)
+
+            if multiline and src_s == '"""':
+                multiline = False
+                collected_lines.append(src_s)
+            elif multiline:
+                collected_lines.append(src_s)
+    recollected_lines = [r for r in [r.strip('"""') for r in collected_lines[1:]] if r]  # noqa: B005
+    if not recollected_lines:
+        return None
+    return "\n".join(recollected_lines)

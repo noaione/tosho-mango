@@ -37,6 +37,7 @@ __all__ = (
     "DevicePlatform",
     "GenderType",
     "PublishCategory",
+    "MagazineCategory",
     "FavoriteStatus",
     "SupportStatus",
     "SimpleId",
@@ -259,14 +260,13 @@ class MagazineCategory(int, Enum):
 
     @property
     def pretty(self):
+        """:class:`str`: The pretty name of the magazine category"""
         # Convert to space separated string
         split_space = re.sub(r"((?<=[a-z])[A-Z]|(?<!\A)[A-Z](?=[a-z])|([\d])+)", r" \1", self.name).strip().split()
         # Special case
         join_back = " ".join(split_space)
         for word in ["The", "A", "An"]:
-            if join_back.startswith(word):
-                continue
-            join_back = join_back.replace(word, word.lower())
+            join_back = join_back.replace(f" {word}", f" {word.lower()}")
         if len(split_space) > 1:
             if split_space[0] == "e":
                 return join_back.replace("e ", "e-", 1)
