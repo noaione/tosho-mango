@@ -70,8 +70,8 @@ def make_client(account: MUConfig):
     return MUClient(account.session, DEVICE_CONSTANTS[account.type])
 
 
-def do_print_search_information(results: list[MangaListNode]):
-    for result in results:
+def do_print_search_information(results: list[MangaListNode], *, numbering: bool = False):
+    for idx, result in enumerate(results, 1):
         badge = BadgeManga(result.badge)
         manga_url = f"https://global.manga-up.com/manga/{result.id}"
         text_data = f"[bold][link={manga_url}]{result.name}[/link][/bold] ({result.id})"
@@ -83,5 +83,7 @@ def do_print_search_information(results: list[MangaListNode]):
             text_data = f"{text_data} ([success][highr]UP[/highr][/success])"
         elif badge is BadgeManga.UPDATE_THIS_WEEK:
             text_data = f"{text_data} ([warning][highr]UP (Week)[/highr][/warning])"
+        if numbering:
+            text_data = f"[{idx:02d}] {text_data}"
         console.info(f"  {text_data}")
         console.info(f"   {manga_url}")

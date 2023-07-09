@@ -13,3 +13,4 @@ from .download import *
 from .favorites import *
 from .manga import *
 from .purchases import *
+from .rankings import *

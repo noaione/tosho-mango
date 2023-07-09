@@ -547,8 +547,8 @@ class HomeView(betterproto.Message):
     """:class:`List[MangaListNode]`: The new manga list."""
     ranking_section_name: str = betterproto.string_field(12)
     """:class:`str`: The ranking section name. (ex: "Ranking")"""
-    rankings: MangaGroup = betterproto.message_field(13)
-    """:class:`MangaGroup`: The manga ranking list."""
+    rankings: List[MangaGroup] = betterproto.message_field(13)
+    """:class:`List[MangaGroup]`: The manga ranking list."""
     ranking_description: str = betterproto.string_field(14)
     """:class:`str`: The ranking description."""
     recommended_banner_image_url: str = betterproto.string_field(15)
