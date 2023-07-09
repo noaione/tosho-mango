@@ -144,22 +144,15 @@ def peek_enum_docstring(enum_value: Enum) -> str | None:
         end_at = len(src_lines)
     else:
         end_at = end_at[0]
+    src_lines = src_lines[:end_at]
     collected_lines = []
     start_collect = False
     multiline = False
-    for idx, src in enumerate(src_lines):
-        if idx >= end_at:
-            break
+    for src in src_lines:
         src_s = src.strip()
         if src_s.startswith(enum_value.name) and not start_collect:
-            act_val = src_s.split("=")[0].strip()
-            if act_val != enum_value.name:
-                break
-
             start_collect = True
             collected_lines.append(src_s)
-            if "\n" in src_s:
-                break
             continue
         if start_collect and not multiline and not src_s.startswith('"'):
             break

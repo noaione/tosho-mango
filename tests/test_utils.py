@@ -23,8 +23,11 @@ SOFTWARE.
 """
 
 from datetime import datetime, timedelta, timezone
+from enum import Enum
+from textwrap import dedent
 
-from tosho_mango.utils import copy_doc, format_date, get_date_from_unix, get_dt_now
+from tosho_mango.sources.kmkc.dto import MagazineCategory
+from tosho_mango.utils import copy_doc, format_date, get_date_from_unix, get_dt_now, peek_enum_docstring
 
 JST_TZ = timezone(timedelta(hours=9))
 
@@ -66,3 +69,51 @@ def _function_b():
 
 def test_copy_doc():
     assert _function_b.__doc__ == _function_a.__doc__
+
+
+class _EnumTest(Enum):
+    """This is from Enum C."""
+
+    A = 4
+
+    def __str__(self) -> str:
+        return super().__str__()
+
+
+class _EnumTest2(Enum):
+    """This is from Enum D."""
+
+    A = 4
+    """A is 4"""
+
+
+def test_peek_enum_docstring():
+    ichijinsha_doc = dedent(
+        """
+    Ichijinsha, a subsidiary of Kodansha
+    Owns the following:
+    - Febri
+    - Comic Rex (4-koma)
+    - Monthly Comic Zero Sum (Josei focused)
+    - Comic Yuri Hime (Girls Love)
+    - gateau
+    - IDOLM@STER Million Live Magazine Plus+
+    """
+    ).strip()
+    assert peek_enum_docstring(_EnumTest.A) is None
+    assert peek_enum_docstring(_EnumTest2.A) == "A is 4"
+    assert peek_enum_docstring(MagazineCategory.Original) == "KM Original series"
+    assert peek_enum_docstring(MagazineCategory.MonthlyShounenMagazine) == "Monthly Shounen Magazine"
+    assert (
+        peek_enum_docstring(MagazineCategory.ShounenMagazineR)
+        == "Shounen Magazine R, a supplement magazine for WSM. (Discontinued)\nOriginally a bi-monthly magazine, "
+        "but now it's a monthly digital-only magazine."
+    )
+    assert peek_enum_docstring(MagazineCategory.BekkanGetsumaga) == "Bekkan Getsumaga"
+    assert peek_enum_docstring(MagazineCategory.WeeklyYoungMagazine) == "Weekly Young Magazine, Seinen focused magazine"
+    assert (
+        peek_enum_docstring(MagazineCategory.BabyMofu)
+        == "Baby Mofu, a website focused on books and manga related to childcare"
+    )
+    assert peek_enum_docstring(MagazineCategory.Ichijinsha) == ichijinsha_doc
+    assert peek_enum_docstring(MagazineCategory.ComicCreate) == "Comic Create, a web comic magazine"
