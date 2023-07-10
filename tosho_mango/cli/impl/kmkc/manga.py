@@ -137,12 +137,21 @@ def kmkc_search_weekly(weekday: WeeklyCode | None = None, account_id: str | None
     do_print_search_information(title_list)
 
 
+def _fmt_genre_name(genre_name: str):
+    genre_split = genre_name.split("･")
+    join_back = " & ".join(genre_split)
+    if len(genre_split) > 2:
+        join_back = ", ".join(genre_split[:-1])
+        join_back += f", and {genre_split[-1]}"
+    return join_back
+
+
 def _fmt_tags(genre_list: list[GenreNode], genre_ids: list[int]) -> str:
     joined_tags: list[str] = []
     added_ids: list[int] = []
     for genre in genre_list:
         if genre.genre_id in genre_ids:
-            joined_tags.append(f"[gray][highr]{genre.genre_name}[/highr][/gray]")
+            joined_tags.append(f"[gray][highr]{_fmt_genre_name(genre.genre_name)}[/highr][/gray]")
             added_ids.append(genre.genre_id)
     # Check if there are any missing tags
     missing_ids = set(genre_ids) - set(added_ids)
@@ -232,7 +241,8 @@ def kmkc_title_info(title_id: int, account_id: str | None = None, show_chapters:
             text_info = f"    [bold][link={episode_url}]{chapter.episode_name}[/link][/bold] ({chapter.episode_id})"
             if chapter.badge is EpisodeBadge.PURCHASEABLE:
                 if chapter.ticket_rental_enabled == 1:
-                    text_info += " [[orange]🎫 [highr]FREE[/highr][/orange]]"
+                    ticket = "\U0001F3AB" if console.is_advanced() else "TICKET"
+                    text_info += f" [[orange]{ticket} [highr]FREE[/highr][/orange]]"
                 else:
                     text_info += f" [[success][highr]P{chapter.point}[/highr][/success]]"
             elif chapter.badge is EpisodeBadge.FREE:
