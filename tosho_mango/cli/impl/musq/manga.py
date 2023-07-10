@@ -173,6 +173,8 @@ def musq_title_info(title_id: int, account_id: str | None = None, show_chapters:
             console.info(f"    [bold]{chapter.name}[/bold] ({chapter.id})")
             if chapter.subtitle:
                 console.info(f"     [bold]{chapter.subtitle}[/bold]")
+            if chapter.published:
+                console.info(f"      [bold]Published[/bold]: {chapter.published}")
             console.info(f"      [bold]Price[/bold]: {chapter.price}c")
         console.enter()
     if result.next_update:
