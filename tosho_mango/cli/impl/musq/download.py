@@ -30,13 +30,13 @@ import click
 import msgspec
 from requests import HTTPError
 
-from tosho_mango import term
+from tosho_mango import models, term
 from tosho_mango.cli.base import ToshoMangoCommandHandler
 from tosho_mango.sources.musq.models import ConsumeCoin, Quality
 from tosho_mango.sources.musq.proto import Chapter, MangaDetail
 
 from .. import options
-from .common import ChapterDetailDump, MangaDetailDump, make_client, select_single_account
+from .common import make_client, parse_published, select_single_account
 
 __all__ = (
     "musq_manga_download",
@@ -46,11 +46,16 @@ console = term.get_console()
 
 
 def create_chapters_info(manga_detail: MangaDetail) -> bytes:
-    chapters: list[ChapterDetailDump] = []
+    chapters: list[models.ChapterDetailDump] = []
     for chapter in manga_detail.chapters:
-        chapters.append(ChapterDetailDump(chapter.id, chapter.name, chapter.is_free, chapter.subtitle))
+        ch_dump = models.ChapterDetailDump(id=chapter.id, main_name=chapter.name)
+        if (pub_time := parse_published(chapter.published)) is not None:
+            ch_dump.timestamp = int(pub_time.timestamp())
+        if chapter.subtitle is not None:
+            ch_dump.sub_name = chapter.subtitle
+        chapters.append(ch_dump)
     return msgspec.json.format(
-        msgspec.json.encode(MangaDetailDump(manga_detail.title, manga_detail.authors, chapters)),
+        msgspec.json.encode(models.MangaDetailDump(manga_detail.title, manga_detail.authors, chapters)),
         indent=4,
     )
 
@@ -216,7 +221,7 @@ def musq_manga_download(
             console.error(f"   Unable to download chapter {chapter.chapter_title} ({chapter.id}), skipping")
             continue
 
-        CH_IMGS = get_output_directory(title_dir, title_id, chapter.id)
+        CH_IMGS = get_output_directory(output_dir, title_id, chapter.id)
         if CH_IMGS.exists() and len(list(CH_IMGS.glob("*.avif"))) >= len(ch_images.images):
             console.warning(
                 f"   Chapter [bold]{chapter.chapter_title}[/bold] ({chapter.id}) already downloaded, skipping",
@@ -353,7 +358,7 @@ def musq_manga_auto_download(
     for chapter in consume_chapters:
         console.info(f"  Downloading chapter [highlight]{chapter.chapter_title}[/highlight] ({chapter.id})...")
 
-        CH_IMGS = get_output_directory(title_dir, title_id, chapter.id)
+        CH_IMGS = get_output_directory(output_dir, title_id, chapter.id)
         if CH_IMGS.exists() and len(list(CH_IMGS.glob("*.avif"))) > 0:
             console.warning(
                 f"   Chapter [bold]{chapter.chapter_title}[/bold] ({chapter.id}) already downloaded, skipping",
@@ -363,10 +368,10 @@ def musq_manga_auto_download(
         consume = client.calculate_coin(coin_purse, chapter)
         if not consume.is_possible():
             console.warning(
-                f"Chapter [highlight]{chapter.chapter_title}[/highlight] ([bold]{chapter.id}[/bold]) is not available "
-                "for purchase, skipping",
+                f"   Chapter [highlight]{chapter.chapter_title}[/highlight] ([bold]{chapter.id}[/bold]) is not "
+                "available for purchase, skipping",
             )
-            console.warning(f"Need {consume.free} free coin, {consume.event} coin, and {consume.paid} paid coin")
+            console.warning(f"    Need {consume.free} free coin, {consume.event} coin, and {consume.paid} paid coin")
             continue
 
         coin_purse.free -= consume.free

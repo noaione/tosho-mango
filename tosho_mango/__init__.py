@@ -10,5 +10,6 @@ The main package for tosho_mango.
 from . import cli, sources
 from ._metadata import *
 from .cmd import *
+from .models import *
 from .term import *
 from .utils import *

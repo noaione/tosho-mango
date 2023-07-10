@@ -24,7 +24,7 @@ SOFTWARE.
 
 from __future__ import annotations
 
-from msgspec import Struct
+from datetime import datetime, timedelta, timezone
 
 from tosho_mango import term
 from tosho_mango.sources.musq.client import MUClient
@@ -36,6 +36,7 @@ __all__ = (
     "select_single_account",
     "make_client",
     "do_print_search_information",
+    "parse_published",
 )
 console = term.get_console()
 
@@ -93,14 +94,11 @@ def do_print_search_information(results: list[MangaListNode], *, numbering: bool
         console.info(f"   {manga_url}")
 
 
-class ChapterDetailDump(Struct, rename="camel", omit_defaults=True):
-    id: int
-    main_name: str
-    available: bool
-    sub_name: str | None = None
-
-
-class MangaDetailDump(Struct, rename="camel"):
-    title_name: str
-    author_name: str
-    chapters: list[ChapterDetailDump]
+def parse_published(published: str | None = None) -> datetime | None:
+    if published is None:
+        return None
+    # ex: Jul 21, 2023
+    return datetime.strptime(
+        published,
+        "%b %d, %Y",
+    ).replace(tzinfo=timezone(timedelta(hours=7)))
