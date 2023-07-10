@@ -242,4 +242,4 @@ def tools_cli_split_merge(folder: Path, skip_last: bool = False, verbose_mode: b
                     except Exception as exc:
                         console.warning(f"   Failed to move {file.name}: {exc}")
                     last_page += 1
-        console.info(f"   Merged {chapter.main_name} with {last_page} images")
+        console.info(f"   Merged {ch_name} with {last_page} images")
