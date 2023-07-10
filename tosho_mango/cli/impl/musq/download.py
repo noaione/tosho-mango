@@ -60,12 +60,16 @@ def create_chapters_info(manga_detail: MangaDetail) -> bytes:
     )
 
 
-def get_output_directory(output_dir: Path, title_id: int | str, chapter_id: int | str | None = None):
+def get_output_directory(
+    output_dir: Path, title_id: int | str, chapter_id: int | str | None = None, *, skip_create: bool = False
+):
     pathing = output_dir / str(title_id)
-    pathing.mkdir(parents=True, exist_ok=True)
+    if not skip_create:
+        pathing.mkdir(parents=True, exist_ok=True)
     if chapter_id is not None:
         pathing = pathing / str(chapter_id)
-        pathing.mkdir(parents=True, exist_ok=True)
+        if not skip_create:
+            pathing.mkdir(parents=True, exist_ok=True)
     return pathing
 
 
@@ -221,13 +225,14 @@ def musq_manga_download(
             console.error(f"   Unable to download chapter {chapter.chapter_title} ({chapter.id}), skipping")
             continue
 
-        CH_IMGS = get_output_directory(output_dir, title_id, chapter.id)
+        CH_IMGS = get_output_directory(output_dir, title_id, chapter.id, skip_create=True)
         if CH_IMGS.exists() and len(list(CH_IMGS.glob("*.avif"))) >= len(ch_images.images):
             console.warning(
                 f"   Chapter [bold]{chapter.chapter_title}[/bold] ({chapter.id}) already downloaded, skipping",
             )
             continue
 
+        CH_IMGS.mkdir(parents=True, exist_ok=True)
         for image in ch_images.images:
             img_dl_path = CH_IMGS / f"p{int(image.stem):03d}.{image.extension}"
             console.info(f"   Downloading image [bold]{image.filename}[/bold] to [bold]{img_dl_path.name}[/bold]...")
@@ -358,7 +363,7 @@ def musq_manga_auto_download(
     for chapter in consume_chapters:
         console.info(f"  Downloading chapter [highlight]{chapter.chapter_title}[/highlight] ({chapter.id})...")
 
-        CH_IMGS = get_output_directory(output_dir, title_id, chapter.id)
+        CH_IMGS = get_output_directory(output_dir, title_id, chapter.id, skip_create=True)
         if CH_IMGS.exists() and len(list(CH_IMGS.glob("*.avif"))) > 0:
             console.warning(
                 f"   Chapter [bold]{chapter.chapter_title}[/bold] ({chapter.id}) already downloaded, skipping",
@@ -386,6 +391,7 @@ def musq_manga_auto_download(
             console.error(f"   Unable to download chapter {chapter.chapter_title} ({chapter.id}), skipping")
             continue
 
+        CH_IMGS.mkdir(parents=True, exist_ok=True)
         for image in ch_images.images:
             img_dl_path = CH_IMGS / f"p{int(image.stem):03d}.{image.extension}"
             console.info(f"   Downloading image [bold]{image.filename}[/bold] to [bold]{img_dl_path.name}[/bold]...")
