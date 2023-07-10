@@ -56,6 +56,7 @@ __all__ = (
     "WeeklyListContent",
     "MagazineCategoryInfo",
     "GenreNode",
+    "TitlePurchaseNode",
     "StatusResponse",
     "UserAccountPointResponse",
     "TitleListResponse",
@@ -72,6 +73,7 @@ __all__ = (
     "MagazineCategoryResponse",
     "GenreSearchResponse",
     "RankingListResponse",
+    "TitlePurchaseResponse",
 )
 
 
@@ -435,17 +437,25 @@ class UserFavoriteList(Struct):
     """:class:`int`: The title ID."""
 
 
-class TitleNode(Struct):
-    """A node of a title or manga."""
+class BasicTitleNode(Struct):
+    """A much more simpler title node."""
 
     title_id: int
     """:class:`int`: The manga ID."""
     title_name: str
     """:class:`str`: The manga name."""
-    banner_image_url: str
-    """:class:`str`: The banner image URL."""
     thumbnail_image_url: str
     """:class:`str`: The thumbnail image URL."""
+    first_episode_id: int
+    """:class:`int`: The first episode ID."""
+
+
+class TitleNode(BasicTitleNode):
+    """A node of a title or manga.
+
+    A subclass of :class:`BasicTitleNode`.
+    """
+
     thumbnail_rect_image_url: str
     """:class:`str`: The thumbnail (square) image URL."""
     feature_image_url: str
@@ -470,8 +480,6 @@ class TitleNode(Struct):
     """:class:`str`: When will a new episode will be added."""
     episode_order: int
     """:class:`int`: The order of the episode."""
-    first_episode_id: int
-    """:class:`int`: The first episode ID."""
     episode_id_list: list[int]
     """:class:`list[int]`: The list of episode IDs."""
     latest_paid_episode_id: list[int]
@@ -887,3 +895,23 @@ class RankingListResponse(StatusResponse):
 
     ranking_title_list: list[SimpleId]
     """:class:`list[SimpleId]`: The list of ranking title IDs."""
+
+
+class TitlePurchaseNode(BasicTitleNode):
+    """A title node from a title purchase response.
+
+    A subclass of :class:`BasicTitleNode`.
+    """
+
+    recently_purchased_episode_id: int | None = None
+    """:class:`int | None`: The ID of the recently purchased episode."""
+
+
+class TitlePurchaseResponse(StatusResponse):
+    """Represents a title purchase response.
+
+    A subclass of :class:`StatusResponse`.
+    """
+
+    title_list: list[TitlePurchaseNode]
+    """:class:`list[TitlePurchaseNode]`: The list of purchased titles."""

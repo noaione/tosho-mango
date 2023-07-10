@@ -49,6 +49,7 @@ from .dto import (
     SearchResponse,
     StatusResponse,
     TitleListResponse,
+    TitlePurchaseResponse,
     TitleTicketInfo,
     TitleTicketListEntry,
     TitleTicketListResponse,
@@ -711,7 +712,7 @@ class KMClientWeb:
             f"{self.API_HOST}/web/title/purchased",
         )
 
-        return self._make_response(response, type=TitleListResponse)
+        return self._make_response(response, type=TitlePurchaseResponse)
 
     def get_magazines(self):
         """Get the magazines list.
