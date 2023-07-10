@@ -364,7 +364,7 @@ def musq_manga_auto_download(
         console.info(f"  Downloading chapter [highlight]{chapter.chapter_title}[/highlight] ({chapter.id})...")
 
         CH_IMGS = get_output_directory(output_dir, title_id, chapter.id, skip_create=True)
-        if CH_IMGS.exists() and len(list(CH_IMGS.glob("*.avif"))) > 0:
+        if CH_IMGS.exists():
             console.warning(
                 f"   Chapter [bold]{chapter.chapter_title}[/bold] ({chapter.id}) already downloaded, skipping",
             )
