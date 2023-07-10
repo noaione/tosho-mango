@@ -29,7 +29,7 @@ from pathlib import Path
 import click
 
 from ._metadata import __appname__, __author__, __version__
-from .cli.manager import kmkc_source, musq_source
+from .cli.manager import common_tools, kmkc_source, musq_source
 
 CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
 WORKING_DIR = Path.cwd().absolute()
@@ -53,3 +53,4 @@ def main(ctx: click.Context):
 
 main.add_command(kmkc_source)
 main.add_command(musq_source)
+main.add_command(common_tools)

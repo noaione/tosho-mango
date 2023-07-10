@@ -26,12 +26,13 @@ from __future__ import annotations
 
 import click
 
-from tosho_mango.cli.impl import kmkc, musq
+from tosho_mango.cli.impl import kmkc, musq, tools
 from tosho_mango.cli.importer import auto_import_implementations
 
 __all__ = (
     "musq_source",
     "kmkc_source",
+    "common_tools",
 )
 
 
@@ -47,5 +48,12 @@ def kmkc_source():
     pass
 
 
+@click.group(name="tools", help="Extra tools to help manage the downloaded manga")
+def common_tools():
+    """Extra tools to help manage the downloaded manga."""
+    pass
+
+
 auto_import_implementations(musq_source, musq)
 auto_import_implementations(kmkc_source, kmkc)
+auto_import_implementations(common_tools, tools)
