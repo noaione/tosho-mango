@@ -179,4 +179,8 @@ def musq_title_info(title_id: int, account_id: str | None = None, show_chapters:
         console.enter()
     if result.next_update:
         console.info(f"  [bold]Next Update[/bold]: {result.next_update}")
-    console.info(f"  [bold]Copyright[/bold]: {result.copyright}")
+    if result.copyright:
+        copyrights = result.copyright.split("\n")
+        console.info(f"  [bold]Copyright[/bold]: {copyrights[0]}")
+        for copyr in copyrights[1:]:
+            console.info(f"             {copyr}")
