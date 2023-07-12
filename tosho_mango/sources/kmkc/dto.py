@@ -715,6 +715,10 @@ class TitleTicketListEntry(Struct):
         """:class:`None`: Subtract the premium ticket."""
         self.ticket_info.premium_ticket_info.own_ticket_num -= 1
 
+    def has_ticket(self) -> bool:
+        """:class:`bool`: Whether the title ticket or premium ticket is available or not."""
+        return self.title_available() or self.premium_available()
+
 
 class TitleTicketListResponse(StatusResponse):
     """

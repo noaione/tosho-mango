@@ -9,6 +9,7 @@ The CLI implementation of KC KM source.
 
 from .accounts import *
 from .balance import *
+from .download import *
 from .manga import *
 from .purchases import *
 from .rankings import *
