@@ -49,7 +49,7 @@ from .common import make_web_client, select_single_account
 
 __all__ = (
     "kmkc_title_download",
-    # "musq_title_auto_download",
+    "kmkc_title_auto_download",
 )
 console = term.get_console()
 
@@ -269,6 +269,206 @@ def kmkc_title_download(
 
         CH_IMGS = get_output_directory(output_dir, title_id, chapter.episode_id, skip_create=True)
         if CH_IMGS.exists() and len(list(CH_IMGS.glob("*.png"))) >= len(viewer_info.page_list):
+            console.warning(
+                f"   Chapter [bold]{chapter.episode_name}[/bold] ({chapter.episode_id}) already downloaded, skipping",
+            )
+            continue
+
+        CH_IMGS.mkdir(parents=True, exist_ok=True)
+        for idx, image in enumerate(viewer_info.page_list):
+            IMG_TARGET = CH_IMGS / f"p{idx:03d}.png"
+            console.info(f"   Downloading image [bold]{IMG_TARGET.name}[/bold]...")
+
+            try:
+                img_req = client.client.get(
+                    image,
+                    headers={
+                        "Host": CDN_HOST,
+                    },
+                )
+                img_req.raise_for_status()
+            except HTTPError as exc:
+                console.warning(f"    Failed to download image, stopping: {exc}")
+                break
+
+            img = bytes_to_image(img_req.content)
+            img_descram = descramble_target(img, 4, viewer_info.scramble_seed)
+            img_descram.save(IMG_TARGET)
+
+
+@click.command(
+    name="autodownload",
+    help="Automatically/batch download manga chapter(s) for a title",
+    cls=ToshoMangoCommandHandler,
+)
+@click.argument("title_id", type=int, metavar="TITLE_ID", required=True)
+@options.output_dir
+@click.option(
+    "-nt",
+    "--no-ticket",
+    "opt_no_ticket",
+    is_flag=True,
+    default=False,
+    help="Force to only download using point",
+)
+@click.option(
+    "-np",
+    "--no-purchase",
+    "opt_no_purchase",
+    is_flag=True,
+    default=False,
+    help="Do not purchase chapter if possible",
+)
+@click.option(
+    "-sf",
+    "--start-from",
+    "start_from",
+    type=click.IntRange(min=1),
+    default=None,
+    help="Start downloading from chapter ID",
+)
+@click.option(
+    "-ef",
+    "--end-until",
+    "end_until",
+    type=click.IntRange(min=1),
+    default=None,
+    help="Stop downloading until chapter ID",
+)
+@options.account_id
+def kmkc_title_auto_download(
+    title_id: int,
+    output_dir: Path,
+    opt_no_ticket: bool = False,
+    opt_no_purchase: bool = False,
+    start_from: int | None = None,
+    end_until: int | None = None,
+    account_id: str | None = None,
+):
+    if start_from is not None and end_until is not None and start_from > end_until:
+        raise click.BadParameter("Start chapter ID cannot be greater than end chapter ID")
+
+    account = select_single_account(account_id)
+    if account is None:
+        console.warning("Aborted")
+        return
+    if not isinstance(account, KMConfigWeb):
+        console.error("Only web account is supported for now!")
+        return
+
+    client = make_web_client(account=account)
+
+    console.info(f"Getting user point for [highlight]{account.username}[/highlight]...")
+    try:
+        user_wallet = client.get_user_point().point
+    except KMAPIError as exc:
+        console.error(f"Failed to get user wallet: {exc}")
+        return
+
+    console.info(f"Getting title information for ID [highlight]{title_id}[/highlight]...")
+    try:
+        results = client.get_title_list([title_id])
+    except KMAPIError as exc:
+        console.error(f"Failed to get title information: {exc}")
+        return
+
+    if not results:
+        console.error("Unable to find title information.")
+        return
+
+    result = results[0]
+
+    console.info(f"Fetching [highlight]{result.title_name}[/highlight] title ticket...")
+    try:
+        ticket_entry = client.get_title_ticket(title_id)
+    except KMAPIError as exc:
+        console.error(f"Failed to get title ticket information: {exc}")
+        return
+
+    chapters_info: list[EpisodeEntry] = []
+    console.info(f"Fetching [highlight]{len(result.episode_id_list)}[/highlight] chapters information...")
+    for episode_ids in client.chunk_episodes(result.episode_id_list):
+        try:
+            chapters_info.extend(client.get_episode_list(episode_ids))
+        except KMAPIError as exc:
+            console.error(f"Failed to get chapter information: {exc}")
+            return
+
+    actual_chapters: list[EpisodeEntry] = []
+    _wallet_copy = msgspec.json.decode(msgspec.json.encode(user_wallet), type=UserPoint)
+    console.info(f"Prepurchasing chapters for [highlight]{result.title_name}[/highlight]")
+    for chapter in chapters_info:
+        if chapter.available():
+            actual_chapters.append(chapter)
+            continue
+
+        if start_from is not None and chapter.episode_id < start_from:
+            console.warning(f" Skipping chapter {chapter.episode_name} ({chapter.episode_id}) due to start from option")
+            continue
+
+        if end_until is not None and chapter.episode_id > end_until:
+            break
+
+        if opt_no_purchase:
+            continue
+
+        if chapter.ticketable() and not opt_no_ticket:
+            ticket: PremiumTicketInfo | TitleTicketInfo | None = None
+            if ticket_entry.premium_available():
+                ticket = ticket_entry.ticket_info.premium_ticket_info
+                ticket_entry.subtract_premium()
+            elif ticket_entry.title_available():
+                ticket = ticket_entry.ticket_info.title_ticket_info
+                ticket_entry.subtract_title()
+            if ticket is not None:
+                console.info(f"Using ticket to purchase: [highlight]{chapter.episode_name}[/highlight]")
+                try:
+                    client.claim_episode_with_ticket(chapter.episode_id, ticket)
+                    actual_chapters.append(chapter)
+                except KMAPIError as exc:
+                    console.warning(f"Failed to purchase chapter, ignoring: {exc}")
+
+        if not _wallet_copy.can_purchase(chapter.point):
+            console.warning(
+                f"Chapter [highlight]{chapter.episode_name}[/highlight] ([bold]{chapter.episode_id}[/bold]) is "
+                "not available for purchase, skipping",
+            )
+            warn_info = f"Need {chapter.point} point"
+            if chapter.ticketable():
+                warn_info += " or ticket"
+            console.warning(warn_info)
+            continue
+
+        try:
+            user_wallet = client.claim_episode_with_point(chapter, user_wallet)
+            _wallet_copy.subtract(chapter.point)
+            _wallet_copy.add(chapter.bonus_point)
+            actual_chapters.append(chapter)
+        except KMNotEnoughPointError:
+            console.warning(f"Not enough point to purchase chapter: [bold]{chapter.episode_name}[/bold]")
+        except KMAPIError as exc:
+            console.warning(f"Failed to purchase chapter, ignoring: {exc}")
+
+    if not actual_chapters:
+        console.warning("No chapters to download after filtering, aborting")
+        return
+
+    title_dir = get_output_directory(output_dir, title_id)
+    (title_dir / "_info.json").write_bytes(create_chapters_info(result, chapters_info))
+
+    for chapter in actual_chapters:
+        console.info(f"  Downloading chapter [highlight]{chapter.episode_name}[/highlight] ({chapter.episode_id})...")
+        try:
+            viewer_info = client.get_chapter_viewer(chapter.episode_id)
+        except KMAPIError as exc:
+            console.warning(f"Failed to get chapter viewer information, ignoring: {exc}")
+            continue
+
+        console.log(f"    Has: {len(viewer_info.page_list)} pages")
+        console.log(f"    Seed: {viewer_info.scramble_seed}")
+
+        CH_IMGS = get_output_directory(output_dir, title_id, chapter.episode_id, skip_create=True)
+        if CH_IMGS.exists():
             console.warning(
                 f"   Chapter [bold]{chapter.episode_name}[/bold] ({chapter.episode_id}) already downloaded, skipping",
             )
