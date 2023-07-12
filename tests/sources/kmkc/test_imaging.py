@@ -22,6 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+from io import BytesIO
 from pathlib import Path
 
 import pytest
@@ -44,9 +45,12 @@ class TestImageDescramble(Fixtureable):
     def process(self, source: Path) -> bytes:
         img_bytes = bytes_to_image(source.read_bytes())
         results = descramble_target(img_bytes, 4, 749191485)
-        target_res = source.parent / "intermediate"
-        results.save(target_res, "PNG", optimize=True)
-        return target_res.read_bytes()
+        io = BytesIO()
+        results.save(io, "PNG", optimize=True)
+        io.seek(0)
+        res_bytes = io.getvalue()
+        io.close()
+        return res_bytes
 
     def test_bytes_to_image(self):
         source, _ = self._get_fixture()
