@@ -66,13 +66,15 @@ def make_web_client(account: KMConfigWeb):
     return KMClientWeb(account)
 
 
-def do_print_search_information(results: list[TitleNode]):
-    for result in results:
+def do_print_search_information(results: list[TitleNode], *, numbering: bool = False):
+    for idx, result in enumerate(results, 1):
         manga_url = f"https://{BASE_HOST}/title/{result.title_id}"
         manga_text = f"[bold][link={manga_url}]{result.title_name}[/link][/bold] ({result.title_id})"
         if result.next_updated_text:
             manga_text += f" [[orange]{result.next_updated_text}[/orange]]"
         if result.new_episode_update_cycle_text:
             manga_text += f" [[gold]{result.new_episode_update_cycle_text}[/gold]]"
+        if numbering:
+            manga_text = f"[{idx:02d}] {manga_text}"
         console.info(f"  {manga_text}")
         console.info(f"   {manga_url}")

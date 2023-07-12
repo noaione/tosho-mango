@@ -11,3 +11,4 @@ from .accounts import *
 from .balance import *
 from .manga import *
 from .purchases import *
+from .rankings import *

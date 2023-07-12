@@ -84,6 +84,7 @@ account_id = click.option(
     default=None,
     help="Account ID to use",
     required=False,
+    metavar="ACCOUNT_ID",
 )
 output_dir = click.option(
     "-o",
