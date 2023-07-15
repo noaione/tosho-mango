@@ -25,6 +25,7 @@ SOFTWARE.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Type
 from uuid import uuid4
 
@@ -72,7 +73,7 @@ class MUConfig(betterproto.Message):
         return cls(id=str(uuid4()), session=session, type=type)
 
 
-def get_config(account_id: str) -> MUConfig | None:
+def get_config(account_id: str, *, path: Path = USER_PATH) -> MUConfig | None:
     """Get a single config from the account ID.
 
     Parameters
@@ -86,9 +87,9 @@ def get_config(account_id: str) -> MUConfig | None:
         The config if found, else None.
     """
 
-    USER_PATH.mkdir(parents=True, exist_ok=True)
+    path.mkdir(parents=True, exist_ok=True)
 
-    CONFIG_PATH = USER_PATH / f"musq.{account_id}.tmconf"
+    CONFIG_PATH = path / f"musq.{account_id}.tmconf"
 
     if not CONFIG_PATH.exists():
         return None
@@ -97,7 +98,7 @@ def get_config(account_id: str) -> MUConfig | None:
     return conf_data
 
 
-def get_all_config() -> list[MUConfig]:
+def get_all_config(path: Path = USER_PATH) -> list[MUConfig]:
     """Get all config from the user path.
 
     Returns
@@ -105,16 +106,17 @@ def get_all_config() -> list[MUConfig]:
     list[MUConfig]
         The list of config.
     """
-    USER_PATH.mkdir(parents=True, exist_ok=True)
 
-    CONFIG_GLOB = USER_PATH.glob("musq.*.tmconf")
+    path.mkdir(parents=True, exist_ok=True)
+
+    CONFIG_GLOB = path.glob("musq.*.tmconf")
     parsed_conf: list[MUConfig] = []
     for conf in CONFIG_GLOB:
         parsed_conf.append(MUConfig.FromString(conf.read_bytes()))
     return parsed_conf
 
 
-def save_config(config: MUConfig):
+def save_config(config: MUConfig, *, path: Path = USER_PATH):
     """Save the config to the user path.
 
     Parameters
@@ -122,8 +124,8 @@ def save_config(config: MUConfig):
     config: :class:`MUConfig`
         The config to be saved.
     """
-    USER_PATH.mkdir(parents=True, exist_ok=True)
+    path.mkdir(parents=True, exist_ok=True)
 
-    CONFIG_PATH = USER_PATH / f"musq.{config.id}.tmconf"
+    CONFIG_PATH = path / f"musq.{config.id}.tmconf"
 
     CONFIG_PATH.write_bytes(bytes(config))
