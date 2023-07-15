@@ -39,10 +39,10 @@ from tosho_mango.sources.kmkc.imaging import (
 )
 
 
-class TestImageDescramble(Fixtureable):
+class TestImageDescramble(Fixtureable[bytes]):
     fixture_name = "image_descramble"
 
-    def process(self, source: Path) -> bytes:
+    def process(self, source: Path):
         img_bytes = bytes_to_image(source.read_bytes())
         results = descramble_target(img_bytes, 4, 749191485)
         io = BytesIO()

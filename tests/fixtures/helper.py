@@ -23,11 +23,14 @@ SOFTWARE.
 """
 
 from pathlib import Path
+from typing import Generic, TypeVar
 
 CURRENT_DIR = Path(__file__).absolute().parent
 
+SourceT = TypeVar("SourceT")
 
-class Fixtureable:
+
+class Fixtureable(Generic[SourceT]):
     fixture_name: str | None = None
 
     def __init_subclass__(cls) -> None:
@@ -54,8 +57,6 @@ class Fixtureable:
         expcets = fixture_path / "expects.tmfxture"
         if not source.exists():
             raise FileNotFoundError(f"Fixture source {source} is not found")
-        if not expcets.exists():
-            raise FileNotFoundError(f"Fixture expects {expcets} is not found")
 
         return source, expcets
 
@@ -74,12 +75,22 @@ class Fixtureable:
         intermediate.unlink(missing_ok=True)
         intermediate_fx.unlink(missing_ok=True)
 
-    def process(self, source: Path) -> bytes:
+    def process(self, source: Path) -> SourceT:
+        raise NotImplementedError
+
+    def assertion_test(self, result: SourceT):
         raise NotImplementedError
 
     def test_fixture(self):
         result, expect_path = self._run_fixture()
         self._cleanup()
-        expect_bytes = expect_path.read_bytes()
-
-        assert result == expect_bytes
+        if expect_path.exists():
+            expect_bytes = expect_path.read_bytes()
+            assert result == expect_bytes
+        else:
+            try:
+                self.assertion_test(result)
+            except NotImplementedError as ner:
+                raise FileNotFoundError(
+                    f"Fixture expects {expect_path} is not found, and assertion_test is not overriden"
+                ) from ner
