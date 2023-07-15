@@ -30,6 +30,19 @@ CURRENT_DIR = Path(__file__).absolute().parent
 class Fixtureable:
     fixture_name: str | None = None
 
+    def __init_subclass__(cls) -> None:
+        if cls.test_fixture != Fixtureable.test_fixture:
+            raise ValueError("You are not allowed to override test_fixture method")
+        if cls._get_fixture != Fixtureable._get_fixture:
+            raise ValueError("You are not allowed to override `_get_fixture` method")
+        if cls._run_fixture != Fixtureable._run_fixture:
+            raise ValueError("You are not allowed to override `_run_fixture` method")
+        if cls._cleanup != Fixtureable._cleanup:
+            raise ValueError("You are not allowed to override `_cleanup` method")
+
+        if cls.process == Fixtureable.process:
+            raise NotImplementedError("You must override `process` method")
+
     def _get_fixture(self):
         if self.fixture_name is None:
             raise ValueError("Fixture name is not defined")
