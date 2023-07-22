@@ -42,12 +42,12 @@ class ClientConstants(TypedDict):
 
 
 _ANDROID_APP = b64decode("Y29tLnNxdWFyZV9lbml4LmFuZHJvaWRfZ29vZ2xlcGxheS5tYW5nYXVwX2dsb2JhbA==").decode("utf-8")
-_ANDROID_APP_VER = "44"
+_ANDROID_APP_VER = "45"  # 2.0.0
 ANDROID_CONSTANTS: ClientConstants = {
     "_IMAGE_UA": "Dalvik/2.1.0 (Linux; U; Android 12; SM-G935F Build/SQ3A.220705.004)",
     "_API_UA": f"{_ANDROID_APP}/{_ANDROID_APP_VER} (Linux; U; Android 12; en_US; SM-G935F; Build/SQ3A.220705.004; Cronet/114.0.5735.33)",  # noqa: E501
     "OS_VER": "32",  # Android SDK 12
-    "APP_VER": _ANDROID_APP_VER,  # 1.9.0
+    "APP_VER": _ANDROID_APP_VER,
 }
 IOS_CONSTANTS: ClientConstants = {
     "_IMAGE_UA": "TODO",

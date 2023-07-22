@@ -38,10 +38,16 @@ __all__ = (
     "UserPoint",
     "Tag",
     "Chapter",
+    "ChapterV2",
     "ViewButton",
+    "ChaptersRange",
     "MangaDetail",
+    "MangaDetailV2",
     "ChapterPage",
     "ChapterViewer",
+    "SNSInfo",
+    "PageBlock",
+    "ChapterViewerV2",
     "Subscription",
     "Billing",
     "PointShopView",
@@ -202,6 +208,57 @@ class Chapter(betterproto.Message):
 
 
 @dataclass
+class ChapterV2(betterproto.Message):
+    """Represents a single chapter."""
+
+    id: int = betterproto.uint64_field(1)
+    """:class:`int`: The chapter ID."""
+    name: str = betterproto.string_field(2)
+    """:class:`str`: The chapter name."""
+    subtitle: Optional[str] = betterproto.string_field(3)
+    """:class:`str`: The chapter subtitle (usually the actual chapter title)."""
+    thumbnail_url: str = betterproto.string_field(4)
+    """:class:`str`: The chapter thumbnail URL."""
+    consumption: ConsumptionType = betterproto.enum_field(5)
+    """:class:`ConsumptionType`: The chapter consumption type."""
+    price: int = betterproto.uint64_field(6)
+    """:class:`int`: The chapter price in coins, also check with consumption type."""
+    end_of_rental_period: Optional[int] = betterproto.uint64_field(7)
+    """:class:`Optional[int]`: How much chapter rental period left in seconds.
+
+    If ``0``, rental period is not available anymore.
+    If ``None``, rental period is NOT YET activated.
+    """
+    comments: Optional[int] = betterproto.uint64_field(8)
+    """:class:`Optional[int]`: How many comments this chapter has."""
+    published: Optional[str] = betterproto.string_field(9)
+    """:class:`Optional[str]`: When this chapter was published."""
+    badge: Badge = betterproto.enum_field(10)
+    """:class:`Badge`: The chapter badge marking."""
+    first_page_url: str = betterproto.string_field(11)
+    """:class:`str`: The first page URL of the chapter."""
+    final_chapter: bool = betterproto.bool_field(12)
+    """:class:`bool`: Whether this is the final chapter or not."""
+    page_count: int = betterproto.uint64_field(13)
+    """:class:`int`: How many pages this chapter has."""
+    read_count: int = betterproto.uint64_field(14)
+    """:class:`int`: How many times this chapter has been read."""
+
+    @property
+    def is_free(self):
+        """:class:`bool`: Whether the chapter is free or not."""
+        return self.price == 0
+
+    @property
+    def chapter_title(self):
+        """:class:`str`: A combined chapter title."""
+        ch_title = self.name
+        if self.subtitle:
+            ch_title = f"{ch_title} — {self.subtitle}"
+        return ch_title
+
+
+@dataclass
 class ViewButton(betterproto.Message):
     """The button that will be shown in the manga detail page."""
 
@@ -252,6 +309,63 @@ class MangaDetail(betterproto.Message):
     """:class:`bool`: Whether the manga comment is enabled or not."""
     related_manga: List["MangaDetail"] = betterproto.message_field(17)
     """:class:`List[MangaDetail]`: Any related manga."""
+
+
+@dataclass
+class ChaptersRange(betterproto.Message):
+    """The hidden chapters range."""
+
+    start_id: int = betterproto.uint64_field(1)
+    """:class:`int`: The start chapter ID."""
+    end_id: int = betterproto.uint64_field(2)
+    """:class:`int`: The end chapter ID."""
+
+
+@dataclass
+class MangaDetailV2(betterproto.Message):
+    """Manga information response version 2.
+
+    When you click a manga, this is the response you will get.
+
+    This is version 2 of the response, which is used in the latest version of the app.
+    """
+
+    status: Status = betterproto.enum_field(1)
+    """:class:`Status`: The status of the request."""
+    user_point: UserPoint = betterproto.message_field(2)
+    """:class:`UserPoint`: The user purse or point."""
+    title: str = betterproto.string_field(3)
+    """:class:`str`: The manga title."""
+    authors: str = betterproto.string_field(4)
+    """:class:`str`: The manga authors, separated by comma."""
+    copyright: str = betterproto.string_field(5)
+    """:class:`str`: The manga copyright.""" ""
+    next_update: Optional[str] = betterproto.string_field(6)
+    """:class:`Optional[str]`: The next chapter update time."""
+    warning: Optional[str] = betterproto.string_field(7)
+    """:class:`Optional[str]`: The manga warning."""
+    description: str = betterproto.string_field(8)
+    """:class:`str`: The manga description."""
+    display_description: bool = betterproto.bool_field(9)
+    """:class:`bool`: Whether the description is displayed or not."""
+    tags: List[Tag] = betterproto.message_field(10)
+    """:class:`List[Tag]`: The manga tags/generes."""
+    thumbnail_url: str = betterproto.string_field(11)
+    """:class:`str`: The manga thumbnail URL."""
+    video_url: Optional[str] = betterproto.string_field(12)
+    """:class:`Optional[str]`: The manga video thumbnail URL."""
+    chapters: List[ChapterV2] = betterproto.message_field(13)
+    """:class:`List[Chapter]`: The manga chapters."""
+    is_favorite: bool = betterproto.bool_field(14)
+    """:class:`bool`: Whether the manga is favorited or not."""
+    view_button: Optional[ViewButton] = betterproto.message_field(15)
+    """:class:`Optional[ViewButton]`: The view button, if any.""" ""
+    is_comment_enabled: bool = betterproto.bool_field(16)
+    """:class:`bool`: Whether the manga comment is enabled or not."""
+    related_manga: List["MangaDetail"] = betterproto.message_field(17)
+    """:class:`List[MangaDetail]`: Any related manga."""
+    hidden_chapters: ChaptersRange = betterproto.message_field(18)
+    """:class:`ChaptersRange`: The hidden chapters range."""
 
 
 @dataclass
@@ -309,6 +423,59 @@ class ChapterViewer(betterproto.Message):
     # event:  # this was something useless, so me ignore.
     is_comment_enabled: bool = betterproto.bool_field(8)
     """:class:`bool`: Whether the chapter comment is enabled or not."""
+
+
+@dataclass
+class SNSInfo(betterproto.Message):
+    """TODO"""
+
+    body: str = betterproto.string_field(1)
+    """:class:`str`: The SNS body."""
+    url: str = betterproto.string_field(2)
+    """:class:`str`: The SNS URL."""
+
+
+@dataclass
+class PageBlock(betterproto.Message):
+    """TODO"""
+
+    id: int = betterproto.uint64_field(1)
+    """:class:`int`: The chapter ID."""
+    title: str = betterproto.string_field(2)
+    """:class:`str`: The chapter view title."""
+    images: List[ChapterPage] = betterproto.message_field(3)
+    """:class:`List[ChapterPage]`: The chapter images list."""
+    last_page: bool = betterproto.bool_field(4)
+    """:class:`bool`: Whether this is the last page or not."""
+    start_page: int = betterproto.uint64_field(5)
+    """:class:`int`: The chapter page start."""
+    sns: SNSInfo = betterproto.message_field(6)
+    """:class:`SNSInfo`: The SNS sharing information."""
+    page_start: int = betterproto.uint64_field(7)
+    """:class:`int`: The chapter page start."""
+    page_end: int = betterproto.uint64_field(8)
+    """:class:`int`: The chapter page end."""
+
+
+@dataclass
+class ChapterViewerV2(betterproto.Message):
+    """Represents a chapter viewer response.
+
+    When you click a chapter, this is the response you will get.
+    """
+
+    status: Status = betterproto.enum_field(1)
+    """:class:`Status`: The status of the request."""
+    user_point: UserPoint = betterproto.message_field(2)
+    """:class:`UserPoint`: The user purse or point."""
+    blocks: List[PageBlock] = betterproto.message_field(3)  # TODO
+    """:class:`List[ChapterPage]`: The chapter images list."""
+    next_chapter: Optional[Chapter] = betterproto.message_field(4)
+    """:class:`Optional[Chapter]`: The next chapter, if any."""
+    is_comment_enabled: bool = betterproto.bool_field(5)
+    """:class:`bool`: Whether the chapter comment is enabled or not."""
+    enable_guide: bool = betterproto.bool_field(6)
+    """:class:`bool`: Whether the chapter view guide is enabled or not."""
 
 
 @dataclass

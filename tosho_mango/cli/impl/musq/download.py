@@ -33,7 +33,7 @@ from requests import HTTPError
 from tosho_mango import models, term
 from tosho_mango.cli.base import ToshoMangoCommandHandler
 from tosho_mango.sources.musq.models import ConsumeCoin, Quality
-from tosho_mango.sources.musq.proto import Chapter, MangaDetail
+from tosho_mango.sources.musq.proto import ChapterV2, MangaDetailV2
 
 from .. import options
 from .common import make_client, parse_published, select_single_account
@@ -45,7 +45,7 @@ __all__ = (
 console = term.get_console()
 
 
-def create_chapters_info(manga_detail: MangaDetail) -> bytes:
+def create_chapters_info(manga_detail: MangaDetailV2) -> bytes:
     chapters: list[models.ChapterDetailDump] = []
     for chapter in manga_detail.chapters:
         ch_dump = models.ChapterDetailDump(id=chapter.id, main_name=chapter.name)
@@ -161,7 +161,7 @@ def musq_manga_download(
     console.info(f"Downloading {len(chapter_ids)} chapters...")
     # Precalculate chapters consumption
     ids_lists = [chapter.id for chapter in manga_chapters]
-    actual_chapters: list[Chapter] = []
+    actual_chapters: list[ChapterV2] = []
     for ch_id in chapter_ids:
         if ch_id not in ids_lists:
             console.warning(f"Chapter ID [bold]{ch_id}[/bold] is not available, skipping")
@@ -198,7 +198,7 @@ def musq_manga_download(
                 f"with consumption [bold]{consume!r}[/bold]...",
             )
             _t = client.get_chapter_images(chapter.id, coins=consume)
-            if not _t.images:
+            if not _t.blocks:
                 console.error(f"Unable to purchase chapter {chapter.chapter_title} ({chapter.id}), skipping")
                 continue
 
@@ -221,19 +221,31 @@ def musq_manga_download(
             coins=ConsumeCoin(0, 0, 0, 0),
             quality=image_quality,
         )
-        if not ch_images.images:
-            console.error(f"   Unable to download chapter {chapter.chapter_title} ({chapter.id}), skipping")
+        if not ch_images.blocks:
+            console.error(f"   Unable to download chapter {chapter.chapter_title} ({chapter.id}), skipping [no blocks]")
             continue
 
         CH_IMGS = get_output_directory(output_dir, title_id, chapter.id, skip_create=True)
-        if CH_IMGS.exists() and len(list(CH_IMGS.glob("*.avif"))) >= len(ch_images.images):
+        if len(ch_images.blocks) > 1:
+            console.warning(
+                f"   Chapter [bold]{chapter.chapter_title}[/bold] ({chapter.id}) has more than 1 block, "
+                "please report this to the developer!"
+            )
+            continue
+
+        images_blocks = ch_images.blocks[0].images
+        if not images_blocks:
+            console.error(f"   Unable to download chapter {chapter.chapter_title} ({chapter.id}), skipping [no images]")
+            continue
+
+        if CH_IMGS.exists() and len(list(CH_IMGS.glob("*.avif"))) >= len(images_blocks):
             console.warning(
                 f"   Chapter [bold]{chapter.chapter_title}[/bold] ({chapter.id}) already downloaded, skipping",
             )
             continue
 
         CH_IMGS.mkdir(parents=True, exist_ok=True)
-        for image in ch_images.images:
+        for image in images_blocks:
             img_dl_path = CH_IMGS / f"p{int(image.stem):03d}.{image.extension}"
             console.info(f"   Downloading image [bold]{image.filename}[/bold] to [bold]{img_dl_path.name}[/bold]...")
             with img_dl_path.open("wb") as fpw:
@@ -342,7 +354,7 @@ def musq_manga_auto_download(
         coin_purse.event = 0
 
     consumptions_list: list[ConsumeCoin] = []
-    consume_chapters: list[Chapter] = []
+    consume_chapters: list[ChapterV2] = []
     # Precalculate coin consumption
     for chapter in manga_chapters:
         if start_from is not None and chapter.id < start_from:
@@ -387,12 +399,24 @@ def musq_manga_auto_download(
             coins=consume,
             quality=image_quality,
         )
-        if not ch_images.images:
-            console.error(f"   Unable to download chapter {chapter.chapter_title} ({chapter.id}), skipping")
+        if not ch_images.blocks:
+            console.error(f"   Unable to download chapter {chapter.chapter_title} ({chapter.id}), skipping [no blocks]")
+            continue
+
+        if len(ch_images.blocks) > 1:
+            console.warning(
+                f"   Chapter [bold]{chapter.chapter_title}[/bold] ({chapter.id}) has more than 1 block, "
+                "please report this to the developer!"
+            )
+            continue
+
+        images_blocks = ch_images.blocks[0].images
+        if not images_blocks:
+            console.error(f"   Unable to download chapter {chapter.chapter_title} ({chapter.id}), skipping [no images]")
             continue
 
         CH_IMGS.mkdir(parents=True, exist_ok=True)
-        for image in ch_images.images:
+        for image in images_blocks:
             img_dl_path = CH_IMGS / f"p{int(image.stem):03d}.{image.extension}"
             console.info(f"   Downloading image [bold]{image.filename}[/bold] to [bold]{img_dl_path.name}[/bold]...")
             with img_dl_path.open("wb") as fpw:

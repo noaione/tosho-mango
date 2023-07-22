@@ -23,6 +23,8 @@ SOFTWARE.
 """
 from __future__ import annotations
 
+from pathlib import Path
+
 import click
 from requests import HTTPError
 
@@ -153,6 +155,9 @@ def musq_title_info(title_id: int, account_id: str | None = None, show_chapters:
         console.error(f"Unable to connect to MU!: {e}")
         return
 
+    # To hex bytes
+    Path("manga_info_v2.hex").write_text(result.SerializeToString().hex())
+
     manga_url = f"https://{BASE_HOST}/manga/{title_id}"
     console.info(f"Title information for [highlight][link={manga_url}]{result.title}[/link][/highlight]")
 
@@ -169,8 +174,12 @@ def musq_title_info(title_id: int, account_id: str | None = None, show_chapters:
     console.enter()
     console.info(f"  [bold]Chapters[/bold]: {len(result.chapters)} chapters")
     if show_chapters:
+        hidden = result.hidden_chapters
         for chapter in result.chapters:
-            console.info(f"    [bold]{chapter.name}[/bold] ({chapter.id})")
+            base_txt = f"    [bold]{chapter.name}[/bold] ({chapter.id})"
+            if chapter.id >= hidden.start_id and chapter.id <= hidden.end_id:
+                base_txt += " [error](Hidden)[/error]"
+            console.info(base_txt)
             if chapter.subtitle:
                 console.info(f"     [bold]{chapter.subtitle}[/bold]")
             if chapter.published:
@@ -183,4 +192,5 @@ def musq_title_info(title_id: int, account_id: str | None = None, show_chapters:
         copyrights = result.copyright.split("\n")
         console.info(f"  [bold]Copyright[/bold]: {copyrights[0]}")
         for copyr in copyrights[1:]:
+            console.info(f"             {copyr}")
             console.info(f"             {copyr}")

@@ -25,13 +25,14 @@ SOFTWARE.
 from __future__ import annotations
 
 import time
+from pathlib import Path
 
 import click
 from requests import HTTPError
 
 from tosho_mango import term
 from tosho_mango.cli.base import ToshoMangoCommandHandler
-from tosho_mango.sources.musq.proto import Chapter
+from tosho_mango.sources.musq.proto import ChapterV2
 
 from .. import options
 from .common import make_client, select_single_account
@@ -88,7 +89,7 @@ def musq_manga_purchase(title_id: int, account_id: str | None = None):
     ids_lists = [chapter.id for chapter in result.chapters]
     console.status(f"Purchasing chapter(s)... (1/{len(selected_ch_ids)})")
     claimed_total = 0
-    failed_chapters: list[tuple[Chapter, str]] = []
+    failed_chapters: list[tuple[ChapterV2, str]] = []
     for idx, ch_id in enumerate(selected_ch_ids):
         console.status(f"Purchasing chapter(s)... ({idx + 1}/{len(selected_ch_ids)})")
         id_index = ids_lists.index(ch_id)
@@ -106,7 +107,8 @@ def musq_manga_purchase(title_id: int, account_id: str | None = None):
         point_bal.paid -= consume.paid
         point_bal.event -= consume.event
         img_chapter = client.get_chapter_images(chapter.id, coins=consume)
-        if not img_chapter.images:
+        Path(f"{chapter.id}").write_text(img_chapter.SerializeToString().hex())
+        if not img_chapter.blocks:
             console.warning(
                 f"Unable to purchase chapter [highlight]{chapter.chapter_title}[/highlight] (ID: {chapter.id}),"
                 "no images available",

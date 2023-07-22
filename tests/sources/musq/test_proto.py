@@ -30,8 +30,10 @@ from betterproto import Message
 from tests.fixtures.helper import Fixtureable
 from tosho_mango.sources.musq.proto import (
     ChapterViewer,
+    ChapterViewerV2,
     HomeView,
     MangaDetail,
+    MangaDetailV2,
     MyPageView,
     PointShopHistory,
     PointShopView,
@@ -69,6 +71,35 @@ class TestChapterView(Fixtureable[ChapterViewer]):
         assert image.extension == "avif"
 
         image2 = chapter_view.images[1]
+        image2.url = "/data/1/noextension"
+        assert image2.extension == ""
+
+
+class TestChapterViewV2(Fixtureable[ChapterViewerV2]):
+    fixture_name = "musq_chapterviewv2"
+
+    def process(self, source: Path):
+        return _proto_read(source, ChapterViewerV2)
+
+    def assertion_test(self, chapter_view: ChapterViewerV2):
+        assert chapter_view.status == 0
+
+        assert chapter_view.user_point.free == 40
+        assert chapter_view.user_point.event == 0
+        assert chapter_view.user_point.paid == 370
+        assert chapter_view.user_point.total_point == 410
+        assert len(chapter_view.blocks) == 1
+
+        assert chapter_view.next_chapter is not None
+
+        block = chapter_view.blocks[0]
+        assert block.title == "Chapter 10.1"
+        image = block.images[0]
+        assert image.filename == "1.avif"
+        assert image.stem == "1"
+        assert image.extension == "avif"
+
+        image2 = block.images[1]
         image2.url = "/data/1/noextension"
         assert image2.extension == ""
 
@@ -138,6 +169,39 @@ class TestMangaDetail(Fixtureable[MangaDetail]):
         assert first_chapter.chapter_title == "Chapter 1.1"
         last_chapter.subtitle = "Test"
         assert last_chapter.chapter_title == "Chapter 44.2 — Test"
+
+
+class TestMangaDetailV2(Fixtureable[MangaDetailV2]):
+    fixture_name = "musq_mangadetailv2"
+
+    def process(self, source: Path) -> MangaDetailV2:
+        return _proto_read(source, MangaDetailV2)
+
+    def assertion_test(self, result: MangaDetailV2):
+        assert result.status == 0
+        assert result.title == "The Angel Next Door Spoils Me Rotten"
+        assert result.authors == "Saekisan, Hanekoto, Wan Shibata, Suzu Yuki"
+        assert result.copyright != ""
+        assert result.next_update is None
+        assert result.warning is None
+        assert result.description != ""
+        assert result.display_description is False
+        assert len(result.tags) == 3
+        assert result.video_url is None
+
+        assert len(result.chapters) > 0
+        # Test chapter
+        last_chapter = result.chapters[0]
+        first_chapter = result.chapters[-1]
+        assert first_chapter.name == "Chapter 1.1"
+        assert first_chapter.is_free is True
+        assert last_chapter.name == "Chapter 10.3"
+        assert last_chapter.is_free is True
+        assert first_chapter.chapter_title == "Chapter 1.1"
+        last_chapter.subtitle = "Test"
+        assert last_chapter.chapter_title == "Chapter 10.3 — Test"
+
+        assert result.hidden_chapters is not None
 
 
 class TestMyPageView(Fixtureable[MyPageView]):

@@ -34,11 +34,11 @@ from .constants import API_HOST, IMAGE_HOST, QUALITY_FORMAT, WEEKLY_CODE, Client
 from .models import ConsumeCoin, Quality, WeeklyCode
 from .proto import (
     AccountView,
-    Chapter,
-    ChapterViewer,
+    ChapterV2,
+    ChapterViewerV2,
     ConsumptionType,
     HomeView,
-    MangaDetail,
+    MangaDetailV2,
     MangaList,
     MyPageView,
     PointShopHistory,
@@ -128,7 +128,7 @@ class MUClient:
 
     # <-- Helper Methods
 
-    def calculate_coin(self, user_point: UserPoint, chapter: Chapter) -> ConsumeCoin:
+    def calculate_coin(self, user_point: UserPoint, chapter: ChapterV2) -> ConsumeCoin:
         """
         Calculate how many coins you need to get this chapter.
 
@@ -240,7 +240,7 @@ class MUClient:
 
     # --> MangaEndpoints.kt
 
-    def get_manga(self, manga_id: int) -> MangaDetail:
+    def get_manga(self, manga_id: int) -> MangaDetailV2:
         """
         Get manga detail information.
 
@@ -251,7 +251,7 @@ class MUClient:
 
         Returns
         -------
-        :class:`MangaDetail`
+        :class:`MangaDetailV2`
             The manga detail information.
 
         Raises
@@ -265,12 +265,13 @@ class MUClient:
             {
                 "title_id": str(manga_id),
                 "ui_lang": "en",
+                "quality": Quality.HIGH.value,
             },
         )
 
-        r = self.request("GET", f"{self.BASE_API}/manga/detail", params=params)
+        r = self.request("GET", f"{self.BASE_API}/manga/detail_v2", params=params)
         r.raise_for_status()
-        manga = MangaDetail.FromString(r.content)
+        manga = MangaDetailV2.FromString(r.content)
         if manga.status != Status.SUCCESS:
             raise RuntimeError(f"Failed to get manga {manga_id}: {Status(manga.status).name}")
         return manga
@@ -377,7 +378,7 @@ class MUClient:
         *,
         coins: ConsumeCoin | None = None,
         quality: Quality = Quality.HIGH,
-    ) -> ChapterViewer:
+    ) -> ChapterViewerV2:
         """
         Get chapter viewer that contains images.
 
@@ -393,7 +394,7 @@ class MUClient:
 
         Returns
         -------
-        :class:`ChapterViewer`
+        :class:`ChapterViewerV2`
             The chapter viewer that contains the images.
 
         Raises
@@ -421,9 +422,9 @@ class MUClient:
             },
         )
 
-        r = self.request("POST", f"{self.BASE_API}/manga/viewer", params=params)
+        r = self.request("POST", f"{self.BASE_API}/manga/viewer_v2", params=params)
         r.raise_for_status()
-        ch_view = ChapterViewer.FromString(r.content)
+        ch_view = ChapterViewerV2.FromString(r.content)
         if ch_view.status != Status.SUCCESS:
             raise RuntimeError(f"Failed to get chapter view {chapter_id}: {Status(ch_view.status).name}")
         return ch_view
