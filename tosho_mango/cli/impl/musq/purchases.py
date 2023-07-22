@@ -25,7 +25,6 @@ SOFTWARE.
 from __future__ import annotations
 
 import time
-from pathlib import Path
 
 import click
 from requests import HTTPError
@@ -107,7 +106,6 @@ def musq_manga_purchase(title_id: int, account_id: str | None = None):
         point_bal.paid -= consume.paid
         point_bal.event -= consume.event
         img_chapter = client.get_chapter_images(chapter.id, coins=consume)
-        Path(f"{chapter.id}").write_text(img_chapter.SerializeToString().hex())
         if not img_chapter.blocks:
             console.warning(
                 f"Unable to purchase chapter [highlight]{chapter.chapter_title}[/highlight] (ID: {chapter.id}),"

@@ -23,8 +23,6 @@ SOFTWARE.
 """
 from __future__ import annotations
 
-from pathlib import Path
-
 import click
 from requests import HTTPError
 
@@ -154,9 +152,6 @@ def musq_title_info(title_id: int, account_id: str | None = None, show_chapters:
     except HTTPError as e:
         console.error(f"Unable to connect to MU!: {e}")
         return
-
-    # To hex bytes
-    Path("manga_info_v2.hex").write_text(result.SerializeToString().hex())
 
     manga_url = f"https://{BASE_HOST}/manga/{title_id}"
     console.info(f"Title information for [highlight][link={manga_url}]{result.title}[/link][/highlight]")
