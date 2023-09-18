@@ -30,8 +30,10 @@ DEVICE_PLATFORM = "3"
 DEVICE_VERSION = "6.0.0"
 
 API_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36"  # noqa
+API_MOBILE_UA = ""
 
 API_HOST = b64decode("YXBpLmttYW5nYS5rb2RhbnNoYS5jb20=").decode("utf-8")
 CDN_HOST = b64decode("Y2RuLmttYW5nYS5rb2RhbnNoYS5jb20=").decode("utf-8")
 BASE_HOST = b64decode("a21hbmdhLmtvZGFuc2hhLmNvbQ==").decode("utf-8")
 HASH_HEADER = b64decode("WC1LbWFuZ2EtSGFzaA==").decode("utf-8")
+HASH_MOBILE_HEADER = b64decode("eC1tZ3BrLWhhc2g=").decode("utf-8")

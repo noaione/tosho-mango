@@ -25,7 +25,7 @@ SOFTWARE.
 from __future__ import annotations
 
 from base64 import b64decode
-from hashlib import sha256, sha512
+from hashlib import md5, sha256, sha512
 from http.cookiejar import Cookie, CookieJar
 from typing import Any, Generator, TypeVar
 from urllib.parse import quote
@@ -33,9 +33,18 @@ from urllib.parse import quote
 import msgspec
 import requests
 
-from tosho_mango.sources.kmkc.config import KMConfigWeb, save_config
+from tosho_mango.sources.kmkc.config import KMConfigMobile, KMConfigWeb, save_config
 
-from .constants import API_HOST, API_UA, BASE_HOST, DEVICE_PLATFORM, DEVICE_VERSION, HASH_HEADER
+from .constants import (
+    API_HOST,
+    API_MOBILE_UA,
+    API_UA,
+    BASE_HOST,
+    DEVICE_PLATFORM,
+    DEVICE_VERSION,
+    HASH_HEADER,
+    HASH_MOBILE_HEADER,
+)
 from .dto import (
     AccountResponse,
     BulkEpisodePurchaseResponse,
@@ -73,7 +82,194 @@ def hash_kv(key: str, value: str):
     return f"{key_hash}_{val_hash}"
 
 
-class KMClientWeb:
+class KMClientBase:
+    """The base client for interacting with KC KM Web API."""
+
+    API_HOST = b64decode("aHR0cHM6Ly9hcGkua21hbmdhLmtvZGFuc2hhLmNvbQ==").decode("utf-8")
+    CDN_HOST = b64decode("aHR0cHM6Ly9jZG4ua21hbmdhLmtvZGFuc2hhLmNvbQ==").decode("utf-8")
+    _config: KMConfigWeb | KMConfigMobile
+
+    def __init__(self, config: KMConfigWeb | KMConfigMobile) -> None:
+        self._config = config
+        self._client = requests.Session()
+        self._client.headers.update(
+            {
+                "User-Agent": API_UA if isinstance(config, KMConfigWeb) else API_MOBILE_UA,
+                "Host": API_HOST,
+                "accept": "application/json",
+            },
+        )
+
+    @property
+    def client(self):
+        """:class:`requests.Session`: The underlying HTTP client."""
+        return self._client
+
+    def _create_request_hash(self, query_params: dict[str, str]) -> str:
+        """Create the request hash for the given query parameters.
+
+        Parameters
+        ----------
+        query_params: :class:`dict[str, str]`
+            The query/body parameters to create the hash for.
+
+        Returns
+        -------
+        :class:`str`
+            The request hash.
+        """
+        if isinstance(self._config, KMConfigMobile):
+            # Thanks to neckothy for the help
+            sha_256 = sha256()
+            for vals in sorted({"hash_key": self._config.user_secret, **query_params}.values()):
+                sha_256.update(md5(vals.encode("utf-8")).hexdigest().encode("utf-8"))  # noqa: S324
+            return sha_256.hexdigest()
+
+        birthday = self._config.birthday.value
+        expires = str(self._config.birthday.expires)
+
+        keys = list(query_params.keys())
+        keys.sort()
+        qi_s = []
+        for key in keys:
+            qi_s.append(hash_kv(key, query_params[key]))
+
+        qi_s_hashed = sha256(",".join(qi_s).encode()).hexdigest()
+        birth_expire_hash = hash_kv(birthday, expires)
+
+        merged_hash = sha512(f"{qi_s_hashed}{birth_expire_hash}".encode("utf-8")).hexdigest()
+        return merged_hash
+
+    def _format_request(self, query: dict[str, str] | None = None, headers: dict[str, str] | None = None):
+        """Format the request with the required headers and query parameters.
+
+        Parameters
+        ----------
+        query: :class:`dict[str, str]` | ``None``
+            The query or body you want to add, by default None
+        headers: :class:`dict[str, str]` | ``None``
+            The headers you want to add, by default None
+
+        Returns
+        -------
+        :class:`tuple[dict[str, str], dict[str, str]]`
+            A tuple containing the formatted query and headers.
+        """
+        extend_query = {
+            "platform": DEVICE_PLATFORM,
+            "version": DEVICE_VERSION,
+            **(query or {}),
+        }
+        extend_headers = {
+            **(headers or {}),
+        }
+        req_hash = self._create_request_hash(extend_query)
+        if isinstance(self._config, KMConfigMobile):
+            extend_headers[HASH_MOBILE_HEADER] = req_hash
+        else:
+            extend_headers[HASH_HEADER] = req_hash
+        return extend_query, extend_headers
+
+    def request(self, method: str, url: str, **kwargs):
+        """Make a request to the API.
+
+        This request will also automatically apply and save the cookies to the config.
+
+        Parameters
+        ----------
+        method: :class:`str`
+            The HTTP method to use.
+        url: :class:`str`
+            The URL to make the request to.
+        kwargs: :class:`dict[str, Any]`
+            The keyword arguments to pass to the request.
+
+        Returns
+        -------
+        :class:`requests.Response`
+            The response from the API.
+        """
+        data = kwargs.pop("data", None)
+        headers = kwargs.pop("headers", None)
+        params = kwargs.pop("params", None)
+
+        fmt_data, fmt_headers = self._format_request(data, headers)
+        fmt_params, fmt_param_headers = self._format_request(params)
+
+        key_param = "data"
+        if data is None and params is None:
+            # Assume params
+            fmt_data = fmt_params
+            fmt_headers = fmt_param_headers
+            key_param = "params"
+        elif data is None and params is not None:
+            # Assume params
+            fmt_data = fmt_params
+            fmt_headers = fmt_param_headers
+            key_param = "params"
+        elif data is not None:
+            # Assume data
+            fmt_data = fmt_data
+            key_param = "data"
+            fmt_headers["Content-Type"] = "application/x-www-form-urlencoded"
+
+        new_kwargs = {
+            **kwargs,
+            key_param: fmt_data,
+            "headers": fmt_headers,
+        }
+        requested = self._client.request(method, url, **new_kwargs)
+        if isinstance(self._config, KMConfigWeb):
+            self._config.apply_cookies(requested.cookies)
+            save_config(self._config)
+        return requested
+
+    def _make_response(self, response: requests.Response, *, type: type[DtoT]) -> DtoT:
+        """Create a entity response from the given HTTP response.
+
+        Parameters
+        ----------
+        response: :class:`requests.Response`
+            The HTTP response to create the response from.
+        type: :class:`type[DtoT]`
+            The type of response to create.
+
+        Returns
+        -------
+        DtoT
+            The created response.
+
+        Raises
+        ------
+        :exc:`.exceptions.KMAPIError`
+            If the response is not successful.
+        """
+        _temp = msgspec.json.decode(response.content, type=StatusResponse)
+        _temp.raise_for_status()
+        parsed = msgspec.json.decode(response.content, type=type)
+        return parsed
+
+    def chunk_episodes(self, episode_ids: list[int], *, chunk_size: int = 50) -> Generator[list[int], Any, None]:
+        """Chunk episode ids into a list of lists with the specified chunk size.
+
+        Parameters
+        ----------
+        episode_ids: :class:`list[int]`
+            The episode IDs to chunk.
+        chunk_size: :class:`int`
+            The size of each chunk.
+
+        Returns
+        -------
+        :class:`Generator[list[int], Any, None]`
+            A generator that yields a list of episode IDs.
+        """
+
+        for i in range(0, len(episode_ids), chunk_size):
+            yield episode_ids[i : i + chunk_size]
+
+
+class KMClientWeb(KMClientBase):
     """The main client for interacting with KC KM Web API.
 
     Usage
@@ -91,9 +287,10 @@ class KMClientWeb:
 
     API_HOST = b64decode("aHR0cHM6Ly9hcGkua21hbmdhLmtvZGFuc2hhLmNvbQ==").decode("utf-8")
     CDN_HOST = b64decode("aHR0cHM6Ly9jZG4ua21hbmdhLmtvZGFuc2hhLmNvbQ==").decode("utf-8")
+    _config: KMConfigWeb
 
     def __init__(self, config: KMConfigWeb) -> None:
-        self._config = config
+        super().__init__(config)
 
         self._client = requests.Session()
         self._client.headers.update(
@@ -201,162 +398,6 @@ class KMClientWeb:
         )
 
         return cookie_jar
-
-    @property
-    def client(self):
-        """:class:`requests.Session`: The underlying HTTP client."""
-        return self._client
-
-    def _create_request_hash(self, query_params: dict[str, str]) -> str:
-        """Create the request hash for the given query parameters.
-
-        Parameters
-        ----------
-        query_params: :class:`dict[str, str]`
-            The query/body parameters to create the hash for.
-
-        Returns
-        -------
-        :class:`str`
-            The request hash.
-        """
-        birthday = self._config.birthday.value
-        expires = str(self._config.birthday.expires)
-
-        keys = list(query_params.keys())
-        keys.sort()
-        qi_s = []
-        for key in keys:
-            qi_s.append(hash_kv(key, query_params[key]))
-
-        qi_s_hashed = sha256(",".join(qi_s).encode()).hexdigest()
-        birth_expire_hash = hash_kv(birthday, expires)
-
-        merged_hash = sha512(f"{qi_s_hashed}{birth_expire_hash}".encode("utf-8")).hexdigest()
-        return merged_hash
-
-    def _format_request(self, query: dict[str, str] | None = None, headers: dict[str, str] | None = None):
-        """Format the request with the required headers and query parameters.
-
-        Parameters
-        ----------
-        query: :class:`dict[str, str]` | ``None``
-            The query or body you want to add, by default None
-        headers: :class:`dict[str, str]` | ``None``
-            The headers you want to add, by default None
-
-        Returns
-        -------
-        :class:`tuple[dict[str, str], dict[str, str]]`
-            A tuple containing the formatted query and headers.
-        """
-        extend_query = {
-            "platform": DEVICE_PLATFORM,
-            "version": DEVICE_VERSION,
-            **(query or {}),
-        }
-        extend_headers = {
-            **(headers or {}),
-            HASH_HEADER: self._create_request_hash(extend_query),
-        }
-        return extend_query, extend_headers
-
-    def request(self, method: str, url: str, **kwargs):
-        """Make a request to the API.
-
-        This request will also automatically apply and save the cookies to the config.
-
-        Parameters
-        ----------
-        method: :class:`str`
-            The HTTP method to use.
-        url: :class:`str`
-            The URL to make the request to.
-        kwargs: :class:`dict[str, Any]`
-            The keyword arguments to pass to the request.
-
-        Returns
-        -------
-        :class:`requests.Response`
-            The response from the API.
-        """
-        data = kwargs.pop("data", None)
-        headers = kwargs.pop("headers", None)
-        params = kwargs.pop("params", None)
-
-        fmt_data, fmt_headers = self._format_request(data, headers)
-        fmt_params, fmt_param_headers = self._format_request(params)
-
-        key_param = "data"
-        if data is None and params is None:
-            # Assume params
-            fmt_data = fmt_params
-            fmt_headers = fmt_param_headers
-            key_param = "params"
-        elif data is None and params is not None:
-            # Assume params
-            fmt_data = fmt_params
-            fmt_headers = fmt_param_headers
-            key_param = "params"
-        elif data is not None:
-            # Assume data
-            fmt_data = fmt_data
-            key_param = "data"
-            fmt_headers["Content-Type"] = "application/x-www-form-urlencoded"
-
-        new_kwargs = {
-            **kwargs,
-            key_param: fmt_data,
-            "headers": fmt_headers,
-        }
-        requested = self._client.request(method, url, **new_kwargs)
-        self._config.apply_cookies(requested.cookies)
-        save_config(self._config)
-        return requested
-
-    def _make_response(self, response: requests.Response, *, type: type[DtoT]) -> DtoT:
-        """Create a entity response from the given HTTP response.
-
-        Parameters
-        ----------
-        response: :class:`requests.Response`
-            The HTTP response to create the response from.
-        type: :class:`type[DtoT]`
-            The type of response to create.
-
-        Returns
-        -------
-        DtoT
-            The created response.
-
-        Raises
-        ------
-        :exc:`.exceptions.KMAPIError`
-            If the response is not successful.
-        """
-        _temp = msgspec.json.decode(response.content, type=StatusResponse)
-        _temp.raise_for_status()
-        parsed = msgspec.json.decode(response.content, type=type)
-        return parsed
-
-    def chunk_episodes(self, episode_ids: list[int], *, chunk_size: int = 50) -> Generator[list[int], Any, None]:
-        """Chunk episode ids into a list of lists with the specified chunk size.
-
-        Parameters
-        ----------
-        episode_ids: :class:`list[int]`
-            The episode IDs to chunk.
-        chunk_size: :class:`int`
-            The size of each chunk.
-
-        Returns
-        -------
-        :class:`Generator[list[int], Any, None]`
-            A generator that yields a list of episode IDs.
-        """
-
-        for i in range(0, len(episode_ids), chunk_size):
-            yield episode_ids[i : i + chunk_size]
 
     def get_episode_list(self, episodes: list[int]):
         """Get episode list from episode ids.
