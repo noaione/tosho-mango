@@ -162,14 +162,14 @@ def kmkc_title_purchase(title_id: int, account_id: str | None = None):
 
     console.info("Precalculated purchase information:")
     console.info(f"  - [bold]Total chapters[/bold]: {len(point_claimant)}")
-    console.info(f"  - [bold]With ticket[/bold]: {ticket_claimant}T")
+    console.info(f"  - [bold]With ticket[/bold]: {len(ticket_claimant)}T")
 
-    current_dex = 1
+    current_dex = 0
     failure_count = 0
-    console.status(f"Purchasing chapter(s).. ({current_dex}/{total_chs})")
+    console.status(f"Purchasing chapter(s).. (1/{total_chs})")
     # Claim ticket first
     for episode, ticket_info in ticket_claimant:
-        console.status(f"Purchasing chapter(s).. ({current_dex}/{total_chs})")
+        console.status(f"Purchasing chapter(s).. ({current_dex + 1}/{total_chs})")
         try:
             client.claim_episode_with_ticket(episode.episode_id, ticket_info)
         except KMAPIError as exc:
@@ -178,7 +178,7 @@ def kmkc_title_purchase(title_id: int, account_id: str | None = None):
         current_dex += 1
 
     # Claim point
-    console.status(f"Purchasing chapter(s).. ({current_dex}/{total_chs}) [point]")
+    console.status(f"Purchasing chapter(s).. ({current_dex + 1}/{total_chs}) [point]")
     try:
         client.claim_bulk_episode(point_claimant, user_wallet.point)
         current_dex += len(point_claimant)
