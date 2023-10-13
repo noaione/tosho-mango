@@ -172,22 +172,23 @@ def kmkc_title_purchase(title_id: int, account_id: str | None = None):
         console.status(f"Purchasing chapter(s).. ({current_dex + 1}/{total_chs})")
         try:
             client.claim_episode_with_ticket(episode.episode_id, ticket_info)
+            current_dex += 1
         except KMAPIError as exc:
             console.warning(f"Failed to purchase chapter, ignoring: {exc}")
             failure_count += 1
-        current_dex += 1
 
     # Claim point
-    console.status(f"Purchasing chapter(s).. ({current_dex + 1}/{total_chs}) [point]")
-    try:
-        client.claim_bulk_episode(point_claimant, user_wallet.point)
-        current_dex += len(point_claimant)
-    except KMNotEnoughPointError as exc:
-        console.error(f"Not enough point to purchase chapters: {exc}")
-        failure_count += len(point_claimant)
-    except KMAPIError as exc:
-        console.error(f"Failed to purchase chapters: {exc}")
-        failure_count += len(point_claimant)
+    if len(point_claimant) > 0:
+        console.status(f"Purchasing chapter(s).. ({current_dex + 1}/{total_chs}) [point]")
+        try:
+            client.claim_bulk_episode(point_claimant, user_wallet.point)
+            current_dex += len(point_claimant)
+        except KMNotEnoughPointError as exc:
+            console.error(f"Not enough point to purchase chapters: {exc}")
+            failure_count += len(point_claimant)
+        except KMAPIError as exc:
+            console.error(f"Failed to purchase chapters: {exc}")
+            failure_count += len(point_claimant)
 
     console.stop_status(f"Purchased [highlight]{current_dex}[/highlight] chapters")
 
