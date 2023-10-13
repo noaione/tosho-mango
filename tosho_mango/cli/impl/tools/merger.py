@@ -37,10 +37,13 @@ import msgspec
 from tosho_mango import models, term
 from tosho_mango.cli.base import ToshoMangoCommandHandler
 
-__all__ = ("tools_cli_split_merge",)
+__all__ = (
+    "tools_cli_merger_automerge",
+    "tools_cli_merger_merge",
+)
 console = term.get_console()
 
-_TITLE_RE = re.compile(r"(?:[\w]+ |#|[\w]+)(?P<base>0?[\d]+)?(?:[.\-( ][\-.\(]?)?(?P<split>[\d]+)?")
+_TITLE_RE = re.compile(r"(?:[\w\.]+ |#|[\w]+)(?P<base>0?[\d]+)?(?:[\(-\. ][\(-\. ]?)?(?P<split>[\d]+)?(?:[\)])?")
 
 
 def safe_int(value: Any) -> int | None:
@@ -98,7 +101,9 @@ def _inquire_chapter_number(chapter: models.ChapterDetailDump, last_known_num: i
     return matching
 
 
-def _collect_chapters(chapters_dump: list[models.ChapterDetailDump]) -> dict[str, list[models.ChapterDetailDump]]:
+def _automated_collect_chapters(
+    chapters_dump: list[models.ChapterDetailDump],
+) -> dict[str, list[models.ChapterDetailDump]]:
     chapters_dump.sort(key=lambda x: x.id)
     chapters_mappings: dict[str, list[models.ChapterDetailDump]] = {}
     last_known_num = 0
@@ -135,6 +140,45 @@ def _collect_chapters(chapters_dump: list[models.ChapterDetailDump]) -> dict[str
             extra += 1
         else:
             chapters_mappings.setdefault(f"c{base:03d}", []).append(chapter)
+    return chapters_mappings
+
+
+def _manual_collect_chapters(
+    chapters_dump: list[models.ChapterDetailDump],
+) -> dict[str, list[models.ChapterDetailDump]]:
+    chapters_dump.sort(key=lambda x: x.id)
+    _dump_id_to_chapter: dict[int, models.ChapterDetailDump] = {chapter.id: chapter for chapter in chapters_dump}
+    chapters_mappings: dict[str, list[models.ChapterDetailDump]] = {}
+
+    selected_chapters: list[int] = []
+
+    first_warn = True
+    while True:
+        ch_number = console.inquire("Chapter number", lambda y: safe_int(y) is not None)
+        ch_number = int(ch_number)
+
+        merge_choices = [
+            term.ConsoleChoice(str(chapter.id), f"{chapter.main_name} ({chapter.id})")
+            for chapter in chapters_dump
+            if chapter.id not in selected_chapters
+        ]
+        if first_warn:
+            console.info("Please make sure you [bcyan]select[/bcyan] the chapters in [bcyan]correct order![/bcyan]")
+            first_warn = False
+        merge_select = console.select("Select chapter you want to merge", merge_choices)
+        if not merge_select:
+            console.warning("  No chapter selected, skipping...")
+        else:
+            chapter_ids = list(map(lambda x: int(x.name), merge_select))
+            selected_chapters.extend(chapter_ids)
+
+            chapters_mappings.setdefault(f"c{ch_number:03d}", []).extend(
+                _dump_id_to_chapter[chapter_id] for chapter_id in chapter_ids
+            )
+
+        is_continue = console.confirm("Do you want to add more?")
+        if not is_continue:
+            break
     return chapters_mappings
 
 
@@ -188,7 +232,7 @@ def _is_image(file: Path):
     is_flag=True,
     help="Show verbose output.",
 )
-def tools_cli_split_merge(folder: Path, skip_last: bool = False, verbose_mode: bool = False):
+def tools_cli_merger_automerge(folder: Path, skip_last: bool = False, verbose_mode: bool = False):
     info_json = folder / "_info.json"
     if not info_json.exists():
         console.error(f"Folder {folder!r} doesn't have _info.json which contains information dumps!")
@@ -202,7 +246,7 @@ def tools_cli_split_merge(folder: Path, skip_last: bool = False, verbose_mode: b
 
     console.info(f"Loaded {len(info.chapters)} chapters from _info.json, collecting...")
 
-    chapters_maps = _collect_chapters(info.chapters)
+    chapters_maps = _automated_collect_chapters(info.chapters)
     console.info(f"Collected {len(chapters_maps)} chapters")
     for key, chapters in chapters_maps.items():
         console.info(f"  {key}: has {len(chapters)} chapters")
@@ -219,6 +263,71 @@ def tools_cli_split_merge(folder: Path, skip_last: bool = False, verbose_mode: b
     if skip_last:
         console.warning("Skipping last chapter merge...")
         chapters_maps.popitem()
+
+    console.info("Starting merge...")
+    for ch_name, all_chapters in chapters_maps.items():
+        console.info(f"  Merging {ch_name}...")
+        if not _is_all_folder_exist(folder, all_chapters):
+            console.warning(f"   Not all folders exist for {ch_name}, skipping...")
+            continue
+
+        target_dir = folder / ch_name
+        target_dir.mkdir(exist_ok=True)
+        last_page = _get_last_page(target_dir)
+        for chapter in all_chapters:
+            source_dir = folder / str(chapter.id)
+            if not source_dir.exists():
+                continue
+
+            for file in source_dir.iterdir():
+                if file.is_file() and _is_image(file):
+                    try:
+                        file.rename(target_dir / f"p{last_page:03d}{file.suffix}")
+                    except Exception as exc:
+                        console.warning(f"   Failed to move {file.name}: {exc}")
+                    last_page += 1
+        console.info(f"   Merged {ch_name} with {last_page} images")
+
+
+@click.command(
+    name="merge",
+    help="Manually merge split chapters together based on _info.json.",
+    cls=ToshoMangoCommandHandler,
+)
+@click.argument(
+    "folder",
+    type=click.Path(exists=True, dir_okay=True, file_okay=False, resolve_path=True, path_type=Path),
+    metavar="PATH",
+    required=True,
+)
+@click.option(
+    "-v",
+    "--verbose",
+    "verbose_mode",
+    is_flag=True,
+    help="Show verbose output.",
+)
+def tools_cli_merger_merge(folder: Path, verbose_mode: bool = False):
+    info_json = folder / "_info.json"
+    if not info_json.exists():
+        console.error(f"Folder {folder!r} doesn't have _info.json which contains information dumps!")
+        return
+
+    try:
+        info = msgspec.json.decode(info_json.read_bytes(), type=models.MangaDetailDump)
+    except Exception as exc:
+        console.error(f"Failed to load _info.json: {exc}")
+        return
+
+    console.info(f"Loaded {len(info.chapters)} chapters from _info.json, starting manual collection...")
+
+    chapters_maps = _manual_collect_chapters(info.chapters)
+    console.info(f"Collected {len(chapters_maps)} chapters")
+    for key, chapters in chapters_maps.items():
+        console.info(f"  {key}: has {len(chapters)} chapters")
+        if verbose_mode:
+            for chapter in chapters:
+                console.info(f"   - {chapter.main_name}")
 
     console.info("Starting merge...")
     for ch_name, all_chapters in chapters_maps.items():
