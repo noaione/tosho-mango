@@ -9,7 +9,7 @@ packages = [{include = "tosho_mango"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
-pillow = "^10.0.0"
+pillow = "^10.0.1"
 msgspec = "^0.16.0"
 betterproto = { version = "2.0.0b6", allow-prereleases = true }
 requests = "^2.31.0"
