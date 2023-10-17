@@ -36,7 +36,10 @@ from tosho_mango.sources.musq.proto import ChapterV2
 from .. import options
 from .common import make_client, select_single_account
 
-__all__ = ("musq_manga_purchase",)
+__all__ = (
+    "musq_manga_purchase",
+    "musq_manga_precalculate",
+)
 console = term.get_console()
 
 
@@ -120,3 +123,69 @@ def musq_manga_purchase(title_id: int, account_id: str | None = None):
         console.warning(f"We failed to purchase {len(failed_chapters)} chapters, you might want to retry")
         for chapter, error_msg in failed_chapters:
             console.warning(f"  - [bold]{chapter.chapter_title}[/bold] (ID: {chapter.id}): [error]{error_msg}[/error]")
+
+
+@click.command(
+    name="precalculate",
+    help="Precalculate the amount of points needed to purchase a manga chapter for a title",
+    cls=ToshoMangoCommandHandler,
+)
+@click.argument("title_id", type=int, metavar="TITLE_ID", required=True)
+@options.account_id
+def musq_manga_precalculate(title_id: int, account_id: str | None = None):
+    account = select_single_account(account_id)
+    if account is None:
+        console.warning("Aborted")
+        return
+
+    console.info(f"Searching for ID [highlight]{title_id}[/highlight]...")
+    client = make_client(account)
+
+    try:
+        result = client.get_manga(title_id)
+    except HTTPError as e:
+        console.error(f"Unable to connect to MU!: {e}")
+        return
+
+    point_bal = result.user_point
+    console.info("Your current point balance:")
+    console.info("  - [bold]Total[/bold]: {0:,}".format(point_bal.total_point))
+    console.info("  - [bold]Paid point[/bold]: {0:,}c".format(point_bal.paid))
+    console.info("  - [bold]Event/XP point[/bold]: {0:,}c".format(point_bal.event))
+    console.info("  - [bold]Free point[/bold]: {0:,}c".format(point_bal.free))
+
+    console.info("Title information:")
+    console.info(f"  - [bold]ID[/bold]: {title_id}")
+    console.info(f"  - [bold]Title[/bold]: {result.title}")
+    console.info(f"  - [bold]Chapters[/bold]: {len(result.chapters)} chapters")
+
+    select_choices = [
+        term.ConsoleChoice(str(chapter.id), f"{chapter.chapter_title} ({chapter.price}c)")
+        for chapter in result.chapters
+    ]
+    selected = console.select("Select chapter to purchase", select_choices)
+    if not selected:
+        console.warning("No chapter selected, aborting")
+        return
+
+    selected_ch_ids = list(map(lambda x: int(x.name), selected))
+
+    ids_lists = [chapter.id for chapter in result.chapters]
+    console.status(f"Purchasing chapter(s)... (1/{len(selected_ch_ids)})")
+    consume_chapters: list[ChapterV2] = []
+    console.status("Calculating chapters...")
+    for ch_id in selected_ch_ids:
+        id_index = ids_lists.index(ch_id)
+        chapter = result.chapters[id_index]
+        consume_chapters.append(chapter)
+
+    console.stop_status("Calculating chapters... Done!")
+    total_coinage = sum(x.price for x in consume_chapters)
+    console.info("Your current point balance:")
+    console.info("  - [bold]Total[/bold]: {0:,}".format(point_bal.total_point))
+    console.info("  - [bold]Paid point[/bold]: {0:,}c".format(point_bal.paid))
+    console.info("  - [bold]Event/XP point[/bold]: {0:,}c".format(point_bal.event))
+    console.info("  - [bold]Free point[/bold]: {0:,}c".format(point_bal.free))
+    console.info("Precalculated purchase information:")
+    console.info(f"  - [bold]Total[/bold]: {len(consume_chapters):,}")
+    console.info(f"  - [bold]Cost[/bold]: {total_coinage:,}c")

@@ -40,6 +40,7 @@ from .common import make_web_client, select_single_account
 __all__ = (
     "kmkc_title_purchase",
     "kmkc_account_purchases",
+    "kmkc_title_precalculate",
 )
 console = term.get_console()
 
@@ -226,3 +227,139 @@ def kmkc_account_purchases(account_id: str | None = None):
         manga_text = f"[bold][link={manga_url}]{result.title_name}[/link][/bold] ({result.title_id})"
         console.info(f"  {manga_text}")
         console.info(f"   {manga_url}")
+
+
+@click.command(
+    name="precalculate",
+    help="Purchase a manga chapter for a title",
+    cls=ToshoMangoCommandHandler,
+)
+@click.argument("title_id", type=int, metavar="TITLE_ID", required=True)
+@options.account_id
+def kmkc_title_precalculate(title_id: int, account_id: str | None = None):
+    account = select_single_account(account_id)
+    if account is None:
+        console.warning("Aborted")
+        return
+    if not isinstance(account, KMConfigWeb):
+        console.error("Only web account is supported for now!")
+        return
+
+    client = make_web_client(account=account)
+
+    console.info(f"Getting user point for [highlight]{account.username}[/highlight]...")
+    try:
+        user_wallet = client.get_user_point()
+    except KMAPIError as exc:
+        console.error(f"Failed to get user wallet: {exc}")
+        return
+
+    console.info(f"Getting title information for ID [highlight]{title_id}[/highlight]...")
+    try:
+        results = client.get_title_list([title_id])
+    except KMAPIError as exc:
+        console.error(f"Failed to get title information: {exc}")
+        return
+
+    if not results:
+        console.error("Unable to find title information.")
+        return
+
+    result = results[0]
+
+    console.info(f"Fetching [highlight]{result.title_name}[/highlight] title ticket...")
+    try:
+        ticket_entry = client.get_title_ticket(title_id)
+    except KMAPIError as exc:
+        console.error(f"Failed to get title ticket information: {exc}")
+        return
+
+    chapters_info: list[EpisodeEntry] = []
+    console.info(f"Fetching [highlight]{len(result.episode_id_list)}[/highlight] chapters information...")
+    for episode_ids in client.chunk_episodes(result.episode_id_list):
+        try:
+            chapters_info.extend(client.get_episode_list(episode_ids))
+        except KMAPIError as exc:
+            console.error(f"Failed to get chapter information: {exc}")
+            return
+
+    console.info("Your current point balance:")
+    console.info("  - [bold]Total[/bold]: [bcyan][highr]{0:,}[/highr]c[/bcyan]".format(user_wallet.point.total_point))
+    console.info(
+        "  - [bold]Paid point[/bold]: [success][highr]{0:,}[/highr]c[/success]".format(user_wallet.point.paid_point),
+    )
+    console.info("  - [bold]Free point[/bold]: [info][highr]{0:,}[/highr]c[/info]".format(user_wallet.point.free_point))
+    console.info(
+        "  - [bold]Premium ticket[/bold]: [orange][highr]{0:,}[/highr] ticket[/orange]".format(
+            user_wallet.ticket.total_num,
+        ),
+    )
+    console.info(f"  - [bold]Title ticket?[/bold]: {ticket_entry.title_available()!r}")
+
+    console.info("Title information:")
+    console.info(f"  - [bold]ID[/bold]: {result.title_id}")
+    console.info(f"  - [bold]Title[/bold]: {result.title_name}")
+    console.info(f"  - [bold]Chapters[/bold]: {len(chapters_info)} chapters")
+
+    # Only show unpurchased chapters
+    chapters_info = [chapter for chapter in chapters_info if not chapter.available()]
+    select_choices = [
+        term.ConsoleChoice(
+            str(chapter.episode_id),
+            f"{chapter.episode_name} ({chapter.point}P)"
+            if not chapter.ticketable()
+            else f"{chapter.episode_name} ({chapter.point}P/Ticket)",
+        )
+        for chapter in chapters_info
+    ]
+    selected = console.select("Select chapters to purchase", select_choices)
+    if not selected:
+        console.warning("No chapter selected, aborting")
+        return
+
+    selected_ch_ids = list(map(lambda x: int(x.name), selected))
+    ids_lists = [chapter.episode_id for chapter in chapters_info]
+    point_claimant: list[EpisodeEntry] = []
+    ticket_claimant: list[tuple[EpisodeEntry, TitleTicketInfo | PremiumTicketInfo]] = []
+    console.status("Calculating chapters...")
+    for episode_id in selected_ch_ids:
+        episode = chapters_info[ids_lists.index(episode_id)]
+        if episode.available():
+            continue
+
+        if episode.ticketable() and ticket_entry.title_available():
+            ticket_entry.subtract_title()
+            ticket_claimant.append((episode, ticket_entry.ticket_info.title_ticket_info))
+        elif episode.ticketable() and ticket_entry.premium_available():
+            ticket_entry.subtract_premium()
+            ticket_claimant.append((episode, ticket_entry.ticket_info.premium_ticket_info))
+        else:
+            point_claimant.append(episode)
+
+    total_claim = len(point_claimant) + len(ticket_claimant)
+    if not total_claim:
+        console.warning("No chapters to purchase after precalculation, aborting")
+        return
+
+    console.stop_status("Calculating chapters... Done!")
+
+    console.info("Your current point balance:")
+    console.info("  - [bold]Total[/bold]: [bcyan][highr]{0:,}[/highr]c[/bcyan]".format(user_wallet.point.total_point))
+    console.info(
+        "  - [bold]Paid point[/bold]: [success][highr]{0:,}[/highr]c[/success]".format(user_wallet.point.paid_point),
+    )
+    console.info("  - [bold]Free point[/bold]: [info][highr]{0:,}[/highr]c[/info]".format(user_wallet.point.free_point))
+    console.info(
+        "  - [bold]Premium ticket[/bold]: [orange][highr]{0:,}[/highr] ticket[/orange]".format(
+            user_wallet.ticket.total_num,
+        ),
+    )
+    coin_total = sum(chapter.point for chapter in point_claimant)
+    use_title_ticket = any(isinstance(x, TitleTicketInfo) for x in ticket_claimant)
+    console.info(f"  - [bold]Title ticket?[/bold]: {ticket_entry.title_available()!r}")
+    console.info("Precalculated purchase information:")
+    console.info(f"  - [bold]Total chapters[/bold]: {total_claim:,}")
+    console.info(f"  - [bold]Coins[/bold]: {coin_total:,}c")
+    console.info(f"  - [bold]Ticket[/bold]: {len(ticket_claimant)}T")
+    if use_title_ticket:
+        console.info("     Will also use title ticket!")
