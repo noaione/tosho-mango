@@ -50,7 +50,7 @@ console = term.get_console()
     help="Purchase a manga chapter for a title",
     cls=ToshoMangoCommandHandler,
 )
-@click.argument("title_id", type=int, metavar="TITLE_ID", required=True)
+@options.title_id
 @options.account_id
 def kmkc_title_purchase(title_id: int, account_id: str | None = None):
     account = select_single_account(account_id)
@@ -234,7 +234,7 @@ def kmkc_account_purchases(account_id: str | None = None):
     help="Purchase a manga chapter for a title",
     cls=ToshoMangoCommandHandler,
 )
-@click.argument("title_id", type=int, metavar="TITLE_ID", required=True)
+@options.title_id
 @options.account_id
 def kmkc_title_precalculate(title_id: int, account_id: str | None = None):
     account = select_single_account(account_id)

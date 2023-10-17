@@ -87,7 +87,7 @@ def get_output_directory(
     help="Download manga chapter(s) for a title",
     cls=ToshoMangoCommandHandler,
 )
-@click.argument("title_id", type=int, metavar="TITLE_ID", required=True)
+@options.title_id
 @options.output_dir
 @click.option(
     "-c",

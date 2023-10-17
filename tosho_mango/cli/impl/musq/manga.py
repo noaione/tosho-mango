@@ -128,7 +128,7 @@ def _fmt_tags(tags_data: list[Tag]) -> str:
     help="Get title information",
     cls=ToshoMangoCommandHandler,
 )
-@click.argument("title_id", type=int, metavar="TITLE_ID", required=True)
+@options.title_id
 @options.account_id
 @click.option(
     "--chapters",

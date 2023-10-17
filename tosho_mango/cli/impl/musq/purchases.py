@@ -48,7 +48,7 @@ console = term.get_console()
     help="Purchase a manga chapter for a title",
     cls=ToshoMangoCommandHandler,
 )
-@click.argument("title_id", type=int, metavar="TITLE_ID", required=True)
+@options.title_id
 @options.account_id
 def musq_manga_purchase(title_id: int, account_id: str | None = None):
     account = select_single_account(account_id)
@@ -130,7 +130,7 @@ def musq_manga_purchase(title_id: int, account_id: str | None = None):
     help="Precalculate the amount of points needed to purchase a manga chapter for a title",
     cls=ToshoMangoCommandHandler,
 )
-@click.argument("title_id", type=int, metavar="TITLE_ID", required=True)
+@options.title_id
 @options.account_id
 def musq_manga_precalculate(title_id: int, account_id: str | None = None):
     account = select_single_account(account_id)

@@ -34,6 +34,7 @@ __all__ = (
     "COMMA_SEPARATED_NUMBER",
     "COMMA_SEPARATED_STR",
     "account_id",
+    "title_id",
     "output_dir",
 )
 
@@ -86,6 +87,7 @@ account_id = click.option(
     required=False,
     metavar="ACCOUNT_ID",
 )
+title_id = click.argument("title_id", type=int, metavar="TITLE_ID", required=True)
 output_dir = click.option(
     "-o",
     "--output",
