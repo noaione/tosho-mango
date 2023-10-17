@@ -49,11 +49,16 @@ ANDROID_CONSTANTS: ClientConstants = {
     "OS_VER": "32",  # Android SDK 12
     "APP_VER": _ANDROID_APP_VER,
 }
+_IOS_APP = b64decode("Y29tLnNxdWFyZS1lbml4Lk1hbmdhVVB3").decode("utf-8")
+_IOS_APP_PRE = b64decode("R2xlbndvb2RfUHJvZA==").decode("utf-8")
+_IOS_APP_POST = b64decode("QWxhbW9maXJlLzUuNy4x").decode("utf-8")
+_IOS_APP_VER = "2.0.1"
+_IOS_APP_BUILD = "202307211728"
 IOS_CONSTANTS: ClientConstants = {
-    "_IMAGE_UA": "TODO",
-    "_API_UA": "TODO",
-    "OS_VER": "14.7.1",
-    "APP_VER": "TODO",
+    "_IMAGE_UA": f"{_IOS_APP_PRE}/{_IOS_APP_BUILD} CFNetwork/1410.0.3 Darwin/22.6.0",
+    "_API_UA": f"{_IOS_APP_PRE}/{_IOS_APP_VER} ({_IOS_APP}; build:{_IOS_APP_BUILD}; iOS 16.7.0) {_IOS_APP_POST}",
+    "OS_VER": "16.7",
+    "APP_VER": _IOS_APP_VER,
 }
 
 DEVICE_CONSTANTS: dict[str | int, ClientConstants] = {
