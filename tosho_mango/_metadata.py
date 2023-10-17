@@ -28,7 +28,7 @@ __name__ = "tosho-mango"
 __appname__ = "tosho"
 __author__ = "noaione"
 __author_email__ = "noaione@n4o.xyz"
-__version__ = "0.1.2"
+__version__ = "0.1.3"
 __license__ = "MIT"
 __copyright__ = "Copyright (c) 2023-present noaione"
 
