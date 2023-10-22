@@ -252,6 +252,9 @@ def kmkc_title_info(title_id: int, account_id: str | None = None, show_chapters:
             elif chapter.badge is EpisodeBadge.RENTAL and chapter.rental_rest_time is not None:
                 text_info += f" [[orange]Renting: {chapter.rental_rest_time}[/orange]]"
             console.info(text_info)
+            if start_time := chapter.start_time_datetime():
+                st_fmt = start_time.strftime("%b %d, %Y")
+                console.info(f"     [bold]Published[/bold]: {st_fmt}")
         console.enter()
     if result.next_updated_text:
         console.info(f"  [bold]Next Update[/bold]: {result.next_updated_text}")
