@@ -308,9 +308,9 @@ def kmkc_magazines_list(account_id: str | None = None):
             console.info(f"  [bold]{enum_doc}[/bold]")
     if not has_undefined:
         total_count -= 1
-    if total_count > len(search_results.magazine_category_list):
+    if len(search_results.magazine_category_list) > total_count:
         console.enter()
         console.warning(
-            f"There is {total_count - len(search_results.magazine_category_list)} more magazine(s), "
+            f"There is {len(search_results.magazine_category_list) - total_count} more magazine(s), "
             "please contact maintainer to update the list."
         )

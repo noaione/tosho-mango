@@ -259,6 +259,10 @@ class MagazineCategory(int, Enum):
     """White Heart, a digital-only magazine for josei manga"""
     MonthlyMagazineBase = 46
     """Monthly Magazine Base, a digital-only magazine for shounen manga, replacement for Shounen Magazine R"""
+    LightNovel = 47
+    """Kodansha Light Novel imprint/label"""
+    Article = 48
+    """Article/Report published by Kodansha"""
 
     @property
     def pretty(self):
