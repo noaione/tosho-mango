@@ -226,6 +226,7 @@ def kmkc_title_info(title_id: int, account_id: str | None = None, show_chapters:
     if result.magazine_category and result.magazine_category is not MagazineCategory.Undefined:
         console.info(f"  [bold]Magazine[/bold]: {result.magazine_category.pretty}")
     console.info("   [bold]Summary[/bold]")
+    console.info(f"   [blue]{result.short_introduction_text}[/blue]")
     split_desc = result.introduction_text.split("\n")
     for desc in split_desc:
         console.info(f"    {desc}")
