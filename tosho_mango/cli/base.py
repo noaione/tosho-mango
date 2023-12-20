@@ -27,7 +27,7 @@ from __future__ import annotations
 import sys
 import traceback
 from functools import partial
-from typing import TYPE_CHECKING, Callable, List, Optional, Tuple, Union, cast
+from typing import IO, TYPE_CHECKING, Any, Callable, List, Optional, Tuple, Union, cast
 
 import click
 from click.core import Context
@@ -99,7 +99,7 @@ class UnrecoverableToshoMangoError(click.ClickException):
         super().__init__(message)
         self.exc_info = exc_info
 
-    def show(self):
+    def show(self, file: IO[Any] | None = None):
         """Show the error message and traceback."""
         emoji = ""
         if console.is_advanced():

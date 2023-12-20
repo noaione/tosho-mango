@@ -54,23 +54,23 @@ class TestChapterView(Fixtureable[ChapterViewer]):
     def process(self, source: Path):
         return _proto_read(source, ChapterViewer)
 
-    def assertion_test(self, chapter_view: ChapterViewer):
-        assert chapter_view.status == 0
+    def assertion_test(self, result: ChapterViewer):
+        assert result.status == 0
 
-        assert chapter_view.user_point.free == 0
-        assert chapter_view.user_point.event == 0
-        assert chapter_view.user_point.paid == 480
-        assert chapter_view.user_point.total_point == 480
-        assert len(chapter_view.images) == 11
-        assert chapter_view.previous_chapter is None
-        assert chapter_view.next_chapter is not None
+        assert result.user_point.free == 0
+        assert result.user_point.event == 0
+        assert result.user_point.paid == 480
+        assert result.user_point.total_point == 480
+        assert len(result.images) == 11
+        assert result.previous_chapter is None
+        assert result.next_chapter is not None
 
-        image = chapter_view.images[0]
+        image = result.images[0]
         assert image.filename == "1.avif"
         assert image.stem == "1"
         assert image.extension == "avif"
 
-        image2 = chapter_view.images[1]
+        image2 = result.images[1]
         image2.url = "/data/1/noextension"
         assert image2.extension == ""
 
@@ -81,18 +81,18 @@ class TestChapterViewV2(Fixtureable[ChapterViewerV2]):
     def process(self, source: Path):
         return _proto_read(source, ChapterViewerV2)
 
-    def assertion_test(self, chapter_view: ChapterViewerV2):
-        assert chapter_view.status == 0
+    def assertion_test(self, result: ChapterViewerV2):
+        assert result.status == 0
 
-        assert chapter_view.user_point.free == 40
-        assert chapter_view.user_point.event == 0
-        assert chapter_view.user_point.paid == 370
-        assert chapter_view.user_point.total_point == 410
-        assert len(chapter_view.blocks) == 1
+        assert result.user_point.free == 40
+        assert result.user_point.event == 0
+        assert result.user_point.paid == 370
+        assert result.user_point.total_point == 410
+        assert len(result.blocks) == 1
 
-        assert chapter_view.next_chapter is not None
+        assert result.next_chapter is not None
 
-        block = chapter_view.blocks[0]
+        block = result.blocks[0]
         assert block.title == "Chapter 10.1"
         image = block.images[0]
         assert image.filename == "1.avif"

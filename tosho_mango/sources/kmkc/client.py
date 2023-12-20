@@ -87,7 +87,7 @@ class KMClientBase:
 
     API_HOST = b64decode("aHR0cHM6Ly9hcGkua21hbmdhLmtvZGFuc2hhLmNvbQ==").decode("utf-8")
     CDN_HOST = b64decode("aHR0cHM6Ly9jZG4ua21hbmdhLmtvZGFuc2hhLmNvbQ==").decode("utf-8")
-    _config: KMConfigWeb | KMConfigMobile
+    _config: KMConfigWeb | KMConfigMobile  # type: ignore
 
     def __init__(self, config: KMConfigWeb | KMConfigMobile) -> None:
         self._config = config
@@ -287,7 +287,7 @@ class KMClientWeb(KMClientBase):
 
     API_HOST = b64decode("aHR0cHM6Ly9hcGkua21hbmdhLmtvZGFuc2hhLmNvbQ==").decode("utf-8")
     CDN_HOST = b64decode("aHR0cHM6Ly9jZG4ua21hbmdhLmtvZGFuc2hhLmNvbQ==").decode("utf-8")
-    _config: KMConfigWeb
+    _config: KMConfigWeb  # type: ignore
 
     def __init__(self, config: KMConfigWeb) -> None:
         super().__init__(config)
