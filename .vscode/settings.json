@@ -1,22 +1,19 @@
 {
     "[python]": {
         "editor.formatOnSave": true,
-        "editor.defaultFormatter": "ms-python.black-formatter",
+        "editor.defaultFormatter": "charliermarsh.ruff",
         "editor.codeActionsOnSave": {
-            "source.fixAll": false,
-            "source.organizeImports": true
-        }
+            "source.fixAll": "never",
+            "source.organizeImports": "explicit"
+        },
     },
-    "ruff.args": ["--config=pyproject.toml"],
+    "ruff.lint.args": ["--config=pyproject.toml"],
+    // "ruff.format.args": ["--config=pyproject.toml"],
     "ruff.organizeImports": true,
     "editor.rulers": [120],
-    "python.formatting.provider": "none",
     "python.analysis.diagnosticMode": "workspace",
     "python.languageServer": "Pylance",
     "autoDocstring.docstringFormat": "numpy",
-    "python.linting.enabled": true,
-    "python.linting.flake8Enabled": false,
-    "python.linting.pylintEnabled": false,
     "python.analysis.typeCheckingMode": "basic",
     "files.exclude": {
         "**/.git": true,
@@ -37,5 +34,5 @@
     "black-formatter.args": [
         "--config",
         "pyproject.toml"
-    ]
+    ],
 }
