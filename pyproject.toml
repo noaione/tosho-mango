@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "tosho-mango"
-version = "0.1.4"
+version = "0.1.5"
 description = "A downloader for some official mango website"
 authors = ["noaione <noaione@n4o.xyz>"]
 license = "MIT"
