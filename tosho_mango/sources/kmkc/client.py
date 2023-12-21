@@ -35,16 +35,7 @@ import requests
 
 from tosho_mango.sources.kmkc.config import KMConfigMobile, KMConfigWeb, save_config
 
-from .constants import (
-    API_HOST,
-    API_MOBILE_UA,
-    API_UA,
-    BASE_HOST,
-    DEVICE_PLATFORM,
-    DEVICE_VERSION,
-    HASH_HEADER,
-    HASH_MOBILE_HEADER,
-)
+from .constants import API_HOST, API_MOBILE_UA, API_UA, BASE_HOST, DEVICE_CONSTANTS, KMKCDeviceConstants
 from .dto import (
     AccountResponse,
     BulkEpisodePurchaseResponse,
@@ -88,10 +79,15 @@ class KMClientBase:
     API_HOST = b64decode("aHR0cHM6Ly9hcGkua21hbmdhLmtvZGFuc2hhLmNvbQ==").decode("utf-8")
     CDN_HOST = b64decode("aHR0cHM6Ly9jZG4ua21hbmdhLmtvZGFuc2hhLmNvbQ==").decode("utf-8")
     _config: KMConfigWeb | KMConfigMobile  # type: ignore
+    _consts: KMKCDeviceConstants
 
     def __init__(self, config: KMConfigWeb | KMConfigMobile) -> None:
         self._config = config
         self._client = requests.Session()
+        if isinstance(config, KMConfigMobile):
+            self._consts = DEVICE_CONSTANTS[2]
+        else:
+            self._consts = DEVICE_CONSTANTS[3]
         self._client.headers.update(
             {
                 "User-Agent": API_UA if isinstance(config, KMConfigWeb) else API_MOBILE_UA,
@@ -156,18 +152,15 @@ class KMClientBase:
             A tuple containing the formatted query and headers.
         """
         extend_query = {
-            "platform": DEVICE_PLATFORM,
-            "version": DEVICE_VERSION,
+            "platform": self._consts["PLATFORM"],
+            "version": self._consts["VERSION"],
             **(query or {}),
         }
         extend_headers = {
             **(headers or {}),
         }
         req_hash = self._create_request_hash(extend_query)
-        if isinstance(self._config, KMConfigMobile):
-            extend_headers[HASH_MOBILE_HEADER] = req_hash
-        else:
-            extend_headers[HASH_HEADER] = req_hash
+        extend_headers[self._consts["HASH"]] = req_hash
         return extend_query, extend_headers
 
     def request(self, method: str, url: str, **kwargs):
