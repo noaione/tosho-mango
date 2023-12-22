@@ -64,6 +64,24 @@ lazy_static! {
             app_ver: ios_app_ver.to_string(),
         }
     };
+    pub static ref BASE_API: String = {
+        let base_api = String::from_utf8(
+            general_purpose::STANDARD
+                .decode("aHR0cHM6Ly9nbG9iYWwtYXBpLm1hbmdhLXVwLmNvbS9hcGk=")
+                .expect("Failed to decode base64 BASE_API")
+        )
+        .expect("Invalid base64 string (BASE_API)");
+        base_api
+    };
+    pub static ref BASE_IMG: String = {
+        let base_img = String::from_utf8(
+            general_purpose::STANDARD
+                .decode("aHR0cHM6Ly9nbG9iYWwtaW1nLm1hbmdhLXVwLmNvbQ==")
+                .expect("Failed to decode base64 BASE_IMG")
+        )
+        .expect("Invalid base64 string (BASE_IMG)");
+        base_img
+    };
 
     /// The list of valid quality formats.
     pub(crate) static ref QUALITY_FORMAT: Vec<&'static str> = vec!["middle", "high"];
