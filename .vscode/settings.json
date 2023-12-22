@@ -7,6 +7,9 @@
             "source.organizeImports": "explicit"
         },
     },
+    "[rust]": {
+        "editor.formatOnSave": true
+    },
     "ruff.lint.args": ["--config=pyproject.toml"],
     // "ruff.format.args": ["--config=pyproject.toml"],
     "ruff.organizeImports": true,

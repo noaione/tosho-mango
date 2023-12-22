@@ -1,0 +1,7 @@
+[workspace]
+resolver = "2"
+members = [
+    "tosho_musq",
+    "tosho_kmkc",
+    "tosho_macros"
+]
