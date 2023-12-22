@@ -13,6 +13,10 @@ prost = "0.12"
 prost-types = "0.12"
 lazy_static = "1"
 base64 = "0.21.5"
+chrono = "0.4"
+anyhow = "1"
+
+tosho-macros = { path = "../tosho_macros" }
 
 [build-dependencies]
 prost-build = "0.12"
