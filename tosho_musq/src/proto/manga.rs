@@ -209,3 +209,28 @@ pub struct MangaResultNode {
     #[prost(string, optional, tag = "9")]
     pub last_update: ::core::option::Option<::prost::alloc::string::String>,
 }
+
+/// The manga search result responses.
+///
+/// Contains the manga list that match the search query,
+/// or used in the weekly updates information.
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct MangaResults {
+    /// The manga list.
+    #[prost(message, repeated, tag = "1")]
+    pub titles: ::prost::alloc::vec::Vec<MangaResultNode>,
+}
+
+/// A grouping of manga by tag/genres.
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct MangaGroup {
+    /// The tag/genre name.
+    #[prost(string, tag = "1")]
+    pub name: ::prost::alloc::string::String,
+    /// The associated manga list.
+    #[prost(message, repeated, tag = "2")]
+    pub titles: ::prost::alloc::vec::Vec<MangaResultNode>,
+    /// The tag/genre ID.
+    #[prost(uint64, tag = "3")]
+    pub tag_id: u64,
+}
