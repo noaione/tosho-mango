@@ -95,7 +95,9 @@ pub fn descramble_image(
 
                 let binding = img.crop_imm(source_x, source_y, width_rect, height_rect);
                 let source_img = binding.as_rgb8().expect("Failed to convert to RGB8");
-                canvas.copy_from(source_img, dest_x, dest_y).expect(&format!("Failed to copy from source image to canvas. source_x: {}, source_y: {}, dest_x: {}, dest_y: {}", source_x, source_y, dest_x, dest_y));
+                canvas.copy_from(source_img, dest_x, dest_y).unwrap_or_else(|_| {
+                    panic!("Failed to copy from source image to canvas. source_x: {}, source_y: {}, dest_x: {}, dest_y: {}", source_x, source_y, dest_x, dest_y)
+                });
             }
 
             // output image to Vec<u8>
