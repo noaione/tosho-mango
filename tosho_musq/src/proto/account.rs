@@ -1,39 +1,6 @@
 #![allow(clippy::derive_partial_eq_without_eq)]
 
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct UserPoint {
-    /// Free/daily coins that you have.
-    #[prost(uint64, tag = "1")]
-    pub free: u64,
-    /// Event/XP coins that you have.
-    #[prost(uint64, tag = "2")]
-    pub event: u64,
-    /// Paid coins that you have.
-    #[prost(uint64, tag = "3")]
-    pub paid: u64,
-}
-
-impl UserPoint {
-    /// Returns the total amount of points.
-    ///
-    /// # Examples
-    /// ```
-    /// use tosho_musq::proto::account::UserPoint;
-    ///
-    /// let points = UserPoint {
-    ///    free: 100,
-    ///    event: 200,
-    ///    paid: 300,
-    /// };
-    ///
-    /// assert_eq!(points.sum(), 600);
-    /// ```
-    pub fn sum(&self) -> u64 {
-        self.free + self.event + self.paid
-    }
-}
-
-#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct AccountDevice {
     /// The device ID.
     #[prost(uint64, tag = "1")]

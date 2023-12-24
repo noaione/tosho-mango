@@ -1,9 +1,6 @@
 #![allow(clippy::derive_partial_eq_without_eq)]
 
-use super::{
-    account::UserPoint,
-    enums::{Badge, ConsumptionType, Status},
-};
+use super::enums::{Badge, ConsumptionType, Status};
 
 /// Represents a single chapter.
 ///
@@ -291,7 +288,7 @@ pub struct ChapterViewer {
     pub status: i32,
     /// The user purse or point.
     #[prost(message, tag = "2")]
-    pub user_point: ::core::option::Option<UserPoint>,
+    pub user_point: ::core::option::Option<super::UserPoint>,
     /// The chapter images list.
     #[prost(message, repeated, tag = "3")]
     pub images: ::prost::alloc::vec::Vec<ChapterPage>,
@@ -361,7 +358,7 @@ pub struct ChapterViewerV2 {
     pub status: i32,
     /// The user purse or point.
     #[prost(message, tag = "2")]
-    pub user_point: ::core::option::Option<UserPoint>,
+    pub user_point: ::core::option::Option<super::UserPoint>,
     /// The chapter images list.
     #[prost(message, repeated, tag = "3")]
     pub blocks: ::prost::alloc::vec::Vec<PageBlock>,

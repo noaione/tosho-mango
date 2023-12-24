@@ -2,6 +2,39 @@
 
 use super::SubscriptionStatus;
 
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct UserPoint {
+    /// Free/daily coins that you have.
+    #[prost(uint64, tag = "1")]
+    pub free: u64,
+    /// Event/XP coins that you have.
+    #[prost(uint64, tag = "2")]
+    pub event: u64,
+    /// Paid coins that you have.
+    #[prost(uint64, tag = "3")]
+    pub paid: u64,
+}
+
+impl UserPoint {
+    /// Returns the total amount of points.
+    ///
+    /// # Examples
+    /// ```
+    /// use tosho_musq::proto::account::UserPoint;
+    ///
+    /// let points = UserPoint {
+    ///    free: 100,
+    ///    event: 200,
+    ///    paid: 300,
+    /// };
+    ///
+    /// assert_eq!(points.sum(), 600);
+    /// ```
+    pub fn sum(&self) -> u64 {
+        self.free + self.event + self.paid
+    }
+}
+
 /// The user subscription information.
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Subscription {
@@ -73,10 +106,10 @@ impl Billing {
 pub struct PointShopView {
     /// The user purse or point.
     #[prost(message, tag = "1")]
-    pub user_point: ::core::option::Option<super::UserPoint>,
+    pub user_point: ::core::option::Option<UserPoint>,
     /// The user point limit.
     #[prost(message, tag = "2")]
-    pub point_limit: ::core::option::Option<super::UserPoint>,
+    pub point_limit: ::core::option::Option<UserPoint>,
     /// The next free point recovery time in seconds.
     #[prost(uint64, tag = "3")]
     pub next_recovery: u64,
