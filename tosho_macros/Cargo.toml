@@ -4,7 +4,6 @@ version.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
-license-file.workspace = true
 description = "A macro library for tosho-mango"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
