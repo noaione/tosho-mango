@@ -20,7 +20,7 @@ impl UserPoint {
     ///
     /// # Examples
     /// ```
-    /// use tosho_musq::proto::account::UserPoint;
+    /// use tosho_musq::proto::UserPoint;
     ///
     /// let points = UserPoint {
     ///    free: 100,

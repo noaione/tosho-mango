@@ -9,9 +9,9 @@ use serde::{Deserialize, Serialize};
 ///
 /// # Example
 /// ```no_run
-/// use tosho_musq::MUClient;
+/// use tosho_musq::{constants::get_constants, MUClient};
 ///
-/// let client = MUClient::new();
+/// let client = MUClient::new("123456", get_constants(1).clone());
 ///
 /// let weekly_titles = client.get_weekly_titles(tosho_musq::WeeklyCode::today());
 /// ```
@@ -122,11 +122,11 @@ impl WeeklyCode {
 ///
 /// # Example
 /// ```no_run
-/// use tosho_musq::{MUClient, ImageQuality};
+/// use tosho_musq::{constants::get_constants, MUClient, ImageQuality};
 ///
-/// let client = MUClient::new();
+/// let client = MUClient::new("123456", get_constants(1).clone());
 ///
-/// let chapter_images = client.get_chapter_images(12345, ImageQuality::Normal);
+/// let chapter_images = client.get_chapter_images(12345, ImageQuality::Normal, None);
 /// ```
 #[derive(
     Debug, Clone, Copy, PartialEq, tosho_macros::SerializeEnum, tosho_macros::DeserializeEnum,

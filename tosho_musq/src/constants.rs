@@ -2,7 +2,7 @@ use base64::{engine::general_purpose, Engine as _};
 use lazy_static::lazy_static;
 
 /// A struct containing constants used in the library.
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Constants {
     /// The user agent string used for image requests.
     pub(crate) image_ua: String,
