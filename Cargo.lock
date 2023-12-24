@@ -1115,6 +1115,15 @@ dependencies = [
 [[package]]
 name = "tosho-kmkc"
 version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "base64",
+ "lazy_static",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "tokio",
+]
 
 [[package]]
 name = "tosho-macros"
