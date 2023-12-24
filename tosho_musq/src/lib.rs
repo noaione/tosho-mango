@@ -132,7 +132,7 @@ impl MUClient {
 
                 let need = (need - event as i64).max(0);
                 if need <= 0 {
-                    let event_diff = chapter.price.checked_sub(free).unwrap_or(0);
+                    let event_diff = chapter.price.saturating_sub(free);
 
                     return self.build_coin(chapter.price, free, Some(event_diff), Some(0));
                 }
@@ -140,10 +140,8 @@ impl MUClient {
                 let need = (need - paid as i64).max(0);
                 let mut paid_diff = chapter
                     .price
-                    .checked_sub(free)
-                    .unwrap_or(0)
-                    .checked_sub(event)
-                    .unwrap_or(0)
+                    .saturating_sub(free)
+                    .saturating_sub(event)
                     .max(0);
                 if need > 0 {
                     paid_diff = paid;
@@ -162,7 +160,7 @@ impl MUClient {
                 }
 
                 let need = (need - paid as i64).max(0);
-                let mut paid_diff = chapter.price.checked_sub(event).unwrap_or(0).max(0);
+                let mut paid_diff = chapter.price.saturating_sub(event).max(0);
                 if need > 0 {
                     paid_diff = paid;
                 }
@@ -185,11 +183,11 @@ impl MUClient {
     }
 
     fn build_url(&self, path: &str) -> String {
-        if path.starts_with("/") {
-            return format!("{}{}", BASE_API.to_string(), path);
+        if path.starts_with('/') {
+            return format!("{:?}{}", *BASE_API, path);
         }
 
-        format!("{}/{}", BASE_API.to_string(), path)
+        format!("{:?}/{}", *BASE_API, path)
     }
 
     fn empty_params(&self) -> HashMap<String, String> {
@@ -521,7 +519,7 @@ impl MUClient {
         let res = self
             .inner
             .get(url)
-            .headers((|| {
+            .headers({
                 let mut headers = reqwest::header::HeaderMap::new();
                 headers.insert(
                     "Host",
@@ -539,7 +537,7 @@ impl MUClient {
                     .unwrap();
 
                 headers
-            })())
+            })
             .send()
             .await
             .unwrap();

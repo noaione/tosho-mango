@@ -65,22 +65,20 @@ lazy_static! {
         }
     };
     pub static ref BASE_API: String = {
-        let base_api = String::from_utf8(
+        String::from_utf8(
             general_purpose::STANDARD
                 .decode("aHR0cHM6Ly9nbG9iYWwtYXBpLm1hbmdhLXVwLmNvbS9hcGk=")
                 .expect("Failed to decode base64 BASE_API")
         )
-        .expect("Invalid base64 string (BASE_API)");
-        base_api
+        .expect("Invalid base64 string (BASE_API)")
     };
     pub static ref BASE_IMG: String = {
-        let base_img = String::from_utf8(
+        String::from_utf8(
             general_purpose::STANDARD
                 .decode("aHR0cHM6Ly9nbG9iYWwtaW1nLm1hbmdhLXVwLmNvbQ==")
                 .expect("Failed to decode base64 BASE_IMG")
         )
-        .expect("Invalid base64 string (BASE_IMG)");
-        base_img
+        .expect("Invalid base64 string (BASE_IMG)")
     };
 
     /// The list of valid quality formats.
@@ -90,33 +88,30 @@ lazy_static! {
 
     /// The base host used for overall requests.
     pub(crate) static ref BASE_HOST: String = {
-        let base_host = String::from_utf8(
+        String::from_utf8(
             general_purpose::STANDARD
                 .decode("Z2xvYmFsLm1hbmdhLXVwLmNvbQ==")
                 .expect("Failed to decode base64 BASE_HOST")
         )
-        .expect("Invalid base64 string (BASE_HOST)");
-        base_host
+        .expect("Invalid base64 string (BASE_HOST)")
     };
     /// The API host used for API requests.
     pub(crate) static ref API_HOST: String = {
-        let api_host = String::from_utf8(
+        String::from_utf8(
             general_purpose::STANDARD
                 .decode("Z2xvYmFsLWFwaS5tYW5nYS11cC5jb20=")
                 .expect("Failed to decode base64 API_HOST")
         )
-        .expect("Invalid base64 string (API_HOST)");
-        api_host
+        .expect("Invalid base64 string (API_HOST)")
     };
     /// The image host used for image requests.
     pub(crate) static ref IMAGE_HOST: String = {
-        let image_host = String::from_utf8(
+        String::from_utf8(
             general_purpose::STANDARD
                 .decode("Z2xvYmFsLWltZy5tYW5nYS11cC5jb20=")
                 .expect("Failed to decode base64 IMAGE_HOST")
         )
-        .expect("Invalid base64 string (IMAGE_HOST)");
-        image_host
+        .expect("Invalid base64 string (IMAGE_HOST)")
     };
 }
 
