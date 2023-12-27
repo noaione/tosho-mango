@@ -52,6 +52,7 @@ fn generate_copy_targets(rectbox: u32, seed: u32) -> Vec<((u32, u32), (u32, u32)
         let next = seed_gen.next().unwrap();
         seed_arrays.push((next, i))
     }
+    drop(seed_gen);
 
     // sort by first element
     seed_arrays.sort_by(|a, b| a.0.cmp(&b.0));

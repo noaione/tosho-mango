@@ -16,3 +16,6 @@ lazy_static.workspace = true
 anyhow.workspace = true
 base64.workspace = true
 image = "0.24.7"
+cookie_store = "0.20.0"
+reqwest_cookie_store = "0.6.0"
+urlencoding = "2.1.3"
