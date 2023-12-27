@@ -14,6 +14,20 @@ pub fn deserializeenum_derive(input: TokenStream) -> TokenStream {
     impl_deserenum_derive(&ast)
 }
 
+/// Derives [`serde::Serialize`] for an enum in i32 mode.
+#[proc_macro_derive(SerializeEnum32)]
+pub fn serializenum32_derive(input: TokenStream) -> TokenStream {
+    let ast = syn::parse(input).unwrap();
+    impl_serenum32_derive(&ast)
+}
+
+/// Derives [`serde::Deserialize`] for an enum in i32 mode.
+#[proc_macro_derive(DeserializeEnum32)]
+pub fn deserializeenum32_derive(input: TokenStream) -> TokenStream {
+    let ast = syn::parse(input).unwrap();
+    impl_deserenum32_derive(&ast)
+}
+
 /// Derives an enum that would implement `.to_name()`
 #[proc_macro_derive(EnumName)]
 pub fn enumname_derive(input: TokenStream) -> TokenStream {
@@ -92,6 +106,85 @@ fn impl_deserenum_derive(ast: &syn::DeriveInput) -> TokenStream {
             {
                 let s = String::deserialize(deserializer)?;
                 s.parse::<#name>().map_err(serde::de::Error::custom)
+            }
+        }
+    };
+    tokens.into()
+}
+
+fn impl_serenum32_derive(ast: &syn::DeriveInput) -> TokenStream {
+    let name = &ast.ident;
+
+    // We want to get the values of the enum variants to create our match arms
+    let variants = match &ast.data {
+        syn::Data::Enum(v) => &v.variants,
+        _ => panic!("`SerializeEnum32` can only be derived for enums"),
+    };
+
+    let mut match_arms = vec![];
+    for variant in variants {
+        let variant_name = &variant.ident;
+        let value = if let Some((_, expr)) = &variant.discriminant {
+            quote::quote! { #expr }
+        } else {
+            quote::quote! { stringify!(#variant_name).parse().unwrap() }
+        };
+
+        match_arms.push(quote::quote! {
+            #name::#variant_name => serializer.serialize_i32(#value),
+        });
+    }
+
+    let tokens = quote::quote! {
+        impl Serialize for #name {
+            fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+            where
+                S: serde::Serializer,
+            {
+                // serialize to i32
+                match self {
+                    #(#match_arms)*
+                }
+            }
+        }
+    };
+    tokens.into()
+}
+
+fn impl_deserenum32_derive(ast: &syn::DeriveInput) -> TokenStream {
+    let name = &ast.ident;
+
+    // We want to get the values of the enum variants to create our match arms
+    let variants = match &ast.data {
+        syn::Data::Enum(v) => &v.variants,
+        _ => panic!("`DeserializeEnum32` can only be derived for enums"),
+    };
+
+    let mut match_arms = vec![];
+    for variant in variants {
+        let variant_name = &variant.ident;
+        let value = if let Some((_, expr)) = &variant.discriminant {
+            quote::quote! { #expr }
+        } else {
+            quote::quote! { stringify!(#variant_name).parse().unwrap() }
+        };
+
+        match_arms.push(quote::quote! {
+            #value => Ok(#name::#variant_name),
+        });
+    }
+
+    let tokens = quote::quote! {
+        impl<'de> Deserialize<'de> for #name {
+            fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+            where
+                D: serde::Deserializer<'de>,
+            {
+                let s = i32::deserialize(deserializer)?;
+                match s {
+                    #(#match_arms)*
+                    _ => Err(serde::de::Error::custom(format!("Invalid {} value: {}", stringify!(#name), s))),
+                }
             }
         }
     };
