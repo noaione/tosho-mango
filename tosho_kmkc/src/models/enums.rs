@@ -292,4 +292,33 @@ mod tests {
             "Weekly Shounen Magazine"
         );
     }
+
+    #[test]
+    fn test_int_bool() {
+        let falsy = super::IntBool::False;
+        let truthy = super::IntBool::True;
+        let unknown = super::IntBool::Unknown;
+
+        assert_eq!(falsy, 0);
+        assert_eq!(truthy, 1);
+        assert_eq!(unknown, -1);
+    }
+
+    #[test]
+    fn test_int_bool_if() {
+        let truthy = super::IntBool::True;
+
+        if truthy.into() {
+            assert!(true);
+        } else {
+            assert!(false);
+        }
+
+        let falsy = super::IntBool::False;
+        if falsy.into() {
+            assert!(false);
+        } else {
+            assert!(true);
+        }
+    }
 }
