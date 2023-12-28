@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use tosho_macros::{DeserializeEnum32, EnumName, SerializeEnum32};
+use tosho_macros::{DeserializeEnum32, DeserializeEnum32Fallback, EnumName, SerializeEnum32};
 
 /// A boolean type used by the API represented as an integer.
 #[derive(Debug, SerializeEnum32, DeserializeEnum32, EnumName)]
@@ -93,9 +93,10 @@ pub enum PublishCategory {
 }
 
 /// The magazine category type.
-#[derive(Debug, SerializeEnum32, DeserializeEnum32, PartialEq, EnumName)]
+#[derive(Debug, SerializeEnum32, DeserializeEnum32Fallback, PartialEq, EnumName, Default)]
 pub enum MagazineCategory {
     /// Unknown magazine.
+    #[default]
     Undefined = 0,
     /// KM Original series.
     Original = 1,
@@ -277,6 +278,39 @@ pub enum SupportStatus {
 
 #[cfg(test)]
 mod tests {
+    use serde::{Deserialize, Serialize};
+
+    use super::MagazineCategory;
+
+    #[derive(Debug, Deserialize, Serialize)]
+    struct TestMagJson {
+        magazine: MagazineCategory,
+    }
+
+    #[test]
+    fn test_magazine_serde() {
+        // test deserialize
+        let wsm_json = r#"{"magazine": 2}"#;
+        let wsm: TestMagJson = serde_json::from_str(wsm_json).unwrap();
+
+        assert_eq!(wsm.magazine, MagazineCategory::WeeklyShounenMagazine);
+        // test serialize
+        let wsm_ser = serde_json::to_string(&wsm).unwrap();
+        assert_eq!(wsm_ser, r#"{"magazine":2}"#);
+    }
+
+    #[test]
+    fn test_magazine_serde_fallback() {
+        // test deserialize for fallback
+        let unknown_json = r#"{"magazine": 100}"#;
+        let unknown: TestMagJson = serde_json::from_str(unknown_json).unwrap();
+
+        assert_eq!(unknown.magazine, MagazineCategory::Undefined);
+        // test serialize for fallback
+        let unknown_ser = serde_json::to_string(&unknown).unwrap();
+        assert_eq!(unknown_ser, r#"{"magazine":0}"#);
+    }
+
     #[test]
     fn test_magazine_category_pretty() {
         let e_young = super::MagazineCategory::eYoungMagazine;
