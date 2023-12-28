@@ -1532,6 +1532,7 @@ version = "0.2.0"
 dependencies = [
  "anyhow",
  "base64",
+ "chrono",
  "cookie_store 0.20.0",
  "image",
  "lazy_static",
