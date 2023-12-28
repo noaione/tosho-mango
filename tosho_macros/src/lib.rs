@@ -25,7 +25,14 @@ pub fn serializenum32_derive(input: TokenStream) -> TokenStream {
 #[proc_macro_derive(DeserializeEnum32)]
 pub fn deserializeenum32_derive(input: TokenStream) -> TokenStream {
     let ast = syn::parse(input).unwrap();
-    impl_deserenum32_derive(&ast)
+    impl_deserenum32_derive(&ast, false)
+}
+
+/// Derives [`serde::Deserialize`] for an enum in i32 mode with fallback to [`std::default::Default`].
+#[proc_macro_derive(DeserializeEnum32Fallback)]
+pub fn deserializeenum32fallback_derive(input: TokenStream) -> TokenStream {
+    let ast = syn::parse(input).unwrap();
+    impl_deserenum32_derive(&ast, true)
 }
 
 /// Derives an enum that would implement `.to_name()`
@@ -151,7 +158,7 @@ fn impl_serenum32_derive(ast: &syn::DeriveInput) -> TokenStream {
     tokens.into()
 }
 
-fn impl_deserenum32_derive(ast: &syn::DeriveInput) -> TokenStream {
+fn impl_deserenum32_derive(ast: &syn::DeriveInput, with_default: bool) -> TokenStream {
     let name = &ast.ident;
 
     // We want to get the values of the enum variants to create our match arms
@@ -174,6 +181,19 @@ fn impl_deserenum32_derive(ast: &syn::DeriveInput) -> TokenStream {
         });
     }
 
+    match with_default {
+        true => {
+            match_arms.push(quote::quote! {
+                _ => Ok(#name::default()),
+            });
+        }
+        false => {
+            match_arms.push(quote::quote! {
+                _ => Err(serde::de::Error::custom(format!("Invalid {} value: {}", stringify!(#name), s))),
+            })
+        }
+    }
+
     let tokens = quote::quote! {
         impl<'de> Deserialize<'de> for #name {
             fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
@@ -183,7 +203,6 @@ fn impl_deserenum32_derive(ast: &syn::DeriveInput) -> TokenStream {
                 let s = i32::deserialize(deserializer)?;
                 match s {
                     #(#match_arms)*
-                    _ => Err(serde::de::Error::custom(format!("Invalid {} value: {}", stringify!(#name), s))),
                 }
             }
         }
