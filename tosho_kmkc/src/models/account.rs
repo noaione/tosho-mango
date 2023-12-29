@@ -1,4 +1,4 @@
-use chrono::{DateTime, NaiveDateTime, Utc};
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 use super::{EpisodeBadge, IntBool};
@@ -14,8 +14,12 @@ pub struct UserPoint {
     #[serde(rename = "point_sale_text")]
     pub point_sale: Option<String>,
     /// The point sale finish datetime string.
-    #[serde(rename = "point_sale_finish_datetime")]
-    point_sale_finish: Option<String>,
+    #[serde(
+        rename = "point_sale_finish_datetime",
+        serialize_with = "super::datetime::serialize_opt",
+        deserialize_with = "super::datetime::deserialize_opt"
+    )]
+    point_sale_finish: Option<DateTime<Utc>>,
 }
 
 impl UserPoint {
@@ -36,46 +40,13 @@ impl UserPoint {
         paid_point: u64,
         free_point: u64,
         point_sale: Option<String>,
-        point_sale_finish_datetime: Option<String>,
+        point_sale_finish_datetime: Option<DateTime<Utc>>,
     ) -> Self {
         Self {
             paid_point,
             free_point,
             point_sale,
             point_sale_finish: point_sale_finish_datetime,
-        }
-    }
-
-    /// The point sale finish datetime.
-    ///
-    /// # Examples
-    /// ```
-    /// use tosho_kmkc::models::UserPoint;
-    /// use chrono::Datelike;
-    ///
-    /// let user_point = UserPoint::new(0, 0);
-    ///
-    /// assert!(user_point.point_sale_finish().is_none());
-    ///
-    /// let user_point = UserPoint::new_with_sale(
-    ///     0,
-    ///     0,
-    ///     None,
-    ///     Some("2021-01-01 00:00:00".to_string()),
-    /// );
-    ///
-    /// assert_eq!(user_point.point_sale_finish().unwrap().year(), 2021);
-    /// ```
-    pub fn point_sale_finish(&self) -> Option<DateTime<Utc>> {
-        // Formatted YYYY-MM-DD HH:MM:SS
-        // Assume UTC
-        match &self.point_sale_finish {
-            Some(s) => {
-                let naive_dt = NaiveDateTime::parse_from_str(s, "%Y-%m-%d %H:%M:%S").ok()?;
-                let utc_dt = naive_dt.and_utc();
-                Some(utc_dt)
-            }
-            None => None,
         }
     }
 
