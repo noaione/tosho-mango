@@ -207,19 +207,19 @@ impl ImagePageNodeStr {
 pub struct EpisodeViewerResponse {
     /// The episode ID.
     #[serde(rename = "episode_id")]
-    id: i32,
+    pub id: i32,
     /// The list of pages.
     #[serde(rename = "page_list")]
-    pages: Vec<ImagePageNode>,
+    pub pages: Vec<ImagePageNode>,
     /// The list of episodes for this titles.
     #[serde(rename = "episode_list")]
-    episodes: Vec<EpisodeNode>,
+    pub episodes: Vec<EpisodeNode>,
     /// The next episode ID.
     #[serde(rename = "next_episode_id", default)]
-    next_id: Option<i32>,
+    pub next_id: Option<i32>,
     /// The previous episode ID.
     #[serde(rename = "prev_episode_id", default)]
-    prev_id: Option<i32>,
+    pub prev_id: Option<i32>,
 }
 
 /// Represents the episode view response for web viewer.
@@ -227,14 +227,33 @@ pub struct EpisodeViewerResponse {
 pub struct WebEpisodeViewerResponse {
     /// The episode ID.
     #[serde(rename = "episode_id")]
-    id: i32,
+    pub id: i32,
     /// The list of pages.
     #[serde(rename = "page_list")]
-    pages: Vec<ImagePageNodeStr>,
+    pub pages: Vec<ImagePageNodeStr>,
     /// The bonus point of the episode.
-    bonus_point: i32,
+    pub bonus_point: i32,
     /// The title ID associated with the episode.
-    title_id: i32,
+    pub title_id: i32,
     /// The scramble seed for the epsiode
-    scramble_seed: u32,
+    pub scramble_seed: u32,
+}
+
+/// Represents an episode purchase response.
+#[derive(Debug, Serialize, Deserialize)]
+pub struct EpisodePurchaseResponse {
+    /// The point left on the account
+    #[serde(rename = "account_point")]
+    pub left: i32,
+    /// The point paid for the episode
+    #[serde(rename = "paid_point")]
+    pub paid: i32,
+}
+
+/// Represents a bulk episode purchase response.
+#[derive(Debug, Serialize, Deserialize)]
+pub struct BulkEpisodePurchaseResponse {
+    /// The point earned back from the purchase
+    #[serde(rename = "earned_point_back")]
+    pub point_back: i32,
 }

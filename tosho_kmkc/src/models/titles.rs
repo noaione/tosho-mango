@@ -56,7 +56,7 @@ pub struct TitleNode {
     #[serde(rename = "latest_paid_episode_id")]
     pub latest_episode_ids: Vec<i32>,
     /// The latest free episode ID.
-    pub latest_free_episode_ids: i32,
+    pub latest_free_episode_id: i32,
     /// The list of genre IDs.
     #[serde(rename = "genre_id_list")]
     pub genre_ids: Vec<i32>,
@@ -90,4 +90,136 @@ pub struct SearchResponse {
     /// The list of title IDs.
     #[serde(rename = "title_id_list")]
     pub title_ids: Vec<i32>,
+}
+
+/// The premium ticket of a title
+#[derive(Debug, Serialize, Deserialize)]
+pub struct PremiumTicketInfo {
+    /// The number of owned premium tickets.
+    #[serde(rename = "own_ticket_num")]
+    pub owned: u64,
+    /// The type of premium ticket.
+    /// Using integer instead of enum because it does not have enough information.
+    #[serde(rename = "ticket_type")]
+    pub r#type: i32,
+    /// The rental time of the premium ticket in seconds.
+    #[serde(rename = "rental_second")]
+    pub duration: i32,
+}
+
+/// The title ticket of a title
+#[derive(Debug, Serialize, Deserialize)]
+pub struct TitleTicketInfo {
+    /// The number of owned title tickets.
+    #[serde(rename = "own_ticket_num")]
+    pub owned: u64,
+    /// The rental time of the title ticket in seconds.
+    #[serde(rename = "rental_second")]
+    pub duration: i32,
+    /// The type of title ticket.
+    /// Using integer instead of enum because it does not have enough information.
+    #[serde(rename = "ticket_type")]
+    pub r#type: i32,
+    /// The ticket vversion of the title ticket.
+    #[serde(rename = "ticket_version")]
+    pub version: i32,
+    /// The maximum title ticket you can own
+    #[serde(rename = "max_ticket_num")]
+    pub max_owned: u64,
+    /// The recover time left of the title ticket.
+    #[serde(rename = "recover_second")]
+    pub recover_time: i32,
+    /// The end time of the title ticket, if used.
+    #[serde(rename = "finish_time")]
+    pub end_time: Option<i32>,
+    /// The next ticket recover time left of the title ticket.
+    #[serde(rename = "next_ticket_recover_second")]
+    pub next_recover_time: i32,
+}
+
+/// A ticket info for a title.
+#[derive(Debug, Serialize, Deserialize)]
+pub struct TicketInfo {
+    /// The premium ticket info.
+    #[serde(rename = "premium_ticket_info")]
+    pub premium: PremiumTicketInfo,
+    /// The title ticket info.
+    #[serde(rename = "title_ticket_info")]
+    pub title: TitleTicketInfo,
+    /// The list of applicable title IDs.
+    #[serde(rename = "target_episode_id_list")]
+    pub title_ids: Vec<i32>,
+}
+
+/// The title ticket list entry of a title.
+#[derive(Debug, Serialize, Deserialize)]
+pub struct TitleTicketListNode {
+    /// The title ID.
+    #[serde(rename = "title_id")]
+    pub id: i32,
+    /// The ticket info
+    #[serde(rename = "ticket_info")]
+    pub info: TicketInfo,
+}
+
+impl TitleTicketListNode {
+    /// Whether the title ticket is available.
+    pub fn is_title_available(&self) -> bool {
+        self.info.title.owned > 0
+    }
+
+    /// Whether the premium ticket is available.
+    pub fn is_premium_available(&self) -> bool {
+        self.info.premium.owned > 0
+    }
+
+    /// Subtract or use a title ticket.
+    pub fn subtract_title(&mut self) {
+        self.info.title.owned = self.info.title.owned.saturating_sub(1)
+    }
+
+    /// Subtract or use a premium ticket.
+    pub fn subtract_premium(&mut self) {
+        self.info.premium.owned = self.info.premium.owned.saturating_sub(1)
+    }
+
+    /// Whether the title has any ticket type available.
+    pub fn has_ticket(&self) -> bool {
+        self.is_title_available() || self.is_premium_available()
+    }
+}
+
+/// Represents the title ticket list response.
+#[derive(Debug, Serialize, Deserialize)]
+pub struct TitleTicketListResponse {
+    /// The list of title ticket list entries.
+    #[serde(rename = "title_ticket_list")]
+    pub tickets: Vec<TitleTicketListNode>,
+}
+
+/// A title node from a title purchase response.
+#[derive(Debug, Serialize, Deserialize)]
+pub struct TitlePurchaseNode {
+    /// The title ID.
+    #[serde(rename = "title_id")]
+    pub id: i32,
+    /// The title name.
+    #[serde(rename = "title_name")]
+    pub title: String,
+    /// The title thumbnail URL.
+    #[serde(rename = "thumbnail_image_url")]
+    pub thumbnail_url: String,
+    /// The first episode ID.
+    pub first_episode_id: i32,
+    /// The ID of the recently purchased episode.
+    #[serde(rename = "recently_purchased_episode_id")]
+    pub recent_purchase_id: i32,
+}
+
+/// Represents the title purchase response.
+#[derive(Debug, Serialize, Deserialize)]
+pub struct TitlePurchaseResponse {
+    /// The list of title nodes.
+    #[serde(rename = "title_list")]
+    pub titles: Vec<TitlePurchaseNode>,
 }

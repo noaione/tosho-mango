@@ -1,7 +1,7 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-use super::{EpisodeBadge, IntBool};
+use super::{DevicePlatform, EpisodeBadge, GenderType, IntBool};
 
 /// The user point information
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -19,7 +19,7 @@ pub struct UserPoint {
         serialize_with = "super::datetime::serialize_opt",
         deserialize_with = "super::datetime::deserialize_opt"
     )]
-    point_sale_finish: Option<DateTime<Utc>>,
+    pub point_sale_finish: Option<DateTime<Utc>>,
 }
 
 impl UserPoint {
@@ -143,15 +143,64 @@ pub struct UserPointResponse {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct UserFavoriteList {
     /// The last updated time of the free episode.
-    free_episode_updated: String,
+    pub free_episode_updated: String,
     /// The last updated time of the paid episode.
-    paid_episode_updated: String,
+    pub paid_episode_updated: String,
     /// Is there any unread free episode.
-    is_unread_free_episode: IntBool,
+    pub is_unread_free_episode: IntBool,
     /// Purchase status of the manga.
-    purchase_status: EpisodeBadge,
+    pub purchase_status: EpisodeBadge,
     /// The title ticket recover time.
-    ticket_recover_time: String,
+    pub ticket_recover_time: String,
     /// The title ID.
-    title_id: i32,
+    pub title_id: i32,
+}
+
+/// The device info of a user account
+#[derive(Debug, Serialize, Deserialize)]
+pub struct UserAccountDevice {
+    /// The user ID or device ID
+    #[serde(rename = "user_id")]
+    pub id: String,
+    /// The device name
+    #[serde(rename = "device_name")]
+    pub name: String,
+    /// The device platform
+    pub platform: DevicePlatform,
+}
+
+/// The user account information
+#[derive(Debug, Serialize, Deserialize)]
+pub struct UserAccount {
+    /// The account ID
+    #[serde(rename = "account_id")]
+    pub id: String,
+    /// The account device ID
+    #[serde(rename = "user_id")]
+    pub device_id: String,
+    /// The user name
+    #[serde(rename = "nickname")]
+    pub name: String,
+    /// The user email
+    pub email: String,
+    /// The user gender
+    pub gender: GenderType,
+    /// The user birth year
+    #[serde(rename = "birthyear")]
+    pub birth_year: i32,
+    /// The list of registered devices
+    #[serde(rename = "device_list")]
+    pub devices: Vec<UserAccountDevice>,
+    /// Whether the account is registered or not.
+    #[serde(rename = "is_registered")]
+    pub registered: IntBool,
+    /// The number of days since the account is registered.
+    #[serde(rename = "days_since_created")]
+    pub registered_days: i64,
+}
+
+/// Represents an user account response.
+pub struct AccountResponse {
+    /// The user account information.
+    pub account: UserAccount,
 }
