@@ -1,10 +1,14 @@
 use core::panic;
 
-use cookie_store::Cookie;
+use cookie_store::{Cookie, RawCookie};
+use reqwest::Url;
 use reqwest_cookie_store::CookieStoreMutex;
-use urlencoding::decode;
+use time::OffsetDateTime;
+use urlencoding::{decode, encode};
 
-#[derive(Debug, serde::Deserialize)]
+use crate::constants::BASE_HOST;
+
+#[derive(Debug, serde::Deserialize, serde::Serialize, Clone)]
 pub struct KMConfigWebKV {
     /// The value of the cookie/key
     pub value: String,
@@ -31,8 +35,25 @@ impl From<&Cookie<'_>> for KMConfigWebKV {
     }
 }
 
+fn i64_to_cookie_time(time: i64) -> OffsetDateTime {
+    OffsetDateTime::from_unix_timestamp(time).unwrap()
+}
+
+impl KMConfigWebKV {
+    fn to_cookie(&self, name: String) -> RawCookie<'_> {
+        let binding = encode(&serde_json::to_string(&self).unwrap()).to_string();
+        RawCookie::build(name, binding)
+            .domain(BASE_HOST.as_str())
+            .secure(true)
+            .http_only(false)
+            .path("/")
+            .expires(i64_to_cookie_time(self.expires))
+            .finish()
+    }
+}
+
 /// Represents the config/cookies for the web implementation
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct KMConfigWeb {
     /// The auth token for KM KC
     pub uwt: String,
@@ -74,15 +95,59 @@ impl From<CookieStoreMutex> for KMConfigWeb {
     }
 }
 
+impl From<KMConfigWeb> for CookieStoreMutex {
+    fn from(value: KMConfigWeb) -> Self {
+        let store = CookieStoreMutex::default();
+
+        let birthday_cookie = value.birthday.to_cookie("birthday".to_string());
+        let tos_adult_cookie = value
+            .tos_adult
+            .to_cookie("terms_of_service_adult".to_string());
+        let privacy_cookie = value.privacy.to_cookie("privacy_policy".to_string());
+
+        let uwt = RawCookie::build("uwt", value.uwt)
+            .domain(BASE_HOST.as_str())
+            .secure(true)
+            .http_only(true)
+            .path("/")
+            .expires(i64_to_cookie_time(value.birthday.expires))
+            .finish();
+
+        let base_host_url = Url::parse(&format!("https://{}", BASE_HOST.as_str())).unwrap();
+        store
+            .lock()
+            .unwrap()
+            .insert_raw(&uwt, &base_host_url)
+            .unwrap();
+        store
+            .lock()
+            .unwrap()
+            .insert_raw(&birthday_cookie, &base_host_url)
+            .unwrap();
+        store
+            .lock()
+            .unwrap()
+            .insert_raw(&tos_adult_cookie, &base_host_url)
+            .unwrap();
+        store
+            .lock()
+            .unwrap()
+            .insert_raw(&privacy_cookie, &base_host_url)
+            .unwrap();
+
+        store
+    }
+}
+
 /// Represents the mobile config
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct KMConfigMobile {
     pub user_id: String,
     pub user_token: String,
 }
 
 /// Represents the config for the KM KC
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum KMConfig {
     /// Web configuration
     Web(KMConfigWeb),
