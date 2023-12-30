@@ -7,6 +7,7 @@ pub mod imaging;
 pub mod models;
 use constants::{ANDROID_CONSTANTS, BASE_API, WEB_CONSTANTS};
 use md5::Md5;
+use models::{EpisodeNode, EpisodesListResponse, StatusResponse};
 use reqwest_cookie_store::CookieStoreMutex;
 use sha2::{Digest, Sha256, Sha512};
 
@@ -120,6 +121,110 @@ impl KMClient {
             }
         }
     }
+
+    fn format_request(&self, query_params: &mut HashMap<String, String>) -> String {
+        let platform = match &self.config {
+            KMConfig::Web(_) => WEB_CONSTANTS.platform,
+            KMConfig::Mobile(_) => ANDROID_CONSTANTS.platform,
+        };
+        let version = match &self.config {
+            KMConfig::Web(_) => WEB_CONSTANTS.version,
+            KMConfig::Mobile(_) => ANDROID_CONSTANTS.version,
+        };
+        query_params.insert("platform".to_string(), platform.to_string());
+        query_params.insert("version".to_string(), version.to_string());
+
+        let hash = self.create_request_hash(query_params.clone());
+        hash
+    }
+
+    async fn request<T>(
+        &self,
+        method: reqwest::Method,
+        endpoint: &str,
+        data: Option<HashMap<String, String>>,
+        params: Option<HashMap<String, String>>,
+        headers: Option<reqwest::header::HeaderMap>,
+    ) -> anyhow::Result<T>
+    where
+        T: serde::de::DeserializeOwned,
+    {
+        let mut extend_headers = match headers {
+            Some(headers) => headers,
+            None => reqwest::header::HeaderMap::new(),
+        };
+        let hash_header = match &self.config {
+            KMConfig::Web(_) => WEB_CONSTANTS.hash.as_str(),
+            KMConfig::Mobile(_) => ANDROID_CONSTANTS.hash.as_str(),
+        };
+
+        let hash_value = match data.clone() {
+            Some(mut data) => self.format_request(&mut data),
+            None => match params.clone() {
+                Some(mut params) => self.format_request(&mut params),
+                None => "".to_string(),
+            },
+        };
+
+        let mut empty_params: HashMap<String, String> = HashMap::new();
+        let mut empty_headers = reqwest::header::HeaderMap::new();
+        empty_headers
+            .insert(hash_header, self.format_request(&mut empty_params).parse()?)
+            .unwrap();
+
+        extend_headers
+            .insert(hash_header, hash_value.parse()?)
+            .unwrap();
+
+        let request = match (data.clone(), params.clone()) {
+            (None, None) => self
+                .inner
+                .request(method, endpoint)
+                .query(&empty_params)
+                .headers(empty_headers),
+            (Some(data), None) => {
+                extend_headers.insert(
+                    reqwest::header::CONTENT_TYPE,
+                    "application/x-www-form-urlencoded".parse()?,
+                );
+                self.inner
+                    .request(method, endpoint)
+                    .form(&data)
+                    .headers(extend_headers)
+            }
+            (None, Some(params)) => self
+                .inner
+                .request(method, endpoint)
+                .query(&params)
+                .headers(extend_headers),
+            (Some(_), Some(_)) => {
+                anyhow::bail!("Cannot have both data and params")
+            }
+        };
+
+        Ok(parse_response(request.send().await?).await?)
+    }
+
+    pub async fn get_episodes(&self, episodes: Vec<i32>) -> anyhow::Result<Vec<EpisodeNode>> {
+        let mut data = HashMap::new();
+        let episode_str = episodes
+            .iter()
+            .map(|x| x.to_string())
+            .collect::<Vec<String>>();
+        data.insert("episode_id_list".to_string(), episode_str.join(","));
+
+        let responses = self
+            .request::<EpisodesListResponse>(
+                reqwest::Method::POST,
+                &format!("{}/episode/list", BASE_API.as_str()),
+                Some(data),
+                None,
+                None,
+            )
+            .await?;
+
+        Ok(responses.episodes)
+    }
 }
 
 fn hash_kv(key: &str, value: &str) -> String {
@@ -132,6 +237,22 @@ fn hash_kv(key: &str, value: &str) -> String {
     let hasher512 = Sha512::digest(value);
 
     format!("{:x}_{:x}", hasher256, hasher512)
+}
+
+async fn parse_response<T>(response: reqwest::Response) -> anyhow::Result<T>
+where
+    T: serde::de::DeserializeOwned,
+{
+    let raw_text = response.text().await.unwrap();
+    let status_resp = serde_json::from_str::<StatusResponse>(&raw_text.clone()).unwrap();
+
+    match status_resp.raise_for_status() {
+        Ok(_) => {
+            let parsed = serde_json::from_str(&raw_text).unwrap();
+            Ok(parsed)
+        }
+        Err(e) => Err(anyhow::Error::new(e)),
+    }
 }
 
 #[cfg(test)]

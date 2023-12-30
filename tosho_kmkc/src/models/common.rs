@@ -10,6 +10,7 @@ pub struct SimpleId {
 }
 
 /// The base response for all API calls.
+#[derive(Debug, Serialize, Deserialize)]
 pub struct StatusResponse {
     /// The status of the response, usually "success" or "fail".
     pub status: String,
