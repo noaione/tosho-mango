@@ -17,6 +17,20 @@ use models::{
 use reqwest_cookie_store::CookieStoreMutex;
 use sha2::{Digest, Sha256, Sha512};
 
+/// Main client for interacting with the SQ MU!
+///
+/// # Example
+/// ```no_run,ignore
+/// use tosho_kmkc::KMClient;
+///
+/// #[tokio::main]
+/// async fn main() {
+///     let config = KMConfig::Web(..);
+///     let client = KMClient::new(config);
+///     let manga = client.get_titles(vec![10007]).await.unwrap();
+///     println!("{:?}", manga);
+/// }
+/// ```
 #[derive(Debug)]
 pub struct KMClient {
     inner: reqwest::Client,
@@ -24,6 +38,10 @@ pub struct KMClient {
 }
 
 impl KMClient {
+    /// Create a new [`KMClient`] with the given config.
+    ///
+    /// # Arguments
+    /// * `config` - The config to use for the client
     pub fn new(config: KMConfig) -> Self {
         let mut headers = reqwest::header::HeaderMap::new();
         headers.insert(
