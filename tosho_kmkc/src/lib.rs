@@ -7,7 +7,13 @@ pub mod imaging;
 pub mod models;
 use constants::{ANDROID_CONSTANTS, BASE_API, WEB_CONSTANTS};
 use md5::Md5;
-use models::{EpisodeNode, EpisodesListResponse, StatusResponse};
+use models::{
+    AccountResponse, BulkEpisodePurchaseResponse, EpisodeNode, EpisodePurchaseResponse,
+    EpisodeViewerResponse, EpisodesListResponse, GenreSearchResponse, KMAPINotEnoughPointsError,
+    MagazineCategoryResponse, RankingListResponse, SearchResponse, StatusResponse, TicketInfoType,
+    TitleListResponse, TitleNode, TitleTicketListNode, TitleTicketListResponse, UserPoint,
+    UserPointResponse, WebEpisodeViewerResponse, WeeklyListResponse,
+};
 use reqwest_cookie_store::CookieStoreMutex;
 use sha2::{Digest, Sha256, Sha512};
 
@@ -138,6 +144,17 @@ impl KMClient {
         hash
     }
 
+    /// Make an authenticated request to the API.
+    ///
+    /// This request will automatically add all the required headers/cookies/auth method
+    /// to the request.
+    ///
+    /// # Arguments
+    /// * `method` - The HTTP method to use
+    /// * `endpoint` - The endpoint to request (e.g. `/episode/list`)
+    /// * `data` - The data to send in the request body (as form data)
+    /// * `params` - The query params to send in the request
+    /// * `headers` - The headers to send in the request
     async fn request<T>(
         &self,
         method: reqwest::Method,
@@ -149,6 +166,7 @@ impl KMClient {
     where
         T: serde::de::DeserializeOwned,
     {
+        let endpoint = format!("{}{}", BASE_API.as_str(), endpoint);
         let mut extend_headers = match headers {
             Some(headers) => headers,
             None => reqwest::header::HeaderMap::new(),
@@ -205,6 +223,10 @@ impl KMClient {
         Ok(parse_response(request.send().await?).await?)
     }
 
+    /// Get the list of episodes from the given list of episode IDs
+    ///
+    /// # Arguments
+    /// * `episodes` - The list of episode IDs to get
     pub async fn get_episodes(&self, episodes: Vec<i32>) -> anyhow::Result<Vec<EpisodeNode>> {
         let mut data = HashMap::new();
         let episode_str = episodes
@@ -216,7 +238,7 @@ impl KMClient {
         let responses = self
             .request::<EpisodesListResponse>(
                 reqwest::Method::POST,
-                &format!("{}/episode/list", BASE_API.as_str()),
+                "/episode/list",
                 Some(data),
                 None,
                 None,
@@ -224,6 +246,338 @@ impl KMClient {
             .await?;
 
         Ok(responses.episodes)
+    }
+
+    /// Get the list of titles from the given list of title IDs
+    ///
+    /// # Arguments
+    /// * `titles` - The list of title IDs to get
+    pub async fn get_titles(&self, titles: Vec<i32>) -> anyhow::Result<Vec<TitleNode>> {
+        let mut data = HashMap::new();
+        let title_str = titles
+            .iter()
+            .map(|x| x.to_string())
+            .collect::<Vec<String>>();
+        data.insert("title_id_list".to_string(), title_str.join(","));
+
+        let responses = self
+            .request::<TitleListResponse>(
+                reqwest::Method::GET,
+                "/title/list",
+                None,
+                Some(data),
+                None,
+            )
+            .await?;
+
+        Ok(responses.titles)
+    }
+
+    /// Get the episode viewer for the given episode ID.
+    ///
+    /// The following will return an enum depending on the config used.
+    ///
+    /// If you're using web config, please remember to descramble the images
+    /// with the [`imaging::descramble_image`] function.
+    ///
+    /// # Arguments
+    /// * `episode_id` - The episode ID to get the viewer for
+    pub async fn get_episode_viewer(
+        &self,
+        episode_id: i32,
+    ) -> anyhow::Result<EpisodeViewerResponse> {
+        match &self.config {
+            KMConfig::Web(_) => {
+                let mut params = HashMap::new();
+                params.insert("episode_id".to_string(), episode_id.to_string());
+
+                let response = self
+                    .request::<WebEpisodeViewerResponse>(
+                        reqwest::Method::GET,
+                        "/web/episode/viewer",
+                        None,
+                        Some(params),
+                        None,
+                    )
+                    .await?;
+
+                Ok(EpisodeViewerResponse::Web(response))
+            }
+            KMConfig::Mobile(_) => {
+                anyhow::bail!("Not implemented")
+            }
+        }
+    }
+
+    /// Get the title ticket for the given title ID.
+    ///
+    /// # Arguments
+    /// * `title_id` - The title ID to get the ticket for
+    pub async fn get_title_ticket(&self, title_id: i32) -> anyhow::Result<TitleTicketListNode> {
+        let mut params = HashMap::new();
+        params.insert("title_id_list".to_string(), title_id.to_string());
+
+        let response = self
+            .request::<TitleTicketListResponse>(
+                reqwest::Method::GET,
+                "/title/ticket/list",
+                None,
+                Some(params),
+                None,
+            )
+            .await?;
+
+        Ok(response.tickets[0].clone())
+    }
+
+    /// Claim or purchase an episode with a user's point.
+    ///
+    /// # Arguments
+    /// * `episode` - The episode to claim
+    /// * `wallet` - The user's point wallet (mutable).
+    pub async fn claim_episode(
+        &self,
+        episode: &EpisodeNode,
+        wallet: &mut UserPoint,
+    ) -> anyhow::Result<EpisodePurchaseResponse> {
+        if !wallet.can_purchase(episode.point.try_into().unwrap_or(0)) {
+            // bail with custom error
+            return Err(anyhow::Error::new(KMAPINotEnoughPointsError {
+                message: "Not enough points to purchase episode".to_string(),
+                points_needed: episode.point.try_into().unwrap_or(0),
+                points_have: wallet.total_point(),
+            }));
+        }
+
+        let mut data = HashMap::new();
+        data.insert("episode_id".to_owned(), episode.id.to_string());
+        data.insert("check_point".to_owned(), episode.point.to_string());
+
+        let response = self
+            .request::<EpisodePurchaseResponse>(
+                reqwest::Method::POST,
+                "/episode/paid",
+                Some(data),
+                None,
+                None,
+            )
+            .await?;
+
+        wallet.subtract(response.paid.try_into().unwrap_or(0));
+        wallet.add(episode.bonus_point.try_into().unwrap_or(0));
+
+        Ok(response)
+    }
+
+    /// Bulk claim or purchase episodes with a user's point.
+    ///
+    /// # Arguments
+    /// * `episodes` - The episodes to claim
+    /// * `wallet` - The user's point wallet (mutable).
+    pub async fn claim_episodes(
+        &self,
+        episodes: Vec<&EpisodeNode>,
+        wallet: &mut UserPoint,
+    ) -> anyhow::Result<BulkEpisodePurchaseResponse> {
+        let mut data = HashMap::new();
+        let mut episode_ids = vec![];
+
+        let mut paid_point = 0_u64;
+        let mut bonus_point = 0_u64;
+
+        for episode in episodes {
+            episode_ids.push(episode.id.to_string());
+
+            paid_point += episode.point.try_into().unwrap_or(0);
+            bonus_point += episode.bonus_point.try_into().unwrap_or(0);
+        }
+
+        let mut cloned_wallet = wallet.clone();
+        cloned_wallet.add(bonus_point);
+        if !cloned_wallet.can_purchase(paid_point) {
+            // bail with custom error
+            return Err(anyhow::Error::new(KMAPINotEnoughPointsError {
+                message: "Not enough points to purchase episode".to_string(),
+                points_needed: paid_point,
+                points_have: cloned_wallet.total_point(),
+            }));
+        }
+
+        data.insert("episode_id_list".to_owned(), episode_ids.join(","));
+        data.insert("paid_point".to_owned(), paid_point.to_string());
+        data.insert("point_back".to_owned(), bonus_point.to_string());
+
+        let response = self
+            .request::<BulkEpisodePurchaseResponse>(
+                reqwest::Method::POST,
+                "/episode/paid/bulk",
+                Some(data),
+                None,
+                None,
+            )
+            .await?;
+
+        wallet.subtract(response.paid.try_into().unwrap_or(0));
+        wallet.add(response.point_back.try_into().unwrap_or(0));
+
+        Ok(response)
+    }
+
+    /// Claim or purchase an episode with a ticket.
+    ///
+    /// This will return the status of the claim, and whether or not the ticket is a title ticket.
+    ///
+    /// # Arguments
+    /// * `episode_id` - The episode ID to claim
+    /// * `ticket` - The ticket to use to claim the episode
+    pub async fn claim_episode_with_ticket(
+        &self,
+        episode_id: i32,
+        ticket: &TicketInfoType,
+    ) -> anyhow::Result<(StatusResponse, bool)> {
+        let mut data = HashMap::new();
+        data.insert("episode_id".to_owned(), episode_id.to_string());
+
+        let mut is_title = false;
+        match ticket {
+            TicketInfoType::Premium(_) => {
+                data.insert("ticket_version".to_owned(), "1".to_owned());
+                data.insert("ticket_type".to_owned(), "99".to_owned());
+            }
+            TicketInfoType::Title(title) => {
+                data.insert("ticket_version".to_owned(), title.version.to_string());
+                data.insert("ticket_type".to_owned(), title.r#type.to_string());
+                is_title = true;
+            }
+        }
+
+        let response = self
+            .request::<StatusResponse>(
+                reqwest::Method::POST,
+                "/episode/rental/ticket",
+                Some(data),
+                None,
+                None,
+            )
+            .await?;
+
+        Ok((response, is_title))
+    }
+
+    /// Get the user's point.
+    pub async fn get_user_point(&self) -> anyhow::Result<UserPointResponse> {
+        let response = self
+            .request::<UserPointResponse>(reqwest::Method::GET, "/account/point", None, None, None)
+            .await?;
+
+        Ok(response)
+    }
+
+    /// Search for a title by name.
+    ///
+    /// # Arguments
+    /// * `query` - The query to search for
+    /// * `limit` - The limit of results to return
+    pub async fn search(&self, query: &str, limit: Option<u32>) -> anyhow::Result<Vec<TitleNode>> {
+        let mut params = HashMap::new();
+        params.insert("keyword".to_owned(), query.to_owned());
+        let limit = limit.unwrap_or(99_999);
+        params.insert("limit".to_owned(), limit.to_string());
+
+        let response = self
+            .request::<SearchResponse>(
+                reqwest::Method::GET,
+                "/search/title",
+                None,
+                Some(params),
+                None,
+            )
+            .await?;
+
+        Ok(response.titles)
+    }
+
+    /// Get the weekly ranking/list.
+    pub async fn get_weekly(&self) -> anyhow::Result<WeeklyListResponse> {
+        let response = self
+            .request::<WeeklyListResponse>(reqwest::Method::GET, "/title/weekly", None, None, None)
+            .await?;
+
+        Ok(response)
+    }
+
+    /// Get the current user's account information.
+    pub async fn get_account(&self) -> anyhow::Result<AccountResponse> {
+        let response = self
+            .request::<AccountResponse>(reqwest::Method::GET, "/account", None, None, None)
+            .await?;
+
+        Ok(response)
+    }
+
+    /// Get the magazine list.
+    pub async fn get_magazines(&self) -> anyhow::Result<MagazineCategoryResponse> {
+        let mut params = HashMap::new();
+        params.insert("limit".to_owned(), "99999".to_owned());
+        params.insert("offset".to_owned(), "0".to_owned());
+        let response = self
+            .request::<MagazineCategoryResponse>(
+                reqwest::Method::GET,
+                "/magazine/category/list",
+                None,
+                Some(params),
+                None,
+            )
+            .await?;
+
+        Ok(response)
+    }
+
+    /// Get the genre list.
+    pub async fn get_genres(&self) -> anyhow::Result<GenreSearchResponse> {
+        let response = self
+            .request::<GenreSearchResponse>(
+                reqwest::Method::GET,
+                "/genre/search/list",
+                None,
+                None,
+                None,
+            )
+            .await?;
+
+        Ok(response)
+    }
+
+    /// Get title rankings for a specific ranking ID.
+    ///
+    /// See [`constants::RANKING_TABS`] for the list of available ranking IDs.
+    ///
+    /// # Arguments
+    /// * `ranking_id` - The ranking ID to get
+    /// * `limit` - The limit of results to return
+    /// * `offset` - The offset of results to return
+    pub async fn get_all_rankings(
+        &self,
+        ranking_id: u32,
+        limit: Option<u32>,
+        offset: Option<u32>,
+    ) -> anyhow::Result<RankingListResponse> {
+        let mut params = HashMap::new();
+        params.insert("ranking_id".to_owned(), ranking_id.to_string());
+        params.insert("limit".to_owned(), limit.unwrap_or(101).to_string());
+        params.insert("offset".to_owned(), offset.unwrap_or(0).to_string());
+
+        let response = self
+            .request::<RankingListResponse>(
+                reqwest::Method::GET,
+                "/ranking/all",
+                None,
+                Some(params),
+                None,
+            )
+            .await?;
+
+        Ok(response)
     }
 }
 

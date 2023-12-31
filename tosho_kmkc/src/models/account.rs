@@ -200,6 +200,7 @@ pub struct UserAccount {
 }
 
 /// Represents an user account response.
+#[derive(Debug, Serialize, Deserialize)]
 pub struct AccountResponse {
     /// The user account information.
     pub account: UserAccount,

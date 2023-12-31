@@ -202,9 +202,9 @@ impl ImagePageNodeStr {
     }
 }
 
-/// Represents the episode view response.
+/// Represents the episode view response for mobile viewer.
 #[derive(Debug, Serialize, Deserialize)]
-pub struct EpisodeViewerResponse {
+pub struct MobileEpisodeViewerResponse {
     /// The episode ID.
     #[serde(rename = "episode_id")]
     pub id: i32,
@@ -239,6 +239,16 @@ pub struct WebEpisodeViewerResponse {
     pub scramble_seed: u32,
 }
 
+/// Represents the episode view response.
+///
+/// This is a combination of both mobile and web viewer response.
+pub enum EpisodeViewerResponse {
+    /// The mobile viewer response.
+    Mobile(MobileEpisodeViewerResponse),
+    /// The web viewer response.
+    Web(WebEpisodeViewerResponse),
+}
+
 /// Represents an episode purchase response.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct EpisodePurchaseResponse {
@@ -253,6 +263,12 @@ pub struct EpisodePurchaseResponse {
 /// Represents a bulk episode purchase response.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct BulkEpisodePurchaseResponse {
+    /// The point left on the account
+    #[serde(rename = "account_point")]
+    pub left: i32,
+    /// The point paid for the episode
+    #[serde(rename = "paid_point")]
+    pub paid: i32,
     /// The point earned back from the purchase
     #[serde(rename = "earned_point_back")]
     pub point_back: i32,

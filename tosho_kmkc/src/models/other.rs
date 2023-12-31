@@ -89,6 +89,7 @@ pub struct GenreSearchResponse {
 }
 
 /// Represents a ranking list response
+#[derive(Debug, Serialize, Deserialize)]
 pub struct RankingListResponse {
     /// The list of titles.
     pub titles: Vec<SimpleId>,

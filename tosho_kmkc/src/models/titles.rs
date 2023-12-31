@@ -93,7 +93,7 @@ pub struct SearchResponse {
 }
 
 /// The premium ticket of a title
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PremiumTicketInfo {
     /// The number of owned premium tickets.
     #[serde(rename = "own_ticket_num")]
@@ -108,7 +108,7 @@ pub struct PremiumTicketInfo {
 }
 
 /// The title ticket of a title
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TitleTicketInfo {
     /// The number of owned title tickets.
     #[serde(rename = "own_ticket_num")]
@@ -137,8 +137,16 @@ pub struct TitleTicketInfo {
     pub next_recover_time: i32,
 }
 
+/// A ticket info for a title (either premium or title ticket).
+pub enum TicketInfoType {
+    /// The premium ticket info.
+    Premium(PremiumTicketInfo),
+    /// The title ticket info.
+    Title(TitleTicketInfo),
+}
+
 /// A ticket info for a title.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TicketInfo {
     /// The premium ticket info.
     #[serde(rename = "premium_ticket_info")]
@@ -152,7 +160,7 @@ pub struct TicketInfo {
 }
 
 /// The title ticket list entry of a title.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TitleTicketListNode {
     /// The title ID.
     #[serde(rename = "title_id")]
