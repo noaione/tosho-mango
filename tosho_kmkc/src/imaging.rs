@@ -71,6 +71,22 @@ fn generate_copy_targets(rectbox: u32, seed: u32) -> Vec<((u32, u32), (u32, u32)
     targets
 }
 
+/// Descramble image bytes, and return descrambled image bytes.
+///
+/// # Arguments
+/// * `img_bytes` - Image bytes to descramble.
+/// * `rectbox` - How much block that divide the images, usually `4`.
+/// * `scramble_seed` - The seed used to scramble the image. Available in the [`models::WebEpisodeViewerResponse`]
+///                     response.
+///
+/// # Example
+/// ```no_run
+/// use tosho_kmkc::imaging::descramble_image;
+///
+/// let img_bytes = [0_u8; 100];
+///
+/// let descrambled_img_bytes = descramble_image(&img_bytes, 4, 749191485).unwrap();
+/// ```
 pub fn descramble_image(
     img_bytes: &[u8],
     rectbox: u32,
