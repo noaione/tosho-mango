@@ -1,6 +1,7 @@
 [workspace]
 resolver = "2"
 members = [
+    "tosho",
     "tosho_musq",
     "tosho_kmkc",
     "tosho_macros"
