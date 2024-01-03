@@ -1,8 +1,9 @@
 use clap::Parser;
 
 mod cli;
-mod r#impl;
-mod term;
+pub(crate) mod config;
+pub(crate) mod r#impl;
+pub(crate) mod term;
 use crate::cli::ToshoCli;
 
 #[tokio::main]
