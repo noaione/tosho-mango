@@ -44,6 +44,7 @@ impl Terminal {
     }
 
     /// Log to terminal
+    #[allow(dead_code)]
     pub fn log(&self, msg: &str) {
         if self.debug > 1 {
             println!(
@@ -53,6 +54,7 @@ impl Terminal {
         }
     }
 
+    #[allow(dead_code)]
     pub fn trace(&self, msg: &str) {
         if self.debug > 2 {
             println!("{}", cformat!("[<blue,strong>TRACE</blue,strong>] {}", msg))
