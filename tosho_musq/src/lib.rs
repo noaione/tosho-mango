@@ -184,10 +184,10 @@ impl MUClient {
 
     fn build_url(&self, path: &str) -> String {
         if path.starts_with('/') {
-            return format!("{:?}{}", *BASE_API, path);
+            return format!("{}{}", BASE_API.to_string(), path);
         }
 
-        format!("{:?}/{}", *BASE_API, path)
+        format!("{}/{}", BASE_API.to_string(), path)
     }
 
     fn empty_params(&self) -> HashMap<String, String> {
@@ -207,7 +207,7 @@ impl MUClient {
         let res = self
             .inner
             .get(self.build_url("/point/shop"))
-            .form(&self.empty_params())
+            .query(&self.empty_params())
             .send()
             .await?;
 
@@ -226,7 +226,7 @@ impl MUClient {
         let res = self
             .inner
             .get(self.build_url("/point/history"))
-            .form(&self.empty_params())
+            .query(&self.empty_params())
             .send()
             .await?;
 
@@ -259,7 +259,7 @@ impl MUClient {
         let res = self
             .inner
             .get(self.build_url("/manga/detail_v2"))
-            .form(&params)
+            .query(&params)
             .send()
             .await?;
 
@@ -291,7 +291,7 @@ impl MUClient {
         let res = self
             .inner
             .get(self.build_url("/manga/weekly"))
-            .form(&params)
+            .query(&params)
             .send()
             .await?;
 
@@ -318,7 +318,7 @@ impl MUClient {
         let res = self
             .inner
             .get(self.build_url("/manga/search"))
-            .form(&params)
+            .query(&params)
             .send()
             .await?;
 
@@ -418,9 +418,11 @@ impl MUClient {
         let res = self
             .inner
             .get(self.build_url("/account/account"))
-            .form(&self.empty_params())
+            .query(&self.empty_params())
             .send()
             .await?;
+
+        println!("{:?}", res.url());
 
         if res.status().is_success() {
             let bytes_data = res.bytes().await?;
@@ -437,7 +439,7 @@ impl MUClient {
         let res = self
             .inner
             .get(self.build_url("/setting/setting"))
-            .form(&self.empty_params())
+            .query(&self.empty_params())
             .send()
             .await?;
 
@@ -460,7 +462,7 @@ impl MUClient {
         let res = self
             .inner
             .get(self.build_url("/my_page"))
-            .form(&self.empty_params())
+            .query(&self.empty_params())
             .send()
             .await?;
 
@@ -486,7 +488,7 @@ impl MUClient {
         let res = self
             .inner
             .get(self.build_url("/home_v2"))
-            .form(&params)
+            .query(&params)
             .send()
             .await?;
 
