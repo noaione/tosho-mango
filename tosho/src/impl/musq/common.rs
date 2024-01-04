@@ -1,4 +1,4 @@
-use chrono::{DateTime, FixedOffset, Utc};
+use chrono::{DateTime, FixedOffset};
 use color_print::cformat;
 use tosho_musq::{
     constants::{get_constants, BASE_HOST},
@@ -35,8 +35,8 @@ pub(super) fn select_single_account(account_id: Option<&str>) -> Option<Config> 
         .filter_map(|c| match c {
             crate::config::ConfigImpl::KMKC(_) => None,
             crate::config::ConfigImpl::MUSQ(c) => Some(ConsoleChoice {
-                name: c.id.clone(),
-                value: c.session.clone(),
+                name: c.session.clone(),
+                value: c.id.clone(),
             }),
         })
         .collect();
@@ -52,7 +52,7 @@ pub(super) fn select_single_account(account_id: Option<&str>) -> Option<Config> 
                 .iter()
                 .find(|&c| match c {
                     crate::config::ConfigImpl::KMKC(_) => false,
-                    crate::config::ConfigImpl::MUSQ(c) => c.session == selected.value,
+                    crate::config::ConfigImpl::MUSQ(c) => c.session == selected.name,
                 })
                 .unwrap();
 
