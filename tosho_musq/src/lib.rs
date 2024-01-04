@@ -215,7 +215,10 @@ impl MUClient {
             let bytes_data = res.bytes().await?;
             let cursor = bytes_data.as_ref();
 
-            Ok(UserPoint::decode(&mut Cursor::new(cursor)).unwrap())
+            Ok(PointShopView::decode(&mut Cursor::new(cursor))
+                .unwrap()
+                .user_point
+                .unwrap())
         } else {
             anyhow::bail!("Failed to get user point: {}", res.status())
         }
