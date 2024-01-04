@@ -1,3 +1,4 @@
+use documented::DocumentedFields;
 use serde::{Deserialize, Serialize};
 use tosho_macros::{DeserializeEnum32, DeserializeEnum32Fallback, EnumName, SerializeEnum32};
 
@@ -93,7 +94,15 @@ pub enum PublishCategory {
 }
 
 /// The magazine category type.
-#[derive(Debug, SerializeEnum32, DeserializeEnum32Fallback, PartialEq, EnumName, Default)]
+#[derive(
+    Debug,
+    SerializeEnum32,
+    DeserializeEnum32Fallback,
+    PartialEq,
+    EnumName,
+    Default,
+    DocumentedFields,
+)]
 pub enum MagazineCategory {
     /// Unknown magazine.
     #[default]
@@ -254,6 +263,11 @@ impl MagazineCategory {
         }
         merge_back
     }
+
+    /// Get the documentation or docstring of the current magazine category.
+    pub fn get_doc(&self) -> Result<&'static str, documented::Error> {
+        Self::get_field_comment(self.to_name())
+    }
 }
 
 /// The favorite status of the titles.
@@ -354,5 +368,24 @@ mod tests {
         } else {
             assert!(true);
         }
+    }
+
+    #[test]
+    fn test_enum_doc_for_magazine() {
+        let magazine = MagazineCategory::eYoungMagazine;
+        assert_eq!(magazine.get_doc(), Ok("e-Young Magazine, a digital-only of Young magazine which focused on user-submitted serialized content."));
+
+        let ichijinsha_doc = "Ichijinsha, a subsidiary of Kodansha.
+
+Owns the following:
+- Febri
+- Comic Rex (4-koma)
+- Monthly Comic Zero Sum (Josei focused)
+- Comic Yuri Hime (Girls Love)
+- gateau
+- IDOLM@STER Million Live Magazine Plus+";
+
+        let ichijinsha = MagazineCategory::Ichijinsha;
+        assert_eq!(ichijinsha.get_doc(), Ok(ichijinsha_doc));
     }
 }
