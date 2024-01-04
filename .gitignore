@@ -28,3 +28,6 @@ cookies.txt
 *cookies.txt
 tests/fixtures/**/intermediate*
 /target
+
+# Sandbox/testing
+/sandbox
