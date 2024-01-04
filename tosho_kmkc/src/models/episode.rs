@@ -33,6 +33,8 @@ pub struct EpisodeNode {
     pub start_time: DateTime<Utc>,
     /// The episosde rental rest time.
     pub rental_rest_time: Option<String>,
+    /// Magazine ID associated with the episode.
+    pub magazine_id: Option<i32>,
 }
 
 impl EpisodeNode {

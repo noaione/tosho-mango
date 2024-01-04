@@ -10,9 +10,10 @@ use md5::Md5;
 use models::{
     AccountResponse, BulkEpisodePurchaseResponse, EpisodeNode, EpisodePurchaseResponse,
     EpisodeViewerResponse, EpisodesListResponse, GenreSearchResponse, KMAPINotEnoughPointsError,
-    MagazineCategoryResponse, RankingListResponse, SearchResponse, StatusResponse, TicketInfoType,
-    TitleListResponse, TitleNode, TitleTicketListNode, TitleTicketListResponse, UserPoint,
-    UserPointResponse, WebEpisodeViewerResponse, WeeklyListResponse,
+    MagazineCategoryResponse, MobileEpisodeViewerResponse, RankingListResponse, SearchResponse,
+    StatusResponse, TicketInfoType, TitleListResponse, TitleNode, TitleTicketListNode,
+    TitleTicketListResponse, UserPoint, UserPointResponse, WebEpisodeViewerResponse,
+    WeeklyListResponse,
 };
 use reqwest_cookie_store::CookieStoreMutex;
 use sha2::{Digest, Sha256, Sha512};
@@ -124,9 +125,9 @@ impl KMClient {
             KMConfig::Mobile(mobile) => {
                 let mut hasher = Sha256::new();
 
-                let hash_key = &mobile.user_token;
+                let hash_key = &mobile.hash_key;
 
-                let mut query_params = query_params;
+                let mut query_params = query_params.clone();
                 query_params.insert("hash_key".to_string(), hash_key.to_string());
 
                 // iterate sorted keys
@@ -302,12 +303,12 @@ impl KMClient {
     /// * `episode_id` - The episode ID to get the viewer for
     pub async fn get_episode_viewer(
         &self,
-        episode_id: i32,
+        episode: EpisodeNode,
     ) -> anyhow::Result<EpisodeViewerResponse> {
         match &self.config {
             KMConfig::Web(_) => {
                 let mut params = HashMap::new();
-                params.insert("episode_id".to_string(), episode_id.to_string());
+                params.insert("episode_id".to_string(), episode.id.to_string());
 
                 let response = self
                     .request::<WebEpisodeViewerResponse>(
@@ -322,7 +323,25 @@ impl KMClient {
                 Ok(EpisodeViewerResponse::Web(response))
             }
             KMConfig::Mobile(_) => {
-                anyhow::bail!("Not implemented")
+                let mut params = HashMap::new();
+                params.insert("episode_id".to_string(), episode.id.to_string());
+                params.insert("force_master".to_string(), "1".to_string());
+                params.insert("is_download".to_string(), "1".to_string());
+                if let Some(magazine_id) = episode.magazine_id {
+                    params.insert("magazine_id".to_string(), magazine_id.to_string());
+                }
+
+                let response = self
+                    .request::<MobileEpisodeViewerResponse>(
+                        reqwest::Method::GET,
+                        "/episode/viewer",
+                        None,
+                        Some(params),
+                        None,
+                    )
+                    .await?;
+
+                Ok(EpisodeViewerResponse::Mobile(response))
             }
         }
     }

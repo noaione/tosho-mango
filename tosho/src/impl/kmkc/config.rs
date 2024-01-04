@@ -67,7 +67,7 @@ impl From<ConfigMobile> for tosho_kmkc::KMConfigMobile {
     fn from(value: ConfigMobile) -> Self {
         tosho_kmkc::config::KMConfigMobile {
             user_id: value.user_id.clone(),
-            user_token: value.user_secret.clone(),
+            hash_key: value.user_secret.clone(),
         }
     }
 }

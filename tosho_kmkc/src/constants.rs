@@ -42,10 +42,9 @@ lazy_static! {
         .expect("Invalid base64 string");
 
         Constants {
-            // TODO: Add user agent
-            ua: "".to_string(),
+            ua: "okhttp/4.9.3".to_string(),
             platform: "2",
-            version: "",
+            version: "5.8.0",
             hash: hash_header,
         }
     };

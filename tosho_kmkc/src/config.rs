@@ -143,7 +143,7 @@ impl From<KMConfigWeb> for CookieStoreMutex {
 #[derive(Debug, Clone)]
 pub struct KMConfigMobile {
     pub user_id: String,
-    pub user_token: String,
+    pub hash_key: String,
 }
 
 /// Represents the config for the KM KC
