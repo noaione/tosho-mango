@@ -87,7 +87,7 @@ lazy_static! {
     pub(crate) static ref WEEKLY_CODE: Vec<&'static str> = vec!["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
 
     /// The base host used for overall requests.
-    pub(crate) static ref BASE_HOST: String = {
+    pub static ref BASE_HOST: String = {
         String::from_utf8(
             general_purpose::STANDARD
                 .decode("Z2xvYmFsLm1hbmdhLXVwLmNvbQ==")
