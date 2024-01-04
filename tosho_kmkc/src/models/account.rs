@@ -174,10 +174,9 @@ pub struct UserAccountDevice {
 pub struct UserAccount {
     /// The account ID
     #[serde(rename = "account_id")]
-    pub id: String,
-    /// The account device ID
-    #[serde(rename = "user_id")]
-    pub device_id: String,
+    pub id: u32,
+    /// The account user ID
+    pub user_id: u32,
     /// The user name
     #[serde(rename = "nickname")]
     pub name: String,
@@ -204,4 +203,17 @@ pub struct UserAccount {
 pub struct AccountResponse {
     /// The user account information.
     pub account: UserAccount,
+}
+
+/// Represents the user information response.
+#[derive(Debug, Serialize, Deserialize)]
+pub struct UserInfoResponse {
+    #[serde(rename = "user_id")]
+    pub id: u32,
+    /// The user email
+    pub email: String,
+    /// The user gender
+    pub status: i32,
+    /// The user hash key
+    pub hash_key: String,
 }

@@ -3,12 +3,13 @@ use core::panic;
 use cookie_store::{Cookie, RawCookie};
 use reqwest::Url;
 use reqwest_cookie_store::CookieStoreMutex;
+use serde::ser::SerializeStruct;
 use time::OffsetDateTime;
 use urlencoding::{decode, encode};
 
 use crate::constants::BASE_HOST;
 
-#[derive(Debug, serde::Deserialize, serde::Serialize, Clone)]
+#[derive(Debug, serde::Deserialize, Clone)]
 pub struct KMConfigWebKV {
     /// The value of the cookie/key
     pub value: String,
@@ -18,15 +19,48 @@ pub struct KMConfigWebKV {
 
 impl Default for KMConfigWebKV {
     fn default() -> Self {
+        let current_utc = OffsetDateTime::now_utc().unix_timestamp();
+
         KMConfigWebKV {
             value: String::new(),
-            expires: 0,
+            // Expires is current + 1 year
+            expires: current_utc + (365 * 24 * 60 * 60),
         }
+    }
+}
+
+impl serde::Serialize for KMConfigWebKV {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::ser::Serializer,
+    {
+        let mut state = serializer.serialize_struct("KMConfigWebKV", 2)?;
+        // Check if value is a str digit
+        let val_as_i64 = self.value.parse::<i64>();
+        match val_as_i64 {
+            Ok(val) => {
+                state.serialize_field("value", &val)?;
+            }
+            Err(_) => {
+                state.serialize_field("value", &self.value)?;
+            }
+        }
+        state.end()
     }
 }
 
 impl From<&Cookie<'_>> for KMConfigWebKV {
     fn from(value: &Cookie<'_>) -> Self {
+        // unquote the value
+        let binding = value.value().to_string();
+        let data = decode(&binding).unwrap();
+        let parsed: KMConfigWebKV = serde_json::from_str(&data).unwrap();
+        parsed
+    }
+}
+
+impl From<reqwest::cookie::Cookie<'_>> for KMConfigWebKV {
+    fn from(value: reqwest::cookie::Cookie) -> Self {
         // unquote the value
         let binding = value.value().to_string();
         let data = decode(&binding).unwrap();
@@ -95,6 +129,36 @@ impl From<CookieStoreMutex> for KMConfigWeb {
     }
 }
 
+impl From<&reqwest::Response> for KMConfigWeb {
+    fn from(value: &reqwest::Response) -> Self {
+        let mut uwt = String::new();
+        let mut birthday = KMConfigWebKV::default();
+        let mut tos_adult = KMConfigWebKV::default();
+        let mut privacy = KMConfigWebKV::default();
+
+        for cookie in value.cookies() {
+            match cookie.name() {
+                "uwt" => uwt = cookie.value().to_string(),
+                "birthday" => birthday = KMConfigWebKV::from(cookie),
+                "terms_of_service_adult" => tos_adult = KMConfigWebKV::from(cookie),
+                "privacy_policy" => privacy = KMConfigWebKV::from(cookie),
+                _ => (),
+            }
+        }
+
+        if uwt.is_empty() {
+            panic!("uwt cookie not found");
+        }
+
+        KMConfigWeb {
+            uwt,
+            birthday,
+            tos_adult,
+            privacy,
+        }
+    }
+}
+
 impl From<KMConfigWeb> for CookieStoreMutex {
     fn from(value: KMConfigWeb) -> Self {
         let store = CookieStoreMutex::default();
@@ -136,6 +200,26 @@ impl From<KMConfigWeb> for CookieStoreMutex {
             .unwrap();
 
         store
+    }
+}
+
+impl Default for KMConfigWeb {
+    /// Create a default [`KMConfigWeb`]
+    ///
+    /// Default will make an empty uwt, with a birthday of 1998-01, and tos_adult and privacy of 1
+    fn default() -> Self {
+        let mut birthday = KMConfigWebKV::default();
+        birthday.value = "1998-01".to_string();
+
+        let mut tos_toggle = KMConfigWebKV::default();
+        tos_toggle.value = "1".to_string();
+
+        Self {
+            uwt: String::new(),
+            birthday,
+            tos_adult: tos_toggle.clone(),
+            privacy: tos_toggle,
+        }
     }
 }
 

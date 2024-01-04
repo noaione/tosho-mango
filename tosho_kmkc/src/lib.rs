@@ -5,15 +5,15 @@ pub mod config;
 pub mod constants;
 pub mod imaging;
 pub mod models;
-use constants::{ANDROID_CONSTANTS, BASE_API, WEB_CONSTANTS};
+use constants::{ANDROID_CONSTANTS, BASE_API, BASE_HOST, WEB_CONSTANTS};
 use md5::Md5;
 use models::{
     AccountResponse, BulkEpisodePurchaseResponse, EpisodeNode, EpisodePurchaseResponse,
     EpisodeViewerResponse, EpisodesListResponse, GenreSearchResponse, KMAPINotEnoughPointsError,
     MagazineCategoryResponse, MobileEpisodeViewerResponse, RankingListResponse, SearchResponse,
     StatusResponse, TicketInfoType, TitleListResponse, TitleNode, TitlePurchaseNode,
-    TitlePurchaseResponse, TitleTicketListNode, TitleTicketListResponse, UserPoint,
-    UserPointResponse, WebEpisodeViewerResponse, WeeklyListResponse,
+    TitlePurchaseResponse, TitleTicketListNode, TitleTicketListResponse, UserAccount,
+    UserInfoResponse, UserPoint, UserPointResponse, WebEpisodeViewerResponse, WeeklyListResponse,
 };
 use reqwest_cookie_store::CookieStoreMutex;
 use sha2::{Digest, Sha256, Sha512};
@@ -94,59 +94,6 @@ impl KMClient {
         }
     }
 
-    /// Create the request hash for any given query params
-    ///
-    /// # Arguments
-    /// * `query_params` - The query params to hash
-    fn create_request_hash(&self, query_params: HashMap<String, String>) -> String {
-        match &self.config {
-            KMConfig::Web(web) => {
-                let birthday = &web.birthday.value;
-                let expires = web.birthday.expires.to_string();
-
-                let mut keys = query_params.keys().collect::<Vec<&String>>();
-                keys.sort();
-
-                let mut qi_s: Vec<String> = vec![];
-                for key in keys {
-                    let value = query_params.get(key).unwrap();
-                    let hashed = hash_kv(key, value);
-                    qi_s.push(hashed);
-                }
-
-                let qi_s_hashed = Sha256::digest(qi_s.join(",").as_bytes());
-                let birth_expire_hash = hash_kv(&birthday, &expires);
-
-                let merged_hash =
-                    Sha512::digest(format!("{:x}{}", qi_s_hashed, birth_expire_hash).as_bytes());
-
-                format!("{:x}", merged_hash)
-            }
-            KMConfig::Mobile(mobile) => {
-                let mut hasher = Sha256::new();
-
-                let hash_key = &mobile.hash_key;
-
-                let mut query_params = query_params.clone();
-                query_params.insert("hash_key".to_string(), hash_key.to_string());
-
-                // iterate sorted keys
-                let mut keys = query_params.keys().collect::<Vec<&String>>();
-                keys.sort();
-
-                for key in keys {
-                    let value = query_params.get(key).unwrap();
-                    let hashed_value = Md5::digest(value.as_bytes());
-
-                    hasher.update(hashed_value);
-                }
-
-                let hashed = hasher.finalize();
-                format!("{:x}", hashed)
-            }
-        }
-    }
-
     fn format_request(&self, query_params: &mut HashMap<String, String>) -> String {
         let platform = match &self.config {
             KMConfig::Web(_) => WEB_CONSTANTS.platform,
@@ -159,7 +106,7 @@ impl KMClient {
         query_params.insert("platform".to_string(), platform.to_string());
         query_params.insert("version".to_string(), version.to_string());
 
-        let hash = self.create_request_hash(query_params.clone());
+        let hash = create_request_hash(&self.config, query_params.clone());
         hash
     }
 
@@ -544,9 +491,24 @@ impl KMClient {
     }
 
     /// Get the current user's account information.
-    pub async fn get_account(&self) -> anyhow::Result<AccountResponse> {
+    pub async fn get_account(&self) -> anyhow::Result<UserAccount> {
         let response = self
             .request::<AccountResponse>(reqwest::Method::GET, "/account", None, None, None)
+            .await?;
+
+        Ok(response.account)
+    }
+
+    /// Get a user information
+    ///
+    /// This is different to [`get_account`] as it needs
+    /// the user ID to get the user information.
+    pub async fn get_user(&self, user_id: u32) -> anyhow::Result<UserInfoResponse> {
+        let mut params = HashMap::new();
+        params.insert("user_id".to_owned(), user_id.to_string());
+
+        let response = self
+            .request::<UserInfoResponse>(reqwest::Method::GET, "/user", None, Some(params), None)
             .await?;
 
         Ok(response)
@@ -630,6 +592,143 @@ impl KMClient {
             .await?;
 
         Ok(response)
+    }
+
+    /// Login to the API with the given username and password.
+    ///
+    /// You can use this to get either Web version of the token or
+    /// the Mobile version of the token.
+    ///
+    /// # Arguments
+    /// * `email` - The email to login with
+    /// * `password` - The password to login with
+    /// * `mobile` - Whether to login as mobile or not
+    pub async fn login(email: &str, password: &str, mobile: bool) -> anyhow::Result<KMConfig> {
+        // Create a new client
+        let mut headers = reqwest::header::HeaderMap::new();
+        headers.insert(
+            reqwest::header::ACCEPT,
+            reqwest::header::HeaderValue::from_static("application/json"),
+        );
+        headers.insert(
+            reqwest::header::HOST,
+            reqwest::header::HeaderValue::from_static(&BASE_API),
+        );
+        headers.insert(
+            reqwest::header::USER_AGENT,
+            reqwest::header::HeaderValue::from_static(&WEB_CONSTANTS.ua),
+        );
+
+        let default_web = KMConfigWeb::default();
+        let cookie_store = CookieStoreMutex::from(default_web.clone());
+        // remove uwt cookie
+        cookie_store.lock().unwrap().remove(&BASE_HOST, "/", "uwt");
+        let cookie_store = std::sync::Arc::new(cookie_store);
+
+        let client = reqwest::Client::builder()
+            .default_headers(headers)
+            .cookie_provider(cookie_store)
+            .build()?;
+
+        // Perform web login
+        let mut req_data = HashMap::new();
+        req_data.insert("email".to_string(), email.to_string());
+        req_data.insert("password".to_string(), password.to_string());
+        req_data.insert("platform".to_string(), WEB_CONSTANTS.platform.to_string());
+        req_data.insert("version".to_string(), WEB_CONSTANTS.version.to_string());
+
+        // hash
+        let req_hash = create_request_hash(&KMConfig::Web(default_web.clone()), req_data.clone());
+
+        let mut extend_headers = reqwest::header::HeaderMap::new();
+        extend_headers.insert(
+            reqwest::header::CONTENT_TYPE,
+            "application/x-www-form-urlencoded".parse()?,
+        );
+        extend_headers
+            .insert(WEB_CONSTANTS.hash.as_str(), req_hash.parse()?)
+            .unwrap();
+        let response = client
+            .post(format!("{}/web/user/login", BASE_API.as_str()))
+            .form(&req_data)
+            .headers(extend_headers)
+            .send()
+            .await?;
+
+        let unparse_web = KMConfigWeb::from(&response);
+
+        let login_status = parse_response::<StatusResponse>(response).await?;
+
+        if login_status.response_code != 0 {
+            anyhow::bail!("Failed to login: {}", login_status.error_message);
+        }
+
+        if !mobile {
+            return Ok(KMConfig::Web(unparse_web));
+        }
+
+        // Get user ID
+        let km_client = KMClient::new(KMConfig::Web(unparse_web));
+        let account = km_client.get_account().await?;
+        let user_info = km_client.get_user(account.user_id).await?;
+
+        Ok(KMConfig::Mobile(KMConfigMobile {
+            user_id: user_info.id.to_string(),
+            hash_key: user_info.hash_key,
+        }))
+    }
+}
+
+/// Create the request hash for any given query params
+///
+/// # Arguments
+/// * `query_params` - The query params to hash
+fn create_request_hash(config: &KMConfig, query_params: HashMap<String, String>) -> String {
+    match config {
+        KMConfig::Web(web) => {
+            let birthday = &web.birthday.value;
+            let expires = web.birthday.expires.to_string();
+
+            let mut keys = query_params.keys().collect::<Vec<&String>>();
+            keys.sort();
+
+            let mut qi_s: Vec<String> = vec![];
+            for key in keys {
+                let value = query_params.get(key).unwrap();
+                let hashed = hash_kv(key, value);
+                qi_s.push(hashed);
+            }
+
+            let qi_s_hashed = Sha256::digest(qi_s.join(",").as_bytes());
+            let birth_expire_hash = hash_kv(&birthday, &expires);
+
+            let merged_hash =
+                Sha512::digest(format!("{:x}{}", qi_s_hashed, birth_expire_hash).as_bytes());
+
+            format!("{:x}", merged_hash)
+        }
+        KMConfig::Mobile(mobile) => {
+            let mut hasher = Sha256::new();
+
+            let hash_key = &mobile.hash_key;
+
+            let mut query_params = query_params.clone();
+            query_params.insert("hash_key".to_string(), hash_key.to_string());
+
+            // iterate sorted keys
+            let mut keys = query_params.keys().collect::<Vec<&String>>();
+            keys.sort();
+
+            for key in keys {
+                let value = query_params.get(key).unwrap();
+                let hashed_value = Md5::digest(value.as_bytes());
+
+                hasher.update(hashed_value);
+            }
+
+            let hashed = hasher.finalize();
+            format!("{:x}", hashed)
+        }
     }
 }
 
