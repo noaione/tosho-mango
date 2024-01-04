@@ -17,24 +17,24 @@ pub(super) fn select_single_account(account_id: Option<&str>) -> Option<Config> 
     let term = get_console(0);
 
     if let Some(account_id) = account_id {
-        let config = get_config(account_id, crate::r#impl::Implementations::MUSQ, None);
+        let config = get_config(account_id, crate::r#impl::Implementations::Musq, None);
 
         if let Some(config) = config {
             return match config {
-                crate::config::ConfigImpl::KMKC(_) => unreachable!(),
-                crate::config::ConfigImpl::MUSQ(c) => Some(c),
+                crate::config::ConfigImpl::Kmkc(_) => unreachable!(),
+                crate::config::ConfigImpl::Musq(c) => Some(c),
             };
         }
 
         term.warn(&format!("Account ID {} not found!", account_id));
     }
 
-    let all_configs = get_all_config(crate::r#impl::Implementations::MUSQ, None);
+    let all_configs = get_all_config(crate::r#impl::Implementations::Musq, None);
     let all_choices: Vec<ConsoleChoice> = all_configs
         .iter()
         .filter_map(|c| match c {
-            crate::config::ConfigImpl::KMKC(_) => None,
-            crate::config::ConfigImpl::MUSQ(c) => Some(ConsoleChoice {
+            crate::config::ConfigImpl::Kmkc(_) => None,
+            crate::config::ConfigImpl::Musq(c) => Some(ConsoleChoice {
                 name: c.session.clone(),
                 value: c.id.clone(),
             }),
@@ -51,15 +51,15 @@ pub(super) fn select_single_account(account_id: Option<&str>) -> Option<Config> 
             let config = all_configs
                 .iter()
                 .find(|&c| match c {
-                    crate::config::ConfigImpl::KMKC(_) => false,
-                    crate::config::ConfigImpl::MUSQ(c) => c.session == selected.name,
+                    crate::config::ConfigImpl::Kmkc(_) => false,
+                    crate::config::ConfigImpl::Musq(c) => c.session == selected.name,
                 })
                 .unwrap();
 
-            return match config {
-                crate::config::ConfigImpl::KMKC(_) => unreachable!(),
-                crate::config::ConfigImpl::MUSQ(c) => Some(c.clone()),
-            };
+            match config {
+                crate::config::ConfigImpl::Kmkc(_) => unreachable!(),
+                crate::config::ConfigImpl::Musq(c) => Some(c.clone()),
+            }
         }
         None => None,
     }
@@ -71,12 +71,14 @@ pub(super) fn make_client(config: &Config) -> tosho_musq::MUClient {
     tosho_musq::MUClient::new(&config.session, constants.clone())
 }
 
+// TODO: REMOVE THIS
+#[allow(dead_code)]
 pub(super) fn do_print_search_information(results: Vec<MangaResultNode>, with_number: bool) {
     let term = get_console(0);
 
     for (idx, result) in results.iter().enumerate() {
         let id = result.id;
-        let manga_url = format!("https://{}/manga/{}", BASE_HOST.to_string(), result.id);
+        let manga_url = format!("https://{}/manga/{}", BASE_HOST.as_str(), result.id);
         let linked = linkify!(&manga_url, &result.title);
         let text_data = color_print::cformat!("<s>{}</s> ({})", linked, id);
 
@@ -99,6 +101,8 @@ pub(super) fn do_print_search_information(results: Vec<MangaResultNode>, with_nu
     }
 }
 
+// TODO: REMOVE THIS
+#[allow(dead_code)]
 pub(super) fn parse_published(
     published: Option<&str>,
 ) -> Option<chrono::LocalResult<DateTime<FixedOffset>>> {

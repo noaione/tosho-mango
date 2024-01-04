@@ -18,12 +18,12 @@ pub(crate) struct ToshoCli {
 #[derive(Subcommand)]
 pub(crate) enum ToshoCommands {
     /// Download manga from MU!
-    MUSQ {
+    Musq {
         #[command(subcommand)]
         subcommand: MUSQCommands,
     },
     /// Download manga from KM
-    KMKC {
+    Kmkc {
         #[command(subcommand)]
         subcommand: KMKCCommands,
     },

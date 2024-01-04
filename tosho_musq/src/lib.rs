@@ -184,10 +184,10 @@ impl MUClient {
 
     fn build_url(&self, path: &str) -> String {
         if path.starts_with('/') {
-            return format!("{}{}", BASE_API.to_string(), path);
+            return format!("{}{}", *BASE_API, path);
         }
 
-        format!("{}/{}", BASE_API.to_string(), path)
+        format!("{}/{}", *BASE_API, path)
     }
 
     fn empty_params(&self) -> HashMap<String, String> {

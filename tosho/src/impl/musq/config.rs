@@ -2,7 +2,7 @@
 
 use tosho_macros::EnumName;
 
-pub const PREFIX: &'static str = "musq";
+pub const PREFIX: &str = "musq";
 
 /// Device type for MU! by SQ session.
 #[derive(

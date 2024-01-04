@@ -9,8 +9,8 @@ use crate::r#impl::Implementations;
 
 /// The many type of config files.
 pub enum ConfigImpl {
-    KMKC(crate::r#impl::kmkc::config::Config),
-    MUSQ(crate::r#impl::musq::config::Config),
+    Kmkc(crate::r#impl::kmkc::config::Config),
+    Musq(crate::r#impl::musq::config::Config),
 }
 
 fn get_user_path() -> std::path::PathBuf {
@@ -102,19 +102,13 @@ pub fn get_config(
     let user_path = user_path.unwrap_or(get_user_path());
 
     match r#impl {
-        Implementations::KMKC => {
+        Implementations::Kmkc => {
             let conf = get_config_kmkc(id, user_path);
-            match conf {
-                Some(conf) => Some(ConfigImpl::KMKC(conf)),
-                None => None,
-            }
+            conf.map(ConfigImpl::Kmkc)
         }
-        Implementations::MUSQ => {
+        Implementations::Musq => {
             let conf = get_config_musq(id, user_path);
-            match conf {
-                Some(conf) => Some(ConfigImpl::MUSQ(conf)),
-                None => None,
-            }
+            conf.map(ConfigImpl::Musq)
         }
     }
 }
@@ -129,35 +123,29 @@ pub fn get_all_config(r#impl: Implementations, user_path: Option<PathBuf>) -> Ve
     // glob .tmconf files
     let mut glob_path = user_path.clone();
     let prefix = match r#impl {
-        Implementations::KMKC => crate::r#impl::kmkc::config::PREFIX,
-        Implementations::MUSQ => crate::r#impl::musq::config::PREFIX,
+        Implementations::Kmkc => crate::r#impl::kmkc::config::PREFIX,
+        Implementations::Musq => crate::r#impl::musq::config::PREFIX,
     };
     glob_path.push(format!("{}.*.tmconf", prefix));
 
     let mut matched_entries: Vec<ConfigImpl> = Vec::new();
-    for entry in glob::glob(glob_path.to_str().unwrap()).expect("Failed to read glob pattern") {
-        match entry {
-            Ok(path) => match r#impl {
-                Implementations::KMKC => {
-                    let conf = read_kmkc_config(path);
-                    match conf {
-                        Some(conf) => {
-                            matched_entries.push(ConfigImpl::KMKC(conf));
-                        }
-                        None => {}
-                    }
+    for entry in glob::glob(glob_path.to_str().unwrap())
+        .expect("Failed to read glob pattern")
+        .flatten()
+    {
+        match r#impl {
+            Implementations::Kmkc => {
+                let conf = read_kmkc_config(entry);
+                if let Some(conf) = conf {
+                    matched_entries.push(ConfigImpl::Kmkc(conf));
                 }
-                Implementations::MUSQ => {
-                    let conf = read_musq_config(path);
-                    match conf {
-                        Some(conf) => {
-                            matched_entries.push(ConfigImpl::MUSQ(conf));
-                        }
-                        None => {}
-                    }
+            }
+            Implementations::Musq => {
+                let conf = read_musq_config(entry);
+                if let Some(conf) = conf {
+                    matched_entries.push(ConfigImpl::Musq(conf));
                 }
-            },
-            Err(_) => {}
+            }
         }
     }
     matched_entries
@@ -171,7 +159,7 @@ pub fn save_config(config: ConfigImpl, user_path: Option<PathBuf>) {
     }
 
     match config {
-        ConfigImpl::KMKC(config) => {
+        ConfigImpl::Kmkc(config) => {
             let mut user_conf = user_path.clone();
             let conf_id = match config.clone() {
                 crate::r#impl::kmkc::config::Config::Mobile(config) => config.id,
@@ -197,7 +185,7 @@ pub fn save_config(config: ConfigImpl, user_path: Option<PathBuf>) {
             file.write_all(&buffer).unwrap();
             drop(file);
         }
-        ConfigImpl::MUSQ(config) => {
+        ConfigImpl::Musq(config) => {
             let mut user_conf = user_path.clone();
             user_conf.push(format!(
                 "{}.{}.tmconf",

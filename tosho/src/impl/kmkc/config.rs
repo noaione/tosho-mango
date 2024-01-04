@@ -1,6 +1,6 @@
 #![allow(clippy::derive_partial_eq_without_eq)]
 
-pub const PREFIX: &'static str = "kmkc";
+pub const PREFIX: &str = "kmkc";
 
 /// Device type for MU! by SQ session.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
@@ -89,7 +89,7 @@ impl From<tosho_kmkc::config::KMConfigWebKV> for ConfigWebKeyValue {
     fn from(value: tosho_kmkc::config::KMConfigWebKV) -> Self {
         ConfigWebKeyValue {
             value: value.value.clone(),
-            expires: value.expires.clone().try_into().unwrap_or(0),
+            expires: value.expires.try_into().unwrap_or(0),
         }
     }
 }
@@ -98,7 +98,7 @@ impl From<ConfigWebKeyValue> for tosho_kmkc::KMConfigWebKV {
     fn from(value: ConfigWebKeyValue) -> Self {
         tosho_kmkc::KMConfigWebKV {
             value: value.value.clone(),
-            expires: value.expires.clone().try_into().unwrap_or(0),
+            expires: value.expires.try_into().unwrap_or(0),
         }
     }
 }

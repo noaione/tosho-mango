@@ -208,11 +208,14 @@ impl Default for KMConfigWeb {
     ///
     /// Default will make an empty uwt, with a birthday of 1998-01, and tos_adult and privacy of 1
     fn default() -> Self {
-        let mut birthday = KMConfigWebKV::default();
-        birthday.value = "1998-01".to_string();
-
-        let mut tos_toggle = KMConfigWebKV::default();
-        tos_toggle.value = "1".to_string();
+        let birthday = KMConfigWebKV {
+            value: "1998-01".to_string(),
+            ..Default::default()
+        };
+        let tos_toggle = KMConfigWebKV {
+            value: "1".to_string(),
+            ..Default::default()
+        };
 
         Self {
             uwt: String::new(),

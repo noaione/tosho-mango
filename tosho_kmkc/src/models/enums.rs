@@ -15,12 +15,12 @@ pub enum IntBool {
 
 impl PartialEq<IntBool> for IntBool {
     fn eq(&self, other: &IntBool) -> bool {
-        match (self, other) {
-            (IntBool::False, IntBool::False) => true,
-            (IntBool::True, IntBool::True) => true,
-            (IntBool::Unknown, IntBool::Unknown) => true,
-            _ => false,
-        }
+        matches!(
+            (self, other),
+            (IntBool::False, IntBool::False)
+                | (IntBool::True, IntBool::True)
+                | (IntBool::Unknown, IntBool::Unknown)
+        )
     }
 }
 
@@ -37,8 +37,8 @@ impl PartialEq<i32> for IntBool {
 impl PartialEq<bool> for IntBool {
     fn eq(&self, other: &bool) -> bool {
         match self {
-            IntBool::True => *other == true,
-            IntBool::False => *other == false,
+            IntBool::True => *other,
+            IntBool::False => !(*other),
             _ => false,
         }
     }
@@ -46,10 +46,7 @@ impl PartialEq<bool> for IntBool {
 
 impl From<IntBool> for bool {
     fn from(item: IntBool) -> Self {
-        match item {
-            IntBool::True => true,
-            _ => false,
-        }
+        matches!(item, IntBool::True)
     }
 }
 
@@ -258,8 +255,8 @@ impl MagazineCategory {
                 _ => (),
             }
         }
-        if merge_back.contains("_") {
-            merge_back = merge_back.replace("_", " ");
+        if merge_back.contains('_') {
+            merge_back = merge_back.replace('_', " ");
         }
         merge_back
     }

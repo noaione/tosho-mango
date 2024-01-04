@@ -59,11 +59,6 @@ impl Terminal {
         }
     }
 
-    /// Create a new line
-    pub fn enter(&self) {
-        println!()
-    }
-
     /// Do a confirmation prompt
     pub fn confirm(&self, prompt: Option<&str>) -> bool {
         let prompt = prompt.unwrap_or("Are you sure?");

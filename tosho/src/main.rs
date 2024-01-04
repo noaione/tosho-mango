@@ -15,7 +15,7 @@ async fn main() {
     let t = term::get_console(_cli.verbose);
 
     let exit_code = match _cli.command {
-        ToshoCommands::MUSQ { subcommand } => match subcommand {
+        ToshoCommands::Musq { subcommand } => match subcommand {
             cli::MUSQCommands::Auth { session_id, r#type } => {
                 r#impl::musq::accounts::musq_auth_session(session_id, r#type, &t).await
             }
@@ -27,7 +27,7 @@ async fn main() {
                 r#impl::musq::accounts::musq_account_balance(account_id.as_deref(), &t).await
             }
         },
-        ToshoCommands::KMKC { subcommand: _ } => {
+        ToshoCommands::Kmkc { subcommand: _ } => {
             t.warn("TODO");
             0
         }

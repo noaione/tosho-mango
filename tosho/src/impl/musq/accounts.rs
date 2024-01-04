@@ -54,13 +54,13 @@ pub(crate) async fn musq_auth_session(
         DeviceKind::Apple => DeviceType::Apple,
     };
 
-    let all_configs = get_all_config(crate::r#impl::Implementations::MUSQ, None);
+    let all_configs = get_all_config(crate::r#impl::Implementations::Musq, None);
     let old_config = all_configs.iter().find(|&c| match c {
-        crate::config::ConfigImpl::KMKC(_) => false,
-        crate::config::ConfigImpl::MUSQ(c) => c.session == session_id && c.r#type == r#type as i32,
+        crate::config::ConfigImpl::Kmkc(_) => false,
+        crate::config::ConfigImpl::Musq(c) => c.session == session_id && c.r#type == r#type as i32,
     });
 
-    if let Some(_) = old_config {
+    if old_config.is_some() {
         console.warn("Session ID already authenticated!");
         let abort_it = console.confirm(Some("Do you want to replace it?"));
         if !abort_it {
@@ -84,7 +84,7 @@ pub(crate) async fn musq_auth_session(
         Ok(_) => {
             // save config
             console.info("Authentication successful! Saving config...");
-            save_config(crate::config::ConfigImpl::MUSQ(config), None);
+            save_config(crate::config::ConfigImpl::Musq(config), None);
             0
         }
         Err(e) => {
@@ -95,7 +95,7 @@ pub(crate) async fn musq_auth_session(
 }
 
 pub(crate) fn musq_accounts(console: &crate::term::Terminal) -> ExitCode {
-    let all_configs = get_all_config(crate::r#impl::Implementations::MUSQ, None);
+    let all_configs = get_all_config(crate::r#impl::Implementations::Musq, None);
 
     match all_configs.len() {
         0 => {
@@ -107,8 +107,8 @@ pub(crate) fn musq_accounts(console: &crate::term::Terminal) -> ExitCode {
             console.info(&format!("Found {} accounts:", all_configs.len()));
             for (i, c) in all_configs.iter().enumerate() {
                 match c {
-                    crate::config::ConfigImpl::KMKC(_) => {}
-                    crate::config::ConfigImpl::MUSQ(c) => {
+                    crate::config::ConfigImpl::Kmkc(_) => {}
+                    crate::config::ConfigImpl::Musq(c) => {
                         console.info(&format!(
                             "{:02}. {} ({})",
                             i + 1,
@@ -155,7 +155,7 @@ pub async fn musq_account_info(
                         acc_info.r#type().to_name()
                     ));
                     console.info(&cformat!("  <bold>Registered?</> {}", account.registered()));
-                    if account.devices.len() > 0 {
+                    if !account.devices.is_empty() {
                         console.info(&cformat!("  <bold>Devices:</>"));
                         for device in account.devices {
                             let device_name = device.name;

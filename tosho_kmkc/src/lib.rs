@@ -106,8 +106,8 @@ impl KMClient {
         query_params.insert("platform".to_string(), platform.to_string());
         query_params.insert("version".to_string(), version.to_string());
 
-        let hash = create_request_hash(&self.config, query_params.clone());
-        hash
+        
+        create_request_hash(&self.config, query_params.clone())
     }
 
     /// Make an authenticated request to the API.
@@ -186,7 +186,7 @@ impl KMClient {
             }
         };
 
-        Ok(parse_response(request.send().await?).await?)
+        parse_response(request.send().await?).await
     }
 
     /// Get the list of episodes from the given list of episode IDs
@@ -700,7 +700,7 @@ fn create_request_hash(config: &KMConfig, query_params: HashMap<String, String>)
             }
 
             let qi_s_hashed = Sha256::digest(qi_s.join(",").as_bytes());
-            let birth_expire_hash = hash_kv(&birthday, &expires);
+            let birth_expire_hash = hash_kv(birthday, &expires);
 
             let merged_hash =
                 Sha512::digest(format!("{:x}{}", qi_s_hashed, birth_expire_hash).as_bytes());
