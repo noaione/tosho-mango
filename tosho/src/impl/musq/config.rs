@@ -1,9 +1,13 @@
 #![allow(clippy::derive_partial_eq_without_eq)]
 
+use tosho_macros::EnumName;
+
 pub const PREFIX: &'static str = "musq";
 
 /// Device type for MU! by SQ session.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration, EnumName,
+)]
 pub enum DeviceType {
     /// Android device.
     Android = 1,
@@ -35,5 +39,22 @@ impl Config {
             session: session.to_string(),
             r#type: r#type as i32,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_numbering_device_type() {
+        assert_eq!(DeviceType::Android as i32, 1);
+        assert_eq!(DeviceType::Apple as i32, 2);
+    }
+
+    #[test]
+    fn test_numbering_u8_device_type() {
+        assert_eq!(DeviceType::Android as u8, 1);
+        assert_eq!(DeviceType::Apple as u8, 2);
     }
 }

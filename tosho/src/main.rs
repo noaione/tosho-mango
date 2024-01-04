@@ -11,10 +11,5 @@ async fn main() {
     // For some god know what reason, `clap` + rustc_lint will show this as unreachable code.
     let _cli = ToshoCli::parse();
 
-    #[allow(unreachable_code)]
-    match _cli.verbose {
-        0 => println!("No verbosity"),
-        1 => println!("Verbose"),
-        _ => println!("Very verbose"),
-    }
+    let t = term::get_console(_cli.verbose);
 }

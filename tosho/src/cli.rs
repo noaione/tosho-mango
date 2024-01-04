@@ -1,5 +1,7 @@
 use clap::{Parser, Subcommand};
 
+pub(crate) type ExitCode = u32;
+
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
 pub(crate) struct ToshoCli {
