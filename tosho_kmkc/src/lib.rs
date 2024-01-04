@@ -106,7 +106,6 @@ impl KMClient {
         query_params.insert("platform".to_string(), platform.to_string());
         query_params.insert("version".to_string(), version.to_string());
 
-        
         create_request_hash(&self.config, query_params.clone())
     }
 
@@ -687,6 +686,7 @@ fn create_request_hash(config: &KMConfig, query_params: HashMap<String, String>)
     match config {
         KMConfig::Web(web) => {
             let birthday = &web.birthday.value;
+
             let expires = web.birthday.expires.to_string();
 
             let mut keys = query_params.keys().collect::<Vec<&String>>();

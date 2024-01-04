@@ -3,13 +3,12 @@ use core::panic;
 use cookie_store::{Cookie, RawCookie};
 use reqwest::Url;
 use reqwest_cookie_store::CookieStoreMutex;
-use serde::ser::SerializeStruct;
 use time::OffsetDateTime;
 use urlencoding::{decode, encode};
 
 use crate::constants::BASE_HOST;
 
-#[derive(Debug, serde::Deserialize, Clone)]
+#[derive(Debug, serde::Deserialize, serde::Serialize, Clone)]
 pub struct KMConfigWebKV {
     /// The value of the cookie/key
     pub value: String,
@@ -17,35 +16,45 @@ pub struct KMConfigWebKV {
     pub expires: i64,
 }
 
+#[derive(Debug, serde::Deserialize, serde::Serialize, Clone)]
+pub struct KMConfigWebKV64 {
+    /// The value of the cookie/key
+    pub value: i64,
+    /// The expiry of the cookie/key
+    pub expires: i64,
+}
+
+impl TryFrom<&KMConfigWebKV> for KMConfigWebKV64 {
+    type Error = std::num::ParseIntError;
+
+    fn try_from(value: &KMConfigWebKV) -> Result<Self, Self::Error> {
+        let parsed = value.value.parse::<i64>()?;
+
+        Ok(Self {
+            value: parsed,
+            expires: value.expires,
+        })
+    }
+}
+
+impl From<KMConfigWebKV64> for KMConfigWebKV {
+    fn from(value: KMConfigWebKV64) -> Self {
+        Self {
+            value: value.value.to_string(),
+            expires: value.expires,
+        }
+    }
+}
+
 impl Default for KMConfigWebKV {
     fn default() -> Self {
         let current_utc = OffsetDateTime::now_utc().unix_timestamp();
 
         KMConfigWebKV {
-            value: String::new(),
+            value: "".into(),
             // Expires is current + 1 year
             expires: current_utc + (365 * 24 * 60 * 60),
         }
-    }
-}
-
-impl serde::Serialize for KMConfigWebKV {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::ser::Serializer,
-    {
-        let mut state = serializer.serialize_struct("KMConfigWebKV", 2)?;
-        // Check if value is a str digit
-        let val_as_i64 = self.value.parse::<i64>();
-        match val_as_i64 {
-            Ok(val) => {
-                state.serialize_field("value", &val)?;
-            }
-            Err(_) => {
-                state.serialize_field("value", &self.value)?;
-            }
-        }
-        state.end()
     }
 }
 
@@ -75,7 +84,12 @@ fn i64_to_cookie_time(time: i64) -> OffsetDateTime {
 
 impl KMConfigWebKV {
     fn to_cookie(&self, name: String) -> RawCookie<'_> {
-        let binding = encode(&serde_json::to_string(&self).unwrap()).to_string();
+        // test if the value is a number
+        let binding = match KMConfigWebKV64::try_from(self) {
+            Ok(parsed) => encode(&serde_json::to_string(&parsed).unwrap()).to_string(),
+            Err(_) => encode(&serde_json::to_string(&self).unwrap()).to_string(),
+        };
+
         RawCookie::build(name, binding)
             .domain(BASE_HOST.as_str())
             .secure(true)
@@ -110,8 +124,18 @@ impl From<CookieStoreMutex> for KMConfigWeb {
             match cookie.name() {
                 "uwt" => uwt = cookie.value().to_string(),
                 "birthday" => birthday = KMConfigWebKV::from(cookie),
-                "terms_of_service_adult" => tos_adult = KMConfigWebKV::from(cookie),
-                "privacy_policy" => privacy = KMConfigWebKV::from(cookie),
+                "terms_of_service_adult" => {
+                    tos_adult = match KMConfigWebKV64::try_from(&KMConfigWebKV::from(cookie)) {
+                        Ok(parsed) => KMConfigWebKV::from(parsed),
+                        Err(_) => KMConfigWebKV::from(cookie),
+                    }
+                }
+                "privacy_policy" => {
+                    privacy = match KMConfigWebKV64::try_from(&KMConfigWebKV::from(cookie)) {
+                        Ok(parsed) => KMConfigWebKV::from(parsed),
+                        Err(_) => KMConfigWebKV::from(cookie),
+                    }
+                }
                 _ => (),
             }
         }
@@ -209,11 +233,11 @@ impl Default for KMConfigWeb {
     /// Default will make an empty uwt, with a birthday of 1998-01, and tos_adult and privacy of 1
     fn default() -> Self {
         let birthday = KMConfigWebKV {
-            value: "1998-01".to_string(),
+            value: "1998-01".into(),
             ..Default::default()
         };
         let tos_toggle = KMConfigWebKV {
-            value: "1".to_string(),
+            value: "1".into(),
             ..Default::default()
         };
 
@@ -240,4 +264,32 @@ pub enum KMConfig {
     Web(KMConfigWeb),
     /// Mobile configuration
     Mobile(KMConfigMobile),
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_kv_serde_str() {
+        let kv = KMConfigWebKV {
+            value: "test".into(),
+            expires: 123,
+        };
+
+        let serde = serde_json::to_string(&kv).unwrap();
+        assert_eq!(serde, "{\"value\":\"test\",\"expires\":123}");
+    }
+
+    #[test]
+    fn test_cookie_i64() {
+        let kv = KMConfigWebKV {
+            value: "123".into(),
+            expires: 123,
+        };
+
+        let cookie = kv.to_cookie("test".into());
+        let decoded_cookie = decode(cookie.value()).unwrap();
+        assert_eq!(decoded_cookie, "{\"value\":123,\"expires\":123}");
+    }
 }
