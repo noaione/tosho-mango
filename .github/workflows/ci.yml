@@ -13,6 +13,9 @@ on:
       - '.gitignore'
       - '.vscode/**'
 
+env:
+  CARGO_TERM_COLOR: always
+
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -28,8 +31,11 @@ jobs:
         with:
           prefix-key: "${{ runner.os }}-tosho-rust"
 
+      - name: Build
+        run: cargo build --verbose --all
+
       - name: Lint
-        run: cargo clippy -- -D warnings
+        run: cargo clippy --verbose --all -- -D warnings
 
       - name: Tests
-        run: cargo test --all
+        run: cargo test --verbose --all
