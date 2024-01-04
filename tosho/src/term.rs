@@ -27,20 +27,20 @@ impl Terminal {
 
     /// Log info to terminal
     pub fn info(&self, msg: &str) {
-        println!("{}", cformat!("[<cyan,strong>LOG</cyan,strong>] {}", msg))
+        println!("{}", cformat!("[<cyan,strong>INFO</cyan,strong>] {}", msg))
     }
 
     /// Log warning to terminal
     pub fn warn(&self, msg: &str) {
         println!(
             "{}",
-            cformat!("[<yellow,strong>LOG</yellow,strong>] {}", msg)
+            cformat!("[<yellow,strong>WARN</yellow,strong>] {}", msg)
         )
     }
 
     /// Log error to terminal
     pub fn error(&self, msg: &str) {
-        println!("{}", cformat!("[<red,strong>LOG</red,strong>] {}", msg))
+        println!("{}", cformat!("[<red,strong>ERROR</red,strong>] {}", msg))
     }
 
     /// Log to terminal
@@ -55,7 +55,7 @@ impl Terminal {
 
     pub fn trace(&self, msg: &str) {
         if self.debug > 2 {
-            println!("{}", cformat!("[<blue,strong>LOG</blue,strong>] {}", msg))
+            println!("{}", cformat!("[<blue,strong>TRACE</blue,strong>] {}", msg))
         }
     }
 
