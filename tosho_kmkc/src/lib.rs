@@ -11,9 +11,9 @@ use models::{
     AccountResponse, BulkEpisodePurchaseResponse, EpisodeNode, EpisodePurchaseResponse,
     EpisodeViewerResponse, EpisodesListResponse, GenreSearchResponse, KMAPINotEnoughPointsError,
     MagazineCategoryResponse, MobileEpisodeViewerResponse, RankingListResponse, SearchResponse,
-    StatusResponse, TicketInfoType, TitleListResponse, TitleNode, TitleTicketListNode,
-    TitleTicketListResponse, UserPoint, UserPointResponse, WebEpisodeViewerResponse,
-    WeeklyListResponse,
+    StatusResponse, TicketInfoType, TitleListResponse, TitleNode, TitlePurchaseNode,
+    TitlePurchaseResponse, TitleTicketListNode, TitleTicketListResponse, UserPoint,
+    UserPointResponse, WebEpisodeViewerResponse, WeeklyListResponse,
 };
 use reqwest_cookie_store::CookieStoreMutex;
 use sha2::{Digest, Sha256, Sha512};
@@ -550,6 +550,21 @@ impl KMClient {
             .await?;
 
         Ok(response)
+    }
+
+    /// Get the user's purchased titles.
+    pub async fn get_purchased(&self) -> anyhow::Result<Vec<TitlePurchaseNode>> {
+        let response = self
+            .request::<TitlePurchaseResponse>(
+                reqwest::Method::GET,
+                "/web/title/purchased",
+                None,
+                None,
+                None,
+            )
+            .await?;
+
+        Ok(response.titles)
     }
 
     /// Get the magazine list.
