@@ -19,13 +19,18 @@ impl std::fmt::Display for ConsoleChoice {
 
 pub struct Terminal {
     debug: u8,
+    #[cfg(windows)]
     modern_win: bool,
 }
 
 impl Terminal {
     fn new(debug: u8) -> Self {
         let modern_win = check_windows_vt_support();
-        Self { debug, modern_win }
+        Self {
+            debug,
+            #[cfg(windows)]
+            modern_win,
+        }
     }
 
     /// Log info to terminal
