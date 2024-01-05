@@ -40,6 +40,11 @@ impl Config {
             r#type: r#type as i32,
         }
     }
+
+    /// Apply the old ID to the new config.
+    pub fn apply_id(&mut self, old_id: &str) {
+        self.id = old_id.to_string();
+    }
 }
 
 #[cfg(test)]

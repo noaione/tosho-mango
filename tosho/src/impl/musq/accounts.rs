@@ -60,12 +60,20 @@ pub(crate) async fn musq_auth_session(
         crate::config::ConfigImpl::Musq(c) => c.session == session_id && c.r#type == r#type as i32,
     });
 
-    if old_config.is_some() {
+    let mut old_id: Option<String> = None;
+    if let Some(old_config) = old_config {
         console.warn("Session ID already authenticated!");
         let abort_it = console.confirm(Some("Do you want to replace it?"));
         if !abort_it {
             console.info("Aborting...");
             return 0;
+        }
+
+        match old_config {
+            crate::config::ConfigImpl::Musq(c) => {
+                old_id = Some(c.id.clone());
+            }
+            _ => unreachable!(),
         }
     }
 
@@ -75,7 +83,10 @@ pub(crate) async fn musq_auth_session(
         r#type.to_name()
     ));
 
-    let config = Config::from_session(&session_id, r#type);
+    let mut config = Config::from_session(&session_id, r#type);
+    if let Some(old_id) = old_id {
+        config.apply_id(&old_id);
+    }
 
     let client = super::common::make_client(&config);
     let account = client.get_account().await;
