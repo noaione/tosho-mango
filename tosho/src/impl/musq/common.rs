@@ -71,8 +71,6 @@ pub(super) fn make_client(config: &Config) -> tosho_musq::MUClient {
     tosho_musq::MUClient::new(&config.session, constants.clone())
 }
 
-// TODO: REMOVE THIS
-#[allow(dead_code)]
 pub(super) fn do_print_search_information(results: Vec<MangaResultNode>, with_number: bool) {
     let term = get_console(0);
 

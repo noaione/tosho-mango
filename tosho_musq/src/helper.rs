@@ -16,7 +16,13 @@ use serde::{Deserialize, Serialize};
 /// let weekly_titles = client.get_weekly_titles(tosho_musq::WeeklyCode::today());
 /// ```
 #[derive(
-    Debug, Clone, Copy, PartialEq, tosho_macros::SerializeEnum, tosho_macros::DeserializeEnum,
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    tosho_macros::SerializeEnum,
+    tosho_macros::DeserializeEnum,
+    tosho_macros::EnumName,
 )]
 pub enum WeeklyCode {
     /// Monday

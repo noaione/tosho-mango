@@ -1,5 +1,6 @@
 use clap::Parser;
 use cli::ToshoCommands;
+use tosho_musq::WeeklyCode;
 
 mod cli;
 pub(crate) mod config;
@@ -25,6 +26,20 @@ async fn main() {
             cli::MUSQCommands::Accounts => r#impl::musq::accounts::musq_accounts(&t),
             cli::MUSQCommands::Balance { account_id } => {
                 r#impl::musq::accounts::musq_account_balance(account_id.as_deref(), &t).await
+            }
+            cli::MUSQCommands::Search { query, account_id } => {
+                r#impl::musq::manga::musq_search(query.as_str(), account_id.as_deref(), &t).await
+            }
+            cli::MUSQCommands::Weekly {
+                weekday,
+                account_id,
+            } => {
+                let weekday: WeeklyCode = match weekday {
+                    Some(week) => week.into(),
+                    None => WeeklyCode::today(),
+                };
+
+                r#impl::musq::manga::musq_search_weekly(weekday, account_id.as_deref(), &t).await
             }
         },
         ToshoCommands::Kmkc { subcommand } => match subcommand {
