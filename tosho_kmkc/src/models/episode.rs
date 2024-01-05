@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use super::{EpisodeBadge, IntBool};
 
 /// A node of a single episode's information.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EpisodeNode {
     /// The episode ID.
     #[serde(rename = "episode_id")]
@@ -55,7 +55,7 @@ impl EpisodeNode {
 }
 
 /// Represents the episode list response.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EpisodesListResponse {
     /// The list of episodes.
     #[serde(rename = "episode_list")]
@@ -63,7 +63,7 @@ pub struct EpisodesListResponse {
 }
 
 /// The node of a single image page.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ImagePageNode {
     pub index: i32,
     #[serde(rename = "image_url")]
@@ -205,7 +205,7 @@ impl ImagePageNodeStr {
 }
 
 /// Represents the episode view response for mobile viewer.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MobileEpisodeViewerResponse {
     /// The episode ID.
     #[serde(rename = "episode_id")]
@@ -225,7 +225,7 @@ pub struct MobileEpisodeViewerResponse {
 }
 
 /// Represents the episode view response for web viewer.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WebEpisodeViewerResponse {
     /// The episode ID.
     #[serde(rename = "episode_id")]
@@ -244,6 +244,7 @@ pub struct WebEpisodeViewerResponse {
 /// Represents the episode view response.
 ///
 /// This is a combination of both mobile and web viewer response.
+#[derive(Debug, Clone)]
 pub enum EpisodeViewerResponse {
     /// The mobile viewer response.
     Mobile(MobileEpisodeViewerResponse),
@@ -252,7 +253,7 @@ pub enum EpisodeViewerResponse {
 }
 
 /// Represents an episode purchase response.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EpisodePurchaseResponse {
     /// The point left on the account
     #[serde(rename = "account_point")]
@@ -263,7 +264,7 @@ pub struct EpisodePurchaseResponse {
 }
 
 /// Represents a bulk episode purchase response.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BulkEpisodePurchaseResponse {
     /// The point left on the account
     #[serde(rename = "account_point")]

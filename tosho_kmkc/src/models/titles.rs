@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use super::{FavoriteStatus, MagazineCategory, PublishCategory, SupportStatus};
 
 /// A single title's information.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TitleNode {
     /// The title ID.
     #[serde(rename = "title_id")]
@@ -75,14 +75,14 @@ pub struct TitleNode {
 }
 
 /// Represents the title list response.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TitleListResponse {
     /// The list of titles.
     #[serde(rename = "title_list")]
     pub titles: Vec<TitleNode>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SearchResponse {
     /// The list of titles.
     #[serde(rename = "title_list")]
@@ -138,6 +138,7 @@ pub struct TitleTicketInfo {
 }
 
 /// A ticket info for a title (either premium or title ticket).
+#[derive(Debug, Clone)]
 pub enum TicketInfoType {
     /// The premium ticket info.
     Premium(PremiumTicketInfo),
@@ -198,7 +199,7 @@ impl TitleTicketListNode {
 }
 
 /// Represents the title ticket list response.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TitleTicketListResponse {
     /// The list of title ticket list entries.
     #[serde(rename = "title_ticket_list")]
@@ -206,7 +207,7 @@ pub struct TitleTicketListResponse {
 }
 
 /// A title node from a title purchase response.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TitlePurchaseNode {
     /// The title ID.
     #[serde(rename = "title_id")]
@@ -225,7 +226,7 @@ pub struct TitlePurchaseNode {
 }
 
 /// Represents the title purchase response.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TitlePurchaseResponse {
     /// The list of title nodes.
     #[serde(rename = "title_list")]

@@ -122,7 +122,7 @@ impl UserPoint {
 }
 
 /// The user ticket information.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UserTicket {
     /// The ticket that the user have.
     pub total_num: u64,
@@ -131,7 +131,7 @@ pub struct UserTicket {
 /// Represents the user account point Response.
 ///
 /// You should use it in combination of [`StatusResponse`].
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UserPointResponse {
     /// The user point information.
     pub point: UserPoint,
@@ -140,7 +140,7 @@ pub struct UserPointResponse {
 }
 
 /// Title that the user favorited
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UserFavoriteList {
     /// The last updated time of the free episode.
     pub free_episode_updated: String,
@@ -157,7 +157,7 @@ pub struct UserFavoriteList {
 }
 
 /// The device info of a user account
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UserAccountDevice {
     /// The user ID or device ID
     #[serde(rename = "user_id")]
@@ -170,7 +170,7 @@ pub struct UserAccountDevice {
 }
 
 /// The user account information
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UserAccount {
     /// The account ID
     #[serde(rename = "account_id")]
@@ -199,14 +199,14 @@ pub struct UserAccount {
 }
 
 /// Represents an user account response.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AccountResponse {
     /// The user account information.
     pub account: UserAccount,
 }
 
 /// Represents the user information response.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UserInfoResponse {
     #[serde(rename = "user_id")]
     pub id: u32,

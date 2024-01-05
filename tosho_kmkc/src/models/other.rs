@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use super::{IntBool, SimpleId, TitleNode};
 
 /// The weekly list contents
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WeeklyListContent {
     /// The weekday index (1-7)
     #[serde(rename = "weekday_index")]
@@ -26,7 +26,7 @@ pub struct WeeklyListContent {
 }
 
 /// Represents the weekly list response.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WeeklyListResponse {
     /// The list of weekly list contents.
     #[serde(rename = "weekly_list")]
@@ -37,7 +37,7 @@ pub struct WeeklyListResponse {
 }
 
 /// Magazine category information.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MagazineCategoryInfo {
     /// The magazine category ID.
     #[serde(rename = "magazine_category_id")]
@@ -60,7 +60,7 @@ pub struct MagazineCategoryInfo {
 }
 
 /// Represents the magazine category response.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MagazineCategoryResponse {
     /// The list of magazine categories.
     #[serde(rename = "magazine_category_list")]
@@ -68,7 +68,7 @@ pub struct MagazineCategoryResponse {
 }
 
 /// A genre node
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GenreNode {
     /// The genre ID.
     #[serde(rename = "genre_id")]
@@ -81,7 +81,7 @@ pub struct GenreNode {
 }
 
 /// Represents the genre search response.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GenreSearchResponse {
     /// The list of genres.
     #[serde(rename = "genre_list")]
@@ -89,7 +89,7 @@ pub struct GenreSearchResponse {
 }
 
 /// Represents a ranking list response
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RankingListResponse {
     /// The list of titles.
     pub titles: Vec<SimpleId>,

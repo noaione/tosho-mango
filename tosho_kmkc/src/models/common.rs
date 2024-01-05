@@ -3,14 +3,14 @@ use serde::{Deserialize, Serialize};
 use super::KMAPIError;
 
 /// Simple ID object model.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SimpleId {
     /// The ID itself.
     pub id: i32,
 }
 
 /// The base response for all API calls.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StatusResponse {
     /// The status of the response, usually "success" or "fail".
     pub status: String,
