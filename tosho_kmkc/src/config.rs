@@ -316,7 +316,7 @@ impl TryFrom<String> for KMConfigWeb {
         let mut privacy = KMConfigWebKV::default();
 
         for cookie_line in value.lines() {
-            if cookie_line.starts_with("#") && !cookie_line.starts_with("#HttpOnly_") {
+            if cookie_line.starts_with('#') && !cookie_line.starts_with("#HttpOnly_") {
                 continue;
             }
 

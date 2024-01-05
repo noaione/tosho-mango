@@ -45,10 +45,7 @@ pub(super) fn select_single_account(account_id: Option<&str>) -> Option<Config> 
                     value: format!("{} [{}]", cc.id, cc.r#type().to_name()),
                 },
             }),
-            crate::config::ConfigImpl::Musq(c) => Some(ConsoleChoice {
-                name: c.id.clone(),
-                value: format!("{} [{}]", c.id, c.r#type().to_name()),
-            }),
+            _ => None,
         })
         .collect();
     if all_configs.is_empty() {

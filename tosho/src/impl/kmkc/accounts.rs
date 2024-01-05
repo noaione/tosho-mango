@@ -84,12 +84,9 @@ pub(crate) async fn kmkc_account_login_web(
         Ok(account) => {
             console.info(&cformat!("Authenticated as <m,s>{}</>", account.name));
             let old_config = all_configs.iter().find(|&c| match c {
-                crate::config::ConfigImpl::Kmkc(c) => match c {
-                    super::config::Config::Web(cc) => {
-                        cc.account_id == account.id && cc.device_id == account.user_id
-                    }
-                    _ => false,
-                },
+                crate::config::ConfigImpl::Kmkc(super::config::Config::Web(cc)) => {
+                    cc.account_id == account.id && cc.device_id == account.user_id
+                }
                 _ => false,
             });
 
@@ -105,12 +102,9 @@ pub(crate) async fn kmkc_account_login_web(
                 }
 
                 match old_config {
-                    crate::config::ConfigImpl::Kmkc(c) => match c {
-                        super::config::Config::Web(cc) => {
-                            acc_config = acc_config.with_id(cc.id.clone());
-                        }
-                        _ => unreachable!(),
-                    },
+                    crate::config::ConfigImpl::Kmkc(super::config::Config::Web(cc)) => {
+                        acc_config = acc_config.with_id(cc.id.clone());
+                    }
                     _ => unreachable!(),
                 }
             }
@@ -145,10 +139,9 @@ pub(crate) async fn kmkc_account_login_mobile(
 
     // find old config
     let old_config = all_configs.iter().find(|&c| match c {
-        crate::config::ConfigImpl::Kmkc(c) => match c {
-            super::config::Config::Mobile(cc) => cc.device_id == user_id,
-            _ => false,
-        },
+        crate::config::ConfigImpl::Kmkc(super::config::Config::Mobile(cc)) => {
+            cc.device_id == user_id
+        }
         _ => false,
     });
 
@@ -162,12 +155,9 @@ pub(crate) async fn kmkc_account_login_mobile(
         }
 
         match old_config {
-            crate::config::ConfigImpl::Kmkc(c) => match c {
-                super::config::Config::Mobile(cc) => {
-                    old_id = Some(cc.id.clone());
-                }
-                _ => unreachable!(),
-            },
+            crate::config::ConfigImpl::Kmkc(super::config::Config::Mobile(cc)) => {
+                old_id = Some(cc.id.clone());
+            }
             _ => unreachable!(),
         }
     }
@@ -219,10 +209,9 @@ pub async fn kmkc_account_login(
 
     // find old config
     let old_config = all_configs.iter().find(|&c| match c {
-        crate::config::ConfigImpl::Kmkc(c) => match c {
-            super::config::Config::Mobile(cc) => cc.email == email && platform == cc.platform(),
-            _ => false,
-        },
+        crate::config::ConfigImpl::Kmkc(super::config::Config::Mobile(cc)) => {
+            cc.email == email && platform == cc.platform()
+        }
         _ => false,
     });
 
@@ -236,12 +225,9 @@ pub async fn kmkc_account_login(
         }
 
         match old_config {
-            crate::config::ConfigImpl::Kmkc(c) => match c {
-                super::config::Config::Mobile(cc) => {
-                    old_id = Some(cc.id.clone());
-                }
-                _ => unreachable!(),
-            },
+            crate::config::ConfigImpl::Kmkc(super::config::Config::Mobile(cc)) => {
+                old_id = Some(cc.id.clone());
+            }
             _ => unreachable!(),
         }
     }
