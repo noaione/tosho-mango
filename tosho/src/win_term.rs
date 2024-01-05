@@ -1,5 +1,6 @@
-#![cfg(windows)]
+#[cfg(windows)]
 use windows_sys::Win32::System::Console::GetConsoleMode;
+#[cfg(windows)]
 use windows_sys::Win32::System::Console::{GetStdHandle, STD_OUTPUT_HANDLE};
 
 /// Check if the terminal supports ANSI/VT escape codes
@@ -7,6 +8,7 @@ use windows_sys::Win32::System::Console::{GetStdHandle, STD_OUTPUT_HANDLE};
 /// Use `unsafe` + [`windows-sys`](https://crates.io/crates/windows-sys) crate to check for VT support.
 ///
 /// Reference implementation from [`rich`](https://github.com/Textualize/rich) library.
+#[cfg(windows)]
 pub fn check_windows_vt_support() -> bool {
     unsafe {
         let handle = GetStdHandle(STD_OUTPUT_HANDLE);
