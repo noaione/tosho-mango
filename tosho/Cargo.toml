@@ -25,7 +25,7 @@ lazy_static.workspace = true
 chrono.workspace = true
 
 # CLI deps
-clap = { version = "4.4.12", features = ["derive"] }
+clap = { version = "4.4.13", features = ["derive"] }
 anstream = "0.6.5"
 color-print = "0.3.5"
 inquire = "0.6.2"

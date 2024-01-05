@@ -1,6 +1,12 @@
 use std::path::PathBuf;
 
-use clap::{Parser, Subcommand, ValueEnum};
+use clap::{
+    builder::{
+        styling::{AnsiColor, Effects},
+        Styles,
+    },
+    Parser, Subcommand, ValueEnum,
+};
 use tosho_macros::EnumName;
 use tosho_musq::WeeklyCode;
 
@@ -106,7 +112,7 @@ impl WeeklyCodeCli {
 }
 
 #[derive(Parser)]
-#[command(author, version, about, long_about = None)]
+#[command(author, version, about, long_about = None, styles = cli_styles())]
 pub(crate) struct ToshoCli {
     /// Increase message verbosity
     #[arg(short, long, action = clap::ArgAction::Count)]
@@ -248,4 +254,12 @@ pub(crate) enum KMKCCommands {
         #[arg(short = 'a', long = "account", default_value = None)]
         account_id: Option<String>,
     },
+}
+
+fn cli_styles() -> Styles {
+    Styles::styled()
+        .header(AnsiColor::Green.on_default() | Effects::BOLD)
+        .usage(AnsiColor::Magenta.on_default() | Effects::BOLD | Effects::UNDERLINE)
+        .literal(AnsiColor::Blue.on_default() | Effects::BOLD)
+        .placeholder(AnsiColor::BrightCyan.on_default())
 }
