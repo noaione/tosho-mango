@@ -167,13 +167,10 @@ pub(crate) async fn musq_title_info(
                 let hidden = result.hidden_chapters.clone();
                 for chapter in result.chapters.clone() {
                     let mut base_txt = cformat!("    <s>{}</> ({})", chapter.title, chapter.id);
-                    match hidden {
-                        Some(ref hidden) => {
-                            if chapter.id >= hidden.start && chapter.id <= hidden.end {
-                                base_txt = cformat!("{} <r>(Hidden)</>", base_txt);
-                            }
+                    if let Some(ref hidden) = hidden {
+                        if chapter.id >= hidden.start && chapter.id <= hidden.end {
+                            base_txt = cformat!("{} <r>(Hidden)</>", base_txt);
                         }
-                        None => {}
                     }
                     console.info(&base_txt);
 
@@ -201,8 +198,8 @@ pub(crate) async fn musq_title_info(
                 let copyrights: Vec<&str> = trim_copyright.split('\n').collect();
                 console.info(&cformat!("  <s>Copyright</>: {}", copyrights[0]));
 
-                for i in 1..(copyrights.len()) {
-                    console.info(&cformat!("             {}", copyrights[i]));
+                for copyr in copyrights.iter().skip(1) {
+                    console.info(&format!("             {}", copyr));
                 }
             }
 
