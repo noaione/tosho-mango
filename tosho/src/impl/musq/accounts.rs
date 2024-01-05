@@ -177,9 +177,8 @@ pub async fn musq_account_info(
                                 device_id
                             ));
                         }
-                    } else {
-                        console.info(&cformat!("  <bold>Devices:</> <red>None</>"));
                     }
+
                     0
                 }
                 Err(e) => {
