@@ -39,6 +39,17 @@ pub enum BadgeManga {
     Unrecognized = -1,
 }
 
+/// The attached label badge of the manga
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+pub enum LabelBadgeManga {
+    /// No label badge marking for this manga.
+    None = 0,
+    /// MU! Original manga.
+    Original = 1,
+    /// An error has occurred.
+    Unrecognized = -1,
+}
+
 /// The type of coin used to read the chapter.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 pub enum ConsumptionType {

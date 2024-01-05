@@ -1,4 +1,4 @@
-use super::{BadgeManga, Status, UserPoint};
+use super::{BadgeManga, LabelBadgeManga, Status, UserPoint};
 
 /// The tag or genre information.
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -54,6 +54,8 @@ pub struct ChaptersRange {
     #[prost(uint64, tag = "2")]
     pub end: u64,
 }
+
+/// A simplified manga information
 
 /// Manga detail information responses.
 ///
@@ -112,7 +114,7 @@ pub struct MangaDetail {
     pub is_comment_enabled: bool,
     /// Related manga list.
     #[prost(message, repeated, tag = "17")]
-    pub related_manga: ::prost::alloc::vec::Vec<MangaDetail>,
+    pub related_manga: ::prost::alloc::vec::Vec<MangaResultNode>,
 }
 
 /// Manga detail information responses.
@@ -172,7 +174,7 @@ pub struct MangaDetailV2 {
     pub is_comment_enabled: bool,
     /// Related manga list.
     #[prost(message, repeated, tag = "17")]
-    pub related_manga: ::prost::alloc::vec::Vec<MangaDetail>,
+    pub related_manga: ::prost::alloc::vec::Vec<MangaResultNode>,
     /// The hidden chapters range.
     #[prost(message, optional, tag = "18")]
     pub hidden_chapters: ::core::option::Option<ChaptersRange>,
@@ -208,6 +210,9 @@ pub struct MangaResultNode {
     /// The manga last update date in datetime format.
     #[prost(string, optional, tag = "9")]
     pub last_update: ::core::option::Option<::prost::alloc::string::String>,
+    /// The label badge information.
+    #[prost(enumeration = "LabelBadgeManga", tag = "10")]
+    pub label_badge: i32,
 }
 
 /// The manga search result responses.
