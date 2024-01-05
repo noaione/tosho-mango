@@ -99,7 +99,7 @@ fn format_tags(tags: Vec<Tag>) -> String {
             let tag_url = format!("https://{}/genre/{}", BASE_HOST.as_str(), tag.id);
             let linked = linkify!(&tag_url, &tag.name);
 
-            cformat!("<dim,reverse,bold>{}</>", linked)
+            cformat!("<p(244),reverse,bold>{}</>", linked)
         })
         .collect::<Vec<String>>()
         .join(", ");
