@@ -20,7 +20,7 @@ async fn common_purchase_select(
         "Fetching for ID <magenta,bold>{}</>...",
         title_id
     ));
-    let client = super::common::make_client(&account);
+    let client = super::common::make_client(account);
 
     let results = client.get_manga(title_id).await;
     match results {

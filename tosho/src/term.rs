@@ -143,12 +143,9 @@ impl Terminal {
 
     /// Stop the current spinner with a message
     pub fn stop_status_msg(&mut self, msg: String) {
-        match self.current_spinner.as_mut() {
-            Some(spinner) => {
-                spinner.finish_with_message(msg);
-                self.current_spinner = None;
-            }
-            None => {}
+        if let Some(spinner) = self.current_spinner.as_mut() {
+            spinner.finish_with_message(msg);
+            self.current_spinner = None;
         }
     }
 
