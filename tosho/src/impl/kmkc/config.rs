@@ -1,10 +1,11 @@
 #![allow(clippy::derive_partial_eq_without_eq)]
 
+use tosho_kmkc::KMConfig;
 use tosho_macros::EnumName;
 
 pub const PREFIX: &str = "kmkc";
 
-/// Device type for MU! by SQ session.
+/// Device type for KM by KC session.
 #[derive(
     Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration, EnumName,
 )]
@@ -15,7 +16,7 @@ pub enum DeviceType {
     Web = 2,
 }
 
-/// Mobile platform for MU! by SQ session.
+/// Mobile platform for KM by KC session.
 #[derive(
     Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration, EnumName,
 )]
@@ -74,6 +75,22 @@ impl From<ConfigMobile> for tosho_kmkc::KMConfigMobile {
         tosho_kmkc::config::KMConfigMobile {
             user_id: value.user_id.clone(),
             hash_key: value.user_secret.clone(),
+        }
+    }
+}
+
+impl From<tosho_kmkc::KMConfigMobile> for ConfigMobile {
+    fn from(value: tosho_kmkc::KMConfigMobile) -> Self {
+        ConfigMobile {
+            id: String::new(),
+            r#type: DeviceType::Mobile as i32,
+            username: String::new(),
+            email: String::from("temp@kmkc.xyz"),
+            account_id: 0,
+            device_id: 0,
+            user_id: value.user_id.clone(),
+            user_secret: value.hash_key.clone(),
+            platform: Some(MobilePlatform::Android as i32),
         }
     }
 }
@@ -172,6 +189,68 @@ impl From<tosho_kmkc::KMConfigWeb> for ConfigWeb {
     }
 }
 
+impl ConfigWeb {
+    /// Combine the config with the response from [`tosho_kmkc::models::UserAccount`].
+    pub fn with_user_account(&self, account: &tosho_kmkc::models::UserAccount) -> Self {
+        let mut config = self.clone();
+
+        config.username = account.name.clone();
+        config.email = account.email.clone();
+        config.account_id = account.id;
+        config.device_id = account.user_id;
+
+        config
+    }
+
+    /// Combine the config with the old ID.
+    pub fn with_id(&self, id: String) -> Self {
+        let mut config = self.clone();
+
+        config.id = id;
+        config
+    }
+
+    /// Combine the config with the old ID.
+    pub fn with_id_opt(&self, id: Option<String>) -> Self {
+        if let Some(id) = id {
+            self.with_id(id)
+        } else {
+            self.clone()
+        }
+    }
+}
+
+impl ConfigMobile {
+    /// Combine the config with the response from [`tosho_kmkc::models::UserAccount`].
+    pub fn with_user_account(&self, account: &tosho_kmkc::models::UserAccount) -> Self {
+        let mut config = self.clone();
+
+        config.username = account.name.clone();
+        config.email = account.email.clone();
+        config.account_id = account.id;
+        config.device_id = account.user_id;
+
+        config
+    }
+
+    /// Combine the config with the old ID.
+    pub fn with_id(&self, id: String) -> Self {
+        let mut config = self.clone();
+
+        config.id = id;
+        config
+    }
+
+    /// Combine the config with the old ID.
+    pub fn with_id_opt(&self, id: Option<String>) -> Self {
+        if let Some(id) = id {
+            self.with_id(id)
+        } else {
+            self.clone()
+        }
+    }
+}
+
 /// Represents the config file for the KM by KC app.
 #[derive(Clone, Debug)]
 pub enum Config {
@@ -179,6 +258,15 @@ pub enum Config {
     Mobile(ConfigMobile),
     /// The web config file.
     Web(ConfigWeb),
+}
+
+impl Config {
+    pub fn get_id(&self) -> &str {
+        match self {
+            Config::Mobile(c) => &c.id,
+            Config::Web(c) => &c.id,
+        }
+    }
 }
 
 impl From<ConfigMobile> for Config {
@@ -189,6 +277,15 @@ impl From<ConfigMobile> for Config {
 impl From<ConfigWeb> for Config {
     fn from(value: ConfigWeb) -> Self {
         Config::Web(value)
+    }
+}
+
+impl From<KMConfig> for Config {
+    fn from(value: KMConfig) -> Self {
+        match value {
+            KMConfig::Mobile(c) => Config::Mobile(c.into()),
+            KMConfig::Web(c) => Config::Web(c.into()),
+        }
     }
 }
 

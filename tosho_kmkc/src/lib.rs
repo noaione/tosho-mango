@@ -18,6 +18,16 @@ use models::{
 use reqwest_cookie_store::CookieStoreMutex;
 use sha2::{Digest, Sha256, Sha512};
 
+/// Login result for the API.
+///
+/// This will return either a [`KMConfig::Web`] or [`KMConfig::Mobile`] depending on the login type.
+///
+/// And will also include the current account info.
+pub struct KMLoginResult {
+    pub config: KMConfig,
+    pub account: UserAccount,
+}
+
 /// Main client for interacting with the SQ MU!
 ///
 /// # Example
@@ -602,7 +612,7 @@ impl KMClient {
     /// * `email` - The email to login with
     /// * `password` - The password to login with
     /// * `mobile` - Whether to login as mobile or not
-    pub async fn login(email: &str, password: &str, mobile: bool) -> anyhow::Result<KMConfig> {
+    pub async fn login(email: &str, password: &str, mobile: bool) -> anyhow::Result<KMLoginResult> {
         // Create a new client
         let mut headers = reqwest::header::HeaderMap::new();
         headers.insert(
@@ -662,19 +672,27 @@ impl KMClient {
             anyhow::bail!("Failed to login: {}", login_status.error_message);
         }
 
+        // Get account info
+        let km_client = KMClient::new(KMConfig::Web(unparse_web.clone()));
+        let account = km_client.get_account().await?;
+
         if !mobile {
-            return Ok(KMConfig::Web(unparse_web));
+            return Ok(KMLoginResult {
+                config: KMConfig::Web(unparse_web),
+                account,
+            });
         }
 
-        // Get user ID
-        let km_client = KMClient::new(KMConfig::Web(unparse_web));
-        let account = km_client.get_account().await?;
+        // Authenticate as mobile
         let user_info = km_client.get_user(account.user_id).await?;
 
-        Ok(KMConfig::Mobile(KMConfigMobile {
-            user_id: user_info.id.to_string(),
-            hash_key: user_info.hash_key,
-        }))
+        Ok(KMLoginResult {
+            config: KMConfig::Mobile(KMConfigMobile {
+                user_id: user_info.id.to_string(),
+                hash_key: user_info.hash_key.clone(),
+            }),
+            account,
+        })
     }
 }
 

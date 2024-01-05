@@ -46,6 +46,16 @@ impl From<KMConfigWebKV64> for KMConfigWebKV {
     }
 }
 
+impl TryFrom<&str> for KMConfigWebKV64 {
+    type Error = serde_json::Error;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        let decoded = decode(value).unwrap();
+        let parsed: KMConfigWebKV64 = serde_json::from_str(&decoded)?;
+        Ok(parsed)
+    }
+}
+
 impl Default for KMConfigWebKV {
     fn default() -> Self {
         let current_utc = OffsetDateTime::now_utc().unix_timestamp();
@@ -73,6 +83,14 @@ impl From<reqwest::cookie::Cookie<'_>> for KMConfigWebKV {
         // unquote the value
         let binding = value.value().to_string();
         let data = decode(&binding).unwrap();
+        let parsed: KMConfigWebKV = serde_json::from_str(&data).unwrap();
+        parsed
+    }
+}
+
+impl From<&str> for KMConfigWebKV {
+    fn from(value: &str) -> Self {
+        let data = decode(value).unwrap();
         let parsed: KMConfigWebKV = serde_json::from_str(&data).unwrap();
         parsed
     }
@@ -264,6 +282,72 @@ pub enum KMConfig {
     Web(KMConfigWeb),
     /// Mobile configuration
     Mobile(KMConfigMobile),
+}
+
+fn parse_cookie_as_str_kv(cookie_value: &str) -> KMConfigWebKV {
+    let kv64 = KMConfigWebKV64::try_from(cookie_value);
+    match kv64 {
+        Ok(parsed) => {
+            // Parse firsst from kv64 since number will fails on string KV
+            KMConfigWebKV::from(parsed)
+        }
+        Err(_) => KMConfigWebKV::from(cookie_value),
+    }
+}
+
+pub struct KMConfigWebFromStrError {
+    line: String,
+}
+
+impl std::fmt::Display for KMConfigWebFromStrError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "The line '{}' is not a valid cookie", self.line)
+    }
+}
+
+impl TryFrom<String> for KMConfigWeb {
+    type Error = KMConfigWebFromStrError;
+
+    /// Parse a netscape cookie string into a [`KMConfigWeb`]
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        let mut uwt = String::new();
+        let mut birthday = KMConfigWebKV::default();
+        let mut tos_adult = KMConfigWebKV::default();
+        let mut privacy = KMConfigWebKV::default();
+
+        for cookie_line in value.lines() {
+            if cookie_line.starts_with("#") && !cookie_line.starts_with("#HttpOnly_") {
+                continue;
+            }
+
+            // cookie is separated by tabs
+            // domain, include subdomain, path, secure, expiration, name, value
+            let cookie_parts: Vec<&str> = cookie_line.split('\t').collect();
+            if cookie_parts.len() != 7 {
+                return Err(KMConfigWebFromStrError {
+                    line: cookie_line.to_string(),
+                });
+            }
+
+            let cookie_name = cookie_parts[5];
+            let cookie_value = cookie_parts[6];
+
+            match cookie_name {
+                "uwt" => uwt = cookie_value.to_string(),
+                "birthday" => birthday = parse_cookie_as_str_kv(cookie_value),
+                "terms_of_service_adult" => tos_adult = parse_cookie_as_str_kv(cookie_value),
+                "privacy_policy" => privacy = parse_cookie_as_str_kv(cookie_value),
+                _ => (),
+            }
+        }
+
+        Ok(KMConfigWeb {
+            uwt,
+            birthday,
+            tos_adult,
+            privacy,
+        })
+    }
 }
 
 #[cfg(test)]

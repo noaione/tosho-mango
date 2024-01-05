@@ -1,4 +1,6 @@
-use tosho_kmkc::{constants::BASE_HOST, models::TitleNode};
+use std::path::PathBuf;
+
+use tosho_kmkc::{constants::BASE_HOST, models::TitleNode, KMConfig, KMConfigWeb};
 
 use crate::{
     config::{get_all_config, get_config},
@@ -77,8 +79,8 @@ pub(super) fn select_single_account(account_id: Option<&str>) -> Option<Config> 
     }
 }
 
-pub(super) fn make_client(config: &Config) -> tosho_kmkc::KMClient {
-    tosho_kmkc::KMClient::new(config.clone().into())
+pub(super) fn make_client(config: &KMConfig) -> tosho_kmkc::KMClient {
+    tosho_kmkc::KMClient::new(config.clone())
 }
 
 pub(super) fn do_print_search_information(results: Vec<TitleNode>, with_number: bool) {
@@ -105,4 +107,25 @@ pub(super) fn do_print_search_information(results: Vec<TitleNode>, with_number: 
         }
         term.info(&format!("   {}", manga_url))
     }
+}
+
+pub(super) fn parse_netscape_cookies(cookie_path: PathBuf) -> KMConfigWeb {
+    let term = get_console(0);
+
+    let read_cookie = match std::fs::read_to_string(cookie_path) {
+        Ok(read_cookie) => read_cookie,
+        Err(e) => {
+            term.error(&format!("Failed to read cookie file: {}", e));
+            std::process::exit(1);
+        }
+    };
+
+    let config: KMConfigWeb = match read_cookie.try_into() {
+        Ok(config) => config,
+        Err(e) => {
+            term.error(&format!("Failed to parse cookie file: {}", e));
+            std::process::exit(1);
+        }
+    };
+    config
 }
