@@ -1,3 +1,4 @@
+use super::win_term::check_windows_vt_support;
 use anstream::println;
 use color_print::cformat;
 use inquire::{Confirm, Select};
@@ -18,11 +19,13 @@ impl std::fmt::Display for ConsoleChoice {
 
 pub struct Terminal {
     debug: u8,
+    modern_win: bool,
 }
 
 impl Terminal {
     fn new(debug: u8) -> Self {
-        Self { debug }
+        let modern_win = check_windows_vt_support();
+        Self { debug, modern_win }
     }
 
     /// Log info to terminal
@@ -80,6 +83,20 @@ impl Terminal {
             Err(_) => None,
         }
     }
+
+    /// Is the terminal modern?
+    ///
+    /// Assume yes if not on Windows
+    pub fn is_modern(&self) -> bool {
+        #[cfg(windows)]
+        {
+            self.modern_win
+        }
+        #[cfg(not(windows))]
+        {
+            true
+        }
+    }
 }
 
 /// Get the root console instance
@@ -95,7 +112,10 @@ macro_rules! linkify {
     ($url:expr, $text:expr) => {
         match supports_hyperlinks::on(supports_hyperlinks::Stream::Stdout) {
             true => format!("\x1b]8;;{}\x1b\\{}\x1b]8;;\x1b\\", $url, $text),
-            false => $url.to_string(),
+            false => match crate::win_term::check_windows_vt_support() {
+                true => format!("\x1b]8;;{}\x1b\\{}\x1b]8;;\x1b\\", $url, $text),
+                false => $text.to_string(),
+            },
         }
     };
     ($url:expr) => {
