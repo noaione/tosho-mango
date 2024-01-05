@@ -2,6 +2,7 @@ use std::path::PathBuf;
 
 use clap::ValueEnum;
 use color_print::cformat;
+use num_format::{Locale, ToFormattedString};
 use tosho_kmkc::{KMClient, KMConfig, KMConfigMobile};
 
 use crate::{
@@ -349,6 +350,58 @@ pub(crate) async fn kmkc_account_info(
                     1
                 }
             }
+        }
+    }
+}
+
+pub(crate) async fn kmkc_balance(
+    account_id: Option<&str>,
+    console: &crate::term::Terminal,
+) -> ExitCode {
+    let account = select_single_account(account_id);
+    if account.is_none() {
+        console.warn("Aborted");
+        return 1;
+    }
+
+    let account = account.unwrap();
+
+    let client = super::common::make_client(&account.clone().into());
+    console.info(&cformat!(
+        "Checking balance for <magenta,bold>{}</>...",
+        account.get_id()
+    ));
+
+    let balance = client.get_user_point().await;
+    match balance {
+        Err(err) => {
+            console.error(&format!("Failed to fetch balance: {}", err));
+            1
+        }
+        Ok(balance) => {
+            console.info("Your current point balance:");
+            let total_bal = balance.point.total_point().to_formatted_string(&Locale::en);
+            let paid_point = balance.point.paid_point.to_formatted_string(&Locale::en);
+            let free_point = balance.point.free_point.to_formatted_string(&Locale::en);
+            let premium_ticket = balance.ticket.total_num.to_formatted_string(&Locale::en);
+            console.info(&cformat!(
+                "  - <bold>Total:</> <cyan!,bold><reverse>{}</>c</cyan!,bold>",
+                total_bal
+            ));
+            console.info(&cformat!(
+                "  - <bold>Paid point:</> <g,bold><reverse>{}</>c</g,bold>",
+                paid_point
+            ));
+            console.info(&cformat!(
+                "  - <bold>Free point:</> <cyan,bold><reverse>{}</>c</cyan,bold>",
+                free_point
+            ));
+            console.info(&cformat!(
+                "  - <bold>Premium ticket:</> <yellow,bold><reverse>{}</> ticket</yellow,bold>",
+                premium_ticket
+            ));
+
+            0
         }
     }
 }

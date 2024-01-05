@@ -93,4 +93,10 @@ pub(crate) enum KMKCCommands {
     },
     /// See all the accounts you have authenticated with
     Accounts,
+    /// Get your account point balance
+    Balance {
+        /// Account ID to use
+        #[arg(short = 'a', long = "account", default_value = None)]
+        account_id: Option<String>,
+    },
 }

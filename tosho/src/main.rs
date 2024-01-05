@@ -43,6 +43,9 @@ async fn main() {
                 r#impl::kmkc::accounts::kmkc_account_info(account_id.as_deref(), &t).await
             }
             cli::KMKCCommands::Accounts => r#impl::kmkc::accounts::kmkc_accounts(&t),
+            cli::KMKCCommands::Balance { account_id } => {
+                r#impl::kmkc::accounts::kmkc_balance(account_id.as_deref(), &t).await
+            }
         },
     };
 
