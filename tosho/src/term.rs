@@ -111,7 +111,7 @@ impl Terminal {
         spinner.set_style(
             ProgressStyle::with_template("{spinner:.blue} {msg}")
                 .unwrap()
-                .tick_strings(&["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]),
+                .tick_strings(&["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏", "✓"]),
         );
         spinner
     }
