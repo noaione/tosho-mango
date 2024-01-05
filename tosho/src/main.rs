@@ -6,6 +6,7 @@ mod cli;
 pub(crate) mod config;
 pub(crate) mod r#impl;
 pub(crate) mod term;
+pub(crate) mod win_term;
 use crate::cli::ToshoCli;
 
 #[tokio::main]
@@ -75,6 +76,19 @@ async fn main() {
             cli::KMKCCommands::Accounts => r#impl::kmkc::accounts::kmkc_accounts(&t),
             cli::KMKCCommands::Balance { account_id } => {
                 r#impl::kmkc::accounts::kmkc_balance(account_id.as_deref(), &t).await
+            }
+            cli::KMKCCommands::Info {
+                title_id,
+                account_id,
+                show_chapters,
+            } => {
+                r#impl::kmkc::manga::kmkc_title_info(
+                    title_id,
+                    account_id.as_deref(),
+                    show_chapters,
+                    &t,
+                )
+                .await
             }
             cli::KMKCCommands::Search { query, account_id } => {
                 r#impl::kmkc::manga::kmkc_search(query.as_str(), account_id.as_deref(), &t).await

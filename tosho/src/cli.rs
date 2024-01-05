@@ -240,6 +240,17 @@ pub(crate) enum KMKCCommands {
         #[arg(short = 'a', long = "account", default_value = None)]
         account_id: Option<String>,
     },
+    /// Get a title information
+    Info {
+        /// Title ID to use
+        title_id: i32,
+        /// Account ID to use
+        #[arg(short = 'a', long = "account", default_value = None)]
+        account_id: Option<String>,
+        /// Show each chapter detailed information
+        #[arg(short = 'c', long = "chapters")]
+        show_chapters: bool,
+    },
     /// Search for a title
     Search {
         /// Query to search for
