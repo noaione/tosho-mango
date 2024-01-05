@@ -5,7 +5,7 @@ pub mod config;
 pub mod constants;
 pub mod imaging;
 pub mod models;
-use constants::{ANDROID_CONSTANTS, BASE_API, BASE_HOST, WEB_CONSTANTS};
+use constants::{ANDROID_CONSTANTS, API_HOST, BASE_API, BASE_HOST, WEB_CONSTANTS};
 use md5::Md5;
 use models::{
     AccountResponse, BulkEpisodePurchaseResponse, EpisodeNode, EpisodePurchaseResponse,
@@ -61,7 +61,7 @@ impl KMClient {
         );
         headers.insert(
             reqwest::header::HOST,
-            reqwest::header::HeaderValue::from_static(&BASE_API),
+            reqwest::header::HeaderValue::from_static(&API_HOST),
         );
         match config {
             KMConfig::Web(web) => {
@@ -104,7 +104,7 @@ impl KMClient {
         }
     }
 
-    fn format_request(&self, query_params: &mut HashMap<String, String>) -> String {
+    fn apply_query_params(&self, query_params: &mut HashMap<String, String>) {
         let platform = match &self.config {
             KMConfig::Web(_) => WEB_CONSTANTS.platform,
             KMConfig::Mobile(_) => ANDROID_CONSTANTS.platform,
@@ -115,6 +115,10 @@ impl KMClient {
         };
         query_params.insert("platform".to_string(), platform.to_string());
         query_params.insert("version".to_string(), version.to_string());
+    }
+
+    fn format_request(&self, query_params: &mut HashMap<String, String>) -> String {
+        self.apply_query_params(query_params);
 
         create_request_hash(&self.config, query_params.clone())
     }
@@ -161,13 +165,10 @@ impl KMClient {
 
         let mut empty_params: HashMap<String, String> = HashMap::new();
         let mut empty_headers = reqwest::header::HeaderMap::new();
-        empty_headers
-            .insert(hash_header, self.format_request(&mut empty_params).parse()?)
-            .unwrap();
+        let empty_hash = self.format_request(&mut empty_params);
 
-        extend_headers
-            .insert(hash_header, hash_value.parse()?)
-            .unwrap();
+        empty_headers.insert(hash_header, empty_hash.parse()?);
+        extend_headers.insert(hash_header, hash_value.parse()?);
 
         let request = match (data.clone(), params.clone()) {
             (None, None) => self
@@ -175,21 +176,24 @@ impl KMClient {
                 .request(method, endpoint)
                 .query(&empty_params)
                 .headers(empty_headers),
-            (Some(data), None) => {
+            (Some(mut data), None) => {
                 extend_headers.insert(
                     reqwest::header::CONTENT_TYPE,
                     "application/x-www-form-urlencoded".parse()?,
                 );
+                self.apply_query_params(&mut data);
                 self.inner
                     .request(method, endpoint)
                     .form(&data)
                     .headers(extend_headers)
             }
-            (None, Some(params)) => self
-                .inner
-                .request(method, endpoint)
-                .query(&params)
-                .headers(extend_headers),
+            (None, Some(mut params)) => {
+                self.apply_query_params(&mut params);
+                self.inner
+                    .request(method, endpoint)
+                    .query(&params)
+                    .headers(extend_headers)
+            }
             (Some(_), Some(_)) => {
                 anyhow::bail!("Cannot have both data and params")
             }
@@ -766,8 +770,14 @@ async fn parse_response<T>(response: reqwest::Response) -> anyhow::Result<T>
 where
     T: serde::de::DeserializeOwned,
 {
+    let stat_code = response.status().clone();
+    let headers = response.headers().clone();
+    let url = response.url().clone();
     let raw_text = response.text().await.unwrap();
-    let status_resp = serde_json::from_str::<StatusResponse>(&raw_text.clone()).unwrap();
+    let status_resp = serde_json::from_str::<StatusResponse>(&raw_text.clone()).expect(&format!(
+        "Failed to parse response.\nURL: {}\nStatus code: {}\nHeaders: {:?}\nContents: {}\nBacktrace",
+        url, stat_code, headers, raw_text
+    ));
 
     match status_resp.raise_for_status() {
         Ok(_) => {
