@@ -113,7 +113,7 @@ pub(crate) async fn kmkc_search_weekly(
 }
 
 fn format_tag_name(tag_name: String) -> String {
-    let tag_split = tag_name.split("･").collect::<Vec<&str>>();
+    let tag_split = tag_name.split('･').collect::<Vec<&str>>();
 
     let mut tag_name = tag_split.join(" & ");
     if tag_split.len() > 2 {

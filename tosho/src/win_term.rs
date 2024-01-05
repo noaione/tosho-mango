@@ -16,9 +16,10 @@ pub fn check_windows_vt_support() -> bool {
         let success = GetConsoleMode(handle, raw);
 
         if success > 0 {
-            console_mode & 0x0004 != 0
+            console_mode & 0x0004 > 0
         } else {
-            0 & 0x0004 != 0
+            // fail
+            false
         }
     }
 }

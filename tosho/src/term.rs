@@ -112,7 +112,7 @@ macro_rules! linkify {
     ($url:expr, $text:expr) => {
         match supports_hyperlinks::on(supports_hyperlinks::Stream::Stdout) {
             true => format!("\x1b]8;;{}\x1b\\{}\x1b]8;;\x1b\\", $url, $text),
-            false => match crate::win_term::check_windows_vt_support() {
+            false => match $crate::win_term::check_windows_vt_support() {
                 true => format!("\x1b]8;;{}\x1b\\{}\x1b]8;;\x1b\\", $url, $text),
                 false => $text.to_string(),
             },
