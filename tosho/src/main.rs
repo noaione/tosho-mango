@@ -1,5 +1,5 @@
 use clap::Parser;
-use cli::ToshoCommands;
+use cli::{ToshoCommands, WeeklyCodeCli};
 use tosho_musq::WeeklyCode;
 
 mod cli;
@@ -75,6 +75,20 @@ async fn main() {
             cli::KMKCCommands::Accounts => r#impl::kmkc::accounts::kmkc_accounts(&t),
             cli::KMKCCommands::Balance { account_id } => {
                 r#impl::kmkc::accounts::kmkc_balance(account_id.as_deref(), &t).await
+            }
+            cli::KMKCCommands::Search { query, account_id } => {
+                r#impl::kmkc::manga::kmkc_search(query.as_str(), account_id.as_deref(), &t).await
+            }
+            cli::KMKCCommands::Weekly {
+                weekday,
+                account_id,
+            } => {
+                let weekday: WeeklyCodeCli = match weekday {
+                    Some(week) => week,
+                    None => WeeklyCode::today().into(),
+                };
+
+                r#impl::kmkc::manga::kmkc_search_weekly(weekday, account_id.as_deref(), &t).await
             }
         },
     };

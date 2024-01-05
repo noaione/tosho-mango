@@ -1,11 +1,12 @@
 use std::path::PathBuf;
 
 use clap::{Parser, Subcommand, ValueEnum};
+use tosho_macros::EnumName;
 use tosho_musq::WeeklyCode;
 
 pub(crate) type ExitCode = u32;
 
-#[derive(Clone)]
+#[derive(Clone, EnumName)]
 pub enum WeeklyCodeCli {
     Monday,
     Tuesday,
@@ -71,6 +72,35 @@ impl From<WeeklyCodeCli> for WeeklyCode {
             WeeklyCodeCli::Thursday => WeeklyCode::Thursday,
             WeeklyCodeCli::Friday => WeeklyCode::Friday,
             WeeklyCodeCli::Saturday => WeeklyCode::Saturday,
+        }
+    }
+}
+
+impl From<WeeklyCode> for WeeklyCodeCli {
+    fn from(value: WeeklyCode) -> Self {
+        match value {
+            WeeklyCode::Sunday => WeeklyCodeCli::Sunday,
+            WeeklyCode::Monday => WeeklyCodeCli::Monday,
+            WeeklyCode::Tuesday => WeeklyCodeCli::Tuesday,
+            WeeklyCode::Wednesday => WeeklyCodeCli::Wednesday,
+            WeeklyCode::Thursday => WeeklyCodeCli::Thursday,
+            WeeklyCode::Friday => WeeklyCodeCli::Friday,
+            WeeklyCode::Saturday => WeeklyCodeCli::Saturday,
+        }
+    }
+}
+
+impl WeeklyCodeCli {
+    /// Get the index of the weekday
+    pub fn indexed(&self) -> i32 {
+        match self {
+            WeeklyCodeCli::Monday => 1,
+            WeeklyCodeCli::Tuesday => 2,
+            WeeklyCodeCli::Wednesday => 3,
+            WeeklyCodeCli::Thursday => 4,
+            WeeklyCodeCli::Friday => 5,
+            WeeklyCodeCli::Saturday => 6,
+            WeeklyCodeCli::Sunday => 7,
         }
     }
 }
@@ -197,6 +227,23 @@ pub(crate) enum KMKCCommands {
     Accounts,
     /// Get your account point balance
     Balance {
+        /// Account ID to use
+        #[arg(short = 'a', long = "account", default_value = None)]
+        account_id: Option<String>,
+    },
+    /// Search for a title
+    Search {
+        /// Query to search for
+        query: String,
+        /// Account ID to use
+        #[arg(short = 'a', long = "account", default_value = None)]
+        account_id: Option<String>,
+    },
+    /// Get weekly releases
+    Weekly {
+        /// Day of the week to get releases for
+        #[arg(short = 'd', long = "day", value_enum, default_value = None)]
+        weekday: Option<WeeklyCodeCli>,
         /// Account ID to use
         #[arg(short = 'a', long = "account", default_value = None)]
         account_id: Option<String>,

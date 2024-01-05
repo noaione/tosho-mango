@@ -1,5 +1,6 @@
 use std::path::PathBuf;
 
+use color_print::cformat;
 use tosho_kmkc::{constants::BASE_HOST, models::TitleNode, KMConfig, KMConfigWeb};
 
 use crate::{
@@ -53,6 +54,14 @@ pub(super) fn select_single_account(account_id: Option<&str>) -> Option<Config> 
         return None;
     }
 
+    if all_configs.len() == 1 {
+        let config = all_configs.first().unwrap();
+        return match config {
+            crate::config::ConfigImpl::Kmkc(c) => Some(c.clone()),
+            crate::config::ConfigImpl::Musq(_) => None,
+        };
+    }
+
     let selected = term.choice("Select an account:", all_choices);
     match selected {
         Some(selected) => {
@@ -80,31 +89,38 @@ pub(super) fn make_client(config: &KMConfig) -> tosho_kmkc::KMClient {
     tosho_kmkc::KMClient::new(config.clone())
 }
 
-/// TODO: Remove this
-#[allow(dead_code)]
-pub(super) fn do_print_search_information(results: Vec<TitleNode>, with_number: bool) {
+pub(super) fn do_print_search_information(
+    results: Vec<TitleNode>,
+    with_number: bool,
+    spacing: Option<usize>,
+) {
     let term = get_console(0);
+    let spacing = spacing.unwrap_or(2);
 
     for (idx, result) in results.iter().enumerate() {
         let id = result.id;
         let manga_url = format!("https://{}/title/{}", BASE_HOST.as_str(), result.id);
         let linked = linkify!(&manga_url, &result.title);
-        let mut text_data = color_print::cformat!("<s>{}</s> ({})", linked, id);
+        let mut text_data = cformat!("<s>{}</s> ({})", linked, id);
         if result.next_update.is_some() {
-            text_data = format!(
+            text_data = cformat!(
                 "{} [<y,s>{}</>]",
                 text_data,
                 result.next_update.clone().unwrap()
             );
         }
         if !result.update_cycle.is_empty() {
-            text_data = format!("{} [<y!,s>{}</>]", text_data, result.update_cycle);
+            text_data = cformat!("{} [<b!,s>{}</>]", text_data, result.update_cycle);
         }
+
+        let pre_space = " ".repeat(spacing);
+        let pre_space_url = " ".repeat(spacing + 1);
+
         match with_number {
-            true => term.info(&format!("  [{:02}] {}", idx + 1, text_data)),
-            false => term.info(&format!("  {}", text_data)),
+            true => term.info(&format!("{}[{:02}] {}", pre_space, idx + 1, text_data)),
+            false => term.info(&format!("{}{}", pre_space, text_data)),
         }
-        term.info(&format!("   {}", manga_url))
+        term.info(&format!("{}{}", pre_space_url, manga_url))
     }
 }
 

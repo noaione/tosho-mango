@@ -770,11 +770,11 @@ async fn parse_response<T>(response: reqwest::Response) -> anyhow::Result<T>
 where
     T: serde::de::DeserializeOwned,
 {
-    let stat_code = response.status().clone();
+    let stat_code = response.status();
     let headers = response.headers().clone();
     let url = response.url().clone();
     let raw_text = response.text().await.unwrap();
-    let status_resp = serde_json::from_str::<StatusResponse>(&raw_text.clone()).expect(&format!(
+    let status_resp = serde_json::from_str::<StatusResponse>(&raw_text.clone()).unwrap_or_else(|_| panic!(
         "Failed to parse response.\nURL: {}\nStatus code: {}\nHeaders: {:?}\nContents: {}\nBacktrace",
         url, stat_code, headers, raw_text
     ));
