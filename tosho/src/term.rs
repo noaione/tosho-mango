@@ -1,6 +1,9 @@
+use std::time::Duration;
+
 use anstream::println;
 use color_print::cformat;
-use inquire::{Confirm, Select};
+use indicatif::ProgressStyle;
+use inquire::{Confirm, MultiSelect, Select};
 
 #[derive(Clone)]
 pub struct ConsoleChoice {
@@ -20,16 +23,19 @@ pub struct Terminal {
     debug: u8,
     #[cfg(windows)]
     modern_win: bool,
+    current_spinner: Option<indicatif::ProgressBar>,
 }
 
 impl Terminal {
     fn new(debug: u8) -> Self {
         #[cfg(windows)]
         let modern_win = super::win_term::check_windows_vt_support();
+
         Self {
             debug,
             #[cfg(windows)]
             modern_win,
+            current_spinner: None,
         }
     }
 
@@ -86,6 +92,63 @@ impl Terminal {
         match choice {
             Ok(choice) => choice,
             Err(_) => None,
+        }
+    }
+
+    /// Do a multiple choice prompt
+    pub fn select(&self, prompt: &str, choices: Vec<ConsoleChoice>) -> Option<Vec<ConsoleChoice>> {
+        let choice = MultiSelect::new(prompt, choices).prompt_skippable();
+
+        match choice {
+            Ok(choice) => choice,
+            Err(_) => None,
+        }
+    }
+
+    fn make_spinner(&self) -> indicatif::ProgressBar {
+        let spinner = indicatif::ProgressBar::new_spinner();
+        spinner.enable_steady_tick(Duration::from_millis(120));
+        spinner.set_style(
+            ProgressStyle::with_template("{spinner:.blue} {msg}")
+                .unwrap()
+                .tick_strings(&["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]),
+        );
+        spinner
+    }
+
+    /// Do a status spinner
+    pub fn status(&mut self, prompt: String) {
+        match self.current_spinner.as_mut() {
+            Some(spinner) => {
+                spinner.set_message(prompt);
+            }
+            None => {
+                let spinner = self.make_spinner();
+                spinner.set_message(prompt);
+                self.current_spinner = Some(spinner);
+            }
+        }
+    }
+
+    /// Stop the current spinner
+    // pub fn stop_status(&mut self) {
+    //     match self.current_spinner.as_mut() {
+    //         Some(spinner) => {
+    //             spinner.finish();
+    //             self.current_spinner = None;
+    //         }
+    //         None => {}
+    //     }
+    // }
+
+    /// Stop the current spinner with a message
+    pub fn stop_status_msg(&mut self, msg: String) {
+        match self.current_spinner.as_mut() {
+            Some(spinner) => {
+                spinner.finish_with_message(msg);
+                self.current_spinner = None;
+            }
+            None => {}
         }
     }
 

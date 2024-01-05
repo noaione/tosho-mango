@@ -128,11 +128,13 @@ pub(crate) struct ToshoCli {
 #[derive(Subcommand)]
 pub(crate) enum ToshoCommands {
     /// Download manga from MU!
+    #[command(name = "mu")]
     Musq {
         #[command(subcommand)]
         subcommand: MUSQCommands,
     },
     /// Download manga from KM
+    #[command(name = "km")]
     Kmkc {
         #[command(subcommand)]
         subcommand: KMKCCommands,
@@ -176,6 +178,22 @@ pub(crate) enum MUSQCommands {
         /// Show related titles
         #[arg(short = 'r', long = "related")]
         show_related: bool,
+    },
+    /// Purchases chapters for a title
+    Purchase {
+        /// Title ID to use
+        title_id: u64,
+        /// Account ID to use
+        #[arg(short = 'a', long = "account", default_value = None)]
+        account_id: Option<String>,
+    },
+    /// Precalculate the amount of points needed to purchase chapters for a title
+    Precalculate {
+        /// Title ID to use
+        title_id: u64,
+        /// Account ID to use
+        #[arg(short = 'a', long = "account", default_value = None)]
+        account_id: Option<String>,
     },
     /// Search for a title
     Search {

@@ -15,6 +15,7 @@ async fn main() {
     let _cli = ToshoCli::parse();
 
     let t = term::get_console(_cli.verbose);
+    let mut t_mut = term::get_console(_cli.verbose);
 
     let exit_code = match _cli.command {
         ToshoCommands::Musq { subcommand } => match subcommand {
@@ -39,6 +40,24 @@ async fn main() {
                     account_id.as_deref(),
                     show_chapters,
                     show_related,
+                    &t,
+                )
+                .await
+            }
+            cli::MUSQCommands::Purchase {
+                title_id,
+                account_id,
+            } => {
+                r#impl::musq::purchases::musq_purchase(title_id, account_id.as_deref(), &mut t_mut)
+                    .await
+            }
+            cli::MUSQCommands::Precalculate {
+                title_id,
+                account_id,
+            } => {
+                r#impl::musq::purchases::musq_purchase_precalculate(
+                    title_id,
+                    account_id.as_deref(),
                     &t,
                 )
                 .await
