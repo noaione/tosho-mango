@@ -39,12 +39,17 @@ pub(crate) enum MUSQCommands {
         #[arg(short, long, value_enum, default_value = "android")]
         r#type: DeviceKind,
     },
+    /// Get an account information
     Account {
+        /// Account ID to use
         #[arg(short = 'a', long = "account", default_value = None)]
         account_id: Option<String>,
     },
+    /// See all the accounts you have authenticated with
     Accounts,
+    /// Get your account point balance
     Balance {
+        /// Account ID to use
         #[arg(short = 'a', long = "account", default_value = None)]
         account_id: Option<String>,
     },
