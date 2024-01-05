@@ -2,7 +2,7 @@ use chrono::{DateTime, FixedOffset};
 use color_print::cformat;
 use tosho_musq::{
     constants::{get_constants, BASE_HOST},
-    proto::{BadgeManga, MangaResultNode},
+    proto::{BadgeManga, LabelBadgeManga, MangaResultNode},
 };
 
 use crate::{
@@ -71,16 +71,21 @@ pub(super) fn make_client(config: &Config) -> tosho_musq::MUClient {
     tosho_musq::MUClient::new(&config.session, constants.clone())
 }
 
-pub(super) fn do_print_search_information(results: Vec<MangaResultNode>, with_number: bool) {
+pub(super) fn do_print_search_information(
+    results: Vec<MangaResultNode>,
+    with_number: bool,
+    spacing: Option<usize>,
+) {
     let term = get_console(0);
+    let spacing = spacing.unwrap_or(2);
 
     for (idx, result) in results.iter().enumerate() {
         let id = result.id;
         let manga_url = format!("https://{}/manga/{}", BASE_HOST.as_str(), result.id);
         let linked = linkify!(&manga_url, &result.title);
-        let text_data = color_print::cformat!("<s>{}</s> ({})", linked, id);
+        let mut text_data = color_print::cformat!("<s>{}</s> ({})", linked, id);
 
-        let text_data = match result.badge() {
+        text_data = match result.badge() {
             BadgeManga::New => cformat!("{} <c!,rev,strong>[NEW]</c!,rev,strong>", text_data),
             BadgeManga::Unread => cformat!("{} <b,rev,strong>●</b,rev,strong>", text_data),
             BadgeManga::Update => cformat!("{} <g,rev,strong>UP</g,rev,strong>", text_data),
@@ -90,12 +95,24 @@ pub(super) fn do_print_search_information(results: Vec<MangaResultNode>, with_nu
             _ => text_data,
         };
 
+        text_data = match result.label_badge() {
+            LabelBadgeManga::Original => {
+                cformat!(
+                    "{} [<b!,strong><reverse>MU!</reverse> Original</>]",
+                    text_data
+                )
+            }
+            _ => text_data,
+        };
+        let pre_space = " ".repeat(spacing);
+        let pre_space_url = " ".repeat(spacing + 1);
+
         if with_number {
-            term.info(&format!("  [{:02}] {}", idx + 1, text_data));
+            term.info(&format!("{}[{:02}] {}", pre_space, idx + 1, text_data));
         } else {
-            term.info(&format!("  {}", text_data));
+            term.info(&format!("{}{}", pre_space, text_data));
         }
-        term.info(&format!("   {}", manga_url));
+        term.info(&format!("{}{}", pre_space_url, manga_url));
     }
 }
 

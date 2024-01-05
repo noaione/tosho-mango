@@ -124,6 +124,20 @@ pub(crate) enum MUSQCommands {
         #[arg(short = 'a', long = "account", default_value = None)]
         account_id: Option<String>,
     },
+    /// Get a title information
+    Info {
+        /// Title ID to use
+        title_id: u64,
+        /// Account ID to use
+        #[arg(short = 'a', long = "account", default_value = None)]
+        account_id: Option<String>,
+        /// Show each chapter detailed information
+        #[arg(short = 'c', long = "chapters")]
+        show_chapters: bool,
+        /// Show related titles
+        #[arg(short = 'r', long = "related")]
+        show_related: bool,
+    },
     /// Search for a title
     Search {
         /// Query to search for

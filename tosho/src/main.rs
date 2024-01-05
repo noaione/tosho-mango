@@ -27,6 +27,21 @@ async fn main() {
             cli::MUSQCommands::Balance { account_id } => {
                 r#impl::musq::accounts::musq_account_balance(account_id.as_deref(), &t).await
             }
+            cli::MUSQCommands::Info {
+                title_id,
+                account_id,
+                show_chapters,
+                show_related,
+            } => {
+                r#impl::musq::manga::musq_title_info(
+                    title_id,
+                    account_id.as_deref(),
+                    show_chapters,
+                    show_related,
+                    &t,
+                )
+                .await
+            }
             cli::MUSQCommands::Search { query, account_id } => {
                 r#impl::musq::manga::musq_search(query.as_str(), account_id.as_deref(), &t).await
             }
