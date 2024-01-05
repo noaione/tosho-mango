@@ -13,6 +13,16 @@ pub enum IntBool {
     Unknown = -1,
 }
 
+impl std::fmt::Display for IntBool {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            IntBool::False => write!(f, "False"),
+            IntBool::True => write!(f, "True"),
+            IntBool::Unknown => write!(f, "Unknown"),
+        }
+    }
+}
+
 impl PartialEq<IntBool> for IntBool {
     fn eq(&self, other: &IntBool) -> bool {
         matches!(

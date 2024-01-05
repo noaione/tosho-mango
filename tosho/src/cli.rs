@@ -1,6 +1,6 @@
-use clap::{Parser, Subcommand};
+use std::path::PathBuf;
 
-use crate::r#impl::musq::accounts::DeviceKind;
+use clap::{Parser, Subcommand};
 
 pub(crate) type ExitCode = u32;
 
@@ -37,7 +37,7 @@ pub(crate) enum MUSQCommands {
         session_id: String,
         /// Device kind/type to use
         #[arg(short, long, value_enum, default_value = "android")]
-        r#type: DeviceKind,
+        r#type: super::r#impl::musq::accounts::DeviceKind,
     },
     /// Get an account information
     Account {
@@ -56,4 +56,41 @@ pub(crate) enum MUSQCommands {
 }
 
 #[derive(Subcommand)]
-pub(crate) enum KMKCCommands {}
+pub(crate) enum KMKCCommands {
+    /// Authenticate tosho with your KM account. (Experimental)
+    ///
+    /// The following use email/password authentication
+    Auth {
+        /// Email to use
+        email: String,
+        /// Password to use
+        password: String,
+        /// Device kind/type to use
+        #[arg(short, long, value_enum, default_value = "android")]
+        r#type: super::r#impl::kmkc::accounts::DeviceKind,
+    },
+    /// Authenticate tosho with your KM account.
+    ///
+    /// The following use user ID/hash key to authenticate as mobile.
+    AuthMobile {
+        /// User ID to use
+        user_id: u32,
+        /// Hash key to use
+        hash_key: String,
+    },
+    /// Authenticate tosho with your KM account.
+    ///
+    /// The following use Netscape cookies to authenticate as web.
+    AuthWeb {
+        /// Path to Netscape cookies file
+        cookies: PathBuf,
+    },
+    /// Get an account information
+    Account {
+        /// Account ID to use
+        #[arg(short = 'a', long = "account", default_value = None)]
+        account_id: Option<String>,
+    },
+    /// See all the accounts you have authenticated with
+    Accounts,
+}

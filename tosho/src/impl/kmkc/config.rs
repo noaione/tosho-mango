@@ -267,6 +267,20 @@ impl Config {
             Config::Web(c) => &c.id,
         }
     }
+
+    pub fn get_username(&self) -> &str {
+        match self {
+            Config::Mobile(c) => &c.username,
+            Config::Web(c) => &c.username,
+        }
+    }
+
+    pub fn get_type(&self) -> DeviceType {
+        match self {
+            Config::Mobile(c) => c.r#type(),
+            Config::Web(c) => c.r#type(),
+        }
+    }
 }
 
 impl From<ConfigMobile> for Config {

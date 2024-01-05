@@ -83,6 +83,8 @@ pub(super) fn make_client(config: &KMConfig) -> tosho_kmkc::KMClient {
     tosho_kmkc::KMClient::new(config.clone())
 }
 
+/// TODO: Remove this
+#[allow(dead_code)]
 pub(super) fn do_print_search_information(results: Vec<TitleNode>, with_number: bool) {
     let term = get_console(0);
 

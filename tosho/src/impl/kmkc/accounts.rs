@@ -10,7 +10,7 @@ use crate::{
 };
 
 use super::{
-    common::make_client,
+    common::{make_client, select_single_account},
     config::{Config, MobilePlatform},
 };
 
@@ -66,7 +66,7 @@ impl PartialEq<MobilePlatform> for DeviceKind {
     }
 }
 
-pub(crate) async fn kmkc_authweb_cookies(
+pub(crate) async fn kmkc_account_login_web(
     cookies_path: PathBuf,
     console: &crate::term::Terminal,
 ) -> ExitCode {
@@ -130,7 +130,7 @@ pub(crate) async fn kmkc_authweb_cookies(
     }
 }
 
-pub(crate) async fn kmkc_authmobile(
+pub(crate) async fn kmkc_account_login_mobile(
     user_id: u32,
     hash_key: String,
     console: &crate::term::Terminal,
@@ -276,6 +276,93 @@ pub async fn kmkc_account_login(
             console.error(&format!("Failed to authenticate your account: {}", err));
 
             1
+        }
+    }
+}
+
+pub(crate) fn kmkc_accounts(console: &crate::term::Terminal) -> ExitCode {
+    let all_configs = get_all_config(crate::r#impl::Implementations::Kmkc, None);
+
+    match all_configs.len() {
+        0 => {
+            console.warn("No accounts found!");
+
+            1
+        }
+        _ => {
+            console.info(&format!("Found {} accounts:", all_configs.len()));
+            for (i, c) in all_configs.iter().enumerate() {
+                match c {
+                    crate::config::ConfigImpl::Kmkc(c) => {
+                        console.info(&format!(
+                            "{:02}. {} — <s>{}</> ({})",
+                            i + 1,
+                            c.get_id(),
+                            c.get_username(),
+                            c.get_type().to_name()
+                        ));
+                    }
+                    _ => unreachable!(),
+                }
+            }
+
+            0
+        }
+    }
+}
+
+pub(crate) async fn kmkc_account_info(
+    account_id: Option<&str>,
+    console: &crate::term::Terminal,
+) -> ExitCode {
+    let acc_info = select_single_account(account_id);
+
+    match acc_info {
+        None => {
+            console.warn("Aborted!");
+
+            1
+        }
+        Some(acc_info) => {
+            let binding = acc_info.clone();
+            let acc_id = binding.get_id();
+            console.info(&cformat!(
+                "Fetching account info for <magenta,bold>{}</>...",
+                acc_id
+            ));
+
+            let client = make_client(&acc_info.into());
+            let account = client.get_account().await;
+
+            match account {
+                Ok(account) => {
+                    console.info(&cformat!("Account info for <magenta,bold>{}</>:", acc_id));
+
+                    console.info(&cformat!("  <s>ID:</>: {}", account.id));
+                    console.info(&cformat!("  <s>User ID:</>: {}", account.user_id));
+                    console.info(&cformat!("  <s>Username:</>: {}", account.name));
+                    console.info(&cformat!("  <s>Email:</>: {}", account.email));
+                    console.info(&cformat!("  <s>Registered?</>: {}", account.registered));
+
+                    if !account.devices.is_empty() {
+                        console.info(&cformat!("  <s>Devices:</>"));
+                        for device in account.devices {
+                            console.info(&cformat!(
+                                "    - <s>{}</>: {} [{}]",
+                                device.id,
+                                device.name,
+                                device.platform.to_name()
+                            ));
+                        }
+                    }
+
+                    0
+                }
+                Err(err) => {
+                    console.error(&format!("Failed to fetch account info: {}", err));
+                    1
+                }
+            }
         }
     }
 }
