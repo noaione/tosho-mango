@@ -82,7 +82,7 @@ lazy_static! {
     };
 
     /// The base host used for overall requests.
-    pub(crate) static ref BASE_HOST: String = {
+    pub static ref BASE_HOST: String = {
         String::from_utf8(
             general_purpose::STANDARD
                 .decode("a21hbmdhLmtvZGFuc2hhLmNvbQ==")

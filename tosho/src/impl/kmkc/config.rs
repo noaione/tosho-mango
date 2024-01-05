@@ -1,9 +1,13 @@
 #![allow(clippy::derive_partial_eq_without_eq)]
 
+use tosho_macros::EnumName;
+
 pub const PREFIX: &str = "kmkc";
 
 /// Device type for MU! by SQ session.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration, EnumName,
+)]
 pub enum DeviceType {
     /// Mobile device.
     Mobile = 1,
@@ -12,7 +16,9 @@ pub enum DeviceType {
 }
 
 /// Mobile platform for MU! by SQ session.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration, EnumName,
+)]
 pub enum MobilePlatform {
     /// Android device.
     Android = 1,
@@ -183,5 +189,14 @@ impl From<ConfigMobile> for Config {
 impl From<ConfigWeb> for Config {
     fn from(value: ConfigWeb) -> Self {
         Config::Web(value)
+    }
+}
+
+impl From<Config> for tosho_kmkc::KMConfig {
+    fn from(value: Config) -> Self {
+        match value {
+            Config::Mobile(c) => tosho_kmkc::KMConfig::Mobile(c.into()),
+            Config::Web(c) => tosho_kmkc::KMConfig::Web(c.into()),
+        }
     }
 }
