@@ -35,8 +35,8 @@ pub(super) fn select_single_account(account_id: Option<&str>) -> Option<Config> 
         .filter_map(|c| match c {
             crate::config::ConfigImpl::Kmkc(_) => None,
             crate::config::ConfigImpl::Musq(c) => Some(ConsoleChoice {
-                name: c.session.clone(),
-                value: c.id.clone(),
+                name: c.id.clone(),
+                value: format!("{} [{}]", c.id, c.r#type().to_name()),
             }),
         })
         .collect();
@@ -52,7 +52,7 @@ pub(super) fn select_single_account(account_id: Option<&str>) -> Option<Config> 
                 .iter()
                 .find(|&c| match c {
                     crate::config::ConfigImpl::Kmkc(_) => false,
-                    crate::config::ConfigImpl::Musq(c) => c.session == selected.name,
+                    crate::config::ConfigImpl::Musq(c) => c.id == selected.name,
                 })
                 .unwrap();
 
