@@ -25,6 +25,7 @@ pub struct Terminal {
 
 impl Terminal {
     fn new(debug: u8) -> Self {
+        #[cfg(windows)]
         let modern_win = check_windows_vt_support();
         Self {
             debug,
