@@ -781,7 +781,12 @@ where
 
     match status_resp.raise_for_status() {
         Ok(_) => {
-            let parsed = serde_json::from_str(&raw_text).unwrap();
+            let parsed = serde_json::from_str(&raw_text).unwrap_or_else(|err| {
+                panic!(
+                    "Failed when deserializing response, error: {}\nContents: {}",
+                    err, raw_text
+                )
+            });
             Ok(parsed)
         }
         Err(e) => Err(anyhow::Error::new(e)),
