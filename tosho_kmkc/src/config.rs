@@ -284,6 +284,18 @@ pub enum KMConfig {
     Mobile(KMConfigMobile),
 }
 
+impl From<KMConfigWeb> for KMConfig {
+    fn from(value: KMConfigWeb) -> Self {
+        Self::Web(value)
+    }
+}
+
+impl From<KMConfigMobile> for KMConfig {
+    fn from(value: KMConfigMobile) -> Self {
+        Self::Mobile(value)
+    }
+}
+
 fn parse_cookie_as_str_kv(cookie_value: &str) -> KMConfigWebKV {
     let kv64 = KMConfigWebKV64::try_from(cookie_value);
     match kv64 {
