@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{ops::RangeInclusive, path::PathBuf};
 
 use clap::{
     builder::{
@@ -9,6 +9,8 @@ use clap::{
 };
 use tosho_macros::EnumName;
 use tosho_musq::WeeklyCode;
+
+use crate::r#impl::kmkc::rankings::RankingType;
 
 pub(crate) type ExitCode = u32;
 
@@ -323,6 +325,18 @@ pub(crate) enum KMKCCommands {
         #[arg(short = 'a', long = "account", default_value = None)]
         account_id: Option<String>,
     },
+    /// Get the current title rankings
+    Rankings {
+        /// Account ID to use
+        #[arg(short = 'a', long = "account", default_value = None)]
+        account_id: Option<String>,
+        /// Which ranking tab to use
+        #[arg(short = 'r', long = "ranking", default_value = None)]
+        ranking_tab: Option<RankingType>,
+        /// Limit the amount of titles to fetch/show
+        #[arg(short = 'l', long = "limit", default_value = None, value_parser = kmkc_ranking_limit_range)]
+        limit: Option<u32>,
+    },
     /// Revoke or delete an account
     Revoke {
         /// Account ID to use
@@ -354,4 +368,20 @@ fn cli_styles() -> Styles {
         .usage(AnsiColor::Magenta.on_default() | Effects::BOLD | Effects::UNDERLINE)
         .literal(AnsiColor::Blue.on_default() | Effects::BOLD)
         .placeholder(AnsiColor::BrightCyan.on_default())
+}
+
+const KMKC_RANKING_LIMIT_RANGE: RangeInclusive<usize> = 1..=100;
+
+fn kmkc_ranking_limit_range(s: &str) -> Result<Option<u32>, String> {
+    let s: usize = s.parse().map_err(|_| format!("Invalid limit: {}", s))?;
+
+    if KMKC_RANKING_LIMIT_RANGE.contains(&s) {
+        Ok(Some(s as u32))
+    } else {
+        Err(format!(
+            "Limit not in range {}-{}",
+            KMKC_RANKING_LIMIT_RANGE.start(),
+            KMKC_RANKING_LIMIT_RANGE.end()
+        ))
+    }
 }

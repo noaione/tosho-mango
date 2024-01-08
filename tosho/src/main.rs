@@ -148,6 +148,19 @@ async fn main() {
                 )
                 .await
             }
+            cli::KMKCCommands::Rankings {
+                account_id,
+                ranking_tab,
+                limit,
+            } => {
+                r#impl::kmkc::rankings::kmkc_home_rankings(
+                    ranking_tab,
+                    account_id.as_deref(),
+                    limit,
+                    &t,
+                )
+                .await
+            }
             cli::KMKCCommands::Revoke { account_id } => {
                 r#impl::kmkc::accounts::kmkc_account_revoke(account_id.as_deref(), &t)
             }
