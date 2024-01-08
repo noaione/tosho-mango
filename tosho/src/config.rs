@@ -13,6 +13,31 @@ pub enum ConfigImpl {
     Musq(crate::r#impl::musq::config::Config),
 }
 
+impl From<crate::r#impl::kmkc::config::Config> for ConfigImpl {
+    fn from(config: crate::r#impl::kmkc::config::Config) -> Self {
+        ConfigImpl::Kmkc(config)
+    }
+}
+
+// Adapt web/mobile
+impl From<crate::r#impl::kmkc::config::ConfigWeb> for ConfigImpl {
+    fn from(config: crate::r#impl::kmkc::config::ConfigWeb) -> Self {
+        ConfigImpl::Kmkc(config.into())
+    }
+}
+
+impl From<crate::r#impl::kmkc::config::ConfigMobile> for ConfigImpl {
+    fn from(config: crate::r#impl::kmkc::config::ConfigMobile) -> Self {
+        ConfigImpl::Kmkc(config.into())
+    }
+}
+
+impl From<crate::r#impl::musq::config::Config> for ConfigImpl {
+    fn from(config: crate::r#impl::musq::config::Config) -> Self {
+        ConfigImpl::Musq(config)
+    }
+}
+
 fn get_user_path() -> std::path::PathBuf {
     #[cfg(windows)]
     let user_path = {

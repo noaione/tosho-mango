@@ -294,6 +294,12 @@ impl From<ConfigWeb> for Config {
     }
 }
 
+impl From<ConfigWeb> for KMConfig {
+    fn from(value: ConfigWeb) -> Self {
+        KMConfig::Web(value.into())
+    }
+}
+
 impl From<KMConfig> for Config {
     fn from(value: KMConfig) -> Self {
         match value {
@@ -303,11 +309,11 @@ impl From<KMConfig> for Config {
     }
 }
 
-impl From<Config> for tosho_kmkc::KMConfig {
+impl From<Config> for KMConfig {
     fn from(value: Config) -> Self {
         match value {
-            Config::Mobile(c) => tosho_kmkc::KMConfig::Mobile(c.into()),
-            Config::Web(c) => tosho_kmkc::KMConfig::Web(c.into()),
+            Config::Mobile(c) => KMConfig::Mobile(c.into()),
+            Config::Web(c) => KMConfig::Web(c.into()),
         }
     }
 }

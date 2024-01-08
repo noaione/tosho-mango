@@ -244,6 +244,8 @@ pub(crate) enum KMKCCommands {
         /// Path to Netscape cookies file
         cookies: PathBuf,
     },
+    /// Adapt web config/account to mobile config/account
+    AuthAdapt,
     /// Get an account information
     Account {
         /// Account ID to use

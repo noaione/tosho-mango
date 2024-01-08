@@ -89,6 +89,9 @@ async fn main() {
             cli::KMKCCommands::AuthWeb { cookies } => {
                 r#impl::kmkc::accounts::kmkc_account_login_web(cookies, &t).await
             }
+            cli::KMKCCommands::AuthAdapt => {
+                r#impl::kmkc::accounts::kmkc_account_login_adapt(&t).await
+            }
             cli::KMKCCommands::Account { account_id } => {
                 r#impl::kmkc::accounts::kmkc_account_info(account_id.as_deref(), &t).await
             }

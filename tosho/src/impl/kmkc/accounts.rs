@@ -8,11 +8,12 @@ use tosho_kmkc::{KMClient, KMConfig, KMConfigMobile};
 use crate::{
     cli::ExitCode,
     config::{get_all_config, save_config},
+    term::ConsoleChoice,
 };
 
 use super::{
     common::{make_client, select_single_account},
-    config::{Config, MobilePlatform},
+    config::{Config, ConfigMobile, MobilePlatform},
 };
 
 #[derive(Clone)]
@@ -204,7 +205,11 @@ pub async fn kmkc_account_login(
     platform: DeviceKind,
     console: &crate::term::Terminal,
 ) -> ExitCode {
-    console.info(&cformat!("Authenticating with email <m,s>{}</>...", email,));
+    console.info(&cformat!(
+        "Authenticating with email <m,s>{}</> and password <m,s>{}</>...",
+        email,
+        password
+    ));
 
     let all_configs = get_all_config(crate::r#impl::Implementations::Kmkc, None);
 
@@ -263,6 +268,82 @@ pub async fn kmkc_account_login(
             console.error(&format!("Failed to authenticate your account: {}", err));
 
             1
+        }
+    }
+}
+
+pub async fn kmkc_account_login_adapt(console: &crate::term::Terminal) -> ExitCode {
+    let binding = get_all_config(crate::r#impl::Implementations::Kmkc, None);
+    let web_configs = binding
+        .iter()
+        .filter_map(|c| match c {
+            crate::config::ConfigImpl::Kmkc(super::config::Config::Web(cc)) => Some(cc),
+            _ => None,
+        })
+        .collect::<Vec<_>>();
+
+    if web_configs.is_empty() {
+        console.warn("There's no available web account to adapt!");
+        return 1;
+    }
+
+    let web_choices: Vec<ConsoleChoice> = web_configs
+        .iter()
+        .map(|&c| ConsoleChoice {
+            name: c.id.clone(),
+            value: format!("{} [{}]", c.id, c.r#type().to_name()),
+        })
+        .collect();
+
+    let select_acc = console.choice("Select an account:", web_choices);
+    match select_acc {
+        None => {
+            console.warn("Aborted!");
+            1
+        }
+        Some(selected) => {
+            let config = web_configs
+                .iter()
+                .cloned()
+                .find(|&c| c.id == selected.name)
+                .unwrap();
+
+            let client = make_client(&config.clone().into());
+            console.info(&cformat!(
+                "Re-Authenticating with email <m,s>{}</>...",
+                config.email
+            ));
+
+            let account = client.get_account().await;
+
+            match account {
+                Ok(account) => {
+                    let user_info = client.get_user(account.id).await.unwrap();
+
+                    console.info(&cformat!("Authenticated as <m,s>{}</>", account.name));
+
+                    let mobile_config = KMConfigMobile {
+                        user_id: account.id.to_string(),
+                        hash_key: user_info.hash_key,
+                    };
+                    let into_tosho: ConfigMobile = mobile_config.into();
+                    let final_config = into_tosho.with_user_account(&account);
+
+                    console.info(&cformat!(
+                        "Created session ID <m,s>{}</>, saving config...",
+                        final_config.id.clone()
+                    ));
+
+                    save_config(final_config.into(), None);
+
+                    0
+                }
+                Err(err) => {
+                    console.error(&format!("Failed to authenticate your account: {}", err));
+
+                    1
+                }
+            }
         }
     }
 }
