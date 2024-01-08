@@ -277,6 +277,12 @@ pub(crate) enum KMKCCommands {
         #[arg(short = 'c', long = "chapters")]
         show_chapters: bool,
     },
+    /// Get magazines list information
+    Magazines {
+        /// Account ID to use
+        #[arg(short = 'a', long = "account", default_value = None)]
+        account_id: Option<String>,
+    },
     /// Purchases chapters for a title
     Purchase {
         /// Title ID to use

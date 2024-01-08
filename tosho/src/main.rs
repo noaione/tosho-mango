@@ -115,6 +115,9 @@ async fn main() {
                 )
                 .await
             }
+            cli::KMKCCommands::Magazines { account_id } => {
+                r#impl::kmkc::manga::kmkc_magazines_list(account_id.as_deref(), &t).await
+            }
             cli::KMKCCommands::Purchase {
                 title_id,
                 account_id,

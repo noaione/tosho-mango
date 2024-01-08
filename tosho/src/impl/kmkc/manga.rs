@@ -310,3 +310,72 @@ pub(crate) async fn kmkc_title_info(
         }
     }
 }
+
+pub(crate) async fn kmkc_magazines_list(
+    account_id: Option<&str>,
+    console: &crate::term::Terminal,
+) -> ExitCode {
+    let account = select_single_account(account_id);
+
+    if account.is_none() {
+        console.warn("Aborted");
+        return 1;
+    }
+
+    let account = account.unwrap();
+    console.info("Fetching magazines list...");
+    let client = super::common::make_client(&account.into());
+
+    let results = client.get_magazines().await;
+
+    match results {
+        Err(e) => {
+            console.error(&cformat!("Unable to connect to KM: {}", e));
+            1
+        }
+        Ok(results) => {
+            if results.categories.is_empty() {
+                console.warn("No magazine results found.");
+                return 1;
+            }
+
+            let mut unknown_ids = vec![];
+            for magazine in results.categories {
+                if magazine.id == 0 {
+                    continue;
+                }
+
+                let mag_text = cformat!("<s>{}</> ({})", magazine.name, magazine.id);
+                let mag = MagazineCategory::try_from(magazine.id);
+
+                if let Ok(mag) = mag {
+                    console.info(&cformat!("{} <s>{}</>", mag_text, mag.pretty_name()));
+
+                    let doc_text = mag.get_doc();
+                    if let Ok(doc_text) = doc_text {
+                        let first_line = doc_text.split('\n').next().unwrap();
+                        console.info(&cformat!("  <s>{}</s>", first_line));
+                    }
+                } else {
+                    console.warn(&cformat!("{} <s>Unknown</>", mag_text));
+                    unknown_ids.push(magazine.id);
+                }
+            }
+
+            if !unknown_ids.is_empty() {
+                console.warn(&cformat!(
+                    "Found <red,bold>{}</> unknown magazine IDs",
+                    unknown_ids.len()
+                ));
+                let unknown_join = unknown_ids
+                    .iter()
+                    .map(|id| id.to_string())
+                    .collect::<Vec<String>>()
+                    .join(", ");
+                console.warn(&cformat!("  {}", unknown_join));
+            }
+
+            0
+        }
+    }
+}
