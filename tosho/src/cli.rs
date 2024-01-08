@@ -195,6 +195,12 @@ pub(crate) enum MUSQCommands {
         #[arg(short = 'a', long = "account", default_value = None)]
         account_id: Option<String>,
     },
+    /// Revoke or delete an account
+    Revoke {
+        /// Account ID to use
+        #[arg(short = 'a', long = "account", default_value = None)]
+        account_id: Option<String>,
+    },
     /// Search for a title
     Search {
         /// Query to search for
@@ -275,6 +281,12 @@ pub(crate) enum KMKCCommands {
     Search {
         /// Query to search for
         query: String,
+        /// Account ID to use
+        #[arg(short = 'a', long = "account", default_value = None)]
+        account_id: Option<String>,
+    },
+    /// Revoke or delete an account
+    Revoke {
         /// Account ID to use
         #[arg(short = 'a', long = "account", default_value = None)]
         account_id: Option<String>,

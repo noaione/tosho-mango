@@ -7,7 +7,7 @@ use tosho_kmkc::{KMClient, KMConfig, KMConfigMobile};
 
 use crate::{
     cli::ExitCode,
-    config::{get_all_config, save_config},
+    config::{get_all_config, save_config, try_remove_config},
     term::ConsoleChoice,
 };
 
@@ -483,6 +483,42 @@ pub(crate) async fn kmkc_balance(
             ));
 
             0
+        }
+    }
+}
+
+pub(crate) fn kmkc_account_revoke(
+    account_id: Option<&str>,
+    console: &crate::term::Terminal,
+) -> ExitCode {
+    let account = select_single_account(account_id);
+    if account.is_none() {
+        console.warn("Aborted");
+        return 1;
+    }
+
+    let account = account.unwrap();
+    let confirm = console.confirm(Some(&cformat!(
+        "Are you sure you want to delete <m,s>{}</>?\nThis action is irreversible!",
+        account.get_id()
+    )));
+
+    if !confirm {
+        console.warn("Aborted");
+        return 0;
+    }
+
+    match try_remove_config(account.get_id(), crate::r#impl::Implementations::Kmkc, None) {
+        Ok(_) => {
+            console.info(&cformat!(
+                "Successfully deleted <magenta,bold>{}</>",
+                account.get_id()
+            ));
+            0
+        }
+        Err(err) => {
+            console.error(&format!("Failed to delete account: {}", err));
+            1
         }
     }
 }

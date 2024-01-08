@@ -4,7 +4,7 @@ use num_format::{Locale, ToFormattedString};
 
 use crate::{
     cli::ExitCode,
-    config::{get_all_config, save_config},
+    config::{get_all_config, save_config, try_remove_config},
 };
 
 use super::{
@@ -239,6 +239,46 @@ pub async fn musq_account_balance(
                     1
                 }
             }
+        }
+    }
+}
+
+pub(crate) fn musq_account_revoke(
+    account_id: Option<&str>,
+    console: &crate::term::Terminal,
+) -> ExitCode {
+    let account = select_single_account(account_id);
+    if account.is_none() {
+        console.warn("Aborted");
+        return 1;
+    }
+
+    let account = account.unwrap();
+    let confirm = console.confirm(Some(&cformat!(
+        "Are you sure you want to delete <m,s>{}</>?\nThis action is irreversible!",
+        account.id
+    )));
+
+    if !confirm {
+        console.warn("Aborted");
+        return 0;
+    }
+
+    match try_remove_config(
+        account.id.as_str(),
+        crate::r#impl::Implementations::Kmkc,
+        None,
+    ) {
+        Ok(_) => {
+            console.info(&cformat!(
+                "Successfully deleted <magenta,bold>{}</>",
+                account.id
+            ));
+            0
+        }
+        Err(err) => {
+            console.error(&format!("Failed to delete account: {}", err));
+            1
         }
     }
 }

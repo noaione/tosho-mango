@@ -62,6 +62,9 @@ async fn main() {
                 )
                 .await
             }
+            cli::MUSQCommands::Revoke { account_id } => {
+                r#impl::musq::accounts::musq_account_revoke(account_id.as_deref(), &t)
+            }
             cli::MUSQCommands::Search { query, account_id } => {
                 r#impl::musq::manga::musq_search(query.as_str(), account_id.as_deref(), &t).await
             }
@@ -112,6 +115,9 @@ async fn main() {
                 )
                 .await
             }
+            cli::KMKCCommands::Revoke { account_id } => {
+                r#impl::kmkc::accounts::kmkc_account_revoke(account_id.as_deref(), &t)
+            }
             cli::KMKCCommands::Search { query, account_id } => {
                 r#impl::kmkc::manga::kmkc_search(query.as_str(), account_id.as_deref(), &t).await
             }
@@ -129,5 +135,5 @@ async fn main() {
         },
     };
 
-    std::process::exit(exit_code as i32);
+    ::std::process::exit(exit_code as i32);
 }

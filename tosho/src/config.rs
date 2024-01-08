@@ -226,3 +226,24 @@ pub fn save_config(config: ConfigImpl, user_path: Option<PathBuf>) {
         }
     }
 }
+
+pub fn try_remove_config(
+    id: &str,
+    r#impl: Implementations,
+    user_path: Option<PathBuf>,
+) -> std::io::Result<()> {
+    let user_path = user_path.unwrap_or(get_user_path());
+
+    let mut user_conf = user_path.clone();
+    let prefix = match r#impl {
+        Implementations::Kmkc => crate::r#impl::kmkc::config::PREFIX,
+        Implementations::Musq => crate::r#impl::musq::config::PREFIX,
+    };
+    user_conf.push(format!("{}.{}.tmconf", prefix, id));
+
+    if user_conf.exists() {
+        std::fs::remove_file(user_conf)
+    } else {
+        Ok(())
+    }
+}
