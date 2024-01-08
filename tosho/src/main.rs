@@ -29,6 +29,12 @@ async fn main() {
             cli::MUSQCommands::Balance { account_id } => {
                 r#impl::musq::accounts::musq_account_balance(account_id.as_deref(), &t).await
             }
+            cli::MUSQCommands::Favorites { account_id } => {
+                r#impl::musq::favorites::musq_my_favorites(account_id.as_deref(), &t).await
+            }
+            cli::MUSQCommands::History { account_id } => {
+                r#impl::musq::favorites::musq_my_history(account_id.as_deref(), &t).await
+            }
             cli::MUSQCommands::Info {
                 title_id,
                 account_id,

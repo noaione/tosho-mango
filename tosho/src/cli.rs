@@ -165,6 +165,18 @@ pub(crate) enum MUSQCommands {
         #[arg(short = 'a', long = "account", default_value = None)]
         account_id: Option<String>,
     },
+    /// Get your account favorites list
+    Favorites {
+        /// Account ID to use
+        #[arg(short = 'a', long = "account", default_value = None)]
+        account_id: Option<String>,
+    },
+    /// Get your account reading history
+    History {
+        /// Account ID to use
+        #[arg(short = 'a', long = "account", default_value = None)]
+        account_id: Option<String>,
+    },
     /// Get a title information
     Info {
         /// Title ID to use
