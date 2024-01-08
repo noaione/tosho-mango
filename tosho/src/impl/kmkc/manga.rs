@@ -346,9 +346,9 @@ pub(crate) async fn kmkc_magazines_list(
                 }
 
                 let mag_text = cformat!("<s>{}</> ({})", magazine.name, magazine.id);
-                let mag = MagazineCategory::try_from(magazine.id);
+                let mag = MagazineCategory::from(magazine.id);
 
-                if let Ok(mag) = mag {
+                if mag != MagazineCategory::Undefined {
                     console.info(&cformat!("{} <s>{}</>", mag_text, mag.pretty_name()));
 
                     let doc_text = mag.get_doc();

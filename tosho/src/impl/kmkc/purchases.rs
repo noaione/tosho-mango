@@ -238,12 +238,10 @@ pub(crate) async fn kmkc_purchase(
                         TicketInfoType::Premium(ticket_entry.info.premium.clone()),
                     ));
                     ticket_entry.subtract_premium();
-                } else {
-                    if wallet_copy.can_purchase(chapter.point.try_into().unwrap_or(0)) {
-                        wallet_copy.subtract(chapter.point.try_into().unwrap_or(0));
-                        wallet_copy.add(chapter.bonus_point.try_into().unwrap_or(0));
-                        chapter_point_claim.push(chapter);
-                    }
+                } else if wallet_copy.can_purchase(chapter.point.try_into().unwrap_or(0)) {
+                    wallet_copy.subtract(chapter.point.try_into().unwrap_or(0));
+                    wallet_copy.add(chapter.bonus_point.try_into().unwrap_or(0));
+                    chapter_point_claim.push(chapter);
                 }
             }
 
@@ -293,10 +291,8 @@ pub(crate) async fn kmkc_purchase(
                 ));
 
                 // convert Vec<EpisodeNode> to Vec<&EpisodeNode>
-                let temp_chapter_claim: Vec<&EpisodeNode> = chapter_point_claim
-                    .iter()
-                    .map(|ch| ch)
-                    .collect::<Vec<&EpisodeNode>>();
+                let temp_chapter_claim: Vec<&EpisodeNode> =
+                    chapter_point_claim.iter().collect::<Vec<&EpisodeNode>>();
 
                 let mut mutable_point = user_point.point.point.clone();
 
@@ -423,12 +419,10 @@ pub(crate) async fn kmkc_purchase_precalculate(
                         TicketInfoType::Premium(ticket_entry.info.premium.clone()),
                     ));
                     ticket_entry.subtract_premium();
-                } else {
-                    if wallet_copy.can_purchase(chapter.point.try_into().unwrap_or(0)) {
-                        wallet_copy.subtract(chapter.point.try_into().unwrap_or(0));
-                        wallet_copy.add(chapter.bonus_point.try_into().unwrap_or(0));
-                        chapter_point_claim.push(chapter);
-                    }
+                } else if wallet_copy.can_purchase(chapter.point.try_into().unwrap_or(0)) {
+                    wallet_copy.subtract(chapter.point.try_into().unwrap_or(0));
+                    wallet_copy.add(chapter.bonus_point.try_into().unwrap_or(0));
+                    chapter_point_claim.push(chapter);
                 }
             }
 
@@ -491,10 +485,7 @@ pub(crate) async fn kmkc_purchase_precalculate(
             let total_claim = total_claim.to_formatted_string(&Locale::en);
             let use_title_ticket = ticketing_claim
                 .iter()
-                .filter(|(_, ticket)| match ticket {
-                    TicketInfoType::Title(_) => true,
-                    _ => false,
-                })
+                .filter(|(_, ticket)| matches!(ticket, TicketInfoType::Title(_)))
                 .count()
                 > 0;
 
