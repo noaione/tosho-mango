@@ -62,6 +62,9 @@ async fn main() {
                 )
                 .await
             }
+            cli::MUSQCommands::Rankings { account_id } => {
+                r#impl::musq::rankings::musq_home_rankings(account_id.as_deref(), &t).await
+            }
             cli::MUSQCommands::Revoke { account_id } => {
                 r#impl::musq::accounts::musq_account_revoke(account_id.as_deref(), &t)
             }

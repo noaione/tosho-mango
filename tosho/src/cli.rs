@@ -195,6 +195,12 @@ pub(crate) enum MUSQCommands {
         #[arg(short = 'a', long = "account", default_value = None)]
         account_id: Option<String>,
     },
+    /// Get the current title rankings
+    Rankings {
+        /// Account ID to use
+        #[arg(short = 'a', long = "account", default_value = None)]
+        account_id: Option<String>,
+    },
     /// Revoke or delete an account
     Revoke {
         /// Account ID to use
