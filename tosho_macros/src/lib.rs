@@ -42,6 +42,27 @@ pub fn enumname_derive(input: TokenStream) -> TokenStream {
     impl_enumname_derive(&ast)
 }
 
+/// Derives an enum that would implement `::count()` to return the number of variants
+#[proc_macro_derive(EnumCount)]
+pub fn enumcount_derive(input: TokenStream) -> TokenStream {
+    let ast = syn::parse(input).unwrap();
+    impl_enumcount_derive(&ast)
+}
+
+/// Derives an enum that would implement From<u32>.
+#[proc_macro_derive(EnumU32)]
+pub fn enumu32_derive(input: TokenStream) -> TokenStream {
+    let ast = syn::parse(input).unwrap();
+    impl_enumu32_derive(&ast, false)
+}
+
+/// Derives an enum that would implement From<u32> with fallback.
+#[proc_macro_derive(EnumU32Fallback)]
+pub fn enumu32fallback_derive(input: TokenStream) -> TokenStream {
+    let ast = syn::parse(input).unwrap();
+    impl_enumu32_derive(&ast, true)
+}
+
 struct EnumErrorMacroInput {
     name: syn::Ident,
 }
@@ -232,6 +253,73 @@ fn impl_enumname_derive(ast: &syn::DeriveInput) -> TokenStream {
             pub fn to_name(&self) -> &'static str {
                 match self {
                     #(#arms)*
+                }
+            }
+        }
+    };
+    tokens.into()
+}
+
+fn impl_enumcount_derive(ast: &syn::DeriveInput) -> TokenStream {
+    let name = &ast.ident;
+
+    let variants = match &ast.data {
+        syn::Data::Enum(v) => &v.variants,
+        _ => panic!("`EnumCount` can only be derived for enums"),
+    };
+
+    let count = variants.len();
+
+    let tokens = quote::quote! {
+        impl #name {
+            /// Returns the number of variants in the enum
+            pub fn count() -> usize {
+                #count
+            }
+        }
+    };
+    tokens.into()
+}
+
+fn impl_enumu32_derive(ast: &syn::DeriveInput, with_default: bool) -> TokenStream {
+    let name = &ast.ident;
+
+    let variants = match &ast.data {
+        syn::Data::Enum(v) => &v.variants,
+        _ => panic!("`EnumU32` can only be derived for enums"),
+    };
+
+    let mut match_arms = vec![];
+    for variant in variants {
+        let variant_name = &variant.ident;
+        // convert from u32 to enum
+        let value = if let Some((_, expr)) = &variant.discriminant {
+            quote::quote! { #expr }
+        } else {
+            quote::quote! { stringify!(#variant_name).parse().unwrap() }
+        };
+
+        match_arms.push(quote::quote! {
+            #value => #name::#variant_name,
+        });
+    }
+
+    match with_default {
+        true => {
+            match_arms.push(quote::quote! {
+                _ => #name::default(),
+            });
+        }
+        false => match_arms.push(quote::quote! {
+            _ => panic!("Invalid value for {}: {}", stringify!(#name), value)
+        }),
+    }
+
+    let tokens = quote::quote! {
+        impl From<u32> for #name {
+            fn from(value: u32) -> Self {
+                match value {
+                    #(#match_arms)*
                 }
             }
         }
