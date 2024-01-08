@@ -20,7 +20,7 @@ pub(crate) async fn musq_my_favorites(
         "Getting favorites list for user <m,s>{}</>",
         account.id
     ));
-    let client = make_client(&account.into());
+    let client = make_client(&account);
 
     let results = client.get_my_manga().await;
 
@@ -63,7 +63,7 @@ pub(crate) async fn musq_my_history(
         "Getting favorites list for user <m,s>{}</>",
         account.id
     ));
-    let client = make_client(&account.into());
+    let client = make_client(&account);
 
     let results = client.get_my_manga().await;
 

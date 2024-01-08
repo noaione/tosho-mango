@@ -20,7 +20,7 @@ pub(crate) async fn musq_home_rankings(
         "Getting rankings list for user <m,s>{}</>",
         account.id
     ));
-    let client = make_client(&account.into());
+    let client = make_client(&account);
 
     let results = client.get_my_home().await;
 
