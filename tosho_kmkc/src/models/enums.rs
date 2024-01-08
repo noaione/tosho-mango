@@ -1,6 +1,9 @@
 use documented::DocumentedFields;
 use serde::{Deserialize, Serialize};
-use tosho_macros::{DeserializeEnum32, DeserializeEnum32Fallback, EnumName, SerializeEnum32};
+use tosho_macros::{
+    DeserializeEnum32, DeserializeEnum32Fallback, EnumCount, EnumName, EnumU32Fallback,
+    SerializeEnum32,
+};
 
 /// A boolean type used by the API represented as an integer.
 #[derive(Debug, Clone, SerializeEnum32, DeserializeEnum32, EnumName)]
@@ -108,6 +111,8 @@ pub enum PublishCategory {
     DeserializeEnum32Fallback,
     PartialEq,
     EnumName,
+    EnumCount,
+    EnumU32Fallback,
     Default,
     DocumentedFields,
 )]
@@ -395,5 +400,10 @@ Owns the following:
 
         let ichijinsha = MagazineCategory::Ichijinsha;
         assert_eq!(ichijinsha.get_doc(), Ok(ichijinsha_doc));
+    }
+
+    #[test]
+    fn test_enum_count() {
+        assert_eq!(MagazineCategory::count(), 49);
     }
 }
