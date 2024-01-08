@@ -277,16 +277,38 @@ pub(crate) enum KMKCCommands {
         #[arg(short = 'c', long = "chapters")]
         show_chapters: bool,
     },
-    /// Search for a title
-    Search {
-        /// Query to search for
-        query: String,
+    /// Purchases chapters for a title
+    Purchase {
+        /// Title ID to use
+        title_id: i32,
+        /// Account ID to use
+        #[arg(short = 'a', long = "account", default_value = None)]
+        account_id: Option<String>,
+    },
+    /// See purchased titles for an account
+    Purchased {
+        /// Account ID to use
+        #[arg(short = 'a', long = "account", default_value = None)]
+        account_id: Option<String>,
+    },
+    /// Precalculate the amount of points needed to purchase chapters for a title
+    Precalculate {
+        /// Title ID to use
+        title_id: i32,
         /// Account ID to use
         #[arg(short = 'a', long = "account", default_value = None)]
         account_id: Option<String>,
     },
     /// Revoke or delete an account
     Revoke {
+        /// Account ID to use
+        #[arg(short = 'a', long = "account", default_value = None)]
+        account_id: Option<String>,
+    },
+    /// Search for a title
+    Search {
+        /// Query to search for
+        query: String,
         /// Account ID to use
         #[arg(short = 'a', long = "account", default_value = None)]
         account_id: Option<String>,

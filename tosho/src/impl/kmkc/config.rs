@@ -317,3 +317,12 @@ impl From<Config> for KMConfig {
         }
     }
 }
+
+impl From<&Config> for KMConfig {
+    fn from(value: &Config) -> Self {
+        match value {
+            Config::Mobile(c) => KMConfig::Mobile(c.clone().into()),
+            Config::Web(c) => KMConfig::Web(c.clone().into()),
+        }
+    }
+}

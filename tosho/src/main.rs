@@ -115,6 +115,27 @@ async fn main() {
                 )
                 .await
             }
+            cli::KMKCCommands::Purchase {
+                title_id,
+                account_id,
+            } => {
+                r#impl::kmkc::purchases::kmkc_purchase(title_id, account_id.as_deref(), &mut t_mut)
+                    .await
+            }
+            cli::KMKCCommands::Purchased { account_id } => {
+                r#impl::kmkc::purchases::kmkc_purchased(account_id.as_deref(), &t).await
+            }
+            cli::KMKCCommands::Precalculate {
+                title_id,
+                account_id,
+            } => {
+                r#impl::kmkc::purchases::kmkc_purchase_precalculate(
+                    title_id,
+                    account_id.as_deref(),
+                    &mut t_mut,
+                )
+                .await
+            }
             cli::KMKCCommands::Revoke { account_id } => {
                 r#impl::kmkc::accounts::kmkc_account_revoke(account_id.as_deref(), &t)
             }
