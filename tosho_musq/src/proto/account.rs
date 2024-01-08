@@ -1,5 +1,7 @@
 #![allow(clippy::derive_partial_eq_without_eq)]
 
+use super::UserPoint;
+
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct AccountDevice {
     /// The device ID.
@@ -97,8 +99,8 @@ pub struct HomeFeatured {
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct HomeViewV2 {
     /// The user point.
-    #[prost(uint64, tag = "1")]
-    pub user_point: u64,
+    #[prost(message, tag = "1")]
+    pub user_point: ::core::option::Option<UserPoint>,
     /// The top most banner list. (Big single carousel)
     #[prost(message, repeated, tag = "3")]
     pub top_banners: ::prost::alloc::vec::Vec<HomeBanner>,
