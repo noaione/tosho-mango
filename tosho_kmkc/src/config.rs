@@ -188,6 +188,20 @@ impl From<&reqwest::Response> for KMConfigWeb {
             }
         }
 
+        let from_set_cookies = value.headers().get(reqwest::header::SET_COOKIE);
+        if let Some(set_cookie) = from_set_cookies {
+            for cookie in set_cookie.to_str().unwrap().split(';') {
+                let cookie = cookie_store::Cookie::parse(cookie, value.url()).unwrap();
+                match cookie.name() {
+                    "uwt" => uwt = cookie.value().to_string(),
+                    "birthday" => birthday = KMConfigWebKV::from(&cookie),
+                    "terms_of_service_adult" => tos_adult = KMConfigWebKV::from(&cookie),
+                    "privacy_policy" => privacy = KMConfigWebKV::from(&cookie),
+                    _ => (),
+                }
+            }
+        }
+
         if uwt.is_empty() {
             panic!("uwt cookie not found");
         }

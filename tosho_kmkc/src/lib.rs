@@ -658,9 +658,7 @@ impl KMClient {
             reqwest::header::CONTENT_TYPE,
             "application/x-www-form-urlencoded".parse()?,
         );
-        extend_headers
-            .insert(WEB_CONSTANTS.hash.as_str(), req_hash.parse()?)
-            .unwrap();
+        extend_headers.insert(WEB_CONSTANTS.hash.as_str(), req_hash.parse()?);
         let response = client
             .post(format!("{}/web/user/login", BASE_API.as_str()))
             .form(&req_data)
@@ -669,7 +667,6 @@ impl KMClient {
             .await?;
 
         let unparse_web = KMConfigWeb::from(&response);
-
         let login_status = parse_response::<StatusResponse>(response).await?;
 
         if login_status.response_code != 0 {
