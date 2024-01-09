@@ -4,6 +4,7 @@ use cookie_store::{Cookie, RawCookie};
 use reqwest::Url;
 use reqwest_cookie_store::CookieStoreMutex;
 use time::OffsetDateTime;
+use tosho_macros::{EnumName, EnumU32};
 use urlencoding::{decode, encode};
 
 use crate::constants::BASE_HOST;
@@ -282,11 +283,22 @@ impl Default for KMConfigWeb {
     }
 }
 
+/// The mobile platform to use
+#[derive(Debug, Clone, EnumName, EnumU32)]
+#[repr(u8)]
+pub enum KMConfigMobilePlatform {
+    /// Apple/iOS
+    Apple = 1,
+    /// Android
+    Android = 2,
+}
+
 /// Represents the mobile config
 #[derive(Debug, Clone)]
 pub struct KMConfigMobile {
     pub user_id: String,
     pub hash_key: String,
+    pub platform: KMConfigMobilePlatform,
 }
 
 /// Represents the config for the KM KC
@@ -401,5 +413,11 @@ mod tests {
         let cookie = kv.to_cookie("test".into());
         let decoded_cookie = decode(cookie.value()).unwrap();
         assert_eq!(decoded_cookie, "{\"value\":123,\"expires\":123}");
+    }
+
+    #[test]
+    fn test_mobile_platform_u8() {
+        assert_eq!(KMConfigMobilePlatform::Apple as u8, 1);
+        assert_eq!(KMConfigMobilePlatform::Android as u8, 2);
     }
 }

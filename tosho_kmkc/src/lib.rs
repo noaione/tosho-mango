@@ -5,7 +5,7 @@ pub mod config;
 pub mod constants;
 pub mod imaging;
 pub mod models;
-use constants::{ANDROID_CONSTANTS, API_HOST, BASE_API, BASE_HOST, WEB_CONSTANTS};
+use constants::{get_constants, API_HOST, BASE_API, BASE_HOST, WEB_CONSTANTS};
 use md5::Md5;
 use models::{
     AccountResponse, BulkEpisodePurchaseResponse, EpisodeNode, EpisodePurchaseResponse,
@@ -46,6 +46,7 @@ pub struct KMLoginResult {
 pub struct KMClient {
     inner: reqwest::Client,
     config: KMConfig,
+    constants: &'static constants::Constants,
 }
 
 impl KMClient {
@@ -83,12 +84,14 @@ impl KMClient {
                 Self {
                     inner: client,
                     config: KMConfig::Web(web),
+                    constants: get_constants(3),
                 }
             }
             KMConfig::Mobile(mobile) => {
+                let consts = get_constants(mobile.platform.clone() as u8);
                 headers.insert(
                     reqwest::header::USER_AGENT,
-                    reqwest::header::HeaderValue::from_static(&ANDROID_CONSTANTS.ua),
+                    reqwest::header::HeaderValue::from_static(&consts.ua),
                 );
 
                 let client = reqwest::Client::builder()
@@ -99,20 +102,15 @@ impl KMClient {
                 Self {
                     inner: client,
                     config: KMConfig::Mobile(mobile),
+                    constants: consts,
                 }
             }
         }
     }
 
     fn apply_query_params(&self, query_params: &mut HashMap<String, String>) {
-        let platform = match &self.config {
-            KMConfig::Web(_) => WEB_CONSTANTS.platform,
-            KMConfig::Mobile(_) => ANDROID_CONSTANTS.platform,
-        };
-        let version = match &self.config {
-            KMConfig::Web(_) => WEB_CONSTANTS.version,
-            KMConfig::Mobile(_) => ANDROID_CONSTANTS.version,
-        };
+        let platform = self.constants.platform;
+        let version = self.constants.version;
         query_params.insert("platform".to_string(), platform.to_string());
         query_params.insert("version".to_string(), version.to_string());
     }
@@ -150,10 +148,7 @@ impl KMClient {
             Some(headers) => headers,
             None => reqwest::header::HeaderMap::new(),
         };
-        let hash_header = match &self.config {
-            KMConfig::Web(_) => WEB_CONSTANTS.hash.as_str(),
-            KMConfig::Mobile(_) => ANDROID_CONSTANTS.hash.as_str(),
-        };
+        let hash_header = self.constants.hash.as_str();
 
         let hash_value = match data.clone() {
             Some(mut data) => self.format_request(&mut data),
@@ -616,7 +611,11 @@ impl KMClient {
     /// * `email` - The email to login with
     /// * `password` - The password to login with
     /// * `mobile` - Whether to login as mobile or not
-    pub async fn login(email: &str, password: &str, mobile: bool) -> anyhow::Result<KMLoginResult> {
+    pub async fn login(
+        email: &str,
+        password: &str,
+        mobile_platform: Option<KMConfigMobilePlatform>,
+    ) -> anyhow::Result<KMLoginResult> {
         // Create a new client
         let mut headers = reqwest::header::HeaderMap::new();
         headers.insert(
@@ -677,7 +676,7 @@ impl KMClient {
         let km_client = KMClient::new(KMConfig::Web(unparse_web.clone()));
         let account = km_client.get_account().await?;
 
-        if !mobile {
+        if mobile_platform.is_none() {
             return Ok(KMLoginResult {
                 config: KMConfig::Web(unparse_web),
                 account,
@@ -691,6 +690,7 @@ impl KMClient {
             config: KMConfig::Mobile(KMConfigMobile {
                 user_id: user_info.id.to_string(),
                 hash_key: user_info.hash_key.clone(),
+                platform: mobile_platform.unwrap(),
             }),
             account,
         })
