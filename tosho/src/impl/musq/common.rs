@@ -1,7 +1,9 @@
 use color_print::cformat;
+use num_format::{Locale, ToFormattedString};
 use tosho_musq::{
     constants::{get_constants, BASE_HOST},
-    proto::{BadgeManga, LabelBadgeManga, MangaResultNode},
+    proto::{BadgeManga, ChapterV2, LabelBadgeManga, MangaResultNode, UserPoint},
+    MUClient,
 };
 
 use crate::{
@@ -112,5 +114,109 @@ pub(super) fn do_print_search_information(
             term.info(&format!("{}{}", pre_space, text_data));
         }
         term.info(&format!("{}{}", pre_space_url, manga_url));
+    }
+}
+
+pub(super) async fn common_purchase_select(
+    title_id: u64,
+    account: &Config,
+    download_mode: bool,
+    show_all: bool,
+    console: &crate::term::Terminal,
+) -> (anyhow::Result<Vec<ChapterV2>>, MUClient, Option<UserPoint>) {
+    console.info(&cformat!(
+        "Fetching for ID <magenta,bold>{}</>...",
+        title_id
+    ));
+    let client = super::common::make_client(account);
+
+    let results = client.get_manga(title_id).await;
+    match results {
+        Ok(result) => {
+            let user_bal = result.user_point.unwrap();
+            let total_bal = user_bal.sum().to_formatted_string(&Locale::en);
+            let paid_point = user_bal.paid.to_formatted_string(&Locale::en);
+            let xp_point = user_bal.event.to_formatted_string(&Locale::en);
+            let free_point = user_bal.free.to_formatted_string(&Locale::en);
+
+            console.info("Your current point balance:");
+            console.info(&cformat!("  - <s>Total</>: {}", total_bal));
+            console.info(&cformat!("  - <s>Paid point</>: {}c", paid_point));
+            console.info(&cformat!("  - <s>Event/XP point</>: {}c", xp_point));
+            console.info(&cformat!("  - <s>Free point</>: {}c", free_point));
+
+            console.info("Title information:");
+            console.info(&cformat!("  - <s>ID</>: {}", title_id));
+            console.info(&cformat!("  - <s>Title</>: {}", result.title));
+            console.info(&cformat!("  - <s>Chapters</>: {}", result.chapters.len()));
+
+            let select_choices: Vec<ConsoleChoice> = result
+                .chapters
+                .iter()
+                .filter_map(|ch| {
+                    if !show_all && ch.is_free() {
+                        None
+                    } else {
+                        let value = if download_mode {
+                            ch.title.clone()
+                        } else {
+                            format!("{} ({}c)", ch.title, ch.price)
+                        };
+                        Some(ConsoleChoice {
+                            name: ch.id.to_string(),
+                            value,
+                        })
+                    }
+                })
+                .collect();
+
+            if select_choices.is_empty() {
+                console.warn("No chapters found, aborting...");
+
+                return (Ok(vec![]), client, Some(user_bal));
+            }
+
+            let sel_prompt = if download_mode {
+                "Select chapter to download"
+            } else {
+                "Select chapter to purchase"
+            };
+            let selected = console.select(sel_prompt, select_choices);
+
+            match selected {
+                Some(selected) => {
+                    if selected.is_empty() {
+                        console.warn("No chapter selected, aborting...");
+
+                        return (Ok(vec![]), client, Some(user_bal));
+                    }
+
+                    let mut selected_chapters: Vec<ChapterV2> = vec![];
+
+                    for chapter in selected {
+                        let ch_id = chapter.name.parse::<u64>().unwrap();
+                        let ch = result
+                            .chapters
+                            .iter()
+                            .find(|ch| ch.id == ch_id)
+                            .unwrap()
+                            .clone();
+
+                        selected_chapters.push(ch);
+                    }
+
+                    (Ok(selected_chapters), client, Some(user_bal))
+                }
+                None => {
+                    console.warn("Aborted");
+                    (Ok(vec![]), client, Some(user_bal))
+                }
+            }
+        }
+        Err(e) => {
+            console.error(&cformat!("Unable to connect to MU!: {}", e));
+
+            (Err(e), client, None)
+        }
     }
 }
