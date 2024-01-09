@@ -1,4 +1,3 @@
-use chrono::{DateTime, FixedOffset};
 use color_print::cformat;
 use tosho_musq::{
     constants::{get_constants, BASE_HOST},
@@ -113,22 +112,5 @@ pub(super) fn do_print_search_information(
             term.info(&format!("{}{}", pre_space, text_data));
         }
         term.info(&format!("{}{}", pre_space_url, manga_url));
-    }
-}
-
-// TODO: REMOVE THIS
-#[allow(dead_code)]
-pub(super) fn parse_published(
-    published: Option<&str>,
-) -> Option<chrono::LocalResult<DateTime<FixedOffset>>> {
-    // %b %d, %Y
-    match published {
-        Some(published) => {
-            // assume JST
-            let published = chrono::NaiveDateTime::parse_from_str(published, "%b %d, %Y")
-                .expect("Failed to parse published date");
-            Some(published.and_local_timezone(chrono::FixedOffset::east_opt(9 * 3600).unwrap()))
-        }
-        None => None,
     }
 }
