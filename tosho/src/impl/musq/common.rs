@@ -159,9 +159,7 @@ pub(super) async fn common_purchase_select(
                 .chapters
                 .iter()
                 .filter_map(|ch| {
-                    if download_mode && !show_all && !ch.is_free() {
-                        None
-                    } else if !download_mode && !show_all && ch.is_free() {
+                    if !download_mode && !show_all && ch.is_free() {
                         None
                     } else {
                         let value = if download_mode {

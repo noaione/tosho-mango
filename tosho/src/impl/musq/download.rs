@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use clap::ValueEnum;
 
@@ -91,12 +91,12 @@ fn create_chapters_info(manga_detail: MangaDetailV2) -> MangaDetailDump {
 }
 
 fn get_output_directory(
-    output_dir: &PathBuf,
+    output_dir: &Path,
     title_id: u64,
     chapter_id: Option<u64>,
     create_folder: bool,
 ) -> PathBuf {
-    let mut pathing = output_dir.clone();
+    let mut pathing = output_dir.to_path_buf();
     pathing.push(title_id.to_string());
 
     if let Some(chapter_id) = chapter_id {
@@ -110,6 +110,7 @@ fn get_output_directory(
     pathing
 }
 
+#[allow(clippy::too_many_arguments)]
 pub(crate) async fn musq_download(
     title_id: u64,
     chapter_ids: Vec<usize>,
@@ -155,7 +156,7 @@ pub(crate) async fn musq_download(
                     continue;
                 }
 
-                let consume = client.calculate_coin(&coin_purse, &chapter);
+                let consume = client.calculate_coin(&coin_purse, chapter);
                 if !consume.is_possible() {
                     console.warn(&cformat!(
                         "Chapter <m,s>{}</> (<s>{}</>) is not available for purchase, skipping",

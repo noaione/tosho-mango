@@ -55,10 +55,9 @@ impl From<ChapterV2> for ChapterDetailDump {
                 let published = chrono::NaiveDate::parse_from_str(&published, "%b %d, %Y")
                     .map(|d| d.and_hms_opt(0, 0, 0).unwrap())
                     .map(|d| d.and_local_timezone(chrono::FixedOffset::east_opt(9 * 3600).unwrap()))
-                    .expect(&format!(
-                        "Failed to parse published date to JST TZ: {}",
-                        published
-                    ))
+                    .unwrap_or_else(|_| {
+                        panic!("Failed to parse published date to JST TZ: {}", published)
+                    })
                     .unwrap();
 
                 // to timestamp

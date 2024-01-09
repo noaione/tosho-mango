@@ -649,10 +649,8 @@ impl KMClient {
                 Ok(())
             }
             (KMConfig::Web(_), Some(scramble_seed)) => {
-                let bytes = res.bytes().await?;
-                // Convert to &[u8]
-                let bytes = bytes.as_ref();
-                match imaging::descramble_image(bytes.as_ref(), 4, scramble_seed) {
+                let image_bytes = res.bytes().await?;
+                match imaging::descramble_image(image_bytes.as_ref(), 4, scramble_seed) {
                     Ok(descram_bytes) => {
                         writer.write_all(&descram_bytes).await?;
                     }
@@ -785,16 +783,17 @@ fn create_request_hash(config: &KMConfig, query_params: HashMap<String, String>)
                 qi_s.push(hashed);
             }
 
-            let qi_s_hashed = Sha256::digest(qi_s.join(",").as_bytes());
+            let qi_s_hashed = <Sha256 as Digest>::digest(qi_s.join(",").as_bytes());
             let birth_expire_hash = hash_kv(birthday, &expires);
 
-            let merged_hash =
-                Sha512::digest(format!("{:x}{}", qi_s_hashed, birth_expire_hash).as_bytes());
+            let merged_hash = <Sha512 as Digest>::digest(
+                format!("{:x}{}", qi_s_hashed, birth_expire_hash).as_bytes(),
+            );
 
             format!("{:x}", merged_hash)
         }
         KMConfig::Mobile(mobile) => {
-            let mut hasher = Sha256::new();
+            let mut hasher = <Sha256 as Digest>::new();
 
             let hash_key = &mobile.hash_key;
 
@@ -807,7 +806,7 @@ fn create_request_hash(config: &KMConfig, query_params: HashMap<String, String>)
 
             for key in keys {
                 let value = query_params.get(key).unwrap();
-                let hashed_value = Md5::digest(value.as_bytes());
+                let hashed_value = <Md5 as Digest>::digest(value.as_bytes());
 
                 hasher.update(hashed_value);
             }
@@ -824,8 +823,8 @@ fn hash_kv(key: &str, value: &str) -> String {
     let value = value.as_bytes();
 
     // create hasher
-    let hasher256 = Sha256::digest(key);
-    let hasher512 = Sha512::digest(value);
+    let hasher256 = <Sha256 as Digest>::digest(key);
+    let hasher512 = <Sha512 as Digest>::digest(value);
 
     format!("{:x}_{:x}", hasher256, hasher512)
 }
