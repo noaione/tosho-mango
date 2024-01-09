@@ -169,6 +169,29 @@ pub(crate) enum MUSQCommands {
         #[arg(short = 'a', long = "account", default_value = None)]
         account_id: Option<String>,
     },
+    /// Download a chapters from a title
+    Download {
+        /// Title ID to use
+        title_id: u64,
+        /// Specify the chapter ID to purchase (ex: 1,2,3,4,5)
+        #[arg(short = 'c', long = "chapters", default_value = None, value_parser = parse_comma_number)]
+        chapters: Option<CommaSeparatedNumber>,
+        /// Show all the chapters available for the title
+        #[arg(long = "show-all")]
+        show_all: bool,
+        /// Automatically purchase chapters if needed
+        #[arg(short = 'p', long = "auto-purchase")]
+        auto_purchase: bool,
+        /// Specify the image quality to download
+        #[arg(short = 'q', long = "quality", default_value = "high", value_enum)]
+        quality: super::r#impl::musq::download::DownloadImageQuality,
+        /// Output directory to use
+        #[arg(short = 'o', long = "output", default_value = None)]
+        output: Option<PathBuf>,
+        /// Account ID to use
+        #[arg(short = 'a', long = "account", default_value = None)]
+        account_id: Option<String>,
+    },
     /// Get your account favorites list
     Favorites {
         /// Account ID to use

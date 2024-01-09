@@ -2,7 +2,7 @@ use color_print::cformat;
 use num_format::{Locale, ToFormattedString};
 use tosho_musq::{
     constants::{get_constants, BASE_HOST},
-    proto::{BadgeManga, ChapterV2, LabelBadgeManga, MangaResultNode, UserPoint},
+    proto::{BadgeManga, ChapterV2, LabelBadgeManga, MangaDetailV2, MangaResultNode, UserPoint},
     MUClient,
 };
 
@@ -123,7 +123,12 @@ pub(super) async fn common_purchase_select(
     download_mode: bool,
     show_all: bool,
     console: &crate::term::Terminal,
-) -> (anyhow::Result<Vec<ChapterV2>>, MUClient, Option<UserPoint>) {
+) -> (
+    anyhow::Result<Vec<ChapterV2>>,
+    Option<MangaDetailV2>,
+    MUClient,
+    Option<UserPoint>,
+) {
     console.info(&cformat!(
         "Fetching for ID <magenta,bold>{}</>...",
         title_id
@@ -133,7 +138,7 @@ pub(super) async fn common_purchase_select(
     let results = client.get_manga(title_id).await;
     match results {
         Ok(result) => {
-            let user_bal = result.user_point.unwrap();
+            let user_bal = result.user_point.clone().unwrap();
             let total_bal = user_bal.sum().to_formatted_string(&Locale::en);
             let paid_point = user_bal.paid.to_formatted_string(&Locale::en);
             let xp_point = user_bal.event.to_formatted_string(&Locale::en);
@@ -154,7 +159,9 @@ pub(super) async fn common_purchase_select(
                 .chapters
                 .iter()
                 .filter_map(|ch| {
-                    if !show_all && ch.is_free() {
+                    if download_mode && !show_all && !ch.is_free() {
+                        None
+                    } else if !download_mode && !show_all && ch.is_free() {
                         None
                     } else {
                         let value = if download_mode {
@@ -171,9 +178,9 @@ pub(super) async fn common_purchase_select(
                 .collect();
 
             if select_choices.is_empty() {
-                console.warn("No chapters found, aborting...");
+                console.warn("No chapters selected, aborting...");
 
-                return (Ok(vec![]), client, Some(user_bal));
+                return (Ok(vec![]), None, client, Some(user_bal));
             }
 
             let sel_prompt = if download_mode {
@@ -188,7 +195,7 @@ pub(super) async fn common_purchase_select(
                     if selected.is_empty() {
                         console.warn("No chapter selected, aborting...");
 
-                        return (Ok(vec![]), client, Some(user_bal));
+                        return (Ok(vec![]), None, client, Some(user_bal));
                     }
 
                     let mut selected_chapters: Vec<ChapterV2> = vec![];
@@ -205,18 +212,18 @@ pub(super) async fn common_purchase_select(
                         selected_chapters.push(ch);
                     }
 
-                    (Ok(selected_chapters), client, Some(user_bal))
+                    (Ok(selected_chapters), Some(result), client, Some(user_bal))
                 }
                 None => {
                     console.warn("Aborted");
-                    (Ok(vec![]), client, Some(user_bal))
+                    (Ok(vec![]), Some(result.clone()), client, Some(user_bal))
                 }
             }
         }
         Err(e) => {
             console.error(&cformat!("Unable to connect to MU!: {}", e));
 
-            (Err(e), client, None)
+            (Err(e), None, client, None)
         }
     }
 }

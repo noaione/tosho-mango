@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use clap::Parser;
 use cli::{ToshoCommands, WeeklyCodeCli};
 use tosho_musq::WeeklyCode;
@@ -8,6 +10,11 @@ pub(crate) mod r#impl;
 pub(crate) mod term;
 pub(crate) mod win_term;
 use crate::cli::ToshoCli;
+
+fn get_default_download_dir() -> PathBuf {
+    let cwd = std::env::current_dir().unwrap();
+    cwd.join("DOWNLOADS")
+}
 
 #[tokio::main]
 async fn main() {
@@ -28,6 +35,27 @@ async fn main() {
             cli::MUSQCommands::Accounts => r#impl::musq::accounts::musq_accounts(&t),
             cli::MUSQCommands::Balance { account_id } => {
                 r#impl::musq::accounts::musq_account_balance(account_id.as_deref(), &t).await
+            }
+            cli::MUSQCommands::Download {
+                title_id,
+                chapters,
+                show_all,
+                auto_purchase,
+                quality,
+                account_id,
+                output,
+            } => {
+                r#impl::musq::download::musq_download(
+                    title_id,
+                    chapters.unwrap_or_default(),
+                    show_all,
+                    auto_purchase,
+                    quality,
+                    account_id.as_deref(),
+                    output.unwrap_or_else(get_default_download_dir),
+                    &mut t_mut,
+                )
+                .await
             }
             cli::MUSQCommands::Favorites { account_id } => {
                 r#impl::musq::favorites::musq_my_favorites(account_id.as_deref(), &t).await

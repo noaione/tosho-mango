@@ -33,6 +33,16 @@ impl MangaDetailDump {
             chapters,
         }
     }
+
+    /// Dump the info into `_info.json` format.
+    ///
+    /// # Arguments
+    /// * `save_path` - The path to save the dump.
+    pub fn dump(&self, save_path: &std::path::PathBuf) -> std::io::Result<()> {
+        let file = std::fs::File::create(save_path)?;
+        serde_json::to_writer_pretty(file, self)?;
+        Ok(())
+    }
 }
 
 impl From<ChapterV2> for ChapterDetailDump {
@@ -42,14 +52,17 @@ impl From<ChapterV2> for ChapterDetailDump {
         let pub_at = match value.published_at {
             Some(published) => {
                 // assume JST
-                let published = chrono::NaiveDateTime::parse_from_str(&published, "%b %d, %Y")
-                    .expect("Failed to parse published date");
-                let published_jst = published
-                    .and_local_timezone(chrono::FixedOffset::east_opt(9 * 3600).unwrap())
+                let published = chrono::NaiveDate::parse_from_str(&published, "%b %d, %Y")
+                    .map(|d| d.and_hms_opt(0, 0, 0).unwrap())
+                    .map(|d| d.and_local_timezone(chrono::FixedOffset::east_opt(9 * 3600).unwrap()))
+                    .expect(&format!(
+                        "Failed to parse published date to JST TZ: {}",
+                        published
+                    ))
                     .unwrap();
 
-                // to timestmap
-                Some(published_jst.timestamp())
+                // to timestamp
+                Some(published.timestamp())
             }
             None => None,
         };

@@ -24,6 +24,7 @@ pub struct Terminal {
     #[cfg(windows)]
     modern_win: bool,
     current_spinner: Option<indicatif::ProgressBar>,
+    current_progress: Option<indicatif::ProgressBar>,
 }
 
 impl Terminal {
@@ -36,7 +37,13 @@ impl Terminal {
             #[cfg(windows)]
             modern_win,
             current_spinner: None,
+            current_progress: None,
         }
+    }
+
+    /// Check if we in debug mode
+    pub fn is_debug(&self) -> bool {
+        self.debug > 0
     }
 
     /// Log info to terminal
@@ -60,7 +67,7 @@ impl Terminal {
     /// Log to terminal
     #[allow(dead_code)]
     pub fn log(&self, msg: &str) {
-        if self.debug > 1 {
+        if self.debug >= 1 {
             println!(
                 "{}",
                 cformat!("[<magenta,strong>LOG</magenta,strong>] {}", msg)
@@ -70,7 +77,7 @@ impl Terminal {
 
     #[allow(dead_code)]
     pub fn trace(&self, msg: &str) {
-        if self.debug > 2 {
+        if self.debug >= 2 {
             println!("{}", cformat!("[<blue,strong>TRACE</blue,strong>] {}", msg))
         }
     }
@@ -146,6 +153,47 @@ impl Terminal {
         if let Some(spinner) = self.current_spinner.as_mut() {
             spinner.finish_with_message(msg);
             self.current_spinner = None;
+        }
+    }
+
+    fn make_progress(&self, len: u64, message: Option<String>) -> indicatif::ProgressBar {
+        let progress = indicatif::ProgressBar::new(len);
+        progress.set_style(
+            ProgressStyle::with_template(
+                "{spinner:.blue} {msg} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos}/{len}",
+            )
+            .unwrap()
+            .progress_chars("#>-"),
+        );
+        let message = message.unwrap_or("Processing".to_string());
+        progress.set_message(message);
+        progress
+    }
+
+    /// Do a progress bar
+    pub fn progress(&mut self, init_len: u64, incr: u64, message: Option<String>) {
+        match self.current_progress.as_mut() {
+            Some(progress) => {
+                progress.inc(incr);
+                if let Some(message) = message {
+                    progress.set_message(message);
+                }
+            }
+            None => {
+                let progress = self.make_progress(init_len, message);
+                self.current_progress = Some(progress);
+            }
+        }
+    }
+
+    /// Stop the current progress bar
+    pub fn stop_progress(&mut self, message: Option<String>) {
+        if let Some(progress) = self.current_progress.as_mut() {
+            match message {
+                Some(message) => progress.finish_with_message(message),
+                None => progress.finish(),
+            }
+            self.current_progress = None;
         }
     }
 
