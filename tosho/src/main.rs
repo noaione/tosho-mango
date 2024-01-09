@@ -95,14 +95,19 @@ async fn main() {
                 password,
                 r#type,
             } => r#impl::kmkc::accounts::kmkc_account_login(email, password, r#type, &t).await,
-            cli::KMKCCommands::AuthMobile { user_id, hash_key } => {
-                r#impl::kmkc::accounts::kmkc_account_login_mobile(user_id, hash_key, &t).await
+            cli::KMKCCommands::AuthMobile {
+                user_id,
+                hash_key,
+                r#type,
+            } => {
+                r#impl::kmkc::accounts::kmkc_account_login_mobile(user_id, hash_key, r#type, &t)
+                    .await
             }
             cli::KMKCCommands::AuthWeb { cookies } => {
                 r#impl::kmkc::accounts::kmkc_account_login_web(cookies, &t).await
             }
-            cli::KMKCCommands::AuthAdapt => {
-                r#impl::kmkc::accounts::kmkc_account_login_adapt(&t).await
+            cli::KMKCCommands::AuthAdapt { r#type } => {
+                r#impl::kmkc::accounts::kmkc_account_login_adapt(r#type, &t).await
             }
             cli::KMKCCommands::Account { account_id } => {
                 r#impl::kmkc::accounts::kmkc_account_info(account_id.as_deref(), &t).await

@@ -3,7 +3,8 @@ use std::path::PathBuf;
 use clap::ValueEnum;
 use color_print::cformat;
 use num_format::{Locale, ToFormattedString};
-use tosho_kmkc::{KMClient, KMConfig, KMConfigMobile};
+use tosho_kmkc::{KMClient, KMConfig, KMConfigMobile, KMConfigMobilePlatform};
+use tosho_macros::EnumName;
 
 use crate::{
     cli::ExitCode,
@@ -16,14 +17,14 @@ use super::{
     config::{Config, ConfigMobile, MobilePlatform},
 };
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, EnumName)]
 pub(crate) enum DeviceKind {
     /// Website platform.
     Web,
     /// Android platform.
     Android,
-    // /// iOS platform.
-    // Apple,
+    /// iOS platform.
+    Apple,
 }
 
 impl ValueEnum for DeviceKind {
@@ -31,16 +32,12 @@ impl ValueEnum for DeviceKind {
         match self {
             DeviceKind::Web => Some(clap::builder::PossibleValue::new("web")),
             DeviceKind::Android => Some(clap::builder::PossibleValue::new("android")),
-            // DeviceKind::Apple => Some(clap::builder::PossibleValue::new("ios")),
+            DeviceKind::Apple => Some(clap::builder::PossibleValue::new("ios")),
         }
     }
 
     fn value_variants<'a>() -> &'a [Self] {
-        &[
-            DeviceKind::Web,
-            DeviceKind::Android,
-            // DeviceKind::Apple
-        ]
+        &[DeviceKind::Web, DeviceKind::Android, DeviceKind::Apple]
     }
 
     fn from_str(s: &str, ignore_case: bool) -> Result<Self, String> {
@@ -52,7 +49,7 @@ impl ValueEnum for DeviceKind {
         match s.as_str() {
             "web" => Ok(DeviceKind::Web),
             "android" => Ok(DeviceKind::Android),
-            // "ios" => Ok(DeviceKind::Apple),
+            "ios" => Ok(DeviceKind::Apple),
             _ => Err(format!("Invalid device kind: {}", s)),
         }
     }
@@ -62,8 +59,20 @@ impl PartialEq<MobilePlatform> for DeviceKind {
     fn eq(&self, other: &MobilePlatform) -> bool {
         match self {
             DeviceKind::Android => matches!(other, MobilePlatform::Android),
-            // DeviceKind::Apple => matches!(other, MobilePlatform::Apple),
+            DeviceKind::Apple => matches!(other, MobilePlatform::Apple),
             _ => false,
+        }
+    }
+}
+
+impl TryFrom<DeviceKind> for KMConfigMobilePlatform {
+    type Error = String;
+
+    fn try_from(value: DeviceKind) -> Result<Self, Self::Error> {
+        match value {
+            DeviceKind::Android => Ok(KMConfigMobilePlatform::Android),
+            DeviceKind::Apple => Ok(KMConfigMobilePlatform::Apple),
+            _ => Err("Invalid device kind!".to_string()),
         }
     }
 }
@@ -129,12 +138,19 @@ pub(crate) async fn kmkc_account_login_web(
 pub(crate) async fn kmkc_account_login_mobile(
     user_id: u32,
     hash_key: String,
+    platform: DeviceKind,
     console: &crate::term::Terminal,
 ) -> ExitCode {
+    if platform == DeviceKind::Web {
+        console.warn("Invalid platform!");
+        return 1;
+    }
+
     console.info(&cformat!(
-        "Authenticating with <m,s>{}</> and key <m,s>{}</>",
+        "Authenticating with <m,s>{}</> and key <m,s>{}</> [{}]",
         user_id,
-        hash_key
+        hash_key,
+        platform.to_name()
     ));
 
     let all_configs = get_all_config(crate::r#impl::Implementations::Kmkc, None);
@@ -167,6 +183,7 @@ pub(crate) async fn kmkc_account_login_mobile(
     let config = KMConfigMobile {
         user_id: user_id.to_string(),
         hash_key,
+        platform: platform.try_into().unwrap(),
     };
     let client = make_client(&KMConfig::Mobile(config.clone()));
 
@@ -238,7 +255,13 @@ pub async fn kmkc_account_login(
         }
     }
 
-    let config = KMClient::login(&email, &password, !matches!(platform, DeviceKind::Web)).await;
+    let mobile_match = match platform {
+        DeviceKind::Web => None,
+        DeviceKind::Android => Some(KMConfigMobilePlatform::Android),
+        DeviceKind::Apple => Some(KMConfigMobilePlatform::Apple),
+    };
+
+    let config = KMClient::login(&email, &password, mobile_match).await;
 
     match config {
         Ok(config) => {
@@ -272,7 +295,15 @@ pub async fn kmkc_account_login(
     }
 }
 
-pub async fn kmkc_account_login_adapt(console: &crate::term::Terminal) -> ExitCode {
+pub async fn kmkc_account_login_adapt(
+    platform: DeviceKind,
+    console: &crate::term::Terminal,
+) -> ExitCode {
+    if platform == DeviceKind::Web {
+        console.warn("Invalid platform!");
+        return 1;
+    }
+
     let binding = get_all_config(crate::r#impl::Implementations::Kmkc, None);
     let web_configs = binding
         .iter()
@@ -325,6 +356,7 @@ pub async fn kmkc_account_login_adapt(console: &crate::term::Terminal) -> ExitCo
                     let mobile_config = KMConfigMobile {
                         user_id: account.id.to_string(),
                         hash_key: user_info.hash_key,
+                        platform: platform.try_into().unwrap(),
                     };
                     let into_tosho: ConfigMobile = mobile_config.into();
                     let final_config = into_tosho.with_user_account(&account);

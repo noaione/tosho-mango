@@ -262,6 +262,9 @@ pub(crate) enum KMKCCommands {
         user_id: u32,
         /// Hash key to use
         hash_key: String,
+        /// Device kind/type to use
+        #[arg(short, long, value_enum, default_value = "android")]
+        r#type: super::r#impl::kmkc::accounts::DeviceKind,
     },
     /// Authenticate tosho with your KM account.
     ///
@@ -271,7 +274,11 @@ pub(crate) enum KMKCCommands {
         cookies: PathBuf,
     },
     /// Adapt web config/account to mobile config/account
-    AuthAdapt,
+    AuthAdapt {
+        /// Device kind/type to use
+        #[arg(short, long, value_enum, default_value = "android")]
+        r#type: super::r#impl::kmkc::accounts::DeviceKind,
+    },
     /// Get an account information
     Account {
         /// Account ID to use

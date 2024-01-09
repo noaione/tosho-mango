@@ -1,6 +1,6 @@
 #![allow(clippy::derive_partial_eq_without_eq)]
 
-use tosho_kmkc::KMConfig;
+use tosho_kmkc::{KMConfig, KMConfigMobilePlatform};
 use tosho_macros::EnumName;
 
 pub const PREFIX: &str = "kmkc";
@@ -25,6 +25,24 @@ pub enum MobilePlatform {
     Android = 1,
     /// iOS device/Apple.
     Apple = 2,
+}
+
+impl From<KMConfigMobilePlatform> for MobilePlatform {
+    fn from(value: KMConfigMobilePlatform) -> Self {
+        match value {
+            KMConfigMobilePlatform::Android => MobilePlatform::Android,
+            KMConfigMobilePlatform::Apple => MobilePlatform::Apple,
+        }
+    }
+}
+
+impl From<MobilePlatform> for KMConfigMobilePlatform {
+    fn from(value: MobilePlatform) -> Self {
+        match value {
+            MobilePlatform::Android => KMConfigMobilePlatform::Android,
+            MobilePlatform::Apple => KMConfigMobilePlatform::Apple,
+        }
+    }
 }
 
 /// Represents the basic/simple config file for the KM by KC app.
@@ -75,6 +93,7 @@ impl From<ConfigMobile> for tosho_kmkc::KMConfigMobile {
         tosho_kmkc::config::KMConfigMobile {
             user_id: value.user_id.clone(),
             hash_key: value.user_secret.clone(),
+            platform: value.platform().into(),
         }
     }
 }
