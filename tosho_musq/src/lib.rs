@@ -515,14 +515,21 @@ impl MUClient {
     /// which can't be accessed directly but need to use the "mirror" host
     /// provided by the client.
     fn replace_image_host(&self, url: &str) -> anyhow::Result<::reqwest::Url> {
-        let mut parse_url = ::reqwest::Url::parse(url)?;
+        match ::reqwest::Url::parse(url) {
+            Ok(mut parsed_url) => {
+                let valid_host =
+                    ::reqwest::Url::parse(format!("https://{}", *IMAGE_HOST).as_str())?;
+                parsed_url.set_host(Some(valid_host.host_str().unwrap()))?;
 
-        let valid_host = ::reqwest::Url::parse(format!("https://{}", *IMAGE_HOST).as_str())?;
-
-        // replace the parse_url host with the valid host
-        parse_url.set_host(Some(valid_host.host_str().unwrap()))?;
-
-        Ok(parse_url)
+                Ok(parsed_url)
+            }
+            Err(_) => {
+                // parse url failed, assume it's a relative path
+                let full_url = format!("https://{}{}", *IMAGE_HOST, url);
+                let parse_url = ::reqwest::Url::parse(full_url.as_str())?;
+                Ok(parse_url)
+            }
+        }
     }
 
     /// Stream download the image from the given URL.
@@ -552,18 +559,21 @@ impl MUClient {
                     "User-Agent",
                     reqwest::header::HeaderValue::from_str(&self.constants.image_ua).unwrap(),
                 );
-                headers
-                    .insert(
-                        "Cache-Control",
-                        reqwest::header::HeaderValue::from_static("no-cache"),
-                    )
-                    .unwrap();
+                headers.insert(
+                    "Cache-Control",
+                    reqwest::header::HeaderValue::from_static("no-cache"),
+                );
 
                 headers
             })
             .send()
             .await
             .unwrap();
+
+        // bail if not success
+        if !res.status().is_success() {
+            anyhow::bail!("Failed to download image: {}", res.status())
+        }
 
         let mut stream = res.bytes_stream();
         while let Some(item) = stream.next().await {
