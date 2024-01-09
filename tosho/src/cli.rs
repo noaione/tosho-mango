@@ -13,6 +13,8 @@ use tosho_musq::WeeklyCode;
 use crate::r#impl::kmkc::rankings::RankingType;
 
 pub(crate) type ExitCode = u32;
+pub(crate) type CommaSeparatedNumber = Vec<usize>;
+pub(crate) type CommaSeparatedString = Vec<String>;
 
 #[derive(Clone, EnumName)]
 pub enum WeeklyCodeCli {
@@ -391,4 +393,40 @@ fn kmkc_ranking_limit_range(s: &str) -> Result<Option<u32>, String> {
             KMKC_RANKING_LIMIT_RANGE.end()
         ))
     }
+}
+
+/// Value parser for comma separated numbers
+#[allow(dead_code)]
+fn parse_comma_number(s: &str) -> Result<CommaSeparatedNumber, String> {
+    let mut numbers = Vec::new();
+
+    for number in s.split(',') {
+        let number = number.trim();
+        let number = number
+            .parse()
+            .map_err(|_| format!("Invalid number: {}", number))?;
+
+        numbers.push(number);
+    }
+
+    Ok(numbers)
+}
+
+/// Value parser for comma separated strings
+#[allow(dead_code)]
+fn parse_comma_string(s: &str) -> Result<CommaSeparatedString, String> {
+    let mut strings = Vec::new();
+
+    for string in s.split(',') {
+        let string = string.trim();
+
+        // skip if empty
+        if string.is_empty() {
+            continue;
+        }
+
+        strings.push(string.to_string());
+    }
+
+    Ok(strings)
 }
