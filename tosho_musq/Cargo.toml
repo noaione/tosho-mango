@@ -19,7 +19,7 @@ anyhow.workspace = true
 base64.workspace = true
 chrono.workspace = true
 reqwest = { workspace = true, features = ["stream"] }
-futures-util = "0.3"
+futures-util.workspace = true
 
 tosho-macros = { path = "../tosho_macros" }
 
