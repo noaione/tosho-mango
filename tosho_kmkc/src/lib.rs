@@ -5,7 +5,8 @@ pub mod config;
 pub mod constants;
 pub mod imaging;
 pub mod models;
-use constants::{get_constants, API_HOST, BASE_API, BASE_HOST, WEB_CONSTANTS};
+use constants::{get_constants, API_HOST, BASE_API, BASE_HOST, IMAGE_HOST, WEB_CONSTANTS};
+use futures_util::StreamExt;
 use md5::Md5;
 use models::{
     AccountResponse, BulkEpisodePurchaseResponse, EpisodeNode, EpisodePurchaseResponse,
@@ -17,6 +18,7 @@ use models::{
 };
 use reqwest_cookie_store::CookieStoreMutex;
 use sha2::{Digest, Sha256, Sha512};
+use tokio::io::AsyncWriteExt;
 
 /// Login result for the API.
 ///
@@ -600,6 +602,71 @@ impl KMClient {
             .await?;
 
         Ok(response)
+    }
+
+    /// Stream download the image from the given URL.
+    ///
+    /// The URL can be obtained from [`get_episode_viewer`](#method.get_episode_viewer).
+    ///
+    /// The Web version will be automatically descrambled, so it will not be a "stream" download.
+    ///
+    /// # Arguments
+    /// * `url` - The URL to download the image from
+    /// * `scramble_seed` - The scramble seed to use to descramble the image (only for Web, please provide it!)
+    /// * `writer` - The writer to write the image to
+    pub async fn stream_download(
+        &self,
+        url: &str,
+        scramble_seed: Option<u32>,
+        mut writer: impl tokio::io::AsyncWrite + std::marker::Unpin,
+    ) -> anyhow::Result<()> {
+        let res = self
+            .inner
+            .get(url)
+            .headers({
+                let mut headers = reqwest::header::HeaderMap::new();
+                headers.insert(
+                    reqwest::header::USER_AGENT,
+                    reqwest::header::HeaderValue::from_static(&self.constants.image_ua),
+                );
+                headers.insert(
+                    reqwest::header::HOST,
+                    reqwest::header::HeaderValue::from_static(&IMAGE_HOST),
+                );
+                headers
+            })
+            .send()
+            .await?;
+
+        match (&self.config, scramble_seed) {
+            (KMConfig::Mobile(_), _) => {
+                let mut stream = res.bytes_stream();
+                while let Some(item) = stream.next().await {
+                    let bytes = item.unwrap_or_default();
+                    writer.write_all(&bytes).await?;
+                }
+
+                Ok(())
+            }
+            (KMConfig::Web(_), Some(scramble_seed)) => {
+                let bytes = res.bytes().await?;
+                // Convert to &[u8]
+                let bytes = bytes.as_ref();
+                match imaging::descramble_image(bytes.as_ref(), 4, scramble_seed) {
+                    Ok(descram_bytes) => {
+                        writer.write_all(&descram_bytes).await?;
+                    }
+                    Err(e) => {
+                        anyhow::bail!("Failed to descramble image: {}", e)
+                    }
+                }
+
+                Ok(())
+            }
+            (KMConfig::Web(_), None) => {
+                anyhow::bail!("Cannot descramble image without scramble seed")
+            }
+        }
     }
 
     /// Login to the API with the given username and password.

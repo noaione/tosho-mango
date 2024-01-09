@@ -2138,6 +2138,7 @@ dependencies = [
  "chrono",
  "cookie_store 0.20.0",
  "documented",
+ "futures-util",
  "image",
  "lazy_static",
  "md-5",
