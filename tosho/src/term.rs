@@ -65,7 +65,6 @@ impl Terminal {
     }
 
     /// Log to terminal
-    #[allow(dead_code)]
     pub fn log(&self, msg: &str) {
         if self.debug >= 1 {
             println!(

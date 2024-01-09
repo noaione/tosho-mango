@@ -419,7 +419,6 @@ fn kmkc_ranking_limit_range(s: &str) -> Result<Option<u32>, String> {
 }
 
 /// Value parser for comma separated numbers
-#[allow(dead_code)]
 fn parse_comma_number(s: &str) -> Result<CommaSeparatedNumber, String> {
     let mut numbers = Vec::new();
 
