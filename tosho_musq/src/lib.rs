@@ -110,10 +110,10 @@ impl MUClient {
     /// let user_point = client.get_user_point();
     /// let chapter = client.get_chapter(12345);
     ///
-    /// let coins = client.calculate_coin(user_point, chapter);
+    /// let coins = client.calculate_coin(&user_point, &chapter);
     /// assert_eq!(coins.is_possible(), true);
     /// ```
-    pub fn calculate_coin(&self, user_point: UserPoint, chapter: &ChapterV2) -> ConsumeCoin {
+    pub fn calculate_coin(&self, user_point: &UserPoint, chapter: &ChapterV2) -> ConsumeCoin {
         if chapter.is_free() {
             return self.build_coin(0, 0, None, None);
         }

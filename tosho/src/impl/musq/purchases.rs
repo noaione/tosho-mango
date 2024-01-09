@@ -41,7 +41,7 @@ pub(crate) async fn musq_purchase(
                     results.len()
                 ));
 
-                let consume = client.calculate_coin(user_point.clone(), chapter);
+                let consume = client.calculate_coin(&user_point, chapter);
 
                 if !consume.is_possible() {
                     console.warn(&cformat!(
