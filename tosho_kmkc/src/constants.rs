@@ -6,6 +6,8 @@ use lazy_static::lazy_static;
 pub struct Constants {
     /// The user agent string used for API requests.
     pub(crate) ua: String,
+    /// The user agent string used for image requests.
+    pub(crate) image_ua: String,
     /// The platform string used for API requests.
     pub(crate) platform: &'static str,
     /// The version string used for API requests.
@@ -43,8 +45,39 @@ lazy_static! {
 
         Constants {
             ua: "okhttp/4.9.3".to_string(),
+            image_ua: "okhttp/4.9.3".to_string(),
             platform: "2",
             version: "5.8.0",
+            hash: hash_header,
+        }
+    };
+    /// The constants used for iOS devices.
+    pub static ref IOS_CONSTANTS: Constants = {
+        let hash_header = String::from_utf8(
+            general_purpose::STANDARD
+                .decode("eC1tZ3BrLWhhc2g=")
+                .expect("Failed to decode base64 IOS_HASH_HEADER"),
+        )
+        .expect("Invalid base64 string");
+
+        let api_ua = String::from_utf8(
+            general_purpose::STANDARD
+                .decode("bWFnZTItZW4vMS4yLjUgKGNvbS5rb2RhbnNoYS5rbWFuZ2E7IGJ1aWxkOjEuMi41OyBpT1MgMTcuMS4yKSBBbGFtb2ZpcmUvMS4yLjU=")
+                .expect("Failed to decode base64 IOS_API_UA"),
+        )
+        .expect("Invalid base64 string");
+        let image_ua = String::from_utf8(
+            general_purpose::STANDARD
+                .decode("bWFnZTItZW4vMS4yLjUgQ0ZOZXR3b3JrLzE0ODUgRGFyd2luLzIzLjEuMA==")
+                .expect("Failed to decode base64 IOS_IMAGE_UA"),
+        )
+        .expect("Invalid base64 string");
+
+        Constants {
+            ua: api_ua,
+            image_ua,
+            platform: "1",
+            version: "5.3.0",
             hash: hash_header,
         }
     };
@@ -57,8 +90,11 @@ lazy_static! {
         )
         .expect("Invalid base64 string");
 
+        let chrome_ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36".to_string();
+
         Constants {
-            ua: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36".to_string(),
+            ua: chrome_ua.clone(),
+            image_ua: chrome_ua,
             platform: "3",
             version: "6.0.0",
             hash: hash_header,
@@ -141,6 +177,7 @@ lazy_static! {
 /// ```
 pub fn get_constants(device_type: u8) -> &'static Constants {
     match device_type {
+        1 => &IOS_CONSTANTS,
         2 => &ANDROID_CONSTANTS,
         3 => &WEB_CONSTANTS,
         _ => panic!("Invalid device type"),
