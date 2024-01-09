@@ -509,6 +509,22 @@ impl MUClient {
 
     // --> Downloader
 
+    /// Replace the image host with the valid and correct host.
+    ///
+    /// Sometimes the API would return a URL with cloudfront host,
+    /// which can't be accessed directly but need to use the "mirror" host
+    /// provided by the client.
+    fn replace_image_host(&self, url: &str) -> anyhow::Result<::reqwest::Url> {
+        let mut parse_url = ::reqwest::Url::parse(url)?;
+
+        let valid_host = ::reqwest::Url::parse(format!("https://{}", *IMAGE_HOST).as_str())?;
+
+        // replace the parse_url host with the valid host
+        parse_url.set_host(Some(valid_host.host_str().unwrap()))?;
+
+        Ok(parse_url)
+    }
+
     /// Stream download the image from the given URL.
     ///
     /// The URL can be obtained from [`get_chapter_images`](#method.get_chapter_images).
@@ -521,9 +537,11 @@ impl MUClient {
         url: &str,
         mut writer: impl io::AsyncWrite + Unpin,
     ) -> anyhow::Result<()> {
+        let actual_url = self.replace_image_host(url)?;
+
         let res = self
             .inner
-            .get(url)
+            .get(actual_url)
             .headers({
                 let mut headers = reqwest::header::HeaderMap::new();
                 headers.insert(
