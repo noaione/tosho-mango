@@ -389,7 +389,6 @@ impl KMClient {
             .await?;
 
         wallet.subtract(response.paid.try_into().unwrap_or(0));
-        wallet.add(episode.bonus_point.try_into().unwrap_or(0));
 
         Ok(response)
     }
