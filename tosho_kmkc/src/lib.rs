@@ -161,6 +161,9 @@ impl KMClient {
         };
 
         let mut empty_params: HashMap<String, String> = HashMap::new();
+        if let KMConfig::Mobile(mobile) = &self.config {
+            empty_params.insert("user_id".to_string(), mobile.user_id.to_string());
+        }
         let mut empty_headers = reqwest::header::HeaderMap::new();
         let empty_hash = self.format_request(&mut empty_params);
 
@@ -807,8 +810,9 @@ fn create_request_hash(config: &KMConfig, query_params: HashMap<String, String>)
             for key in keys {
                 let value = query_params.get(key).unwrap();
                 let hashed_value = <Md5 as Digest>::digest(value.as_bytes());
+                let hash_digest = format!("{:x}", hashed_value);
 
-                hasher.update(hashed_value);
+                hasher.update(hash_digest);
             }
 
             let hashed = hasher.finalize();
