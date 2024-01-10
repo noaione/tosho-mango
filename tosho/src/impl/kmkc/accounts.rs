@@ -394,7 +394,7 @@ pub(crate) fn kmkc_accounts(console: &crate::term::Terminal) -> ExitCode {
             for (i, c) in all_configs.iter().enumerate() {
                 match c {
                     crate::config::ConfigImpl::Kmkc(c) => {
-                        console.info(&format!(
+                        console.info(&cformat!(
                             "{:02}. {} — <s>{}</> ({})",
                             i + 1,
                             c.get_id(),
