@@ -394,7 +394,7 @@ pub(crate) fn kmkc_accounts(console: &crate::term::Terminal) -> ExitCode {
             for (i, c) in all_configs.iter().enumerate() {
                 match c {
                     crate::config::ConfigImpl::Kmkc(c) => {
-                        let mut plat_name = format!("{}", c.get_type().to_name());
+                        let mut plat_name = c.get_type().to_name().to_string();
                         if let Config::Mobile(mob) = &c {
                             plat_name = format!("{} - {}", plat_name, mob.platform().to_name());
                         }

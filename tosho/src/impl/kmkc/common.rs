@@ -279,10 +279,10 @@ pub(super) async fn common_purchase_select(
     let select_choices: Vec<ConsoleChoice> = chapters_entry
         .iter()
         .filter_map(|ch| {
-            if !download_mode && !show_all && ch.is_available() {
+            if download_mode && !show_all && !ch.is_available() {
                 None
             } else {
-                let value = if download_mode {
+                let value = if ch.is_available() {
                     ch.title.clone()
                 } else if ch.is_ticketable() {
                     format!("{} ({}P/Ticket)", ch.title, ch.point)
@@ -349,7 +349,7 @@ pub(super) async fn common_purchase_select(
         None => {
             console.warn("Aborted!");
             (
-                Ok(vec![]),
+                Err(anyhow::anyhow!("Aborted!")),
                 Some(result.clone()),
                 chapters_entry,
                 client,
