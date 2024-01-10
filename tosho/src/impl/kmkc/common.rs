@@ -1,7 +1,12 @@
 use std::path::PathBuf;
 
 use color_print::cformat;
-use tosho_kmkc::{constants::BASE_HOST, models::TitleNode, KMConfig, KMConfigWeb};
+use num_format::{Locale, ToFormattedString};
+use tosho_kmkc::{
+    constants::BASE_HOST,
+    models::{TitleNode, TitleTicketListNode, UserPointResponse},
+    KMClient, KMConfig, KMConfigWeb,
+};
 
 use crate::{
     config::{get_all_config, get_config},
@@ -143,4 +148,218 @@ pub(super) fn parse_netscape_cookies(cookie_path: PathBuf) -> KMConfigWeb {
         }
     };
     config
+}
+
+#[derive(Clone)]
+pub(super) struct PurchasePoint {
+    pub(super) point: UserPointResponse,
+    pub(super) ticket: TitleTicketListNode,
+}
+
+pub(super) async fn common_purchase_select(
+    title_id: i32,
+    account: &Config,
+    download_mode: bool,
+    show_all: bool,
+    console: &crate::term::Terminal,
+) -> (
+    anyhow::Result<Vec<tosho_kmkc::models::EpisodeNode>>,
+    Option<TitleNode>,
+    KMClient,
+    Option<PurchasePoint>,
+) {
+    let client = super::common::make_client(&account.into());
+    console.info(&cformat!(
+        "Getting user point for <m,s>{}</>...",
+        account.get_username()
+    ));
+    let user_point = client.get_user_point().await;
+    if let Err(error) = user_point {
+        console.error(&format!("Unable to get user point: {}", error));
+        return (Err(error), None, client, None);
+    }
+    let user_point = user_point.unwrap();
+
+    console.info(&cformat!(
+        "Getting title information for ID <m,s>{}</>...",
+        title_id
+    ));
+    let results = client.get_titles(vec![title_id]).await;
+    if let Err(error) = results {
+        console.error(&format!("Failed to get title information: {}", error));
+        return (Err(error), None, client, None);
+    }
+
+    let results = results.unwrap();
+    if results.is_empty() {
+        console.error("Unable to find title information");
+        return (
+            Err(anyhow::anyhow!("Unable to find title information")),
+            None,
+            client,
+            None,
+        );
+    }
+
+    let result = results.first().unwrap();
+
+    console.info(&cformat!(
+        "Fetching <m,s>{}</> title ticket...",
+        result.title
+    ));
+    let ticket_entry = client.get_title_ticket(result.id).await;
+    if let Err(error) = ticket_entry {
+        console.error(&format!("Failed to get title ticket: {}", error));
+        return (Err(error), Some(result.clone()), client, None);
+    }
+
+    let ticket_entry = ticket_entry.unwrap();
+
+    let mut chapters_entry = vec![];
+    console.info(&cformat!("Fetching <m,s>{}</> chapters...", result.title));
+    for episodes in result.episode_ids.clone().chunks(50) {
+        let chapters = client.get_episodes(episodes.to_vec()).await;
+
+        if let Err(error) = chapters {
+            console.error(&format!("Failed to get chapters: {}", error));
+            return (
+                Err(error),
+                Some(result.clone()),
+                client,
+                Some(PurchasePoint {
+                    point: user_point,
+                    ticket: ticket_entry,
+                }),
+            );
+        }
+
+        chapters_entry.extend(chapters.unwrap());
+    }
+
+    console.info("Your current point balance:");
+    let total_bal = user_point
+        .point
+        .total_point()
+        .to_formatted_string(&Locale::en);
+    let paid_point = user_point.point.paid_point.to_formatted_string(&Locale::en);
+    let free_point = user_point.point.free_point.to_formatted_string(&Locale::en);
+    let premium_ticket = user_point.ticket.total_num.to_formatted_string(&Locale::en);
+    console.info(&cformat!(
+        "  - <bold>Total:</> <cyan!,bold><reverse>{}</>c</cyan!,bold>",
+        total_bal
+    ));
+    console.info(&cformat!(
+        "  - <bold>Paid point:</> <g,bold><reverse>{}</>c</g,bold>",
+        paid_point
+    ));
+    console.info(&cformat!(
+        "  - <bold>Free point:</> <cyan,bold><reverse>{}</>c</cyan,bold>",
+        free_point
+    ));
+    console.info(&cformat!(
+        "  - <bold>Premium ticket:</> <yellow,bold><reverse>{}</> ticket</yellow,bold>",
+        premium_ticket
+    ));
+    console.info(&cformat!(
+        "  - <bold>Title ticket?</bold>: {}",
+        ticket_entry.is_title_available()
+    ));
+
+    console.info("Title information:");
+    console.info(&cformat!("  - <bold>ID:</> {}", result.id));
+    console.info(&cformat!("  - <bold>Title:</> {}", result.title));
+    console.info(&cformat!(
+        "  - <bold>Chapters:</> {} chapters",
+        chapters_entry.len()
+    ));
+
+    // Only show unpaid chapters
+    let unpaid_chapters: Vec<&tosho_kmkc::models::EpisodeNode> = chapters_entry
+        .iter()
+        .filter(|ch| !ch.is_available())
+        .collect();
+
+    let select_choices: Vec<ConsoleChoice> = unpaid_chapters
+        .iter()
+        .filter_map(|&ch| {
+            if !download_mode && !show_all && ch.is_available() {
+                None
+            } else {
+                let value = if download_mode {
+                    ch.title.clone()
+                } else {
+                    if ch.is_ticketable() {
+                        format!("{} ({}P/Ticket)", ch.title, ch.point)
+                    } else {
+                        format!("{} ({}P)", ch.title, ch.point)
+                    }
+                };
+                Some(ConsoleChoice {
+                    name: ch.id.to_string(),
+                    value,
+                })
+            }
+        })
+        .collect();
+
+    let sel_prompt = if download_mode {
+        "Select chapter to download"
+    } else {
+        "Select chapter to purchase"
+    };
+
+    let selected_chapters = console.select(sel_prompt, select_choices);
+    match selected_chapters {
+        Some(selected) => {
+            let mapped_chapters: Vec<tosho_kmkc::models::EpisodeNode> = selected
+                .iter()
+                .map(|ch| {
+                    let ch_id = ch.name.parse::<i32>().unwrap();
+                    let ch = chapters_entry
+                        .iter()
+                        .find(|ch| ch.id == ch_id)
+                        .unwrap()
+                        .clone();
+
+                    ch
+                })
+                .collect();
+
+            if mapped_chapters.is_empty() {
+                console.warn("No chapters selected, aborting...");
+
+                return (
+                    Ok(vec![]),
+                    Some(result.clone()),
+                    client,
+                    Some(PurchasePoint {
+                        point: user_point,
+                        ticket: ticket_entry,
+                    }),
+                );
+            }
+
+            (
+                Ok(mapped_chapters),
+                Some(result.clone()),
+                client,
+                Some(PurchasePoint {
+                    point: user_point,
+                    ticket: ticket_entry,
+                }),
+            )
+        }
+        None => {
+            console.warn("Aborted!");
+            (
+                Ok(vec![]),
+                Some(result.clone()),
+                client,
+                Some(PurchasePoint {
+                    point: user_point,
+                    ticket: ticket_entry,
+                }),
+            )
+        }
+    }
 }
