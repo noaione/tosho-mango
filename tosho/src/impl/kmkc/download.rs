@@ -189,7 +189,7 @@ pub(crate) async fn kmkc_download(
                         let mut ticket_info = None;
                         if ticket_entry.is_title_available() {
                             console.info(&cformat!(
-                                "Using title ticket to purchase chapter <m,s>{}</> (<s>{}</>)...",
+                                "  Using title ticket to purchase chapter <m,s>{}</> (<s>{}</>)...",
                                 chapter.title,
                                 chapter.id
                             ));
@@ -198,7 +198,7 @@ pub(crate) async fn kmkc_download(
                             ticket_entry.subtract_title();
                         } else if ticket_entry.is_premium_available() {
                             console.info(&cformat!(
-                                "Using premium ticket to purchase chapter <m,s>{}</> (<s>{}</>)...",
+                                "  Using premium ticket to purchase chapter <m,s>{}</> (<s>{}</>)...",
                                 chapter.title,
                                 chapter.id
                             ));
@@ -215,7 +215,7 @@ pub(crate) async fn kmkc_download(
                                 }
                                 Err(e) => {
                                     console.error(&format!(
-                                        "Failed to purchase chapter, ignoring: {}",
+                                        "   Failed to purchase chapter, ignoring: {}",
                                         e
                                     ));
                                 }
@@ -224,22 +224,16 @@ pub(crate) async fn kmkc_download(
                     }
 
                     if dl_config.no_point {
-                        console.warn(&cformat!(
-                            "Chapter <m,s>{}</> (<s>{}</>), is not available for purchase, skipping",
-                            chapter.title,
-                            chapter.id
-                        ));
-                        console.warn("You provide --ignore-point flag!");
                         continue;
                     }
 
                     if !wallet_copy.can_purchase(chapter.point.try_into().unwrap_or(0)) {
                         console.warn(&cformat!(
-                            "Chapter <m,s>{}</> (<s>{}</>), is not available for purchase, skipping",
+                            "   Chapter <m,s>{}</> (<s>{}</>), is not available for purchase, skipping",
                             chapter.title,
                             chapter.id
                         ));
-                        let mut warn_info = format!("Need {} point", chapter.point);
+                        let mut warn_info = format!("    Need {} point", chapter.point);
                         if chapter.is_ticketable() {
                             warn_info += " or ticket";
                         }
@@ -248,16 +242,18 @@ pub(crate) async fn kmkc_download(
                     }
 
                     console.info(&cformat!(
-                        "Purchasing chapter <m,s>{}</> (<s>{}</>)...",
+                        "  Purchasing chapter <m,s>{}</> (<s>{}</>) for {}P...",
                         chapter.title,
-                        chapter.id
+                        chapter.id,
+                        chapter.point
                     ));
                     match client.claim_episode(chapter, &mut wallet_copy).await {
                         Ok(_) => {
                             download_chapters.push(chapter);
                         }
                         Err(e) => {
-                            console.error(&format!("Failed to purchase chapter, ignoring: {}", e));
+                            console
+                                .error(&format!("   Failed to purchase chapter, ignoring: {}", e));
                         }
                     }
                 }

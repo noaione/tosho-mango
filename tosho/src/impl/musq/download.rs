@@ -224,17 +224,20 @@ pub(crate) async fn musq_download(
 
                 let consume = client.calculate_coin(&coin_purse, chapter);
                 if !consume.is_possible() {
-                    console.warn(&cformat!(
-                        "Chapter <m,s>{}</> (<s>{}</>) is not available for purchase, skipping",
-                        chapter.title,
-                        chapter.id
-                    ));
-                    console.warn(&format!(
-                        "Need {} free coin, {} XP coin, and {} paid coin",
-                        consume.get_free(),
-                        consume.get_event(),
-                        consume.get_paid()
-                    ));
+                    if !dl_config.no_input {
+                        console.warn(&cformat!(
+                            "  Chapter <m,s>{}</> (<s>{}</>) is not available for purchase, skipping",
+                            chapter.title,
+                            chapter.id
+                        ));
+                        console.warn(&format!(
+                            "   Need {} free coin, {} XP coin, and {} paid coin",
+                            consume.get_free(),
+                            consume.get_event(),
+                            consume.get_paid()
+                        ));
+                    }
+
                     continue;
                 }
 
@@ -251,7 +254,7 @@ pub(crate) async fn musq_download(
 
                 if should_purchase {
                     console.info(&cformat!(
-                        "Purchasing chapter <m,s>{}</> (<s>{}</>) with consumption <s>{:?}</>...",
+                        "  Purchasing chapter <m,s>{}</> (<s>{}</>) with consumption <s>{:?}</>...",
                         chapter.title,
                         chapter.id,
                         consume
@@ -267,16 +270,16 @@ pub(crate) async fn musq_download(
 
                     match purchase_result {
                         Err(err) => {
-                            console.error(&format!("Failed to purchase chapter: {}", err));
+                            console.error(&format!("   Failed to purchase chapter: {}", err));
                             console.error(&format!(
-                                "Skipping chapter <m,s>{}</> (<s>{}</>)",
+                                "    Skipping chapter <m,s>{}</> (<s>{}</>)",
                                 chapter.title, chapter.id
                             ));
                         }
                         Ok(ch_view) => {
                             if ch_view.blocks.is_empty() {
                                 console.warn(&cformat!(
-                                    "Unable to purchase chapter <m,s>{}</> (<s>{}</>) since image block is empty, skipping",
+                                    "   Unable to purchase chapter <m,s>{}</> (<s>{}</>) since image block is empty, skipping",
                                     chapter.title,
                                     chapter.id
                                 ));
