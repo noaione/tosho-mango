@@ -45,14 +45,16 @@ async fn main() {
                 output,
                 account_id,
             } => {
-                let mut mu_config = MUDownloadCliConfig::default();
-                mu_config.auto_purchase = !no_purchase;
-                mu_config.quality = quality;
-                mu_config.start_from = start_from;
-                mu_config.end_at = end_until;
-                mu_config.no_paid_point = no_paid_coins;
-                mu_config.no_xp_point = no_xp_coins;
-                mu_config.no_input = true;
+                let mu_config = MUDownloadCliConfig {
+                    auto_purchase: !no_purchase,
+                    no_input: true,
+                    quality,
+                    start_from,
+                    end_at: end_until,
+                    no_paid_point: no_paid_coins,
+                    no_xp_point: no_xp_coins,
+                    ..Default::default()
+                };
 
                 r#impl::musq::download::musq_download(
                     title_id,
@@ -75,11 +77,13 @@ async fn main() {
                 account_id,
                 output,
             } => {
-                let mut mu_config = MUDownloadCliConfig::default();
-                mu_config.auto_purchase = auto_purchase;
-                mu_config.show_all = show_all;
-                mu_config.chapter_ids = chapters.unwrap_or_default();
-                mu_config.quality = quality;
+                let mu_config = MUDownloadCliConfig {
+                    auto_purchase,
+                    show_all,
+                    chapter_ids: chapters.unwrap_or_default(),
+                    quality,
+                    ..Default::default()
+                };
 
                 r#impl::musq::download::musq_download(
                     title_id,
@@ -184,13 +188,15 @@ async fn main() {
                 output,
                 account_id,
             } => {
-                let mut main_config = KMDownloadCliConfig::default();
-                main_config.auto_purchase = !no_purchase;
-                main_config.start_from = start_from;
-                main_config.end_at = end_until;
-                main_config.no_ticket = no_ticket;
-                main_config.no_point = no_point;
-                main_config.no_input = true;
+                let main_config = KMDownloadCliConfig {
+                    auto_purchase: !no_purchase,
+                    no_input: true,
+                    start_from,
+                    end_at: end_until,
+                    no_point,
+                    no_ticket,
+                    ..Default::default()
+                };
 
                 r#impl::kmkc::download::kmkc_download(
                     title_id,
@@ -212,10 +218,12 @@ async fn main() {
                 account_id,
                 output,
             } => {
-                let mut main_config = KMDownloadCliConfig::default();
-                main_config.auto_purchase = auto_purchase;
-                main_config.show_all = show_all;
-                main_config.chapter_ids = chapters.unwrap_or_default();
+                let main_config = KMDownloadCliConfig {
+                    auto_purchase,
+                    show_all,
+                    chapter_ids: chapters.unwrap_or_default(),
+                    ..Default::default()
+                };
 
                 r#impl::kmkc::download::kmkc_download(
                     title_id,

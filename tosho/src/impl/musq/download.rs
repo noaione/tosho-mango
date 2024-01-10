@@ -15,9 +15,10 @@ use crate::{
 
 use super::common::{common_purchase_select, select_single_account};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub(crate) enum DownloadImageQuality {
     Normal,
+    #[default]
     High,
 }
 
@@ -57,7 +58,7 @@ impl From<DownloadImageQuality> for ImageQuality {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub(crate) struct MUDownloadCliConfig {
     /// Disable all input prompt (a.k.a `autodownload`)
     pub(crate) no_input: bool,
@@ -77,22 +78,6 @@ pub(crate) struct MUDownloadCliConfig {
 
     pub(crate) no_paid_point: bool,
     pub(crate) no_xp_point: bool,
-}
-
-impl Default for MUDownloadCliConfig {
-    fn default() -> Self {
-        Self {
-            auto_purchase: false,
-            show_all: false,
-            chapter_ids: vec![],
-            quality: DownloadImageQuality::High,
-            start_from: None,
-            end_at: None,
-            no_input: false,
-            no_paid_point: false,
-            no_xp_point: false,
-        }
-    }
 }
 
 fn check_downloaded_image_count(image_dir: &PathBuf) -> Option<usize> {

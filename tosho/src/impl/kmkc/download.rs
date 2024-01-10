@@ -10,7 +10,7 @@ use crate::{
 
 use super::common::{common_purchase_select, select_single_account};
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub(crate) struct KMDownloadCliConfig {
     /// Disable all input prompt (a.k.a `autodownload`)
     pub(crate) no_input: bool,
@@ -29,21 +29,6 @@ pub(crate) struct KMDownloadCliConfig {
 
     pub(crate) no_ticket: bool,
     pub(crate) no_point: bool,
-}
-
-impl Default for KMDownloadCliConfig {
-    fn default() -> Self {
-        Self {
-            auto_purchase: false,
-            show_all: false,
-            chapter_ids: vec![],
-            start_from: None,
-            end_at: None,
-            no_ticket: false,
-            no_point: false,
-            no_input: false,
-        }
-    }
 }
 
 fn check_downloaded_image_count(image_dir: &PathBuf, extension: &str) -> Option<usize> {
