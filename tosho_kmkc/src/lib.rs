@@ -260,7 +260,7 @@ impl KMClient {
     /// * `episode_id` - The episode ID to get the viewer for
     pub async fn get_episode_viewer(
         &self,
-        episode: EpisodeNode,
+        episode: &EpisodeNode,
     ) -> anyhow::Result<EpisodeViewerResponse> {
         match &self.config {
             KMConfig::Web(_) => {
