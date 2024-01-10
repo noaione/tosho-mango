@@ -26,7 +26,7 @@ pub(crate) async fn musq_my_favorites(
 
     match results {
         Err(e) => {
-            console.error(&cformat!("Unale to connect to MU!: {}", e));
+            console.error(&cformat!("Unable to connect to MU!: {}", e));
             1
         }
         Ok(results) => {
@@ -69,7 +69,7 @@ pub(crate) async fn musq_my_history(
 
     match results {
         Err(e) => {
-            console.error(&cformat!("Unale to connect to MU!: {}", e));
+            console.error(&cformat!("Unable to connect to MU!: {}", e));
             1
         }
         Ok(results) => {

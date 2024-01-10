@@ -26,7 +26,7 @@ pub(crate) async fn musq_home_rankings(
 
     match results {
         Err(e) => {
-            console.error(&cformat!("Unale to connect to MU!: {}", e));
+            console.error(&cformat!("Unable to connect to MU!: {}", e));
             1
         }
         Ok(results) => {
