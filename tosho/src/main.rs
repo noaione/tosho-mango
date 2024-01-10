@@ -34,6 +34,35 @@ async fn main() {
                 r#impl::musq::accounts::musq_account_info(account_id.as_deref(), &t).await
             }
             cli::MUSQCommands::Accounts => r#impl::musq::accounts::musq_accounts(&t),
+            cli::MUSQCommands::AutoDownload {
+                title_id,
+                no_purchase,
+                start_from,
+                end_until,
+                no_paid_coins,
+                no_xp_coins,
+                quality,
+                output,
+                account_id,
+            } => {
+                let mut mu_config = MUDownloadCliConfig::default();
+                mu_config.auto_purchase = !no_purchase;
+                mu_config.quality = quality;
+                mu_config.start_from = start_from;
+                mu_config.end_at = end_until;
+                mu_config.no_paid_point = no_paid_coins;
+                mu_config.no_xp_point = no_xp_coins;
+                mu_config.no_input = true;
+
+                r#impl::musq::download::musq_download(
+                    title_id,
+                    mu_config,
+                    account_id.as_deref(),
+                    output.unwrap_or_else(get_default_download_dir),
+                    &mut t_mut,
+                )
+                .await
+            }
             cli::MUSQCommands::Balance { account_id } => {
                 r#impl::musq::accounts::musq_account_balance(account_id.as_deref(), &t).await
             }
@@ -145,6 +174,33 @@ async fn main() {
                 r#impl::kmkc::accounts::kmkc_account_info(account_id.as_deref(), &t).await
             }
             cli::KMKCCommands::Accounts => r#impl::kmkc::accounts::kmkc_accounts(&t),
+            cli::KMKCCommands::AutoDownload {
+                title_id,
+                no_purchase,
+                start_from,
+                end_until,
+                no_ticket,
+                no_point,
+                output,
+                account_id,
+            } => {
+                let mut main_config = KMDownloadCliConfig::default();
+                main_config.auto_purchase = !no_purchase;
+                main_config.start_from = start_from;
+                main_config.end_at = end_until;
+                main_config.no_ticket = no_ticket;
+                main_config.no_point = no_point;
+                main_config.no_input = true;
+
+                r#impl::kmkc::download::kmkc_download(
+                    title_id,
+                    main_config,
+                    account_id.as_deref(),
+                    output.unwrap_or_else(get_default_download_dir),
+                    &mut t_mut,
+                )
+                .await
+            }
             cli::KMKCCommands::Balance { account_id } => {
                 r#impl::kmkc::accounts::kmkc_balance(account_id.as_deref(), &t).await
             }
@@ -160,6 +216,7 @@ async fn main() {
                 main_config.auto_purchase = auto_purchase;
                 main_config.show_all = show_all;
                 main_config.chapter_ids = chapters.unwrap_or_default();
+
                 r#impl::kmkc::download::kmkc_download(
                     title_id,
                     main_config,

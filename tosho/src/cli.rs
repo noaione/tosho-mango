@@ -163,6 +163,36 @@ pub(crate) enum MUSQCommands {
     },
     /// See all the accounts you have authenticated with
     Accounts,
+    /// Automatically/batch download a chapter(s) from a title
+    #[command(name = "autodownload")]
+    AutoDownload {
+        /// Title ID to use
+        title_id: u64,
+        /// Disable the auto purchase feature and only download free/purchased chapter(s).
+        #[arg(short = 'n', long)]
+        no_purchase: bool,
+        /// Specify the starting chapter ID to download
+        #[arg(short = 's', long, default_value = None)]
+        start_from: Option<u64>,
+        /// Specify the end chapter ID to download
+        #[arg(short = 'e', long, default_value = None)]
+        end_until: Option<u64>,
+        /// Disable the use of paid coins to purchase chapters
+        #[arg(long = "no-paid")]
+        no_paid_coins: bool,
+        /// Disable the use of XP/event coins to purchase chapters
+        #[arg(long = "no-xp")]
+        no_xp_coins: bool,
+        /// Specify the image quality to download
+        #[arg(short = 'q', long = "quality", default_value = "high", value_enum)]
+        quality: super::r#impl::musq::download::DownloadImageQuality,
+        /// Output directory to use
+        #[arg(short = 'o', long = "output", default_value = None)]
+        output: Option<PathBuf>,
+        /// Account ID to use
+        #[arg(short = 'a', long = "account", default_value = None)]
+        account_id: Option<String>,
+    },
     /// Get your account point balance
     Balance {
         /// Account ID to use
@@ -312,6 +342,33 @@ pub(crate) enum KMKCCommands {
     },
     /// See all the accounts you have authenticated with
     Accounts,
+    /// Automatically/batch download a chapter(s) from a title
+    #[command(name = "autodownload")]
+    AutoDownload {
+        /// Title ID to use
+        title_id: i32,
+        /// Disable the auto purchase feature and only download free/purchased chapter(s).
+        #[arg(short = 'n', long)]
+        no_purchase: bool,
+        /// Specify the starting chapter ID to download
+        #[arg(short = 's', long, default_value = None)]
+        start_from: Option<i32>,
+        /// Specify the end chapter ID to download
+        #[arg(short = 'e', long, default_value = None)]
+        end_until: Option<i32>,
+        /// Disable both title/premium ticket from being used to purchase chapters
+        #[arg(long)]
+        no_ticket: bool,
+        /// Disable the use of points to purchase chapters
+        #[arg(long)]
+        no_point: bool,
+        /// Output directory to use
+        #[arg(short = 'o', long = "output", default_value = None)]
+        output: Option<PathBuf>,
+        /// Account ID to use
+        #[arg(short = 'a', long = "account", default_value = None)]
+        account_id: Option<String>,
+    },
     /// Get your account point balance
     Balance {
         /// Account ID to use
