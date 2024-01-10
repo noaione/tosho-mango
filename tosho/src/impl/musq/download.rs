@@ -230,6 +230,8 @@ pub(crate) async fn musq_download(
                 return 1;
             }
 
+            download_chapters.sort_by(|&a, &b| a.id.cmp(&b.id));
+
             let title_dir = get_output_directory(&output_dir, title_id, None, true);
             let dump_info = create_chapters_info(manga_detail);
 

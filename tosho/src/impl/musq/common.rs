@@ -159,10 +159,10 @@ pub(super) async fn common_purchase_select(
                 .chapters
                 .iter()
                 .filter_map(|ch| {
-                    if !download_mode && !show_all && ch.is_free() {
+                    if download_mode && !show_all && !ch.is_free() {
                         None
                     } else {
-                        let value = if download_mode {
+                        let value = if ch.is_free() {
                             ch.title.clone()
                         } else {
                             format!("{} ({}c)", ch.title, ch.price)
@@ -214,7 +214,12 @@ pub(super) async fn common_purchase_select(
                 }
                 None => {
                     console.warn("Aborted");
-                    (Ok(vec![]), Some(result.clone()), client, Some(user_bal))
+                    (
+                        Err(anyhow::anyhow!("Aborted")),
+                        Some(result.clone()),
+                        client,
+                        Some(user_bal),
+                    )
                 }
             }
         }
