@@ -22,7 +22,7 @@ pub(crate) async fn musq_purchase(
 
     let account = account.unwrap();
     let (results, _, client, user_bal) =
-        common_purchase_select(title_id, &account, false, true, console).await;
+        common_purchase_select(title_id, &account, false, true, false, console).await;
 
     match (results, user_bal) {
         (Ok(results), Some(user_bal)) => {
@@ -112,7 +112,7 @@ pub(crate) async fn musq_purchase_precalculate(
 
     let account = account.unwrap();
     let (results, _, _, user_bal) =
-        common_purchase_select(title_id, &account, false, true, console).await;
+        common_purchase_select(title_id, &account, false, true, false, console).await;
 
     match (results, user_bal) {
         (Ok(results), Some(user_bal)) => {

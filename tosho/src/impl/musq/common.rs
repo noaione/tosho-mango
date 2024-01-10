@@ -122,6 +122,7 @@ pub(super) async fn common_purchase_select(
     account: &Config,
     download_mode: bool,
     show_all: bool,
+    no_input: bool,
     console: &crate::term::Terminal,
 ) -> (
     anyhow::Result<Vec<ChapterV2>>,
@@ -154,6 +155,15 @@ pub(super) async fn common_purchase_select(
             console.info(&cformat!("  - <s>ID</>: {}", title_id));
             console.info(&cformat!("  - <s>Title</>: {}", result.title));
             console.info(&cformat!("  - <s>Chapters</>: {}", result.chapters.len()));
+
+            if no_input {
+                return (
+                    Ok(result.chapters.clone()),
+                    Some(result.clone()),
+                    client,
+                    Some(user_bal),
+                );
+            }
 
             let select_choices: Vec<ConsoleChoice> = result
                 .chapters

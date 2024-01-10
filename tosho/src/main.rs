@@ -2,6 +2,7 @@ use std::path::PathBuf;
 
 use clap::Parser;
 use cli::{ToshoCommands, WeeklyCodeCli};
+use r#impl::{kmkc::download::KMDownloadCliConfig, musq::download::MUDownloadCliConfig};
 use tosho_musq::WeeklyCode;
 
 mod cli;
@@ -45,12 +46,15 @@ async fn main() {
                 account_id,
                 output,
             } => {
+                let mut mu_config = MUDownloadCliConfig::default();
+                mu_config.auto_purchase = auto_purchase;
+                mu_config.show_all = show_all;
+                mu_config.chapter_ids = chapters.unwrap_or_default();
+                mu_config.quality = quality;
+
                 r#impl::musq::download::musq_download(
                     title_id,
-                    chapters.unwrap_or_default(),
-                    show_all,
-                    auto_purchase,
-                    quality,
+                    mu_config,
                     account_id.as_deref(),
                     output.unwrap_or_else(get_default_download_dir),
                     &mut t_mut,
@@ -152,11 +156,13 @@ async fn main() {
                 account_id,
                 output,
             } => {
+                let mut main_config = KMDownloadCliConfig::default();
+                main_config.auto_purchase = auto_purchase;
+                main_config.show_all = show_all;
+                main_config.chapter_ids = chapters.unwrap_or_default();
                 r#impl::kmkc::download::kmkc_download(
                     title_id,
-                    chapters.unwrap_or_default(),
-                    show_all,
-                    auto_purchase,
+                    main_config,
                     account_id.as_deref(),
                     output.unwrap_or_else(get_default_download_dir),
                     &mut t_mut,

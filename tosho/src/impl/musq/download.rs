@@ -57,6 +57,44 @@ impl From<DownloadImageQuality> for ImageQuality {
     }
 }
 
+#[derive(Clone, Debug)]
+pub(crate) struct MUDownloadCliConfig {
+    /// Disable all input prompt (a.k.a `autodownload`)
+    pub(crate) no_input: bool,
+    pub(crate) auto_purchase: bool,
+    pub(crate) show_all: bool,
+    pub(crate) quality: DownloadImageQuality,
+
+    pub(crate) chapter_ids: Vec<usize>,
+    /// The start chapter range.
+    ///
+    /// Used only when `no_input` is `true`.
+    pub(crate) start_from: Option<u64>,
+    /// The end chapter range.
+    ///
+    /// Used only when `no_input` is `true`.
+    pub(crate) end_at: Option<u64>,
+
+    pub(crate) no_paid_point: bool,
+    pub(crate) no_xp_point: bool,
+}
+
+impl Default for MUDownloadCliConfig {
+    fn default() -> Self {
+        Self {
+            auto_purchase: false,
+            show_all: false,
+            chapter_ids: vec![],
+            quality: DownloadImageQuality::High,
+            start_from: None,
+            end_at: None,
+            no_input: false,
+            no_paid_point: false,
+            no_xp_point: false,
+        }
+    }
+}
+
 fn check_downloaded_image_count(image_dir: &PathBuf) -> Option<usize> {
     // check if dir exist
     if !image_dir.exists() {
@@ -110,13 +148,9 @@ fn get_output_directory(
     pathing
 }
 
-#[allow(clippy::too_many_arguments)]
 pub(crate) async fn musq_download(
     title_id: u64,
-    chapter_ids: Vec<usize>,
-    show_all: bool,
-    auto_purchase: bool,
-    image_quality: DownloadImageQuality,
+    dl_config: MUDownloadCliConfig,
     account_id: Option<&str>,
     output_dir: PathBuf,
     console: &mut crate::term::Terminal,
@@ -129,16 +163,41 @@ pub(crate) async fn musq_download(
     }
 
     let account = account.unwrap();
-    let (results, manga_detail, client, user_bal) =
-        common_purchase_select(title_id, &account, true, show_all, console).await;
+    let (results, manga_detail, client, user_bal) = common_purchase_select(
+        title_id,
+        &account,
+        true,
+        dl_config.show_all,
+        dl_config.no_input,
+        console,
+    )
+    .await;
 
     match (results, manga_detail, user_bal) {
         (Ok(results), Some(manga_detail), Some(coin_purse)) => {
             let results: Vec<&ChapterV2> = results
                 .iter()
                 .filter(|&ch| {
-                    // allow if chapter_ids is empty or chapter id is in chapter_ids
-                    chapter_ids.is_empty() || chapter_ids.contains(&(ch.id as usize))
+                    if dl_config.no_input {
+                        // check if chapter id is in range
+                        match (dl_config.start_from, dl_config.end_at) {
+                            (Some(start), Some(end)) => {
+                                // between start and end
+                                ch.id >= start && ch.id <= end
+                            }
+                            (Some(start), None) => {
+                                ch.id >= start // start to end
+                            }
+                            (None, Some(end)) => {
+                                ch.id <= end // 0 to end
+                            }
+                            _ => true,
+                        }
+                    } else {
+                        // allow if chapter_ids is empty or chapter id is in chapter_ids
+                        dl_config.chapter_ids.is_empty()
+                            || dl_config.chapter_ids.contains(&(ch.id as usize))
+                    }
                 })
                 .collect();
 
@@ -147,6 +206,13 @@ pub(crate) async fn musq_download(
             }
 
             let mut coin_purse = coin_purse.clone();
+
+            if dl_config.no_paid_point {
+                coin_purse.paid = 0;
+            }
+            if dl_config.no_xp_point {
+                coin_purse.event = 0;
+            }
 
             console.info(&format!("Downloading {} chapters...", results.len()));
             let mut download_chapters = vec![];
@@ -172,8 +238,8 @@ pub(crate) async fn musq_download(
                     continue;
                 }
 
-                let mut should_purchase = auto_purchase;
-                if !auto_purchase {
+                let mut should_purchase = dl_config.auto_purchase;
+                if !dl_config.auto_purchase && !dl_config.no_input {
                     let prompt = cformat!(
                         "Chapter <m,s>{}</> (<s>{}</>) need to be purchased for {:?}, continue?",
                         chapter.title,
@@ -194,7 +260,7 @@ pub(crate) async fn musq_download(
                     let purchase_result = client
                         .get_chapter_images(
                             chapter.id,
-                            image_quality.clone().into(),
+                            dl_config.quality.clone().into(),
                             Some(consume.clone()),
                         )
                         .await;
@@ -248,7 +314,7 @@ pub(crate) async fn musq_download(
                 ));
 
                 let ch_images = client
-                    .get_chapter_images(chapter.id, image_quality.clone().into(), None)
+                    .get_chapter_images(chapter.id, dl_config.quality.clone().into(), None)
                     .await;
                 if let Err(err) = ch_images {
                     console.error(&format!("Failed to download chapter: {}", err));

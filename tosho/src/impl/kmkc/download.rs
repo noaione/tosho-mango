@@ -10,6 +10,42 @@ use crate::{
 
 use super::common::{common_purchase_select, select_single_account};
 
+#[derive(Clone, Debug)]
+pub(crate) struct KMDownloadCliConfig {
+    /// Disable all input prompt (a.k.a `autodownload`)
+    pub(crate) no_input: bool,
+    pub(crate) auto_purchase: bool,
+    pub(crate) show_all: bool,
+
+    pub(crate) chapter_ids: Vec<usize>,
+    /// The start chapter range.
+    ///
+    /// Used only when `no_input` is `true`.
+    pub(crate) start_from: Option<i32>,
+    /// The end chapter range.
+    ///
+    /// Used only when `no_input` is `true`.
+    pub(crate) end_at: Option<i32>,
+
+    pub(crate) no_ticket: bool,
+    pub(crate) no_point: bool,
+}
+
+impl Default for KMDownloadCliConfig {
+    fn default() -> Self {
+        Self {
+            auto_purchase: false,
+            show_all: false,
+            chapter_ids: vec![],
+            start_from: None,
+            end_at: None,
+            no_ticket: false,
+            no_point: false,
+            no_input: false,
+        }
+    }
+}
+
 fn check_downloaded_image_count(image_dir: &PathBuf, extension: &str) -> Option<usize> {
     // check if dir exist
     if !image_dir.exists() {
@@ -65,9 +101,7 @@ fn get_output_directory(
 
 pub(crate) async fn kmkc_download(
     title_id: i32,
-    chapter_ids: Vec<usize>,
-    show_all: bool,
-    auto_purchase: bool,
+    dl_config: KMDownloadCliConfig,
     account_id: Option<&str>,
     output_dir: PathBuf,
     console: &mut crate::term::Terminal,
@@ -79,15 +113,49 @@ pub(crate) async fn kmkc_download(
         return 1;
     }
 
+    if let (Some(start), Some(end)) = (dl_config.start_from, dl_config.end_at) {
+        if start > end {
+            console.error("Start chapter is greater than end chapter!");
+            return 1;
+        }
+    }
+
     let account = account.unwrap();
-    let (results, title_detail, all_chapters, client, user_point) =
-        common_purchase_select(title_id, &account, true, show_all, console).await;
+    let (results, title_detail, all_chapters, client, user_point) = common_purchase_select(
+        title_id,
+        &account,
+        true,
+        dl_config.show_all,
+        dl_config.no_input,
+        console,
+    )
+    .await;
 
     match (results, title_detail, user_point) {
         (Ok(results), Some(title_detail), Some(user_point)) => {
             let results: Vec<&EpisodeNode> = results
                 .iter()
-                .filter(|&ch| chapter_ids.is_empty() || chapter_ids.contains(&(ch.id as usize)))
+                .filter(|&ch| {
+                    if dl_config.no_input {
+                        // check if chapter id is in range
+                        match (dl_config.start_from, dl_config.end_at) {
+                            (Some(start), Some(end)) => {
+                                // between start and end
+                                ch.id >= start && ch.id <= end
+                            }
+                            (Some(start), None) => {
+                                ch.id >= start // start to end
+                            }
+                            (None, Some(end)) => {
+                                ch.id <= end // 0 to end
+                            }
+                            _ => true,
+                        }
+                    } else {
+                        dl_config.chapter_ids.is_empty()
+                            || dl_config.chapter_ids.contains(&(ch.id as usize))
+                    }
+                })
                 .collect();
 
             if results.is_empty() {
@@ -105,8 +173,8 @@ pub(crate) async fn kmkc_download(
                     continue;
                 }
 
-                let mut should_purchase = auto_purchase;
-                if !auto_purchase {
+                let mut should_purchase = dl_config.auto_purchase;
+                if !dl_config.auto_purchase && !dl_config.no_input {
                     let prompt = cformat!(
                         "Chapter <m,s>{}</> (<s>{}</>) need to be purchased for {}P, continue?",
                         chapter.title,
@@ -117,7 +185,7 @@ pub(crate) async fn kmkc_download(
                 }
 
                 if should_purchase {
-                    if chapter.is_ticketable() {
+                    if chapter.is_ticketable() && !dl_config.no_ticket {
                         let mut ticket_info = None;
                         if ticket_entry.is_title_available() {
                             console.info(&cformat!(
@@ -153,6 +221,16 @@ pub(crate) async fn kmkc_download(
                                 }
                             }
                         }
+                    }
+
+                    if dl_config.no_point {
+                        console.warn(&cformat!(
+                            "Chapter <m,s>{}</> (<s>{}</>), is not available for purchase, skipping",
+                            chapter.title,
+                            chapter.id
+                        ));
+                        console.warn("You provide --ignore-point flag!");
+                        continue;
                     }
 
                     if !wallet_copy.can_purchase(chapter.point.try_into().unwrap_or(0)) {

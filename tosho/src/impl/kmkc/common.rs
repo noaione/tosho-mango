@@ -161,6 +161,7 @@ pub(super) async fn common_purchase_select(
     account: &Config,
     download_mode: bool,
     show_all: bool,
+    no_input: bool,
     console: &crate::term::Terminal,
 ) -> (
     anyhow::Result<Vec<tosho_kmkc::models::EpisodeNode>>,
@@ -275,6 +276,19 @@ pub(super) async fn common_purchase_select(
         "  - <bold>Chapters:</> {} chapters",
         chapters_entry.len()
     ));
+
+    if no_input {
+        return (
+            Ok(chapters_entry.clone()),
+            Some(result.clone()),
+            chapters_entry,
+            client,
+            Some(PurchasePoint {
+                point: user_point,
+                ticket: ticket_entry,
+            }),
+        );
+    }
 
     let select_choices: Vec<ConsoleChoice> = chapters_entry
         .iter()
