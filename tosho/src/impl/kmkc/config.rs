@@ -101,6 +101,10 @@ impl From<ConfigMobile> for tosho_kmkc::KMConfigMobile {
 impl From<tosho_kmkc::KMConfigMobile> for ConfigMobile {
     fn from(value: tosho_kmkc::KMConfigMobile) -> Self {
         let id = uuid::Uuid::new_v4().to_string();
+        let platform_id = match value.platform {
+            tosho_kmkc::config::KMConfigMobilePlatform::Android => MobilePlatform::Android,
+            tosho_kmkc::config::KMConfigMobilePlatform::Apple => MobilePlatform::Apple,
+        };
         ConfigMobile {
             id,
             r#type: DeviceType::Mobile as i32,
@@ -110,7 +114,7 @@ impl From<tosho_kmkc::KMConfigMobile> for ConfigMobile {
             device_id: 0,
             user_id: value.user_id.clone(),
             user_secret: value.hash_key.clone(),
-            platform: Some(MobilePlatform::Android as i32),
+            platform: Some(platform_id as i32),
         }
     }
 }

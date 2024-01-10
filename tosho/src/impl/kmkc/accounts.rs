@@ -158,7 +158,7 @@ pub(crate) async fn kmkc_account_login_mobile(
     // find old config
     let old_config = all_configs.iter().find(|&c| match c {
         crate::config::ConfigImpl::Kmkc(super::config::Config::Mobile(cc)) => {
-            cc.device_id == user_id
+            cc.device_id == user_id && platform == cc.platform()
         }
         _ => false,
     });
@@ -394,12 +394,16 @@ pub(crate) fn kmkc_accounts(console: &crate::term::Terminal) -> ExitCode {
             for (i, c) in all_configs.iter().enumerate() {
                 match c {
                     crate::config::ConfigImpl::Kmkc(c) => {
+                        let mut plat_name = format!("{}", c.get_type().to_name());
+                        if let Config::Mobile(mob) = &c {
+                            plat_name = format!("{} - {}", plat_name, mob.platform().to_name());
+                        }
                         console.info(&cformat!(
                             "{:02}. {} — <s>{}</> ({})",
                             i + 1,
                             c.get_id(),
                             c.get_username(),
-                            c.get_type().to_name()
+                            plat_name,
                         ));
                     }
                     _ => unreachable!(),
