@@ -232,3 +232,13 @@ pub struct TitlePurchaseResponse {
     #[serde(rename = "title_list")]
     pub titles: Vec<TitlePurchaseNode>,
 }
+
+/// Title sharing data
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TitleShare {
+    #[serde(rename = "title_name")]
+    title: String,
+    #[serde(rename = "twitter_post_text")]
+    post_text: String,
+    url: String,
+}

@@ -10,11 +10,12 @@ use futures_util::StreamExt;
 use md5::Md5;
 use models::{
     AccountResponse, BulkEpisodePurchaseResponse, EpisodeNode, EpisodePurchaseResponse,
-    EpisodeViewerResponse, EpisodesListResponse, GenreSearchResponse, KMAPINotEnoughPointsError,
-    MagazineCategoryResponse, MobileEpisodeViewerResponse, RankingListResponse, SearchResponse,
-    StatusResponse, TicketInfoType, TitleListResponse, TitleNode, TitlePurchaseNode,
-    TitlePurchaseResponse, TitleTicketListNode, TitleTicketListResponse, UserAccount,
-    UserInfoResponse, UserPoint, UserPointResponse, WebEpisodeViewerResponse, WeeklyListResponse,
+    EpisodeViewerFinishResponse, EpisodeViewerResponse, EpisodesListResponse, GenreSearchResponse,
+    KMAPINotEnoughPointsError, MagazineCategoryResponse, MobileEpisodeViewerResponse,
+    RankingListResponse, SearchResponse, StatusResponse, TicketInfoType, TitleListResponse,
+    TitleNode, TitlePurchaseNode, TitlePurchaseResponse, TitleTicketListNode,
+    TitleTicketListResponse, UserAccount, UserInfoResponse, UserPoint, UserPointResponse,
+    WebEpisodeViewerResponse, WeeklyListResponse,
 };
 use reqwest_cookie_store::CookieStoreMutex;
 use sha2::{Digest, Sha256, Sha512};
@@ -260,7 +261,7 @@ impl KMClient {
     /// with the [`imaging::descramble_image`] function.
     ///
     /// # Arguments
-    /// * `episode_id` - The episode ID to get the viewer for
+    /// * `episode` - The episode to get the viewer for
     pub async fn get_episode_viewer(
         &self,
         episode: &EpisodeNode,
@@ -304,6 +305,33 @@ impl KMClient {
                 Ok(EpisodeViewerResponse::Mobile(response))
             }
         }
+    }
+
+    /// Finish the episode viewer for the given episode ID.
+    ///
+    /// You should be using this after you fetch the episode viewer.
+    /// The following would claim the bonus point available.
+    ///
+    /// # Arguments
+    /// * `episode` - The episode to get the viewer for
+    pub async fn finish_episode_viewer(
+        &self,
+        episode: &EpisodeNode,
+    ) -> anyhow::Result<EpisodeViewerFinishResponse> {
+        let mut params = HashMap::new();
+        params.insert("episode_id".to_string(), episode.id.to_string());
+
+        let response = self
+            .request::<EpisodeViewerFinishResponse>(
+                reqwest::Method::GET,
+                "/episode/viewer/finish",
+                None,
+                Some(params),
+                None,
+            )
+            .await?;
+
+        Ok(response)
     }
 
     /// Get the title ticket for the given title ID.

@@ -1,7 +1,7 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-use super::{EpisodeBadge, IntBool};
+use super::{EpisodeBadge, FavoriteStatus, IntBool, TitleShare};
 
 /// A node of a single episode's information.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -275,4 +275,24 @@ pub struct BulkEpisodePurchaseResponse {
     /// The point earned back from the purchase
     #[serde(rename = "earned_point_back")]
     pub point_back: i32,
+}
+
+/// Represents an episode finish response.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EpisodeViewerFinishResponse {
+    /// The ID of the episode.
+    #[serde(rename = "episode_id")]
+    pub id: u32,
+    /// The title ID of the episode.
+    pub title_id: i32,
+    /// The favorite status of the titles.
+    #[serde(rename = "favorite_status")]
+    pub favorite: FavoriteStatus,
+    /// The bonus point of the episode.
+    pub bonus_point: i32,
+    /// The bonus point of the episode.
+    #[serde(rename = "view_finish_episode_count")]
+    pub view_count: u64,
+    #[serde(rename = "title_share_ret")]
+    pub share: TitleShare,
 }
