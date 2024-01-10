@@ -161,7 +161,7 @@ pub struct UserFavoriteList {
 pub struct UserAccountDevice {
     /// The user ID or device ID
     #[serde(rename = "user_id")]
-    pub id: String,
+    pub id: u32,
     /// The device name
     #[serde(rename = "device_name")]
     pub name: String,
@@ -191,7 +191,7 @@ pub struct UserAccount {
     #[serde(rename = "device_list")]
     pub devices: Vec<UserAccountDevice>,
     /// Whether the account is registered or not.
-    #[serde(rename = "is_registered")]
+    #[serde(rename = "is_registerd")]
     pub registered: IntBool,
     /// The number of days since the account is registered.
     #[serde(rename = "days_since_created")]
