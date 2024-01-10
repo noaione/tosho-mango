@@ -22,7 +22,7 @@ pub(crate) async fn kmkc_purchase(
     }
 
     let account = account.unwrap();
-    let (results, _, client, user_point) =
+    let (results, _, _, client, user_point) =
         common_purchase_select(title_id, &account, false, false, console).await;
 
     match (results, user_point) {
@@ -208,7 +208,7 @@ pub(crate) async fn kmkc_purchase_precalculate(
     }
 
     let account = account.unwrap();
-    let (results, _, _, user_point) =
+    let (results, _, _, _, user_point) =
         common_purchase_select(title_id, &account, false, false, console).await;
 
     match (results, user_point) {

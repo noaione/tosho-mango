@@ -144,6 +144,25 @@ async fn main() {
             cli::KMKCCommands::Balance { account_id } => {
                 r#impl::kmkc::accounts::kmkc_balance(account_id.as_deref(), &t).await
             }
+            cli::KMKCCommands::Download {
+                title_id,
+                chapters,
+                show_all,
+                auto_purchase,
+                account_id,
+                output,
+            } => {
+                r#impl::kmkc::download::kmkc_download(
+                    title_id,
+                    chapters.unwrap_or_default(),
+                    show_all,
+                    auto_purchase,
+                    account_id.as_deref(),
+                    output.unwrap_or_else(get_default_download_dir),
+                    &mut t_mut,
+                )
+                .await
+            }
             cli::KMKCCommands::Info {
                 title_id,
                 account_id,

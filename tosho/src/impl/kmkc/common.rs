@@ -165,6 +165,7 @@ pub(super) async fn common_purchase_select(
 ) -> (
     anyhow::Result<Vec<tosho_kmkc::models::EpisodeNode>>,
     Option<TitleNode>,
+    Vec<tosho_kmkc::models::EpisodeNode>,
     KMClient,
     Option<PurchasePoint>,
 ) {
@@ -176,7 +177,7 @@ pub(super) async fn common_purchase_select(
     let user_point = client.get_user_point().await;
     if let Err(error) = user_point {
         console.error(&format!("Unable to get user point: {}", error));
-        return (Err(error), None, client, None);
+        return (Err(error), None, vec![], client, None);
     }
     let user_point = user_point.unwrap();
 
@@ -187,7 +188,7 @@ pub(super) async fn common_purchase_select(
     let results = client.get_titles(vec![title_id]).await;
     if let Err(error) = results {
         console.error(&format!("Failed to get title information: {}", error));
-        return (Err(error), None, client, None);
+        return (Err(error), None, vec![], client, None);
     }
 
     let results = results.unwrap();
@@ -196,6 +197,7 @@ pub(super) async fn common_purchase_select(
         return (
             Err(anyhow::anyhow!("Unable to find title information")),
             None,
+            vec![],
             client,
             None,
         );
@@ -210,7 +212,7 @@ pub(super) async fn common_purchase_select(
     let ticket_entry = client.get_title_ticket(result.id).await;
     if let Err(error) = ticket_entry {
         console.error(&format!("Failed to get title ticket: {}", error));
-        return (Err(error), Some(result.clone()), client, None);
+        return (Err(error), Some(result.clone()), vec![], client, None);
     }
 
     let ticket_entry = ticket_entry.unwrap();
@@ -225,6 +227,7 @@ pub(super) async fn common_purchase_select(
             return (
                 Err(error),
                 Some(result.clone()),
+                chapters_entry,
                 client,
                 Some(PurchasePoint {
                     point: user_point,
@@ -273,15 +276,9 @@ pub(super) async fn common_purchase_select(
         chapters_entry.len()
     ));
 
-    // Only show unpaid chapters
-    let unpaid_chapters: Vec<&tosho_kmkc::models::EpisodeNode> = chapters_entry
+    let select_choices: Vec<ConsoleChoice> = chapters_entry
         .iter()
-        .filter(|ch| !ch.is_available())
-        .collect();
-
-    let select_choices: Vec<ConsoleChoice> = unpaid_chapters
-        .iter()
-        .filter_map(|&ch| {
+        .filter_map(|ch| {
             if !download_mode && !show_all && ch.is_available() {
                 None
             } else {
@@ -331,6 +328,7 @@ pub(super) async fn common_purchase_select(
                 return (
                     Ok(vec![]),
                     Some(result.clone()),
+                    chapters_entry,
                     client,
                     Some(PurchasePoint {
                         point: user_point,
@@ -342,6 +340,7 @@ pub(super) async fn common_purchase_select(
             (
                 Ok(mapped_chapters),
                 Some(result.clone()),
+                chapters_entry,
                 client,
                 Some(PurchasePoint {
                     point: user_point,
@@ -354,6 +353,7 @@ pub(super) async fn common_purchase_select(
             (
                 Ok(vec![]),
                 Some(result.clone()),
+                chapters_entry,
                 client,
                 Some(PurchasePoint {
                     point: user_point,
