@@ -100,8 +100,9 @@ impl From<ConfigMobile> for tosho_kmkc::KMConfigMobile {
 
 impl From<tosho_kmkc::KMConfigMobile> for ConfigMobile {
     fn from(value: tosho_kmkc::KMConfigMobile) -> Self {
+        let id = uuid::Uuid::new_v4().to_string();
         ConfigMobile {
-            id: String::new(),
+            id,
             r#type: DeviceType::Mobile as i32,
             username: String::new(),
             email: String::from("temp@kmkc.xyz"),
@@ -193,8 +194,9 @@ impl From<ConfigWeb> for tosho_kmkc::KMConfigWeb {
 
 impl From<tosho_kmkc::KMConfigWeb> for ConfigWeb {
     fn from(value: tosho_kmkc::KMConfigWeb) -> Self {
+        let id = uuid::Uuid::new_v4().to_string();
         ConfigWeb {
-            id: String::new(),
+            id,
             r#type: DeviceType::Web as i32,
             username: String::new(),
             email: String::from("temp@kmkc.xyz"),
