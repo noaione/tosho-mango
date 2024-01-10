@@ -115,6 +115,9 @@ impl KMClient {
         let version = self.constants.version;
         query_params.insert("platform".to_string(), platform.to_string());
         query_params.insert("version".to_string(), version.to_string());
+        if let KMConfig::Mobile(mobile) = &self.config {
+            query_params.insert("user_id".to_string(), mobile.user_id.to_string());
+        }
     }
 
     fn format_request(&self, query_params: &mut HashMap<String, String>) -> String {
@@ -161,9 +164,6 @@ impl KMClient {
         };
 
         let mut empty_params: HashMap<String, String> = HashMap::new();
-        if let KMConfig::Mobile(mobile) = &self.config {
-            empty_params.insert("user_id".to_string(), mobile.user_id.to_string());
-        }
         let mut empty_headers = reqwest::header::HeaderMap::new();
         let empty_hash = self.format_request(&mut empty_params);
 
