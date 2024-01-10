@@ -284,12 +284,10 @@ pub(super) async fn common_purchase_select(
             } else {
                 let value = if download_mode {
                     ch.title.clone()
+                } else if ch.is_ticketable() {
+                    format!("{} ({}P/Ticket)", ch.title, ch.point)
                 } else {
-                    if ch.is_ticketable() {
-                        format!("{} ({}P/Ticket)", ch.title, ch.point)
-                    } else {
-                        format!("{} ({}P)", ch.title, ch.point)
-                    }
+                    format!("{} ({}P)", ch.title, ch.point)
                 };
                 Some(ConsoleChoice {
                     name: ch.id.to_string(),
