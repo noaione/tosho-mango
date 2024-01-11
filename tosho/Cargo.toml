@@ -35,6 +35,9 @@ uuid = { version = "1.6.1", features = ["v4", "fast-rng"] }
 glob = "0.3.1"
 supports-hyperlinks = "2.1.0"
 num-format = "0.4.4"
+regex = "*"
+mime_guess = "2.0.4"
+mime = "*"
 
 [target.'cfg(windows)'.dependencies]
 # Windows deps
