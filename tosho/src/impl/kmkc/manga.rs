@@ -4,10 +4,8 @@ use tosho_kmkc::{
     models::{GenreNode, MagazineCategory},
 };
 
-use crate::{
-    cli::{ExitCode, WeeklyCodeCli},
-    linkify,
-};
+use super::super::parser::WeeklyCodeCli;
+use crate::{cli::ExitCode, linkify};
 
 use super::common::{do_print_search_information, select_single_account};
 

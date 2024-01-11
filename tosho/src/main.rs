@@ -1,8 +1,10 @@
 use std::path::PathBuf;
 
 use clap::Parser;
-use cli::{ToshoCommands, WeeklyCodeCli};
+use cli::ToshoCommands;
+use r#impl::parser::WeeklyCodeCli;
 use r#impl::{kmkc::download::KMDownloadCliConfig, musq::download::MUDownloadCliConfig};
+use r#impl::{kmkc::KMKCCommands, musq::MUSQCommands};
 use tosho_musq::WeeklyCode;
 
 mod cli;
@@ -27,14 +29,14 @@ async fn main() {
 
     let exit_code = match _cli.command {
         ToshoCommands::Musq { subcommand } => match subcommand {
-            cli::MUSQCommands::Auth { session_id, r#type } => {
+            MUSQCommands::Auth { session_id, r#type } => {
                 r#impl::musq::accounts::musq_auth_session(session_id, r#type, &t).await
             }
-            cli::MUSQCommands::Account { account_id } => {
+            MUSQCommands::Account { account_id } => {
                 r#impl::musq::accounts::musq_account_info(account_id.as_deref(), &t).await
             }
-            cli::MUSQCommands::Accounts => r#impl::musq::accounts::musq_accounts(&t),
-            cli::MUSQCommands::AutoDownload {
+            MUSQCommands::Accounts => r#impl::musq::accounts::musq_accounts(&t),
+            MUSQCommands::AutoDownload {
                 title_id,
                 no_purchase,
                 start_from,
@@ -65,10 +67,10 @@ async fn main() {
                 )
                 .await
             }
-            cli::MUSQCommands::Balance { account_id } => {
+            MUSQCommands::Balance { account_id } => {
                 r#impl::musq::accounts::musq_account_balance(account_id.as_deref(), &t).await
             }
-            cli::MUSQCommands::Download {
+            MUSQCommands::Download {
                 title_id,
                 chapters,
                 show_all,
@@ -94,13 +96,13 @@ async fn main() {
                 )
                 .await
             }
-            cli::MUSQCommands::Favorites { account_id } => {
+            MUSQCommands::Favorites { account_id } => {
                 r#impl::musq::favorites::musq_my_favorites(account_id.as_deref(), &t).await
             }
-            cli::MUSQCommands::History { account_id } => {
+            MUSQCommands::History { account_id } => {
                 r#impl::musq::favorites::musq_my_history(account_id.as_deref(), &t).await
             }
-            cli::MUSQCommands::Info {
+            MUSQCommands::Info {
                 title_id,
                 account_id,
                 show_chapters,
@@ -115,14 +117,14 @@ async fn main() {
                 )
                 .await
             }
-            cli::MUSQCommands::Purchase {
+            MUSQCommands::Purchase {
                 title_id,
                 account_id,
             } => {
                 r#impl::musq::purchases::musq_purchase(title_id, account_id.as_deref(), &mut t_mut)
                     .await
             }
-            cli::MUSQCommands::Precalculate {
+            MUSQCommands::Precalculate {
                 title_id,
                 account_id,
             } => {
@@ -133,16 +135,16 @@ async fn main() {
                 )
                 .await
             }
-            cli::MUSQCommands::Rankings { account_id } => {
+            MUSQCommands::Rankings { account_id } => {
                 r#impl::musq::rankings::musq_home_rankings(account_id.as_deref(), &t).await
             }
-            cli::MUSQCommands::Revoke { account_id } => {
+            MUSQCommands::Revoke { account_id } => {
                 r#impl::musq::accounts::musq_account_revoke(account_id.as_deref(), &t)
             }
-            cli::MUSQCommands::Search { query, account_id } => {
+            MUSQCommands::Search { query, account_id } => {
                 r#impl::musq::manga::musq_search(query.as_str(), account_id.as_deref(), &t).await
             }
-            cli::MUSQCommands::Weekly {
+            MUSQCommands::Weekly {
                 weekday,
                 account_id,
             } => {
@@ -155,12 +157,12 @@ async fn main() {
             }
         },
         ToshoCommands::Kmkc { subcommand } => match subcommand {
-            cli::KMKCCommands::Auth {
+            KMKCCommands::Auth {
                 email,
                 password,
                 r#type,
             } => r#impl::kmkc::accounts::kmkc_account_login(email, password, r#type, &t).await,
-            cli::KMKCCommands::AuthMobile {
+            KMKCCommands::AuthMobile {
                 user_id,
                 hash_key,
                 r#type,
@@ -168,17 +170,17 @@ async fn main() {
                 r#impl::kmkc::accounts::kmkc_account_login_mobile(user_id, hash_key, r#type, &t)
                     .await
             }
-            cli::KMKCCommands::AuthWeb { cookies } => {
+            KMKCCommands::AuthWeb { cookies } => {
                 r#impl::kmkc::accounts::kmkc_account_login_web(cookies, &t).await
             }
-            cli::KMKCCommands::AuthAdapt { r#type } => {
+            KMKCCommands::AuthAdapt { r#type } => {
                 r#impl::kmkc::accounts::kmkc_account_login_adapt(r#type, &t).await
             }
-            cli::KMKCCommands::Account { account_id } => {
+            KMKCCommands::Account { account_id } => {
                 r#impl::kmkc::accounts::kmkc_account_info(account_id.as_deref(), &t).await
             }
-            cli::KMKCCommands::Accounts => r#impl::kmkc::accounts::kmkc_accounts(&t),
-            cli::KMKCCommands::AutoDownload {
+            KMKCCommands::Accounts => r#impl::kmkc::accounts::kmkc_accounts(&t),
+            KMKCCommands::AutoDownload {
                 title_id,
                 no_purchase,
                 start_from,
@@ -207,10 +209,10 @@ async fn main() {
                 )
                 .await
             }
-            cli::KMKCCommands::Balance { account_id } => {
+            KMKCCommands::Balance { account_id } => {
                 r#impl::kmkc::accounts::kmkc_balance(account_id.as_deref(), &t).await
             }
-            cli::KMKCCommands::Download {
+            KMKCCommands::Download {
                 title_id,
                 chapters,
                 show_all,
@@ -234,7 +236,7 @@ async fn main() {
                 )
                 .await
             }
-            cli::KMKCCommands::Info {
+            KMKCCommands::Info {
                 title_id,
                 account_id,
                 show_chapters,
@@ -247,20 +249,20 @@ async fn main() {
                 )
                 .await
             }
-            cli::KMKCCommands::Magazines { account_id } => {
+            KMKCCommands::Magazines { account_id } => {
                 r#impl::kmkc::manga::kmkc_magazines_list(account_id.as_deref(), &t).await
             }
-            cli::KMKCCommands::Purchase {
+            KMKCCommands::Purchase {
                 title_id,
                 account_id,
             } => {
                 r#impl::kmkc::purchases::kmkc_purchase(title_id, account_id.as_deref(), &mut t_mut)
                     .await
             }
-            cli::KMKCCommands::Purchased { account_id } => {
+            KMKCCommands::Purchased { account_id } => {
                 r#impl::kmkc::purchases::kmkc_purchased(account_id.as_deref(), &t).await
             }
-            cli::KMKCCommands::Precalculate {
+            KMKCCommands::Precalculate {
                 title_id,
                 account_id,
             } => {
@@ -271,7 +273,7 @@ async fn main() {
                 )
                 .await
             }
-            cli::KMKCCommands::Rankings {
+            KMKCCommands::Rankings {
                 account_id,
                 ranking_tab,
                 limit,
@@ -284,13 +286,13 @@ async fn main() {
                 )
                 .await
             }
-            cli::KMKCCommands::Revoke { account_id } => {
+            KMKCCommands::Revoke { account_id } => {
                 r#impl::kmkc::accounts::kmkc_account_revoke(account_id.as_deref(), &t)
             }
-            cli::KMKCCommands::Search { query, account_id } => {
+            KMKCCommands::Search { query, account_id } => {
                 r#impl::kmkc::manga::kmkc_search(query.as_str(), account_id.as_deref(), &t).await
             }
-            cli::KMKCCommands::Weekly {
+            KMKCCommands::Weekly {
                 weekday,
                 account_id,
             } => {
