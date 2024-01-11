@@ -66,25 +66,35 @@ jobs:
       - name: Build
         run: cargo build --release --verbose --all
 
-      - name: Rename binary (non-windows)
-        if: matrix.os != 'windows-latest'
-        run: mv target/release/tosho target/release/tosho-${{ runner.os }}
-
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: tosho-${{ runner.os }}
           path: |
             target/release/tosho.exe
-            target/release/tosho-${{ runner.os }}
+            target/release/tosho
+
+      - name: Prepare release
+        if: matrix.os != 'windows-latest'
+        shell: bash
+        run: |
+          cd target/release
+          zip -r tosho-${{ runner.os }}.zip tosho*
+          cd ../..
+
+      - name: Prepare release (Win32)
+        if: matrix.os == 'windows-latest'
+        run: |
+          cd target/release
+          Compress-Archive -Path tosho.exe -DestinationPath tosho-${{ runner.os }}.zip
+          cd ../..
 
       - name: Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/v')
         with:
           files: |
-            target/release/tosho.exe
-            target/release/tosho-${{ runner.os }}
+            target/release/tosho-${{ runner.os }}.zip
           draft: true
           prerelease: false
           token: ${{ secrets.GITHUB_TOKEN }}
