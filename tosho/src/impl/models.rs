@@ -7,9 +7,9 @@ use tosho_musq::proto::ChapterV2;
 #[serde(rename_all = "camelCase")]
 pub struct ChapterDetailDump {
     /// The chapter ID.
-    id: u64,
+    pub id: u64,
     /// The main chapter name.
-    main_name: String,
+    pub main_name: String,
     /// The timestamp of the chapter release date.
     timestamp: Option<i64>,
     /// The sub chapter name, if any.
@@ -20,9 +20,9 @@ pub struct ChapterDetailDump {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MangaDetailDump {
-    title_name: String,
+    pub(crate) title_name: String,
     author_name: String,
-    chapters: Vec<ChapterDetailDump>,
+    pub(crate) chapters: Vec<ChapterDetailDump>,
 }
 
 impl MangaDetailDump {
@@ -88,4 +88,16 @@ impl From<EpisodeNode> for ChapterDetailDump {
             sub_name: None,
         }
     }
+}
+
+#[derive(Clone, Default, Deserialize, Serialize, Debug)]
+pub struct MangaManualMergeChapterDetail {
+    pub(crate) name: String,
+    pub(crate) chapters: Vec<u64>,
+}
+
+#[derive(Clone, Default, Deserialize, Serialize, Debug)]
+pub struct MangaManualMergeDetail {
+    pub(crate) title: String,
+    pub(crate) chapters: Vec<MangaManualMergeChapterDetail>,
 }

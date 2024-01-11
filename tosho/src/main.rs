@@ -3,6 +3,7 @@ use std::path::PathBuf;
 use clap::Parser;
 use cli::ToshoCommands;
 use r#impl::parser::WeeklyCodeCli;
+use r#impl::tools::ToolsCommands;
 use r#impl::{kmkc::download::KMDownloadCliConfig, musq::download::MUDownloadCliConfig};
 use r#impl::{kmkc::KMKCCommands, musq::MUSQCommands};
 use tosho_musq::WeeklyCode;
@@ -302,6 +303,31 @@ async fn main() {
                 };
 
                 r#impl::kmkc::manga::kmkc_search_weekly(weekday, account_id.as_deref(), &t).await
+            }
+        },
+        ToshoCommands::Tools { subcommand } => match subcommand {
+            ToolsCommands::AutoMerge {
+                input_folder,
+                skip_last,
+            } => {
+                let config = r#impl::tools::merger::ToolsMergeConfig {
+                    skip_last,
+                    no_input: true,
+                    ignore_manual_info: true,
+                };
+
+                r#impl::tools::merger::tools_split_merge(&input_folder, config, &mut t_mut).await
+            }
+            ToolsCommands::Merge {
+                input_folder,
+                ignore_manual_merge,
+            } => {
+                let config = r#impl::tools::merger::ToolsMergeConfig {
+                    ignore_manual_info: ignore_manual_merge,
+                    ..Default::default()
+                };
+
+                r#impl::tools::merger::tools_split_merge(&input_folder, config, &mut t_mut).await
             }
         },
     };

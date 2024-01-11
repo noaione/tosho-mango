@@ -5,7 +5,7 @@ use color_print::cformat;
 use indicatif::ProgressStyle;
 use inquire::{Confirm, MultiSelect, Select};
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct ConsoleChoice {
     /// The name of the choice (also the key)
     pub name: String,

@@ -6,7 +6,7 @@ use clap::{
     Parser, Subcommand,
 };
 
-use crate::r#impl::{kmkc::KMKCCommands, musq::MUSQCommands};
+use crate::r#impl::{kmkc::KMKCCommands, musq::MUSQCommands, tools::ToolsCommands};
 
 pub(crate) type ExitCode = u32;
 
@@ -37,6 +37,10 @@ pub(crate) enum ToshoCommands {
     Kmkc {
         #[command(subcommand)]
         subcommand: KMKCCommands,
+    },
+    Tools {
+        #[command(subcommand)]
+        subcommand: ToolsCommands,
     },
 }
 
