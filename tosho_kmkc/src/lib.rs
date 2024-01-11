@@ -1,11 +1,11 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::MutexGuard};
 
 pub use config::*;
 pub mod config;
 pub mod constants;
 pub mod imaging;
 pub mod models;
-use constants::{get_constants, API_HOST, BASE_API, BASE_HOST, IMAGE_HOST, WEB_CONSTANTS};
+use constants::{get_constants, API_HOST, BASE_API, IMAGE_HOST, WEB_CONSTANTS};
 use futures_util::StreamExt;
 use md5::Md5;
 use models::{
@@ -45,11 +45,12 @@ pub struct KMLoginResult {
 ///     println!("{:?}", manga);
 /// }
 /// ```
-#[derive(Debug)]
+#[derive(Clone)]
 pub struct KMClient {
     inner: reqwest::Client,
     config: KMConfig,
     constants: &'static constants::Constants,
+    cookie_store: std::sync::Arc<CookieStoreMutex>,
 }
 
 impl KMClient {
@@ -80,7 +81,7 @@ impl KMClient {
                 // make cookie store
                 let client = reqwest::Client::builder()
                     .default_headers(headers)
-                    .cookie_provider(cookie_store)
+                    .cookie_provider(std::sync::Arc::clone(&cookie_store))
                     .build()
                     .unwrap();
 
@@ -88,6 +89,7 @@ impl KMClient {
                     inner: client,
                     config: KMConfig::Web(web),
                     constants: get_constants(3),
+                    cookie_store,
                 }
             }
             KMConfig::Mobile(mobile) => {
@@ -97,8 +99,12 @@ impl KMClient {
                     reqwest::header::HeaderValue::from_static(&consts.ua),
                 );
 
+                let cookie_store = CookieStoreMutex::default();
+                let cookie_store = std::sync::Arc::new(cookie_store);
+
                 let client = reqwest::Client::builder()
                     .default_headers(headers)
+                    .cookie_provider(std::sync::Arc::clone(&cookie_store))
                     .build()
                     .unwrap();
 
@@ -106,6 +112,7 @@ impl KMClient {
                     inner: client,
                     config: KMConfig::Mobile(mobile),
                     constants: consts,
+                    cookie_store,
                 }
             }
         }
@@ -125,6 +132,11 @@ impl KMClient {
         self.apply_query_params(query_params);
 
         create_request_hash(&self.config, query_params.clone())
+    }
+
+    /// Get the underlying cookie store.
+    pub fn get_cookie_store(&self) -> MutexGuard<'_, reqwest_cookie_store::CookieStore> {
+        self.cookie_store.lock().unwrap()
     }
 
     /// Make an authenticated request to the API.
@@ -719,7 +731,7 @@ impl KMClient {
         );
         headers.insert(
             reqwest::header::HOST,
-            reqwest::header::HeaderValue::from_static(&BASE_API),
+            reqwest::header::HeaderValue::from_static(&API_HOST),
         );
         headers.insert(
             reqwest::header::USER_AGENT,
@@ -727,14 +739,12 @@ impl KMClient {
         );
 
         let default_web = KMConfigWeb::default();
-        let cookie_store = CookieStoreMutex::from(default_web.clone());
-        // remove uwt cookie
-        cookie_store.lock().unwrap().remove(&BASE_HOST, "/", "uwt");
+        let cookie_store = reqwest_cookie_store::CookieStoreMutex::new(default_web.clone().into());
         let cookie_store = std::sync::Arc::new(cookie_store);
 
         let client = reqwest::Client::builder()
             .default_headers(headers)
-            .cookie_provider(cookie_store)
+            .cookie_provider(std::sync::Arc::clone(&cookie_store))
             .build()?;
 
         // Perform web login
@@ -760,13 +770,13 @@ impl KMClient {
             .send()
             .await?;
 
-        let unparse_web = KMConfigWeb::from(&response);
         let login_status = parse_response::<StatusResponse>(response).await?;
 
         if login_status.response_code != 0 {
             anyhow::bail!("Failed to login: {}", login_status.error_message);
         }
 
+        let unparse_web = KMConfigWeb::from(cookie_store.lock().unwrap().clone());
         // Get account info
         let km_client = KMClient::new(KMConfig::Web(unparse_web.clone()));
         let account = km_client.get_account().await?;
@@ -877,8 +887,8 @@ where
         Ok(_) => {
             let parsed = serde_json::from_str(&raw_text).unwrap_or_else(|err| {
                 panic!(
-                    "Failed when deserializing response, error: {}\nContents: {}",
-                    err, raw_text
+                    "Failed when deserializing response, error: {}\nURL: {}\nContents: {}",
+                    url, err, raw_text
                 )
             });
             Ok(parsed)

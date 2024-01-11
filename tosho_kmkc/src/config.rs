@@ -79,16 +79,6 @@ impl From<&Cookie<'_>> for KMConfigWebKV {
     }
 }
 
-impl From<reqwest::cookie::Cookie<'_>> for KMConfigWebKV {
-    fn from(value: reqwest::cookie::Cookie) -> Self {
-        // unquote the value
-        let binding = value.value().to_string();
-        let data = decode(&binding).unwrap();
-        let parsed: KMConfigWebKV = serde_json::from_str(&data).unwrap();
-        parsed
-    }
-}
-
 impl From<&str> for KMConfigWebKV {
     fn from(value: &str) -> Self {
         let data = decode(value).unwrap();
@@ -132,25 +122,25 @@ pub struct KMConfigWeb {
     pub privacy: KMConfigWebKV,
 }
 
-impl From<CookieStoreMutex> for KMConfigWeb {
-    fn from(value: CookieStoreMutex) -> Self {
+impl From<reqwest_cookie_store::CookieStore> for KMConfigWeb {
+    fn from(value: reqwest_cookie_store::CookieStore) -> Self {
         let mut uwt = String::new();
         let mut birthday = KMConfigWebKV::default();
         let mut tos_adult = KMConfigWebKV::default();
         let mut privacy = KMConfigWebKV::default();
 
-        for cookie in value.lock().unwrap().iter_any() {
+        for cookie in value.iter_any() {
             match cookie.name() {
                 "uwt" => uwt = cookie.value().to_string(),
                 "birthday" => birthday = KMConfigWebKV::from(cookie),
                 "terms_of_service_adult" => {
-                    tos_adult = match KMConfigWebKV64::try_from(&KMConfigWebKV::from(cookie)) {
+                    tos_adult = match KMConfigWebKV64::try_from(cookie.value()) {
                         Ok(parsed) => KMConfigWebKV::from(parsed),
                         Err(_) => KMConfigWebKV::from(cookie),
                     }
                 }
                 "privacy_policy" => {
-                    privacy = match KMConfigWebKV64::try_from(&KMConfigWebKV::from(cookie)) {
+                    privacy = match KMConfigWebKV64::try_from(cookie.value()) {
                         Ok(parsed) => KMConfigWebKV::from(parsed),
                         Err(_) => KMConfigWebKV::from(cookie),
                     }
@@ -172,53 +162,10 @@ impl From<CookieStoreMutex> for KMConfigWeb {
     }
 }
 
-impl From<&reqwest::Response> for KMConfigWeb {
-    fn from(value: &reqwest::Response) -> Self {
-        let mut uwt = String::new();
-        let mut birthday = KMConfigWebKV::default();
-        let mut tos_adult = KMConfigWebKV::default();
-        let mut privacy = KMConfigWebKV::default();
-
-        for cookie in value.cookies() {
-            match cookie.name() {
-                "uwt" => uwt = cookie.value().to_string(),
-                "birthday" => birthday = KMConfigWebKV::from(cookie),
-                "terms_of_service_adult" => tos_adult = KMConfigWebKV::from(cookie),
-                "privacy_policy" => privacy = KMConfigWebKV::from(cookie),
-                _ => (),
-            }
-        }
-
-        let from_set_cookies = value.headers().get(reqwest::header::SET_COOKIE);
-        if let Some(set_cookie) = from_set_cookies {
-            for cookie in set_cookie.to_str().unwrap().split(';') {
-                let cookie = cookie_store::Cookie::parse(cookie, value.url()).unwrap();
-                match cookie.name() {
-                    "uwt" => uwt = cookie.value().to_string(),
-                    "birthday" => birthday = KMConfigWebKV::from(&cookie),
-                    "terms_of_service_adult" => tos_adult = KMConfigWebKV::from(&cookie),
-                    "privacy_policy" => privacy = KMConfigWebKV::from(&cookie),
-                    _ => (),
-                }
-            }
-        }
-
-        if uwt.is_empty() {
-            panic!("uwt cookie not found");
-        }
-
-        KMConfigWeb {
-            uwt,
-            birthday,
-            tos_adult,
-            privacy,
-        }
-    }
-}
-
-impl From<KMConfigWeb> for CookieStoreMutex {
+impl From<KMConfigWeb> for reqwest_cookie_store::CookieStore {
     fn from(value: KMConfigWeb) -> Self {
-        let store = CookieStoreMutex::default();
+        let mut store = reqwest_cookie_store::CookieStore::default();
+        let base_host_url = Url::parse(&format!("https://{}", BASE_HOST.as_str())).unwrap();
 
         let birthday_cookie = value.birthday.to_cookie("birthday".to_string());
         let tos_adult_cookie = value
@@ -226,37 +173,29 @@ impl From<KMConfigWeb> for CookieStoreMutex {
             .to_cookie("terms_of_service_adult".to_string());
         let privacy_cookie = value.privacy.to_cookie("privacy_policy".to_string());
 
-        let uwt = RawCookie::build("uwt", value.uwt)
-            .domain(BASE_HOST.as_str())
-            .secure(true)
-            .http_only(true)
-            .path("/")
-            .expires(i64_to_cookie_time(value.birthday.expires))
-            .finish();
+        store.insert_raw(&birthday_cookie, &base_host_url).unwrap();
+        store.insert_raw(&tos_adult_cookie, &base_host_url).unwrap();
+        store.insert_raw(&privacy_cookie, &base_host_url).unwrap();
 
-        let base_host_url = Url::parse(&format!("https://{}", BASE_HOST.as_str())).unwrap();
-        store
-            .lock()
-            .unwrap()
-            .insert_raw(&uwt, &base_host_url)
-            .unwrap();
-        store
-            .lock()
-            .unwrap()
-            .insert_raw(&birthday_cookie, &base_host_url)
-            .unwrap();
-        store
-            .lock()
-            .unwrap()
-            .insert_raw(&tos_adult_cookie, &base_host_url)
-            .unwrap();
-        store
-            .lock()
-            .unwrap()
-            .insert_raw(&privacy_cookie, &base_host_url)
-            .unwrap();
+        if !value.uwt.is_empty() {
+            let uwt = RawCookie::build("uwt", value.uwt)
+                .domain(BASE_HOST.as_str())
+                .secure(true)
+                .http_only(true)
+                .path("/")
+                .expires(i64_to_cookie_time(value.birthday.expires))
+                .finish();
+            store.insert_raw(&uwt, &base_host_url).unwrap();
+        }
 
         store
+    }
+}
+
+impl From<KMConfigWeb> for CookieStoreMutex {
+    fn from(value: KMConfigWeb) -> Self {
+        let store: reqwest_cookie_store::CookieStore = value.into();
+        CookieStoreMutex::new(store)
     }
 }
 
