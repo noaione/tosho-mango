@@ -31,7 +31,7 @@ jobs:
           lfs: true
 
       - name: Setup rust cache
-        uses: Swatinem/rust-cache@v2
+        uses: Swatinem/rust-cache@3cf7f8cc28d1b4e7d01e3783be10a97d55d483c8
         with:
           prefix-key: "${{ runner.os }}-tosho-rust"
 
@@ -59,7 +59,7 @@ jobs:
           lfs: true
 
       - name: Setup rust cache
-        uses: Swatinem/rust-cache@v2
+        uses: Swatinem/rust-cache@3cf7f8cc28d1b4e7d01e3783be10a97d55d483c8
         with:
           prefix-key: "${{ runner.os }}-tosho-build-rust"
 
