@@ -59,6 +59,21 @@ impl KMClient {
     /// # Arguments
     /// * `config` - The config to use for the client
     pub fn new(config: KMConfig) -> Self {
+        Self::make_client(config, None)
+    }
+
+    /// Attach a proxy to the client.
+    ///
+    /// This will clone the client and return a new client with the proxy attached.
+    ///
+    /// # Arguments
+    /// * `proxy` - The proxy to attach to the client
+    pub fn with_proxy(&self, proxy: reqwest::Proxy) -> Self {
+        Self::make_client(self.config.clone(), Some(proxy))
+    }
+
+    /// Internal function to create new client.
+    fn make_client(config: KMConfig, proxy: Option<reqwest::Proxy>) -> Self {
         let mut headers = reqwest::header::HeaderMap::new();
         headers.insert(
             reqwest::header::ACCEPT,
@@ -81,9 +96,12 @@ impl KMClient {
                 // make cookie store
                 let client = reqwest::Client::builder()
                     .default_headers(headers)
-                    .cookie_provider(std::sync::Arc::clone(&cookie_store))
-                    .build()
-                    .unwrap();
+                    .cookie_provider(std::sync::Arc::clone(&cookie_store));
+
+                let client = match proxy {
+                    Some(proxy) => client.proxy(proxy).build().unwrap(),
+                    None => client.build().unwrap(),
+                };
 
                 Self {
                     inner: client,
@@ -104,9 +122,12 @@ impl KMClient {
 
                 let client = reqwest::Client::builder()
                     .default_headers(headers)
-                    .cookie_provider(std::sync::Arc::clone(&cookie_store))
-                    .build()
-                    .unwrap();
+                    .cookie_provider(std::sync::Arc::clone(&cookie_store));
+
+                let client = match proxy {
+                    Some(proxy) => client.proxy(proxy).build().unwrap(),
+                    None => client.build().unwrap(),
+                };
 
                 Self {
                     inner: client,
