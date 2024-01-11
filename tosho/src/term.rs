@@ -157,6 +157,7 @@ impl Terminal {
 
     fn make_progress(&self, len: u64, message: Option<String>) -> indicatif::ProgressBar {
         let progress = indicatif::ProgressBar::new(len);
+        progress.enable_steady_tick(Duration::from_millis(120));
         progress.set_style(
             ProgressStyle::with_template(
                 "{spinner:.blue} {msg} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos}/{len}",
