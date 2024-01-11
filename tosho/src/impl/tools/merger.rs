@@ -246,6 +246,7 @@ pub fn manual_chapters_collector(
     }
 
     let mut first_warn = true;
+    let mut abort_after = false;
     loop {
         let ch_number = Text::new("Chapter number")
             .with_validator(required!())
@@ -307,6 +308,10 @@ pub fn manual_chapters_collector(
                     .iter()
                     .map(|choice| choice.name.parse::<u64>().unwrap())
                     .collect::<Vec<u64>>();
+                if chapter_ids.is_empty() {
+                    console.warn("  No chapter selected, skipping...");
+                    continue;
+                }
                 selected_chapters.extend(chapter_ids.clone());
                 let name = format!("c{:03}", ch_number);
                 let remapped = chapter_ids
@@ -316,8 +321,9 @@ pub fn manual_chapters_collector(
                 chapters_mapping.entry(name).or_default().extend(remapped);
             }
             None => {
-                console.error("  No chapter selected, skipping...");
-                continue;
+                console.warn("Aborted.");
+                abort_after = true;
+                break;
             }
         }
 
@@ -325,6 +331,10 @@ pub fn manual_chapters_collector(
         if !is_continue {
             break;
         }
+    }
+
+    if abort_after {
+        return BTreeMap::new();
     }
 
     chapters_mapping
