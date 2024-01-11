@@ -9,7 +9,7 @@ use color_print::cformat;
 use inquire::{required, validator::StringValidator, Text};
 use std::{
     collections::{BTreeMap, HashMap},
-    path::PathBuf,
+    path::{Path, PathBuf},
 };
 
 lazy_static::lazy_static! {
@@ -66,13 +66,13 @@ impl StringValidator for NumberValidation {
     ) -> Result<inquire::validator::Validation, inquire::CustomUserError> {
         if input.contains('.') {
             // try f64
-            if let Some(_) = safe_float(input) {
+            if safe_float(input).is_some() {
                 return Ok(inquire::validator::Validation::Valid);
             }
         }
 
         // try u64
-        if let Some(_) = safe_int(input) {
+        if safe_int(input).is_some() {
             return Ok(inquire::validator::Validation::Valid);
         }
 
@@ -88,7 +88,7 @@ impl StringValidator for IntValidation {
         input: &str,
     ) -> Result<inquire::validator::Validation, inquire::CustomUserError> {
         // try u64
-        if let Some(_) = safe_int(input) {
+        if safe_int(input).is_some() {
             return Ok(inquire::validator::Validation::Valid);
         }
 
@@ -375,16 +375,13 @@ async fn get_last_page(target_dir: PathBuf) -> u64 {
     last_page
 }
 
-fn guess_from_ext(path: &PathBuf) -> Option<String> {
+fn guess_from_ext(path: &Path) -> Option<String> {
     let suffix = path.extension();
-    match suffix {
-        Some(suffix) => {
-            let suffix = suffix.to_str().unwrap();
-            if MODERN_IMAGE_EXT.contains(&suffix) {
-                return Some(suffix.to_string());
-            }
+    if let Some(suffix) = suffix {
+        let suffix = suffix.to_str().unwrap();
+        if MODERN_IMAGE_EXT.contains(&suffix) {
+            return Some(suffix.to_string());
         }
-        None => {}
     }
     None
 }
@@ -404,7 +401,7 @@ fn is_image(path: &PathBuf) -> bool {
     }
 }
 
-async fn read_manual_info_json(input_folder: &PathBuf) -> MangaManualMergeDetail {
+async fn read_manual_info_json(input_folder: &Path) -> MangaManualMergeDetail {
     let info_json = input_folder.join("_info_manual_merge.json");
 
     if !info_json.exists() {
@@ -427,7 +424,7 @@ async fn read_manual_info_json(input_folder: &PathBuf) -> MangaManualMergeDetail
 }
 
 pub(crate) async fn tools_split_merge(
-    input_folder: &PathBuf,
+    input_folder: &Path,
     config: ToolsMergeConfig,
     console: &mut crate::term::Terminal,
 ) -> ExitCode {
@@ -567,10 +564,7 @@ pub(crate) async fn tools_split_merge(
             let mut read_dirs = match tokio::fs::read_dir(source_dir).await {
                 Ok(read_dirs) => read_dirs,
                 Err(err) => {
-                    console.error(&format!(
-                        "   Failed to read source directory: {}",
-                        err.to_string()
-                    ));
+                    console.error(&format!("   Failed to read source directory: {}", err));
                     continue;
                 }
             };
@@ -579,10 +573,7 @@ pub(crate) async fn tools_split_merge(
                 let file = match read_dirs.next_entry().await {
                     Ok(file) => file,
                     Err(err) => {
-                        console.error(&format!(
-                            "   Failed to read source directory: {}",
-                            err.to_string()
-                        ));
+                        console.error(&format!("   Failed to read source directory: {}", err));
                         break;
                     }
                 };
@@ -593,7 +584,7 @@ pub(crate) async fn tools_split_merge(
                 };
 
                 let path = &file.path();
-                if path.is_file() && is_image(&path) {
+                if path.is_file() && is_image(path) {
                     // move the file from "file" to target_dir / p{last_page}.{ext}
                     let file_name = format!("p{:03}", last_page);
                     let file_ext = path.extension().unwrap().to_str().unwrap();
