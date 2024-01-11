@@ -31,3 +31,5 @@ tests/fixtures/**/intermediate*
 
 # Sandbox/testing
 /sandbox
+/**/tests/*.json
+/**/tests/*.proto
