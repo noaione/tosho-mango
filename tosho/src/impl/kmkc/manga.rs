@@ -232,7 +232,9 @@ pub(crate) async fn kmkc_title_info(
             }
 
             console.info(&cformat!("  <s>Summary</>"));
-            console.info(&format!("   <blue>{}</>", result.summary));
+            if !result.summary.is_empty() {
+                console.info(&format!("   <blue>{}</>", result.summary));
+            }
             let split_desc: Vec<&str> = result.description.split('\n').collect();
             for desc in split_desc {
                 console.info(&format!("    {}", desc));
