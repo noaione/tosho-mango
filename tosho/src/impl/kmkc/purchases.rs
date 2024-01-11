@@ -92,10 +92,11 @@ pub(crate) async fn kmkc_purchase(
             ));
 
             console.status(format!("Purchasing chapter(s)... (1/{})", total_claim));
-            let mut purchase_count = 1;
+            let mut purchase_count = 0;
             let mut failure_count = 0_u64;
 
             for (chapter, ticket_info) in ticketing_claim {
+                purchase_count += 1;
                 console.status(format!(
                     "Purchasing chapter(s)... ({}/{})",
                     purchase_count, total_claim
@@ -105,7 +106,6 @@ pub(crate) async fn kmkc_purchase(
                     .claim_episode_with_ticket(chapter.id, &ticket_info)
                     .await;
 
-                purchase_count += 1;
                 if let Err(error) = result {
                     console.error(&format!("Failed to purchase chapter: {}", error));
                     failure_count += 1;
