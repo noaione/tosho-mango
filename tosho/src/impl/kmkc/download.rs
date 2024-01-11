@@ -152,7 +152,7 @@ pub(crate) async fn kmkc_download(
             let mut ticket_entry = user_point.ticket.clone();
             console.info(&format!("Downloading {} chapters...", results.len()));
             let mut download_chapters = vec![];
-            let mut chapters_with_bonus = vec![];
+            // let mut chapters_with_bonus = vec![];
             for chapter in results {
                 if chapter.is_available() {
                     download_chapters.push(chapter);
@@ -197,9 +197,9 @@ pub(crate) async fn kmkc_download(
                             match client.claim_episode_with_ticket(chapter.id, &ticket).await {
                                 Ok(_) => {
                                     download_chapters.push(chapter);
-                                    if chapter.bonus_point > 0 {
-                                        chapters_with_bonus.push(chapter.id);
-                                    }
+                                    // if chapter.bonus_point > 0 {
+                                    //     chapters_with_bonus.push(chapter.id);
+                                    // }
                                     continue;
                                 }
                                 Err(e) => {
@@ -239,9 +239,9 @@ pub(crate) async fn kmkc_download(
                     match client.claim_episode(chapter, &mut wallet_copy).await {
                         Ok(_) => {
                             download_chapters.push(chapter);
-                            if chapter.bonus_point > 0 {
-                                chapters_with_bonus.push(chapter.id);
-                            }
+                            // if chapter.bonus_point > 0 {
+                            //     chapters_with_bonus.push(chapter.id);
+                            // }
                         }
                         Err(e) => {
                             console
@@ -386,28 +386,28 @@ pub(crate) async fn kmkc_download(
                         }
                     }
 
-                    // claim bonus point
-                    if chapters_with_bonus.contains(&chapter.id) {
-                        console.info(&cformat!(
-                            "   Claiming bonus point for chapter <m,s>{}</> (<s>{}</>)...",
-                            chapter.title,
-                            chapter.id
-                        ));
+                    // claim bonus point (disable for now :D)
+                    // if chapters_with_bonus.contains(&chapter.id) {
+                    //     console.info(&cformat!(
+                    //         "   Claiming bonus point for chapter <m,s>{}</> (<s>{}</>)...",
+                    //         chapter.title,
+                    //         chapter.id
+                    //     ));
 
-                        match client.finish_episode_viewer(chapter).await {
-                            Ok(finish_res) => {
-                                console.info(&cformat!(
-                                    "    Claimed <s,yellow>{}</> bonus point for chapter <m,s>{}</> (<s>{}</>)",
-                                    finish_res.bonus_point,
-                                    chapter.title,
-                                    chapter.id
-                                ));
-                            }
-                            Err(err) => {
-                                console.error(&format!("    Failed to claim bonus point: {}", err));
-                            }
-                        }
-                    }
+                    //     match client.finish_episode_viewer(chapter).await {
+                    //         Ok(finish_res) => {
+                    //             console.info(&cformat!(
+                    //                 "    Claimed <s,yellow>{}</> bonus point for chapter <m,s>{}</> (<s>{}</>)",
+                    //                 finish_res.bonus_point,
+                    //                 chapter.title,
+                    //                 chapter.id
+                    //             ));
+                    //         }
+                    //         Err(err) => {
+                    //             console.error(&format!("    Failed to claim bonus point: {}", err));
+                    //         }
+                    //     }
+                    // }
                 }
                 console.stop_progress(Some("Downloaded".to_string()));
             }

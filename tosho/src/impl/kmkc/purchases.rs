@@ -36,7 +36,7 @@ pub(crate) async fn kmkc_purchase(
 
             let mut chapter_point_claim: Vec<EpisodeNode> = vec![];
             let mut ticketing_claim: Vec<(EpisodeNode, TicketInfoType)> = vec![];
-            let mut chapter_point_back: Vec<EpisodeNode> = vec![];
+            // let mut chapter_point_back: Vec<EpisodeNode> = vec![];
             for chapter in results {
                 if chapter.is_available() {
                     console.warn(&cformat!(
@@ -47,18 +47,18 @@ pub(crate) async fn kmkc_purchase(
                 }
 
                 if chapter.is_ticketable() && ticket_entry.is_title_available() {
-                    if chapter.bonus_point > 0 {
-                        chapter_point_back.push(chapter.clone());
-                    }
+                    // if chapter.bonus_point > 0 {
+                    //     chapter_point_back.push(chapter.clone());
+                    // }
                     ticketing_claim.push((
                         chapter,
                         TicketInfoType::Title(ticket_entry.info.title.clone()),
                     ));
                     ticket_entry.subtract_title();
                 } else if chapter.is_ticketable() && ticket_entry.is_premium_available() {
-                    if chapter.bonus_point > 0 {
-                        chapter_point_back.push(chapter.clone());
-                    }
+                    // if chapter.bonus_point > 0 {
+                    //     chapter_point_back.push(chapter.clone());
+                    // }
                     ticketing_claim.push((
                         chapter,
                         TicketInfoType::Premium(ticket_entry.info.premium.clone()),
@@ -66,9 +66,9 @@ pub(crate) async fn kmkc_purchase(
                     ticket_entry.subtract_premium();
                 } else if wallet_copy.can_purchase(chapter.point.try_into().unwrap_or(0)) {
                     wallet_copy.subtract(chapter.point.try_into().unwrap_or(0));
-                    if chapter.bonus_point > 0 {
-                        chapter_point_back.push(chapter.clone());
-                    }
+                    // if chapter.bonus_point > 0 {
+                    //     chapter_point_back.push(chapter.clone());
+                    // }
                     chapter_point_claim.push(chapter);
                 }
             }
@@ -148,52 +148,53 @@ pub(crate) async fn kmkc_purchase(
                 ));
             }
 
-            if !chapter_point_back.is_empty() {
-                console.info(&cformat!(
-                    "Claiming back point from <s>{}</> chapters...",
-                    chapter_point_back.len(),
-                ));
+            // disable point claim for now
+            // if !chapter_point_back.is_empty() {
+            //     console.info(&cformat!(
+            //         "Claiming back point from <s>{}</> chapters...",
+            //         chapter_point_back.len(),
+            //     ));
 
-                for chapter in chapter_point_back {
-                    let result = client.get_episode_viewer(&chapter).await;
-                    match result {
-                        Ok(_) => {
-                            console.info(&cformat!(
-                                "  Claiming back point from <m,s>{}</> ({})",
-                                chapter.title,
-                                chapter.id
-                            ));
-                            let claim_back_res = client.finish_episode_viewer(&chapter).await;
-                            match claim_back_res {
-                                Ok(finish_res) => {
-                                    console.info(&cformat!(
-                                        "   Claimed back <yellow,s>{}</> point from <m,s>{}</> ({})",
-                                        finish_res.bonus_point,
-                                        chapter.title,
-                                        chapter.id
-                                    ));
-                                }
-                                Err(error) => {
-                                    console.error(&cformat!(
-                                        "   Failed to claim back point from <m,s>{}</> ({}): <red,s>{}</>",
-                                        chapter.title,
-                                        chapter.id,
-                                        error
-                                    ));
-                                }
-                            }
-                        }
-                        Err(err) => {
-                            console.warn(&cformat!(
-                                "   Chapter <m,s>{}</> ({}) is not available: <red,s>{}</>",
-                                chapter.title,
-                                chapter.id,
-                                err
-                            ));
-                        }
-                    }
-                }
-            }
+            //     for chapter in chapter_point_back {
+            //         let result = client.get_episode_viewer(&chapter).await;
+            //         match result {
+            //             Ok(_) => {
+            //                 console.info(&cformat!(
+            //                     "  Claiming back point from <m,s>{}</> ({})",
+            //                     chapter.title,
+            //                     chapter.id
+            //                 ));
+            //                 let claim_back_res = client.finish_episode_viewer(&chapter).await;
+            //                 match claim_back_res {
+            //                     Ok(finish_res) => {
+            //                         console.info(&cformat!(
+            //                             "   Claimed back <yellow,s>{}</> point from <m,s>{}</> ({})",
+            //                             finish_res.bonus_point,
+            //                             chapter.title,
+            //                             chapter.id
+            //                         ));
+            //                     }
+            //                     Err(error) => {
+            //                         console.error(&cformat!(
+            //                             "   Failed to claim back point from <m,s>{}</> ({}): <red,s>{}</>",
+            //                             chapter.title,
+            //                             chapter.id,
+            //                             error
+            //                         ));
+            //                     }
+            //                 }
+            //             }
+            //             Err(err) => {
+            //                 console.warn(&cformat!(
+            //                     "   Chapter <m,s>{}</> ({}) is not available: <red,s>{}</>",
+            //                     chapter.title,
+            //                     chapter.id,
+            //                     err
+            //                 ));
+            //             }
+            //         }
+            //     }
+            // }
 
             0
         }
