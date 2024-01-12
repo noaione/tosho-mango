@@ -36,14 +36,22 @@ jobs:
         with:
           prefix-key: "${{ runner.os }}-tosho-rust"
 
+      - name: Prepare toolchain
+        run: |
+          rustup toolchain install nightly
+          rustup component add clippy --toolchain nightly
+          rustup component add rustfmt --toolchain nightly
+          rustup default nightly
+          cargo install cargo-tarpaulin
+
       - name: Build
         run: cargo build --verbose --all
 
       - name: Lint
         run: cargo clippy --verbose --all -- -D warnings
 
-      - name: Tests
-        run: cargo test --verbose --all
+      - name: Test & Coverage
+        run: cargo tarpaulin --verbose --all-features --workspace --out xml --count -l
 
   build:
     needs: lint
