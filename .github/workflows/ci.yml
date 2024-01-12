@@ -74,12 +74,15 @@ jobs:
           prefix-key: "${{ runner.os }}-${{ matrix.os[1] }}-tosho-build-rust"
 
       - name: Build
-        run: cargo build --release --verbose --all --target ${{ matrix.os[1] }}
+        run: |
+          cargo build --release --verbose --all --target ${{ matrix.os[1] }}
+          ls -l target/release
+          ls -l .
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: tosho-${{ runner.os }}
+          name: tosho-${{ matrix.os[1] }}
           path: |
             target/release/tosho.exe
             target/release/tosho
