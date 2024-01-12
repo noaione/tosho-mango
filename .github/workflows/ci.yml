@@ -67,7 +67,6 @@ jobs:
       - name: Rust Target
         run: |
           rustup target add ${{ matrix.os[1] }}
-          cargo install cross
 
       - name: Setup rust cache
         uses: Swatinem/rust-cache@3cf7f8cc28d1b4e7d01e3783be10a97d55d483c8
@@ -77,13 +76,16 @@ jobs:
       - name: Dependencies (musl)
         if: matrix.os[1] == 'x86_64-unknown-linux-musl'
         run: |
-          sudo apt-get update
-          sudo apt-get install -y musl-tools
-          sudo apt-get install -y libssl-dev
+          cargo install cross
 
       - name: Build
         run: |
-          cross build --release --verbose --all --target ${{ matrix.os[1] }}
+          if [ "${{ matrix.os[1] }}" == "x86_64-unknown-linux-musl" ]; then
+            cross build --release --verbose --all --target ${{ matrix.os[1] }}
+          else
+            cargo build --release --verbose --all --target ${{ matrix.os[1] }}
+          fi
+        shell: bash
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
