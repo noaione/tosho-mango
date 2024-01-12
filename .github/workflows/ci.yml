@@ -63,10 +63,8 @@ jobs:
         with:
           lfs: true
 
-      - name: Rustup
+      - name: Rust Target
         run: |
-          rustup self update
-          rustup update stable
           rustup target add ${{ matrix.os[1] }}
 
       - name: Setup rust cache
