@@ -17,6 +17,7 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  PKG_CONFIG_SYSROOT_DIR: /
 permissions:
   contents: write
 
@@ -84,7 +85,7 @@ jobs:
             target/release/tosho
 
       - name: Prepare release
-        if: matrix.os != 'windows-latest'
+        if: matrix.os[0] != 'windows-latest'
         shell: bash
         run: |
           cd target/release
@@ -92,7 +93,7 @@ jobs:
           cd ../..
 
       - name: Prepare release (Win32)
-        if: matrix.os == 'windows-latest'
+        if: matrix.os[0] == 'windows-latest'
         run: |
           cd target/release
           Compress-Archive -Path tosho.exe -DestinationPath tosho-${{ matrix.os[1] }}.zip
