@@ -67,6 +67,7 @@ jobs:
       - name: Rust Target
         run: |
           rustup target add ${{ matrix.os[1] }}
+          cargo install cross
 
       - name: Setup rust cache
         uses: Swatinem/rust-cache@3cf7f8cc28d1b4e7d01e3783be10a97d55d483c8
@@ -82,7 +83,7 @@ jobs:
 
       - name: Build
         run: |
-          cargo build --release --verbose --all --target ${{ matrix.os[1] }}
+          cross build --release --verbose --all --target ${{ matrix.os[1] }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
