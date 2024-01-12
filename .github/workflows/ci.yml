@@ -6,6 +6,8 @@ on:
       - 'LICENSE'
       - '.gitignore'
       - '.vscode/**'
+    tags:
+      - v*
   pull_request:
     paths-ignore:
       - 'README.md'
@@ -13,55 +15,119 @@ on:
       - '.gitignore'
       - '.vscode/**'
 
+env:
+  CARGO_TERM_COLOR: always
+  PKG_CONFIG_SYSROOT_DIR: /
+permissions:
+  contents: write
+
 jobs:
-  lint:
+  tests:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           lfs: true
 
-      - name: Setup python
-        uses: actions/setup-python@v4
+      - name: Setup rust cache
+        uses: Swatinem/rust-cache@3cf7f8cc28d1b4e7d01e3783be10a97d55d483c8
         with:
-          python-version: '3.10'
+          prefix-key: "${{ runner.os }}-tosho-rust"
 
-      - name: Install Poetry
-        uses: snok/install-poetry@v1
-        with:
-          virtualenvs-create: true
-          virtualenvs-in-project: true
-
-      - name: Load cached venv
-        id: cached-poetry-dependencies
-        uses: actions/cache@v3
-        with:
-          path: .venv
-          key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
-
-      - name: Install dependencies
+      - name: Prepare toolchain
         run: |
-          poetry install
-        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+          rustup toolchain install nightly
+          rustup component add clippy --toolchain nightly
+          rustup component add rustfmt --toolchain nightly
+          rustup default nightly
+
+      - name: Install tarpaulin
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-tarpaulin
+
+      - name: Build
+        run: cargo build --verbose --all
 
       - name: Lint
-        run: |
-          python3 pipelines/multi-lint.py
+        run: cargo clippy --verbose --all -- -D warnings
 
-      - name: Type check
-        uses: jakebailey/pyright-action@v1
-        with:
-          venv-path: .venv
-          project: pyproject.toml
+      - name: Test & Coverage
+        # Run custom script to get coverage
+        run: python3 ./scripts/tarpaulin_coverage.py
 
-      - name: Tests
-        run: |
-          source .venv/bin/activate
-          pytest
-      
       - name: Coverage report
         uses: codecov/codecov-action@v3
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+  build:
+    needs: tests
+    strategy:
+      matrix:
+        os:
+          # GNU Linux (x64)
+          - [ubuntu-latest, x86_64-unknown-linux-gnu]
+          # macOS Intel (x64)
+          - [macos-latest, x86_64-apple-darwin]
+          # macOS Apple Silicon (ARM64)
+          - [macos-latest, aarch64-apple-darwin]
+          # Windows 10 (x64)
+          - [windows-latest, x86_64-pc-windows-msvc]
+      fail-fast: false
+    
+    runs-on: ${{ matrix.os[0] }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Rust Target
+        run: |
+          rustup target add ${{ matrix.os[1] }}
+
+      - name: Setup rust cache
+        uses: Swatinem/rust-cache@3cf7f8cc28d1b4e7d01e3783be10a97d55d483c8
+        with:
+          prefix-key: "${{ runner.os }}-${{ matrix.os[1] }}-tosho-build-rust"
+
+      - name: Build
+        run: |
+          cargo build --release --verbose --all --target ${{ matrix.os[1] }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tosho-${{ matrix.os[1] }}
+          path: |
+            target/${{ matrix.os[1] }}/release/tosho.exe
+            target/${{ matrix.os[1] }}/release/tosho
+
+      - name: Prepare release
+        if: matrix.os[0] != 'windows-latest'
+        shell: bash
+        run: |
+          cd target/${{ matrix.os[1] }}/release
+          zip -r tosho-${{ runner.os }}.zip tosho*
+          cd ../../..
+
+      - name: Prepare release (Win32)
+        if: matrix.os[0] == 'windows-latest'
+        run: |
+          cd target/${{ matrix.os[1] }}/release
+          Compress-Archive -Path tosho.exe -DestinationPath tosho-${{ matrix.os[1] }}.zip
+          cd ../../..
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/v')
+        with:
+          files: |
+            target/${{ matrix.os[1] }}/release/tosho-${{ matrix.os[1] }}.zip
+          draft: true
+          prerelease: false
+          token: ${{ secrets.GITHUB_TOKEN }}
+          generate_release_notes: true

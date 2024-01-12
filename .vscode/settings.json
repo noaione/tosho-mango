@@ -1,20 +1,9 @@
 {
-    "[python]": {
-        "editor.formatOnSave": true,
-        "editor.defaultFormatter": "charliermarsh.ruff",
-        "editor.codeActionsOnSave": {
-            "source.fixAll": "never",
-            "source.organizeImports": "explicit"
-        },
+    "[rust]": {
+        "editor.formatOnSave": true
     },
-    "ruff.lint.args": ["--config=pyproject.toml"],
-    // "ruff.format.args": ["--config=pyproject.toml"],
     "ruff.organizeImports": true,
     "editor.rulers": [120],
-    "python.analysis.diagnosticMode": "workspace",
-    "python.languageServer": "Pylance",
-    "autoDocstring.docstringFormat": "numpy",
-    "python.analysis.typeCheckingMode": "basic",
     "files.exclude": {
         "**/.git": true,
         "**/.svn": true,
@@ -30,9 +19,4 @@
         "**/.mypy_cache": true,
         "**/.ruff_cache": true
     },
-    "black-formatter.importStrategy": "fromEnvironment",
-    "black-formatter.args": [
-        "--config",
-        "pyproject.toml"
-    ],
 }

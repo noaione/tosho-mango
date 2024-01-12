@@ -1,0 +1,44 @@
+[package]
+name = "tosho"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "A downloader for some official mango website"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+# Sources deps
+tosho-musq = { path = "../tosho_musq" }
+tosho-kmkc = { path = "../tosho_kmkc" }
+tosho-macros = { path = "../tosho_macros" }
+
+# External deps
+tokio.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+prost.workspace = true
+prost-types.workspace = true
+anyhow.workspace = true
+lazy_static.workspace = true
+chrono.workspace = true
+
+# CLI deps
+clap = { version = "4.4.13", features = ["derive"] }
+anstream = "0.6.5"
+color-print = "0.3.5"
+inquire = "0.6.2"
+indicatif = "0.17.7"
+directories = "5.0.1"
+uuid = { version = "1.6.1", features = ["v4", "fast-rng"] }
+glob = "0.3.1"
+supports-hyperlinks = "2.1.0"
+num-format = "0.4.4"
+regex = "*"
+mime_guess = "2.0.4"
+mime = "*"
+
+[target.'cfg(windows)'.dependencies]
+# Windows deps
+windows-sys = { version = "*", features = ["Win32_Foundation", "Win32_System_Console"] }

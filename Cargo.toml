@@ -1,0 +1,27 @@
+[workspace]
+resolver = "2"
+members = [
+    "tosho",
+    "tosho_musq",
+    "tosho_kmkc",
+    "tosho_macros"
+]
+
+[workspace.package]
+version = "0.2.0"
+edition = "2021"
+authors = ["noaione <noaione@n4o.xyz>"]
+license = "MIT"
+
+[workspace.dependencies]
+tokio = { version = "1.35.1", features = ["full"] }
+reqwest = "0.11.23"
+serde = { version = "1.0.193", features = ["derive"] }
+serde_json = "1.0.108"
+prost = "0.12"
+prost-types = "0.12"
+lazy_static = "1"
+anyhow = "1"
+base64 = "0.21.5"
+chrono = "0.4"
+futures-util = "0.3"

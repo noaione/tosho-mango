@@ -1,0 +1,17 @@
+[package]
+name = "tosho-macros"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "A macro library for tosho-mango"
+readme = "README.md"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+syn = "2.0"
+quote = "1.0"
+
+[lib]
+proc-macro = true

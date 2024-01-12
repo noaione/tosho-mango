@@ -9,7 +9,7 @@ The new Rust version will also introduce some more capabilities like actual logi
 
 # tosho-mango
 
-[![CI](https://github.com/noaione/tosho-mango/actions/workflows/ci.yml/badge.svg)](https://github.com/noaione/tosho-mango/actions/workflows/ci.yml) ![Codecov](https://img.shields.io/codecov/c/github/noaione/tosho-mango) [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black) [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/charliermarsh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff) [![License: MIT](https://img.shields.io/github/license/noaione/tosho-mango)](https://github.com/noaione/tosho-mango/blob/master/LICENSE)
+[![CI](https://github.com/noaione/tosho-mango/actions/workflows/ci.yml/badge.svg)](https://github.com/noaione/tosho-mango/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/github/license/noaione/tosho-mango)](https://github.com/noaione/tosho-mango/blob/master/LICENSE)
 
 A simple downloader for some official mango.
 
@@ -19,21 +19,27 @@ as a CLI application.
 All of the implementations here are originally a separate script that I made myself, I decide to open source it because
 I'm kinda burned out doing it myself so someone else can do it.
 
-Currently, the authentication system is limited to HTTP Intercepting or downloading cookies.
+Please see each folder implementations for how you can authenticate your account with `tosho`
 
 ## Installation
 
 **Requirements**
-- Python 3.10+
-- [Poetry](https://python-poetry.org/)
+- Rust 1.72+
+- 64-bit devices (ARM64/aarch64 support might be experimental)
+- Modern enough terminal (VT support)
 
-1. Clone this repository
-2. Go to the directory
-3. Type `poetry install`
-4. Run `poetry run tosho` to see all available commands
+You can get the binary by either compiling everything yourself by running:
+1. Clone the repository
+2. Run `cargo build --release --all`
+3. Execute `target/release/tosho` (or `target/release/tosho.exe` on Windows)
 
-Each sources can be authenticated, to see how each sources can be authenticated, please see the [`sources`](https://github.com/noaione/tosho-mango/tree/master/tosho_mango/sources) folder.
+Or, you can get the precompiled binary from the **[Releases](https://github.com/noaione/tosho-mango/releases)** tab.
 
 ## License
 
 [MIT License](LICENSE)
+
+## Acknowledgements
+
+- `neckothy`, provided some help and info for KMKC.
+- myself, created this from scratch

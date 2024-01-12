@@ -27,3 +27,14 @@ _data_test/
 cookies.txt
 *cookies.txt
 tests/fixtures/**/intermediate*
+
+# Rust
+/target
+*.profraw
+lcov.info
+cobertura.xml
+
+# Sandbox/testing
+/sandbox
+/**/tests/*.json
+/**/tests/*.proto
