@@ -21,3 +21,34 @@ async fn main() {
     println!("{:?}", manga);
 }
 ```
+
+## Authentication
+
+The following sources does not have any easy authentication method.
+
+The command to authenticate is `tosho mu auth`.
+
+It's recommended you setup network intercepting first, please read [INTERCEPTING](../INTERCEPTING.md)
+
+```bash
+$ tosho mu auth secret -t android
+```
+
+```bash
+$ tosho mu auth secret -t ios
+```
+
+### Android
+
+1. Open the source app
+2. Click on home page or my page.
+3. See the request on HTTP Toolkit and find request to the API that have `secret` as the query parameters.
+4. Save that secret elsewhere and authenticate with `tosho`.
+
+### Apple
+
+1. Open the Stream app and click `Sniff Now`
+2. Go to the source app and open the home or my page.
+3. Go back to the Stream app and click `Sniff History` and select the most recent item.
+4. Find request that goes to the API of the source app and find request that have `secret=xxxxx` on them.
+5. Copy the link and save the secret value somewhere so you can authenticate with the `tosho`.
