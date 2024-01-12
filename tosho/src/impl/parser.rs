@@ -2,7 +2,6 @@ use clap::ValueEnum;
 use tosho_macros::EnumName;
 
 pub(crate) type CommaSeparatedNumber = Vec<usize>;
-pub(crate) type CommaSeparatedString = Vec<String>;
 
 #[derive(Clone, EnumName)]
 pub enum WeeklyCodeCli {
@@ -28,6 +27,7 @@ impl ValueEnum for WeeklyCodeCli {
         }
     }
 
+    #[cfg(not(tarpaulin_include))]
     fn value_variants<'a>() -> &'a [Self] {
         &[
             WeeklyCodeCli::Sunday,
@@ -119,21 +119,20 @@ pub(super) fn parse_comma_number(s: &str) -> Result<CommaSeparatedNumber, String
     Ok(numbers)
 }
 
-/// Value parser for comma separated strings
-#[allow(dead_code)]
-pub(super) fn parse_comma_string(s: &str) -> Result<CommaSeparatedString, String> {
-    let mut strings = Vec::new();
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-    for string in s.split(',') {
-        let string = string.trim();
-
-        // skip if empty
-        if string.is_empty() {
-            continue;
-        }
-
-        strings.push(string.to_string());
+    #[test]
+    fn test_parse_comma_number() {
+        let parsed = parse_comma_number("1,2,3,4,5");
+        assert!(parsed.is_ok());
+        assert_eq!(parsed.unwrap(), vec![1, 2, 3, 4, 5]);
     }
 
-    Ok(strings)
+    #[test]
+    fn test_parse_comma_number_invalid() {
+        let parsed = parse_comma_number("aaa,bbb");
+        assert!(parsed.is_err());
+    }
 }

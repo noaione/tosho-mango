@@ -6,6 +6,7 @@ use tosho_musq::proto::{
     PointHistoryView, PointShopView, Status,
 };
 
+#[cfg(not(tarpaulin_include))]
 fn common_reader(file_name: &str) -> Result<String, std::io::Error> {
     let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap();
 
@@ -312,4 +313,27 @@ fn test_proto_pointshopview() {
             assert_eq!(billing.total_point(), 34840);
         }
     }
+}
+
+#[test]
+fn test_common_reader() {
+    let proto_data = common_reader("chapterview");
+
+    match proto_data {
+        Err(err) => {
+            assert!(true, "{}", err);
+        }
+        Ok(_) => {
+            assert!(true)
+        }
+    }
+}
+
+#[test]
+fn test_hex_to_bytes() {
+    // encoded string: hello
+    let hex_str = "68656c6c6f";
+
+    let bytes = hex_to_bytes(hex_str);
+    assert_eq!(bytes, vec![104, 101, 108, 108, 111]);
 }

@@ -95,6 +95,7 @@ pub fn descramble_image(
     // read img_source as image
     let img = image::load_from_memory(img_bytes)?;
 
+    #[cfg(not(tarpaulin_include))]
     let (width, height) = img.dimensions();
     let (width_rect, height_rect) = calc_block_size(width, height, rectbox);
 
@@ -112,6 +113,7 @@ pub fn descramble_image(
 
                 let binding = img.crop_imm(source_x, source_y, width_rect, height_rect);
                 let source_img = binding.as_rgb8().expect("Failed to convert to RGB8");
+                #[cfg(not(tarpaulin_include))]
                 canvas.copy_from(source_img, dest_x, dest_y).unwrap_or_else(|_| {
                     panic!("Failed to copy from source image to canvas. source_x: {}, source_y: {}, dest_x: {}, dest_y: {}", source_x, source_y, dest_x, dest_y)
                 });
@@ -159,6 +161,12 @@ mod tests {
         let (width_rect, height_rect) = calc_block_size(width, height, 4);
         assert_eq!(width_rect, None);
         assert_eq!(height_rect, None);
+
+        let width = 1_u32;
+        let height = 10_u32;
+        let (width_rect, height_rect) = calc_block_size(width, height, 4);
+        assert_eq!(width_rect, None);
+        assert_eq!(height_rect, None);
     }
 
     #[test]
@@ -201,5 +209,11 @@ mod tests {
         ];
 
         assert_eq!(copy_targets, expect_targets);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_u32_to_f32_panic() {
+        u32_to_f32(u32::MAX);
     }
 }

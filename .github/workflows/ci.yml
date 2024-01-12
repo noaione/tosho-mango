@@ -55,7 +55,13 @@ jobs:
         run: cargo clippy --verbose --all -- -D warnings
 
       - name: Test & Coverage
-        run: cargo tarpaulin --verbose --all-features --workspace --out xml --count -l
+        # Run custom script to get coverage
+        run: python3 ./scripts/tarpaulin_coverage.py
+
+      - name: Coverage report
+        uses: codecov/codecov-action@v3
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   build:
     needs: tests

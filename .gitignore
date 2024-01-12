@@ -32,7 +32,7 @@ tests/fixtures/**/intermediate*
 /target
 *.profraw
 lcov.info
-
+cobertura.xml
 
 # Sandbox/testing
 /sandbox

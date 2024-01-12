@@ -36,6 +36,7 @@ impl ValueEnum for DeviceKind {
         }
     }
 
+    #[cfg(not(tarpaulin_include))]
     fn value_variants<'a>() -> &'a [Self] {
         &[DeviceKind::Web, DeviceKind::Android, DeviceKind::Apple]
     }

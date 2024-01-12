@@ -59,3 +59,11 @@ fn test_descramble_image() {
 
     assert_eq!(descrambled, ref_buf);
 }
+
+#[test]
+#[should_panic]
+fn test_1x1_image_with_4_rectbox() {
+    let one_by_one = include_bytes!("1x1.png");
+
+    descramble_image(one_by_one, 4, 749191485).unwrap();
+}
