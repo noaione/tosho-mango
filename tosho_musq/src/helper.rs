@@ -282,3 +282,27 @@ impl Default for ConsumeCoin {
         Self::new(0, 0, 0, 0)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_consume_free() {
+        let cc = ConsumeCoin::default();
+        assert!(cc.is_free());
+        assert!(cc.is_possible());
+    }
+
+    #[test]
+    fn test_consume_possible() {
+        let cc = ConsumeCoin::new(20, 0, 0, 10);
+        assert!(cc.is_possible());
+    }
+
+    #[test]
+    fn test_consume_impossible() {
+        let cc = ConsumeCoin::new(0, 0, 0, 10);
+        assert!(!cc.is_possible());
+    }
+}
