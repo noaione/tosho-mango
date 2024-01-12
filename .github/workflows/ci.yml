@@ -43,11 +43,10 @@ jobs:
           rustup component add rustfmt --toolchain nightly
           rustup default nightly
 
-      - name: Cargo binstall
-        uses: cargo-bins/cargo-binstall@main
-
       - name: Install tarpaulin
-        run: cargo binstall tarpaulin
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-tarpaulin
 
       - name: Build
         run: cargo build --verbose --all
