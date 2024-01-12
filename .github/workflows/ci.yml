@@ -22,7 +22,7 @@ permissions:
   contents: write
 
 jobs:
-  lint:
+  tests:
     runs-on: ubuntu-latest
 
     steps:
@@ -54,7 +54,7 @@ jobs:
         run: cargo tarpaulin --verbose --all-features --workspace --out xml --count -l
 
   build:
-    needs: lint
+    needs: tests
     strategy:
       matrix:
         os:
