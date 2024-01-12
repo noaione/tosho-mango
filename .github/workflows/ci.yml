@@ -50,11 +50,14 @@ jobs:
     strategy:
       matrix:
         os:
+          # GNU Linux (x64)
           - [ubuntu-latest, x86_64-unknown-linux-gnu]
-          - [ubuntu-latest, x86_64-unknown-linux-musl]
+          # macOS Intel (x64)
           - [macos-latest, x86_64-apple-darwin]
-          - [windows-latest, x86_64-pc-windows-msvc]
+          # macOS Apple Silicon (ARM64)
           - [macos-latest, aarch64-apple-darwin]
+          # Windows 10 (x64)
+          - [windows-latest, x86_64-pc-windows-msvc]
       fail-fast: false
     
     runs-on: ${{ matrix.os[0] }}
@@ -73,19 +76,9 @@ jobs:
         with:
           prefix-key: "${{ runner.os }}-${{ matrix.os[1] }}-tosho-build-rust"
 
-      - name: Dependencies (musl)
-        if: matrix.os[1] == 'x86_64-unknown-linux-musl'
-        run: |
-          cargo install cross
-
       - name: Build
         run: |
-          if [ "${{ matrix.os[1] }}" == "x86_64-unknown-linux-musl" ]; then
-            cross build --release --verbose --all --target ${{ matrix.os[1] }}
-          else
-            cargo build --release --verbose --all --target ${{ matrix.os[1] }}
-          fi
-        shell: bash
+          cargo build --release --verbose --all --target ${{ matrix.os[1] }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
