@@ -48,23 +48,34 @@ jobs:
     needs: lint
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os:
+          - [ubuntu-latest, x86_64-unknown-linux-gnu]
+          - [ubuntu-latest, x86_64-unknown-linux-musl]
+          - [macos-latest, x86_64-apple-darwin]
+          - [windows-latest, x86_64-pc-windows-msvc]
+          - [macos-latest, aarch64-apple-darwin]
       fail-fast: false
     
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.os[0] }}
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
           lfs: true
 
+      - name: Rustup
+        run: |
+          rustup self update
+          rustup update stable
+          rustup target add ${{ matrix.os[1] }}
+
       - name: Setup rust cache
         uses: Swatinem/rust-cache@3cf7f8cc28d1b4e7d01e3783be10a97d55d483c8
         with:
-          prefix-key: "${{ runner.os }}-tosho-build-rust"
+          prefix-key: "${{ runner.os }}-${{ matrix.os[1] }}-tosho-build-rust"
 
       - name: Build
-        run: cargo build --release --verbose --all
+        run: cargo build --release --verbose --all --target ${{ matrix.os[1] }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -86,7 +97,7 @@ jobs:
         if: matrix.os == 'windows-latest'
         run: |
           cd target/release
-          Compress-Archive -Path tosho.exe -DestinationPath tosho-${{ runner.os }}.zip
+          Compress-Archive -Path tosho.exe -DestinationPath tosho-${{ matrix.os[1] }}.zip
           cd ../..
 
       - name: Release
@@ -94,7 +105,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v')
         with:
           files: |
-            target/release/tosho-${{ runner.os }}.zip
+            target/release/tosho-${{ matrix.os[1] }}.zip
           draft: true
           prerelease: false
           token: ${{ secrets.GITHUB_TOKEN }}
