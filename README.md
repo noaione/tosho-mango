@@ -1,12 +1,3 @@
-## The Rust™ Rewrite™
-
-There is an [ongoing process](https://github.com/noaione/tosho-mango/pull/5) of me rewritting everything into Rust because it's fun \:)
-
-So, there will be no more update to the Python code.<br />
-The Python code will be hosted on separate branch here: [`legacy-snek`](https://github.com/noaione/tosho-mango/tree/legacy-snek).
-
-The new Rust version will also introduce some more capabilities like actual login system for some sources. (Legacy "login" will also still be supported because honestly it's way easier to implement and use)
-
 # tosho-mango
 
 [![CI](https://github.com/noaione/tosho-mango/actions/workflows/ci.yml/badge.svg)](https://github.com/noaione/tosho-mango/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/github/license/noaione/tosho-mango)](https://github.com/noaione/tosho-mango/blob/master/LICENSE)
@@ -43,3 +34,7 @@ Or, you can get the precompiled binary from the **[Releases](https://github.com/
 
 - `neckothy`, provided some help and info for KMKC.
 - myself, created this from scratch
+
+### Legacy Python Code
+
+The codebase has been rewritten to Rust, you can see the original Python version in [`legacy-snek`](https://github.com/noaione/tosho-mango/tree/legacy-snek) branch.
