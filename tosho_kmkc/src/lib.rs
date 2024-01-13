@@ -909,7 +909,7 @@ where
             let parsed = serde_json::from_str(&raw_text).unwrap_or_else(|err| {
                 panic!(
                     "Failed when deserializing response, error: {}\nURL: {}\nContents: {}",
-                    url, err, raw_text
+                    err, url, raw_text
                 )
             });
             Ok(parsed)
