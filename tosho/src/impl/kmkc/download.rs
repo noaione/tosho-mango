@@ -179,8 +179,9 @@ pub(crate) async fn kmkc_download(
                                 chapter.title,
                                 chapter.id
                             ));
-                            ticket_info =
-                                Some(TicketInfoType::Title(ticket_entry.info.title.clone()));
+                            ticket_info = Some(TicketInfoType::Title(
+                                ticket_entry.info.title.clone().unwrap(),
+                            ));
                             ticket_entry.subtract_title();
                         } else if ticket_entry.is_premium_available() {
                             console.info(&cformat!(
@@ -188,8 +189,9 @@ pub(crate) async fn kmkc_download(
                                 chapter.title,
                                 chapter.id
                             ));
-                            ticket_info =
-                                Some(TicketInfoType::Premium(ticket_entry.info.premium.clone()));
+                            ticket_info = Some(TicketInfoType::Premium(
+                                ticket_entry.info.premium.clone().unwrap(),
+                            ));
                             ticket_entry.subtract_premium();
                         }
 

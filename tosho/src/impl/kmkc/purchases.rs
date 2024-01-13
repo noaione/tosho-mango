@@ -52,7 +52,7 @@ pub(crate) async fn kmkc_purchase(
                     // }
                     ticketing_claim.push((
                         chapter,
-                        TicketInfoType::Title(ticket_entry.info.title.clone()),
+                        TicketInfoType::Title(ticket_entry.info.title.clone().unwrap()),
                     ));
                     ticket_entry.subtract_title();
                 } else if chapter.is_ticketable() && ticket_entry.is_premium_available() {
@@ -61,7 +61,7 @@ pub(crate) async fn kmkc_purchase(
                     // }
                     ticketing_claim.push((
                         chapter,
-                        TicketInfoType::Premium(ticket_entry.info.premium.clone()),
+                        TicketInfoType::Premium(ticket_entry.info.premium.clone().unwrap()),
                     ));
                     ticket_entry.subtract_premium();
                 } else if wallet_copy.can_purchase(chapter.point.try_into().unwrap_or(0)) {
@@ -287,13 +287,13 @@ pub(crate) async fn kmkc_purchase_precalculate(
                 if chapter.is_ticketable() && ticket_entry.is_title_available() {
                     ticketing_claim.push((
                         chapter,
-                        TicketInfoType::Title(ticket_entry.info.title.clone()),
+                        TicketInfoType::Title(ticket_entry.info.title.clone().unwrap()),
                     ));
                     ticket_entry.subtract_title();
                 } else if chapter.is_ticketable() && ticket_entry.is_premium_available() {
                     ticketing_claim.push((
                         chapter,
-                        TicketInfoType::Premium(ticket_entry.info.premium.clone()),
+                        TicketInfoType::Premium(ticket_entry.info.premium.clone().unwrap()),
                     ));
                     ticket_entry.subtract_premium();
                 } else if wallet_copy.can_purchase(chapter.point.try_into().unwrap_or(0)) {

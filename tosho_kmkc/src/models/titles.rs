@@ -151,13 +151,13 @@ pub enum TicketInfoType {
 pub struct TicketInfo {
     /// The premium ticket info.
     #[serde(rename = "premium_ticket_info")]
-    pub premium: PremiumTicketInfo,
+    pub premium: Option<PremiumTicketInfo>,
     /// The title ticket info.
     #[serde(rename = "title_ticket_info")]
-    pub title: TitleTicketInfo,
+    pub title: Option<TitleTicketInfo>,
     /// The list of applicable title IDs.
     #[serde(rename = "target_episode_id_list")]
-    pub title_ids: Vec<i32>,
+    pub title_ids: Option<Vec<i32>>,
 }
 
 /// The title ticket list entry of a title.
@@ -174,22 +174,32 @@ pub struct TitleTicketListNode {
 impl TitleTicketListNode {
     /// Whether the title ticket is available.
     pub fn is_title_available(&self) -> bool {
-        self.info.title.owned > 0
+        match self.info.title {
+            Some(ref info) => info.owned > 0,
+            None => false,
+        }
     }
 
     /// Whether the premium ticket is available.
     pub fn is_premium_available(&self) -> bool {
-        self.info.premium.owned > 0
+        match self.info.premium {
+            Some(ref info) => info.owned > 0,
+            None => false,
+        }
     }
 
     /// Subtract or use a title ticket.
     pub fn subtract_title(&mut self) {
-        self.info.title.owned = self.info.title.owned.saturating_sub(1)
+        if let Some(ref mut info) = self.info.title {
+            info.owned = info.owned.saturating_sub(1);
+        }
     }
 
     /// Subtract or use a premium ticket.
     pub fn subtract_premium(&mut self) {
-        self.info.premium.owned = self.info.premium.owned.saturating_sub(1)
+        if let Some(ref mut info) = self.info.premium {
+            info.owned = info.owned.saturating_sub(1);
+        }
     }
 
     /// Whether the title has any ticket type available.
