@@ -44,32 +44,14 @@ jobs:
         with:
           prefix-key: "${{ runner.os }}-tosho-rust"
 
-      - name: Prepare toolchain
-        run: |
-          rustup toolchain install nightly
-          rustup component add clippy --toolchain nightly
-          rustup component add rustfmt --toolchain nightly
-          rustup default nightly
-
-      - name: Install tarpaulin
-        uses: taiki-e/install-action@v2
-        with:
-          tool: cargo-tarpaulin
-
       - name: Build
         run: cargo build --verbose --all
 
       - name: Lint
         run: cargo clippy --verbose --all -- -D warnings
 
-      - name: Test & Coverage
-        # Run custom script to get coverage
-        run: python3 ./scripts/tarpaulin_coverage.py
-
-      - name: Coverage report
-        uses: codecov/codecov-action@v3
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      - name: Test
+        run: cargo test --verbose --all
 
   build:
     needs: tests
