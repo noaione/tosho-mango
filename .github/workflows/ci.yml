@@ -2,9 +2,7 @@ name: CI
 on:
   push:
     branches:
-      - master
-      - feat/*
-      - fix/*
+      - '**'
     paths-ignore:
       - 'README.md'
       - 'LICENSE'
@@ -15,8 +13,7 @@ on:
   pull_request:
     branches:
       - master
-      - feat/*
-      - fix/*
+      - develop
     paths-ignore:
       - 'README.md'
       - 'LICENSE'
