@@ -2152,6 +2152,7 @@ dependencies = [
  "cookie_store 0.20.0",
  "futures-util",
  "lazy_static",
+ "rand",
  "reqwest",
  "reqwest_cookie_store",
  "serde",
