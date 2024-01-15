@@ -123,7 +123,7 @@ impl ComicPurchase {
 
         cost = cost.saturating_sub(point);
         if cost == 0 {
-            return Some(Self {
+            Some(Self {
                 id,
                 rental_term,
                 bonus,
@@ -131,7 +131,7 @@ impl ComicPurchase {
                 premium,
                 point: Some(point - price),
                 is_free_daily,
-            });
+            })
         } else {
             None
         }
