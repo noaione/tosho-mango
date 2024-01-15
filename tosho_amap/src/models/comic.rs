@@ -159,7 +159,7 @@ pub struct ComicInfo {
     pub episodes: Vec<ComicEpisodeInfo>,
     pub next_update_text: Option<String>,
     pub favorite: bool,
-    pub rental_term: String,
+    pub rental_term: Option<String>,
     #[serde(rename = "author_info_list")]
     pub authors: Vec<ComicAuthorInfo>,
     #[serde(rename = "tag_info_list")]

@@ -2,6 +2,7 @@ use std::{collections::HashMap, sync::MutexGuard};
 
 use constants::{get_constants, API_HOST, APP_NAME, BASE_API, HEADER_NAMES, IMAGE_HOST};
 use futures_util::StreamExt;
+use helper::ComicPurchase;
 use models::{APIResult, StatusResult};
 use reqwest_cookie_store::CookieStoreMutex;
 use sha2::{Digest, Sha256};
@@ -10,6 +11,7 @@ use tokio::io::AsyncWriteExt;
 pub use config::*;
 pub mod config;
 pub mod constants;
+pub mod helper;
 pub mod models;
 
 #[derive(Clone)]
@@ -172,6 +174,73 @@ impl AMClient {
             .request::<models::ComicInfoResponse>(
                 reqwest::Method::POST,
                 "/iap/comicCover.json",
+                Some(json_body),
+            )
+            .await?;
+
+        result
+            .result
+            .content
+            .ok_or_else(|| anyhow::anyhow!("No content in response"))
+    }
+
+    /// Get reader/viewer for an episode.
+    ///
+    /// # Arguments
+    /// * `comic_id` - The ID of the comic.
+    /// * `episode` - The episode being read.
+    pub async fn get_comic_viewer(
+        &self,
+        id: u64,
+        episode: &ComicPurchase,
+    ) -> anyhow::Result<models::ComicReadResponse> {
+        let mut json_body = HashMap::new();
+        json_body.insert(
+            "manga_sele_id".to_string(),
+            serde_json::Value::Number(serde_json::Number::from(id)),
+        );
+        json_body.insert(
+            "story_no".to_string(),
+            serde_json::Value::Number(serde_json::Number::from(episode.id)),
+        );
+        if let Some(rental_term) = episode.rental_term.clone() {
+            json_body.insert(
+                "rental_term".to_string(),
+                serde_json::Value::String(rental_term),
+            );
+        }
+        json_body.insert(
+            "bonus".to_string(),
+            serde_json::Value::Number(serde_json::Number::from(episode.bonus)),
+        );
+        json_body.insert(
+            "product".to_string(),
+            serde_json::Value::Number(serde_json::Number::from(episode.product)),
+        );
+        json_body.insert(
+            "premium".to_string(),
+            serde_json::Value::Number(serde_json::Number::from(episode.premium)),
+        );
+        if let Some(point) = episode.point {
+            json_body.insert(
+                "point".to_string(),
+                serde_json::Value::Number(serde_json::Number::from(point)),
+            );
+        }
+        json_body.insert(
+            "is_free_daily".to_string(),
+            serde_json::Value::Bool(episode.is_free_daily),
+        );
+        json_body.insert(
+            "i_token".to_string(),
+            serde_json::Value::String(self.config.token.clone()),
+        );
+        json_body.insert("app_login".to_string(), serde_json::Value::Bool(true));
+
+        let result = self
+            .request::<models::ComicReadResponse>(
+                reqwest::Method::POST,
+                "/iap/mangaDownload.json",
                 Some(json_body),
             )
             .await?;
