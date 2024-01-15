@@ -14,6 +14,14 @@ pub struct Constants {
     pub(crate) version: &'static str,
 }
 
+#[derive(Debug, Clone)]
+pub struct HeaderMapping {
+    pub(crate) i: String,
+    pub(crate) t: String,
+    pub(crate) s: String,
+    pub(crate) n: String,
+}
+
 lazy_static! {
     pub static ref APP_NAME: String = {
         String::from_utf8(
@@ -87,6 +95,40 @@ lazy_static! {
                 .expect("Failed to decode base64 IMAGE_HOST")
         )
         .expect("Invalid base64 string (IMAGE_HOST)")
+    };
+
+    /// Constants used for header names.
+    pub static ref HEADER_NAMES: HeaderMapping = {
+        let i = String::from_utf8(
+            general_purpose::STANDARD
+                .decode("YXAtYXV0aC1pZGVudGlmaWVy")
+                .expect("Failed to decode base64 HEADER_NAME_I")
+        ).expect("Invalid base64 string (HEADER_NAME_I)");
+
+        let t = String::from_utf8(
+            general_purpose::STANDARD
+                .decode("YXAtYXV0aC10b2tlbg==")
+                .expect("Failed to decode base64 HEADER_NAME_T")
+        ).expect("Invalid base64 string (HEADER_NAME_T)");
+
+        let s = String::from_utf8(
+            general_purpose::STANDARD
+                .decode("YXAtYXV0aC1zZWNyZXQ=")
+                .expect("Failed to decode base64 HEADER_NAME_S")
+        ).expect("Invalid base64 string (HEADER_NAME_S)");
+
+        let n = String::from_utf8(
+            general_purpose::STANDARD
+                .decode("YXAtYXV0aC1ub25jZQ==")
+                .expect("Failed to decode base64 HEADER_NAME_N")
+        ).expect("Invalid base64 string (HEADER_NAME_N)");
+
+        HeaderMapping {
+            i,
+            t,
+            s,
+            n,
+        }
     };
 }
 
