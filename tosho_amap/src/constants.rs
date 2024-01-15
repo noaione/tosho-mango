@@ -130,6 +130,15 @@ lazy_static! {
             n,
         }
     };
+
+    pub(crate) static ref MASKED_LOGIN: String = {
+        String::from_utf8(
+            general_purpose::STANDARD
+                .decode("bG9naW4vYWxwaGFwb2xpcy5qc29u")
+                .expect("Failed to decode base64 MASKED_LOGIN")
+        )
+        .expect("Invalid base64 string (MASKED_LOGIN)")
+    };
 }
 
 /// Returns the constants for the given device type.

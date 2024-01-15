@@ -6,7 +6,7 @@ use crate::constants::BASE_HOST;
 use cookie_store::RawCookie;
 
 lazy_static::lazy_static! {
-    static ref SESSION_COOKIE_NAME: String = {
+    pub static ref SESSION_COOKIE_NAME: String = {
         String::from_utf8(
             general_purpose::STANDARD
                 .decode("YWxwaGFfbWFuZ2Ffc2Vzc2lvbl92Mg==")

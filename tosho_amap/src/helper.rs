@@ -1,4 +1,6 @@
 use crate::models::{ComicEpisodeInfoNode, ComicInfo, IAPInfo};
+use rand::distributions::Alphanumeric;
+use rand::{thread_rng, Rng};
 
 /// A comic purchase info.
 ///
@@ -135,5 +137,27 @@ impl ComicPurchase {
         } else {
             None
         }
+    }
+}
+
+/// Generate a string of random characters used for token.
+///
+/// The length of the string is 16.
+pub(crate) fn generate_random_token() -> String {
+    let rng = thread_rng();
+    let token = rng.sample_iter(&Alphanumeric).take(16).collect::<Vec<u8>>();
+
+    String::from_utf8(token).unwrap().to_lowercase()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_generate_random_token() {
+        let token = generate_random_token();
+        println!("{}", token);
+        assert_eq!(token.len(), 16);
     }
 }

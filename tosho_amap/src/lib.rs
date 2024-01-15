@@ -1,8 +1,10 @@
 use std::{collections::HashMap, sync::MutexGuard};
 
-use constants::{get_constants, API_HOST, APP_NAME, BASE_API, HEADER_NAMES, IMAGE_HOST};
+use constants::{
+    get_constants, API_HOST, APP_NAME, BASE_API, HEADER_NAMES, IMAGE_HOST, MASKED_LOGIN,
+};
 use futures_util::StreamExt;
-use helper::ComicPurchase;
+use helper::{generate_random_token, ComicPurchase};
 use models::{APIResult, StatusResult};
 use reqwest_cookie_store::CookieStoreMutex;
 use sha2::{Digest, Sha256};
@@ -60,39 +62,7 @@ impl AMClient {
 
     /// Apply the JSON object with the default values.
     fn apply_json_object(&self, json_obj: &mut HashMap<String, serde_json::Value>) {
-        let platform = self.constants.platform.to_string();
-        let version = self.constants.version.to_string();
-        let app_name = APP_NAME.to_string();
-
-        json_obj.insert("app_name".to_string(), serde_json::Value::String(app_name));
-        json_obj.insert("platform".to_string(), serde_json::Value::String(platform));
-        json_obj.insert("version".to_string(), serde_json::Value::String(version));
-
-        let mut screen = serde_json::Map::new();
-        screen.insert(
-            "inch".to_string(),
-            serde_json::Value::Number(serde_json::Number::from_f64(SCREEN_INCH).unwrap()),
-        );
-        json_obj.insert("screen".to_string(), serde_json::Value::Object(screen));
-    }
-
-    /// Create the request headers used for the API.
-    fn make_header(&self) -> anyhow::Result<reqwest::header::HeaderMap> {
-        let mut req_headers = reqwest::header::HeaderMap::new();
-
-        let current_unix = chrono::Utc::now().timestamp();
-        let av = format!("{}/{}", *APP_NAME, self.constants.version);
-        let formulae = format!("{}{}{}", self.config.token, current_unix, av);
-
-        let formulae_hashed = <Sha256 as Digest>::digest(formulae.as_bytes());
-        let formulae_hashed = format!("{:x}", formulae_hashed);
-
-        req_headers.insert(HEADER_NAMES.s.as_str(), formulae_hashed.parse()?);
-        req_headers.insert(HEADER_NAMES.i.as_str(), self.config.identifier.parse()?);
-        req_headers.insert(HEADER_NAMES.n.as_str(), current_unix.to_string().parse()?);
-        req_headers.insert(HEADER_NAMES.t.as_str(), self.config.token.clone().parse()?);
-
-        Ok(req_headers)
+        json_with_common(json_obj, self.constants)
     }
 
     /// Get the underlying cookie store.
@@ -114,7 +84,7 @@ impl AMClient {
         let mut cloned_json = json.clone().unwrap_or_default();
         self.apply_json_object(&mut cloned_json);
 
-        let headers = self.make_header()?;
+        let headers = make_header(&self.config, &self.constants)?;
 
         let req = self
             .inner
@@ -263,7 +233,7 @@ impl AMClient {
         url: &str,
         mut writer: impl tokio::io::AsyncWrite + Unpin,
     ) -> anyhow::Result<()> {
-        let mut headers = self.make_header()?;
+        let mut headers = make_header(&self.config, &self.constants)?;
         headers.insert(
             "Host",
             reqwest::header::HeaderValue::from_str(&IMAGE_HOST).unwrap(),
@@ -287,6 +257,153 @@ impl AMClient {
         }
 
         Ok(())
+    }
+
+    /// Perform a login request.
+    ///
+    /// # Arguments
+    /// * `email` - The email of the user.
+    /// * `password` - The password of the user.
+    pub async fn login(email: &str, password: &str) -> anyhow::Result<AMConfig> {
+        let cookie_store = CookieStoreMutex::default();
+        let cookie_store = std::sync::Arc::new(cookie_store);
+
+        let mut headers = reqwest::header::HeaderMap::new();
+        headers.insert(
+            reqwest::header::ACCEPT,
+            reqwest::header::HeaderValue::from_static("application/json"),
+        );
+        headers.insert(
+            reqwest::header::HOST,
+            reqwest::header::HeaderValue::from_static(&API_HOST),
+        );
+        let constants = get_constants(1);
+        headers.insert(
+            reqwest::header::USER_AGENT,
+            reqwest::header::HeaderValue::from_static(&constants.ua),
+        );
+
+        let session = reqwest::Client::builder()
+            .cookie_provider(std::sync::Arc::clone(&cookie_store))
+            .default_headers(headers)
+            .build()
+            .unwrap();
+
+        let secret_token = generate_random_token();
+        let temp_config = AMConfig {
+            token: secret_token.clone(),
+            identifier: "".to_string(),
+            session_v2: "".to_string(),
+        };
+        let android_c = get_constants(1);
+
+        let mut json_body = HashMap::new();
+        json_body.insert(
+            "i_token".to_string(),
+            serde_json::Value::String(secret_token.clone()),
+        );
+        json_body.insert(
+            "iap_product_version".to_string(),
+            serde_json::Value::Number(serde_json::Number::from(0_u32)),
+        );
+        json_body.insert("app_login".to_string(), serde_json::Value::Bool(false));
+        json_with_common(&mut json_body, android_c);
+
+        let req = session
+            .request(reqwest::Method::POST, "/iap/remainder.json")
+            .headers(make_header(&temp_config, android_c)?)
+            .json(&json_body)
+            .send()
+            .await?;
+
+        let result = parse_response::<models::IAPRemainder>(req).await?;
+        let result = result.result.content.unwrap();
+
+        // Step 2: Perform login
+        let mut json_body_login = HashMap::new();
+        json_body_login.insert(
+            "email".to_string(),
+            serde_json::Value::String(email.to_string()),
+        );
+        json_body_login.insert(
+            "citi_pass".to_string(),
+            serde_json::Value::String(password.to_string()),
+        );
+        json_body_login.insert(
+            "iap_token".to_string(),
+            serde_json::Value::String(secret_token.clone()),
+        );
+        json_with_common(&mut json_body_login, android_c);
+
+        let temp_config = AMConfig {
+            token: secret_token.clone(),
+            identifier: result.info.guest_id,
+            session_v2: "".to_string(),
+        };
+
+        let req = session
+            .request(
+                reqwest::Method::POST,
+                format!("{}/{}", *BASE_API, *MASKED_LOGIN),
+            )
+            .headers(make_header(&temp_config, android_c)?)
+            .json(&json_body_login)
+            .send()
+            .await
+            .unwrap();
+
+        let result = parse_response::<models::LoginResult>(req).await.unwrap();
+        let result = result.result.content.unwrap();
+
+        // final step: get session_v2
+        let mut json_body_session = HashMap::new();
+        json_body_session.insert(
+            "i_token".to_string(),
+            serde_json::Value::String(secret_token.clone()),
+        );
+        json_body_session.insert(
+            "iap_product_version".to_string(),
+            serde_json::Value::Number(serde_json::Number::from(0_u32)),
+        );
+        json_body_session.insert("app_login".to_string(), serde_json::Value::Bool(true));
+        json_with_common(&mut json_body_session, android_c);
+
+        let temp_config = AMConfig {
+            token: secret_token.clone(),
+            identifier: result.info.guest_id.clone(),
+            session_v2: "".to_string(),
+        };
+
+        let req = session
+            .request(reqwest::Method::POST, "/iap/remainder.json")
+            .headers(make_header(&temp_config, android_c)?)
+            .json(&json_body_session)
+            .send()
+            .await?;
+
+        if req.status() != reqwest::StatusCode::OK {
+            anyhow::bail!("Failed to get session_v2");
+        }
+
+        // session_v2 is cookies
+        let mut session_v2 = String::new();
+        let cookie_name = SESSION_COOKIE_NAME.to_string();
+        for cookie in cookie_store.lock().unwrap().iter_any() {
+            if cookie.name() == cookie_name {
+                session_v2 = cookie.value().to_string();
+                break;
+            }
+        }
+
+        if session_v2.is_empty() {
+            anyhow::bail!("Failed to get session_v2");
+        }
+
+        Ok(AMConfig {
+            token: secret_token,
+            identifier: result.info.guest_id,
+            session_v2,
+        })
     }
 }
 
@@ -320,4 +437,48 @@ where
         }
         Err(e) => Err(anyhow::Error::new(e)),
     }
+}
+
+/// Create the request headers used for the API.
+fn make_header(
+    config: &AMConfig,
+    constants: &constants::Constants,
+) -> anyhow::Result<reqwest::header::HeaderMap> {
+    let mut req_headers = reqwest::header::HeaderMap::new();
+
+    let current_unix = chrono::Utc::now().timestamp();
+    let av = format!("{}/{}", *APP_NAME, constants.version);
+    let formulae = format!("{}{}{}", config.token, current_unix, av);
+
+    let formulae_hashed = <Sha256 as Digest>::digest(formulae.as_bytes());
+    let formulae_hashed = format!("{:x}", formulae_hashed);
+
+    req_headers.insert(HEADER_NAMES.s.as_str(), formulae_hashed.parse()?);
+    if !config.identifier.is_empty() {
+        req_headers.insert(HEADER_NAMES.i.as_str(), config.identifier.parse()?);
+    }
+    req_headers.insert(HEADER_NAMES.n.as_str(), current_unix.to_string().parse()?);
+    req_headers.insert(HEADER_NAMES.t.as_str(), config.token.clone().parse()?);
+
+    Ok(req_headers)
+}
+
+fn json_with_common(
+    json_obj: &mut HashMap<String, serde_json::Value>,
+    constants: &constants::Constants,
+) {
+    let platform = constants.platform.to_string();
+    let version = constants.version.to_string();
+    let app_name = APP_NAME.to_string();
+
+    json_obj.insert("app_name".to_string(), serde_json::Value::String(app_name));
+    json_obj.insert("platform".to_string(), serde_json::Value::String(platform));
+    json_obj.insert("version".to_string(), serde_json::Value::String(version));
+
+    let mut screen = serde_json::Map::new();
+    screen.insert(
+        "inch".to_string(),
+        serde_json::Value::Number(serde_json::Number::from_f64(SCREEN_INCH).unwrap()),
+    );
+    json_obj.insert("screen".to_string(), serde_json::Value::Object(screen));
 }
