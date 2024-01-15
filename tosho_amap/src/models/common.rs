@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 
+use super::AMAPIError;
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct ResultHeader {
     /// The result of the request.
@@ -9,7 +11,52 @@ pub struct ResultHeader {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Result<R> {
+pub struct StatusResult {
+    /// The result of the request.
+    pub header: ResultHeader,
+}
+
+impl StatusResult {
+    /// Raise/return an error if the response code is not 0.
+    ///
+    /// # Examples
+    /// ```
+    /// use tosho_amap::models::StatusResult;
+    ///
+    /// let response = StatusResult {
+    ///     header: ResultHeader {
+    ///         result: true,
+    ///     }
+    /// };
+    ///
+    /// assert!(response.raise_for_status().is_ok());
+    ///
+    /// let response = StatusResult {
+    ///     header: ResultHeader {
+    ///         result: true,
+    ///         message: Some("An error occurred".to_string()),
+    ///     }
+    /// };
+    ///
+    /// assert!(response.raise_for_status().is_err());
+    /// ```
+    pub fn raise_for_status(&self) -> core::result::Result<(), AMAPIError> {
+        if !self.header.result {
+            Err(AMAPIError {
+                message: self
+                    .header
+                    .message
+                    .clone()
+                    .unwrap_or("Unknown error occured".to_string()),
+            })
+        } else {
+            Ok(())
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AMResult<R> {
     /// The result of the request.
     pub header: ResultHeader,
     /// The content of the request.
@@ -27,7 +74,7 @@ pub struct APIResult<R> {
         deserialize = "R: Deserialize<'de>, R: Clone",
         serialize = "R: Serialize, R: Clone"
     ))]
-    pub result: Result<R>,
+    pub result: AMResult<R>,
 }
 
 #[cfg(test)]
