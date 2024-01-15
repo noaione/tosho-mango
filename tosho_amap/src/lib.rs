@@ -14,6 +14,8 @@ pub mod constants;
 pub mod helper;
 pub mod models;
 
+const SCREEN_INCH: f64 = 61.1918658356194;
+
 #[derive(Clone)]
 pub struct AMClient {
     inner: reqwest::Client,
@@ -69,7 +71,7 @@ impl AMClient {
         let mut screen = serde_json::Map::new();
         screen.insert(
             "inch".to_string(),
-            serde_json::Value::Number(serde_json::Number::from_f64(61.1918658356194).unwrap()),
+            serde_json::Value::Number(serde_json::Number::from_f64(SCREEN_INCH).unwrap()),
         );
         json_obj.insert("screen".to_string(), serde_json::Value::Object(screen));
     }
