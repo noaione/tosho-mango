@@ -1,9 +1,11 @@
 use std::{collections::HashMap, sync::MutexGuard};
 
-use constants::{get_constants, API_HOST, APP_NAME, BASE_API, HEADER_NAMES};
+use constants::{get_constants, API_HOST, APP_NAME, BASE_API, HEADER_NAMES, IMAGE_HOST};
+use futures_util::StreamExt;
 use models::{APIResult, StatusResult};
 use reqwest_cookie_store::CookieStoreMutex;
 use sha2::{Digest, Sha256};
+use tokio::io::AsyncWriteExt;
 
 pub use config::*;
 pub mod config;
@@ -151,6 +153,9 @@ impl AMClient {
     }
 
     /// Get a single comic information by ID.
+    ///
+    /// # Arguments
+    /// * `id` - The ID of the comic.
     pub async fn get_comic(&self, id: u64) -> anyhow::Result<models::ComicInfoResponse> {
         let mut json_body = HashMap::new();
         json_body.insert(
@@ -175,6 +180,42 @@ impl AMClient {
             .result
             .content
             .ok_or_else(|| anyhow::anyhow!("No content in response"))
+    }
+
+    /// Stream download the image from the given URL.
+    ///
+    /// # Arguments
+    /// * `url` - The URL of the image.
+    /// * `writer` - The writer to write the image to.
+    pub async fn stream_download(
+        &self,
+        url: &str,
+        mut writer: impl tokio::io::AsyncWrite + Unpin,
+    ) -> anyhow::Result<()> {
+        let mut headers = self.make_header()?;
+        headers.insert(
+            "Host",
+            reqwest::header::HeaderValue::from_str(&IMAGE_HOST).unwrap(),
+        );
+        headers.insert(
+            "User-Agent",
+            reqwest::header::HeaderValue::from_str(&self.constants.image_ua).unwrap(),
+        );
+
+        let res = self.inner.get(url).headers(headers).send().await.unwrap();
+
+        // bail if not success
+        if !res.status().is_success() {
+            anyhow::bail!("Failed to download image: {}", res.status())
+        }
+
+        let mut stream = res.bytes_stream();
+        while let Some(item) = stream.next().await {
+            let item = item.unwrap();
+            writer.write_all(&item).await?;
+        }
+
+        Ok(())
     }
 }
 
