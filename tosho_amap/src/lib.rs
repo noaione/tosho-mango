@@ -84,7 +84,7 @@ impl AMClient {
         let mut cloned_json = json.clone().unwrap_or_default();
         self.apply_json_object(&mut cloned_json);
 
-        let headers = make_header(&self.config, &self.constants)?;
+        let headers = make_header(&self.config, self.constants)?;
 
         let req = self
             .inner
@@ -233,7 +233,7 @@ impl AMClient {
         url: &str,
         mut writer: impl tokio::io::AsyncWrite + Unpin,
     ) -> anyhow::Result<()> {
-        let mut headers = make_header(&self.config, &self.constants)?;
+        let mut headers = make_header(&self.config, self.constants)?;
         headers.insert(
             "Host",
             reqwest::header::HeaderValue::from_str(&IMAGE_HOST).unwrap(),
