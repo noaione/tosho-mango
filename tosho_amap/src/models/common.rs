@@ -26,6 +26,7 @@ impl StatusResult {
     /// let response = StatusResult {
     ///     header: ResultHeader {
     ///         result: true,
+    ///         message: None,
     ///     }
     /// };
     ///
