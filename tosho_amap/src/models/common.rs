@@ -34,22 +34,22 @@ impl StatusResult {
     ///
     /// let response = StatusResult {
     ///     header: ResultHeader {
-    ///         result: true,
+    ///         result: false,
     ///         message: Some("An error occurred".to_string()),
     ///     }
     /// };
     ///
     /// assert!(response.raise_for_status().is_err());
     /// ```
-    pub fn raise_for_status(&self) -> core::result::Result<(), AMAPIError> {
+    pub fn raise_for_status(&self) -> Result<(), AMAPIError> {
+        let message = self
+            .header
+            .message
+            .clone()
+            .unwrap_or_else(|| "Unknown error occured".to_string());
+
         if !self.header.result {
-            Err(AMAPIError {
-                message: self
-                    .header
-                    .message
-                    .clone()
-                    .unwrap_or("Unknown error occured".to_string()),
-            })
+            Err(AMAPIError { message })
         } else {
             Ok(())
         }
