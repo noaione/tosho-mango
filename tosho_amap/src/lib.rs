@@ -126,7 +126,6 @@ impl AMClient {
     /// This request has data related to user point and more.
     pub async fn get_remainder(&self) -> anyhow::Result<models::IAPRemainder> {
         let mut json_body = HashMap::new();
-
         json_body.insert(
             "i_token".to_string(),
             serde_json::Value::String(self.config.token.clone()),
@@ -141,6 +140,33 @@ impl AMClient {
             .request::<models::IAPRemainder>(
                 reqwest::Method::POST,
                 "/iap/remainder.json",
+                Some(json_body),
+            )
+            .await?;
+
+        result
+            .result
+            .content
+            .ok_or_else(|| anyhow::anyhow!("No content in response"))
+    }
+
+    /// Get a single comic information by ID.
+    pub async fn get_comic(&self, id: u64) -> anyhow::Result<models::ComicInfoResponse> {
+        let mut json_body = HashMap::new();
+        json_body.insert(
+            "manga_sele_id".to_string(),
+            serde_json::Value::Number(serde_json::Number::from(id)),
+        );
+        json_body.insert(
+            "i_token".to_string(),
+            serde_json::Value::String(self.config.token.clone()),
+        );
+        json_body.insert("app_login".to_string(), serde_json::Value::Bool(true));
+
+        let result = self
+            .request::<models::ComicInfoResponse>(
+                reqwest::Method::POST,
+                "/iap/comicCover.json",
                 Some(json_body),
             )
             .await?;
