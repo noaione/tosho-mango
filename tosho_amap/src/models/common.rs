@@ -21,7 +21,7 @@ impl StatusResult {
     ///
     /// # Examples
     /// ```
-    /// use tosho_amap::models::StatusResult;
+    /// use tosho_amap::models::{ResultHeader, StatusResult};
     ///
     /// let response = StatusResult {
     ///     header: ResultHeader {
