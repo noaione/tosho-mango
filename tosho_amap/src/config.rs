@@ -1,0 +1,40 @@
+use base64::{engine::general_purpose, Engine as _};
+use reqwest::Url;
+
+use crate::constants::BASE_HOST;
+use cookie_store::RawCookie;
+
+lazy_static::lazy_static! {
+    static ref SESSION_COOKIE_NAME: String = {
+        String::from_utf8(
+            general_purpose::STANDARD
+                .decode("YWxwaGFfbWFuZ2Ffc2Vzc2lvbl92Mg==")
+                .expect("Failed to decode base64 SESSION_COOKIE_NAME")
+        )
+        .expect("Invalid base64 string (SESSION_COOKIE_NAME)")
+    };
+}
+
+#[derive(Debug, Clone)]
+pub struct AMConfig {
+    pub token: String,
+    pub identifier: String,
+    /// The cookie of session_v2
+    pub session_v2: String,
+}
+
+impl From<AMConfig> for reqwest_cookie_store::CookieStore {
+    fn from(value: AMConfig) -> Self {
+        let mut store = reqwest_cookie_store::CookieStore::default();
+        let base_host_url = Url::parse(&format!("https://{}", *BASE_HOST)).unwrap();
+
+        let session_cookie = RawCookie::build(SESSION_COOKIE_NAME.as_str(), value.session_v2)
+            .domain(BASE_HOST.as_str())
+            .secure(true)
+            .path("/")
+            .finish();
+
+        store.insert_raw(&session_cookie, &base_host_url).unwrap();
+        store
+    }
+}
