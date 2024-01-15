@@ -1,5 +1,6 @@
 use base64::{engine::general_purpose, Engine as _};
 use reqwest::Url;
+use reqwest_cookie_store::CookieStoreMutex;
 
 use crate::constants::BASE_HOST;
 use cookie_store::RawCookie;
@@ -36,5 +37,12 @@ impl From<AMConfig> for reqwest_cookie_store::CookieStore {
 
         store.insert_raw(&session_cookie, &base_host_url).unwrap();
         store
+    }
+}
+
+impl From<AMConfig> for CookieStoreMutex {
+    fn from(value: AMConfig) -> Self {
+        let store: reqwest_cookie_store::CookieStore = value.into();
+        CookieStoreMutex::new(store)
     }
 }
