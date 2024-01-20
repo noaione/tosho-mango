@@ -87,7 +87,7 @@ pub(super) fn make_client(config: &AMConfig) -> tosho_amap::AMClient {
 
 #[allow(dead_code)]
 pub(super) fn do_print_search_information(
-    results: &Vec<ComicSimpleInfo>,
+    results: &[ComicSimpleInfo],
     with_number: bool,
     spacing: Option<usize>,
 ) {
