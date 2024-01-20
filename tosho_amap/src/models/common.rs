@@ -65,7 +65,7 @@ pub struct AMResult<R> {
         deserialize = "R: Deserialize<'de>, R: Clone",
         serialize = "R: Serialize, R: Clone"
     ))]
-    pub content: Option<R>,
+    pub body: Option<R>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -105,7 +105,7 @@ mod tests {
 
         assert_eq!(data.result.header.result, true);
         assert_eq!(data.result.header.message, None);
-        assert_eq!(data.result.content, None);
+        assert_eq!(data.result.body, None);
     }
 
     #[test]
@@ -128,7 +128,7 @@ mod tests {
         assert_eq!(data.result.header.result, true);
         assert_eq!(data.result.header.message, None);
 
-        let content_unwrap = data.result.content.unwrap();
+        let content_unwrap = data.result.body.unwrap();
         assert_eq!(content_unwrap.magic, 123);
         assert_eq!(content_unwrap.value, "magic value");
     }

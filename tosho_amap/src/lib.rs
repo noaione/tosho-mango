@@ -125,7 +125,7 @@ impl AMClient {
 
         result
             .result
-            .content
+            .body
             .ok_or_else(|| anyhow::anyhow!("No content in response"))
     }
 
@@ -155,7 +155,7 @@ impl AMClient {
 
         result
             .result
-            .content
+            .body
             .ok_or_else(|| anyhow::anyhow!("No content in response"))
     }
 
@@ -222,7 +222,7 @@ impl AMClient {
 
         result
             .result
-            .content
+            .body
             .ok_or_else(|| anyhow::anyhow!("No content in response"))
     }
 
@@ -241,7 +241,7 @@ impl AMClient {
 
         result
             .result
-            .content
+            .body
             .ok_or_else(|| anyhow::anyhow!("No content in response"))
     }
 
@@ -257,7 +257,7 @@ impl AMClient {
 
         result
             .result
-            .content
+            .body
             .ok_or_else(|| anyhow::anyhow!("No content in response"))
     }
 
@@ -315,7 +315,7 @@ impl AMClient {
 
         result
             .result
-            .content
+            .body
             .ok_or_else(|| anyhow::anyhow!("No content in response"))
     }
 
@@ -406,14 +406,17 @@ impl AMClient {
         json_with_common(&mut json_body, android_c);
 
         let req = session
-            .request(reqwest::Method::POST, "/iap/remainder.json")
+            .request(
+                reqwest::Method::POST,
+                format!("{}/iap/remainder.json", *BASE_API),
+            )
             .headers(make_header(&temp_config, android_c)?)
             .json(&json_body)
             .send()
             .await?;
 
         let result = parse_response::<models::IAPRemainder>(req).await?;
-        let result = result.result.content.unwrap();
+        let result = result.result.body.unwrap();
 
         // Step 2: Perform login
         let mut json_body_login = HashMap::new();
@@ -449,7 +452,7 @@ impl AMClient {
             .unwrap();
 
         let result = parse_response::<models::LoginResult>(req).await.unwrap();
-        let result = result.result.content.unwrap();
+        let result = result.result.body.unwrap();
 
         // final step: get session_v2
         let mut json_body_session = HashMap::new();
@@ -471,7 +474,10 @@ impl AMClient {
         };
 
         let req = session
-            .request(reqwest::Method::POST, "/iap/remainder.json")
+            .request(
+                reqwest::Method::POST,
+                format!("{}/iap/remainder.json", *BASE_API),
+            )
             .headers(make_header(&temp_config, android_c)?)
             .json(&json_body_session)
             .send()
