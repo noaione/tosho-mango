@@ -55,3 +55,19 @@ pub struct LoginResult {
     #[serde(rename = "iap_info")]
     pub info: IAPInfo,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AccountUserInfo {
+    #[serde(rename = "citi_id")]
+    pub id: u64,
+    #[serde(rename = "p_name")]
+    pub name: u64,
+    #[serde(rename = "prof_image_url")]
+    pub image_url: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AccountUserResponse {
+    #[serde(rename = "user_info")]
+    pub info: AccountUserInfo,
+}

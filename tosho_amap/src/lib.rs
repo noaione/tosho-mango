@@ -5,7 +5,7 @@ use constants::{
 };
 use futures_util::StreamExt;
 use helper::{generate_random_token, ComicPurchase};
-use models::{APIResult, StatusResult};
+use models::{APIResult, AccountUserResponse, StatusResult};
 use reqwest_cookie_store::CookieStoreMutex;
 use sha2::{Digest, Sha256};
 use tokio::io::AsyncWriteExt;
@@ -213,6 +213,25 @@ impl AMClient {
             .request::<models::ComicReadResponse>(
                 reqwest::Method::POST,
                 "/iap/mangaDownload.json",
+                Some(json_body),
+            )
+            .await?;
+
+        result
+            .result
+            .content
+            .ok_or_else(|| anyhow::anyhow!("No content in response"))
+    }
+
+    /// Get the account for the current session.
+    pub async fn get_account(&self) -> anyhow::Result<AccountUserResponse> {
+        let mut json_body = HashMap::new();
+        json_body.insert("mine".to_string(), serde_json::Value::Bool(true));
+
+        let result = self
+            .request::<AccountUserResponse>(
+                reqwest::Method::POST,
+                "/author/profile.json",
                 Some(json_body),
             )
             .await?;
