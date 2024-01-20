@@ -6,8 +6,8 @@ use constants::{
 use futures_util::StreamExt;
 use helper::{generate_random_token, ComicPurchase};
 use models::{
-    APIResult, AccountUserResponse, ComicDiscoveryPaginatedResponse, ComicSearchResponse,
-    ComicStatus, StatusResult,
+    APIResult, AccountUserResponse, ComicDiscovery, ComicDiscoveryPaginatedResponse,
+    ComicSearchResponse, ComicStatus, StatusResult,
 };
 use reqwest_cookie_store::CookieStoreMutex;
 use sha2::{Digest, Sha256};
@@ -314,6 +314,18 @@ impl AMClient {
             .await?;
 
         result
+            .result
+            .body
+            .ok_or_else(|| anyhow::anyhow!("No content in response"))
+    }
+
+    /// Get home discovery.
+    pub async fn get_discovery(&self) -> anyhow::Result<ComicDiscovery> {
+        let results = self
+            .request::<ComicDiscovery>(reqwest::Method::POST, "/manga/discover.json", None)
+            .await?;
+
+        results
             .result
             .body
             .ok_or_else(|| anyhow::anyhow!("No content in response"))
