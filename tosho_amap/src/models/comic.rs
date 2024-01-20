@@ -48,6 +48,13 @@ pub struct ComicDiscoveryNode {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ComicDiscoveryPaginatedResponse {
+    #[serde(rename = "comic_info_list")]
+    pub comics: Vec<ComicSimpleInfo>,
+    pub next_page: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComicDiscovery {
     #[serde(rename = "manga_banner_list")]
     pub banners: Vec<ComicBannerInfo>,

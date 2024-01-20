@@ -5,7 +5,7 @@ use constants::{
 };
 use futures_util::StreamExt;
 use helper::{generate_random_token, ComicPurchase};
-use models::{APIResult, AccountUserResponse, StatusResult};
+use models::{APIResult, AccountUserResponse, ComicDiscoveryPaginatedResponse, StatusResult};
 use reqwest_cookie_store::CookieStoreMutex;
 use sha2::{Digest, Sha256};
 use tokio::io::AsyncWriteExt;
@@ -233,6 +233,22 @@ impl AMClient {
                 reqwest::Method::POST,
                 "/author/profile.json",
                 Some(json_body),
+            )
+            .await?;
+
+        result
+            .result
+            .content
+            .ok_or_else(|| anyhow::anyhow!("No content in response"))
+    }
+
+    /// Get account favorites.
+    pub async fn get_favorites(&self) -> anyhow::Result<ComicDiscoveryPaginatedResponse> {
+        let result = self
+            .request::<ComicDiscoveryPaginatedResponse>(
+                reqwest::Method::POST,
+                "/mypage/favOfficialComicList.json",
+                None,
             )
             .await?;
 
