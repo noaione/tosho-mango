@@ -425,8 +425,6 @@ impl MUClient {
             .send()
             .await?;
 
-        println!("{:?}", res.url());
-
         if res.status().is_success() {
             let bytes_data = res.bytes().await?;
             let cursor = bytes_data.as_ref();
