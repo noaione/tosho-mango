@@ -314,6 +314,9 @@ async fn main() {
                 r#impl::amap::accounts::amap_account_info(account_id.as_deref(), &t).await
             }
             AMAPCommands::Accounts => r#impl::amap::accounts::amap_accounts(&t),
+            AMAPCommands::Balance { account_id } => {
+                r#impl::amap::accounts::amap_account_balance(account_id.as_deref(), &t).await
+            }
         },
         ToshoCommands::Tools { subcommand } => match subcommand {
             ToolsCommands::AutoMerge {

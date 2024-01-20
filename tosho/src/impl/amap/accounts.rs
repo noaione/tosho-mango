@@ -1,4 +1,5 @@
 use color_print::cformat;
+use num_format::{Locale, ToFormattedString};
 use tosho_amap::AMClient;
 
 use crate::{
@@ -170,6 +171,65 @@ pub(crate) async fn amap_account_info(
                     1
                 }
             }
+        }
+    }
+}
+
+pub(crate) async fn amap_account_balance(
+    account_id: Option<&str>,
+    console: &crate::term::Terminal,
+) -> ExitCode {
+    let acc_info = select_single_account(account_id);
+
+    if acc_info.is_none() {
+        console.warn("Aborted!");
+
+        return 1;
+    }
+
+    let acc_info = acc_info.unwrap();
+
+    let client = make_client(&acc_info.clone().into());
+
+    console.info(&cformat!(
+        "Fetching balance for <magenta,bold>{}</>...",
+        acc_info.id
+    ));
+    let remainder = client.get_remainder().await;
+
+    match remainder {
+        Ok(remainder) => {
+            let balance = &remainder.info;
+
+            console.info("Your current point balance:");
+            let total_ticket = balance.sum().to_formatted_string(&Locale::en);
+            let purchased = balance.purchased.to_formatted_string(&Locale::en);
+            let premium = balance.premium.to_formatted_string(&Locale::en);
+            let total_point = balance.sum_point().to_formatted_string(&Locale::en);
+
+            console.info(&cformat!(
+                "  - <s>Total</>: <magenta,bold><reverse>{}</>T</magenta,bold>",
+                total_ticket
+            ));
+            console.info(&cformat!(
+                "  - <s>Purchased</>: <yellow,bold><reverse>{}</>T</yellow,bold>",
+                purchased
+            ));
+            console.info(&cformat!(
+                "  - <s>Premium</>: <green,bold><reverse>{}</>T</green,bold>",
+                premium
+            ));
+            console.info(&cformat!(
+                "  - <s>Total point</>: <cyan!,bold><reverse>{}</>p</cyan!,bold>",
+                total_point
+            ));
+
+            0
+        }
+        Err(e) => {
+            console.error(&format!("Failed to fetch balance: {}", e));
+
+            1
         }
     }
 }
