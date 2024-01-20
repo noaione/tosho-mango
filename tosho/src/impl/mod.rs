@@ -1,3 +1,4 @@
+pub(crate) mod amap;
 pub(crate) mod kmkc;
 pub(crate) mod models;
 pub(crate) mod musq;
@@ -10,4 +11,6 @@ pub enum Implementations {
     Kmkc,
     /// MU! by SQ
     Musq,
+    /// AM by AP
+    Amap,
 }

@@ -22,8 +22,8 @@ pub(super) fn select_single_account(account_id: Option<&str>) -> Option<Config> 
 
         if let Some(config) = config {
             return match config {
-                crate::config::ConfigImpl::Kmkc(_) => unreachable!(),
                 crate::config::ConfigImpl::Musq(c) => Some(c),
+                _ => unreachable!(),
             };
         }
 
@@ -34,11 +34,11 @@ pub(super) fn select_single_account(account_id: Option<&str>) -> Option<Config> 
     let all_choices: Vec<ConsoleChoice> = all_configs
         .iter()
         .filter_map(|c| match c {
-            crate::config::ConfigImpl::Kmkc(_) => None,
             crate::config::ConfigImpl::Musq(c) => Some(ConsoleChoice {
                 name: c.id.clone(),
                 value: format!("{} [{}]", c.id, c.r#type().to_name()),
             }),
+            _ => None,
         })
         .collect();
 
@@ -61,14 +61,14 @@ pub(super) fn select_single_account(account_id: Option<&str>) -> Option<Config> 
             let config = all_configs
                 .iter()
                 .find(|&c| match c {
-                    crate::config::ConfigImpl::Kmkc(_) => false,
                     crate::config::ConfigImpl::Musq(c) => c.id == selected.name,
+                    _ => false,
                 })
                 .unwrap();
 
             match config {
-                crate::config::ConfigImpl::Kmkc(_) => unreachable!(),
                 crate::config::ConfigImpl::Musq(c) => Some(c.clone()),
+                _ => unreachable!(),
             }
         }
         None => None,

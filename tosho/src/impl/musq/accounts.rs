@@ -57,8 +57,8 @@ pub(crate) async fn musq_auth_session(
 
     let all_configs = get_all_config(crate::r#impl::Implementations::Musq, None);
     let old_config = all_configs.iter().find(|&c| match c {
-        crate::config::ConfigImpl::Kmkc(_) => false,
         crate::config::ConfigImpl::Musq(c) => c.session == session_id && c.r#type == r#type as i32,
+        _ => false,
     });
 
     let mut old_id: Option<String> = None;
@@ -119,7 +119,6 @@ pub(crate) fn musq_accounts(console: &crate::term::Terminal) -> ExitCode {
             console.info(&format!("Found {} accounts:", all_configs.len()));
             for (i, c) in all_configs.iter().enumerate() {
                 match c {
-                    crate::config::ConfigImpl::Kmkc(_) => {}
                     crate::config::ConfigImpl::Musq(c) => {
                         console.info(&format!(
                             "{:02}. {} ({})",
@@ -128,6 +127,7 @@ pub(crate) fn musq_accounts(console: &crate::term::Terminal) -> ExitCode {
                             c.r#type().to_name()
                         ));
                     }
+                    _ => unreachable!(),
                 }
             }
 

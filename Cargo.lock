@@ -2135,6 +2135,7 @@ dependencies = [
  "serde_json",
  "supports-hyperlinks",
  "tokio",
+ "tosho-amap",
  "tosho-kmkc",
  "tosho-macros",
  "tosho-musq",
