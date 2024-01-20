@@ -190,7 +190,7 @@ impl AMClient {
         );
         json_body.insert(
             "product".to_string(),
-            serde_json::Value::Number(serde_json::Number::from(episode.product)),
+            serde_json::Value::Number(serde_json::Number::from(episode.purchased)),
         );
         json_body.insert(
             "premium".to_string(),

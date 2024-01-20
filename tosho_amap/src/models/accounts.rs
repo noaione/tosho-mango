@@ -2,9 +2,14 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct IAPInfo {
+    /// Bonus ticket
     pub bonus: u64,
-    pub product: u64,
+    /// Purchased ticket
+    #[serde(rename = "product")]
+    pub purchased: u64,
+    /// Premium ticket
     pub premium: u64,
+    /// Point that you have
     #[serde(rename = "pp")]
     pub point: u64,
     pub new_bonus: u64,
@@ -17,6 +22,18 @@ pub struct IAPInfo {
     pub next_point: u64,
     pub available_wall: bool,
     pub guest_id: String,
+}
+
+impl IAPInfo {
+    /// Get the total number of tickets
+    pub fn sum(&self) -> u64 {
+        self.bonus + self.purchased + self.premium
+    }
+
+    /// Get the total number of points
+    pub fn sum_point(&self) -> u64 {
+        self.point + self.new_bonus
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
