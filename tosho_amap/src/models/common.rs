@@ -97,7 +97,7 @@ mod tests {
                         "result": true,
                         "message": null
                     },
-                    "content": null
+                    "body": null
                 }
             }"#,
         )
@@ -116,7 +116,7 @@ mod tests {
                     "header": {
                         "result": true
                     },
-                    "content": {
+                    "body": {
                         "magic": 123,
                         "value": "magic value"
                     }
