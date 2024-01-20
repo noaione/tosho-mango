@@ -117,7 +117,8 @@ impl ComicEpisodeInfoNode {
 
     /// Check if the episode is available to read
     pub fn is_available(&self) -> bool {
-        self.is_free() || self.expiry_time.is_none()
+        let current_unix = chrono::Utc::now().timestamp();
+        self.is_free() || (self.expiry_time.unwrap_or(0) as i64) > current_unix
     }
 }
 
