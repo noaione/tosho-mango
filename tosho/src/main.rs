@@ -2,6 +2,7 @@ use std::path::PathBuf;
 
 use clap::Parser;
 use cli::ToshoCommands;
+use r#impl::amap::AMAPCommands;
 use r#impl::parser::WeeklyCodeCli;
 use r#impl::tools::ToolsCommands;
 use r#impl::{kmkc::download::KMDownloadCliConfig, musq::download::MUDownloadCliConfig};
@@ -304,6 +305,15 @@ async fn main() {
 
                 r#impl::kmkc::manga::kmkc_search_weekly(weekday, account_id.as_deref(), &t).await
             }
+        },
+        ToshoCommands::Amap { subcommand } => match subcommand {
+            AMAPCommands::Auth { email, password } => {
+                r#impl::amap::accounts::amap_account_login(email, password, &t).await
+            }
+            AMAPCommands::Account { account_id } => {
+                r#impl::amap::accounts::amap_account_info(account_id.as_deref(), &t).await
+            }
+            AMAPCommands::Accounts => r#impl::amap::accounts::amap_accounts(&t),
         },
         ToshoCommands::Tools { subcommand } => match subcommand {
             ToolsCommands::AutoMerge {

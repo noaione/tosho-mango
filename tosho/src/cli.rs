@@ -6,7 +6,9 @@ use clap::{
     Parser, Subcommand,
 };
 
-use crate::r#impl::{kmkc::KMKCCommands, musq::MUSQCommands, tools::ToolsCommands};
+use crate::r#impl::{
+    amap::AMAPCommands, kmkc::KMKCCommands, musq::MUSQCommands, tools::ToolsCommands,
+};
 
 pub(crate) type ExitCode = u32;
 
@@ -37,6 +39,12 @@ pub(crate) enum ToshoCommands {
     Kmkc {
         #[command(subcommand)]
         subcommand: KMKCCommands,
+    },
+    /// Download manga from AM
+    #[command(name = "am")]
+    Amap {
+        #[command(subcommand)]
+        subcommand: AMAPCommands,
     },
     Tools {
         #[command(subcommand)]
