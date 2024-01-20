@@ -87,7 +87,7 @@ pub(super) fn make_client(config: &AMConfig) -> tosho_amap::AMClient {
 
 #[allow(dead_code)]
 pub(super) fn do_print_search_information(
-    results: Vec<ComicSimpleInfo>,
+    results: &Vec<ComicSimpleInfo>,
     with_number: bool,
     spacing: Option<usize>,
 ) {
@@ -122,7 +122,7 @@ pub(super) fn do_print_search_information(
     }
 }
 
-fn unix_timestamp_to_string(timestamp: u64) -> Option<String> {
+pub(super) fn unix_timestamp_to_string(timestamp: u64) -> Option<String> {
     let dt = chrono::Utc
         .timestamp_opt(timestamp.try_into().unwrap(), 0)
         .single();

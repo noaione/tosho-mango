@@ -317,6 +317,25 @@ async fn main() {
             AMAPCommands::Balance { account_id } => {
                 r#impl::amap::accounts::amap_account_balance(account_id.as_deref(), &t).await
             }
+            AMAPCommands::Discovery { account_id } => {
+                r#impl::amap::manga::amap_discovery(account_id.as_deref(), &t).await
+            }
+            AMAPCommands::Info {
+                title_id,
+                account_id,
+                show_chapters,
+            } => {
+                r#impl::amap::manga::amap_title_info(
+                    title_id,
+                    account_id.as_deref(),
+                    show_chapters,
+                    &t,
+                )
+                .await
+            }
+            AMAPCommands::Search { query, account_id } => {
+                r#impl::amap::manga::amap_search(query.as_str(), account_id.as_deref(), &t).await
+            }
         },
         ToshoCommands::Tools { subcommand } => match subcommand {
             ToolsCommands::AutoMerge {
