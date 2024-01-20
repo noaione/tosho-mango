@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::IAPInfo;
+use super::{ComicStatus, IAPInfo};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComicSimpleInfoNode {
@@ -51,6 +51,14 @@ pub struct ComicDiscoveryNode {
 pub struct ComicDiscoveryPaginatedResponse {
     #[serde(rename = "comic_info_list")]
     pub comics: Vec<ComicSimpleInfo>,
+    pub next_page: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ComicSearchResponse {
+    #[serde(rename = "comic_info_list")]
+    pub comics: Vec<ComicSimpleInfo>,
+    pub total_count: String,
     pub next_page: bool,
 }
 
@@ -173,7 +181,8 @@ pub struct ComicInfo {
     pub tags: Vec<ComicTagInfo>,
     pub likes: String,
     pub comments: String,
-    pub complete: u64, // ??
+    #[serde(rename = "complete")]
+    pub status: ComicStatus,
     #[serde(rename = "production_participants")]
     pub productions: String,
     #[serde(rename = "is_free_daily")]

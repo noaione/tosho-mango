@@ -5,7 +5,10 @@ use constants::{
 };
 use futures_util::StreamExt;
 use helper::{generate_random_token, ComicPurchase};
-use models::{APIResult, AccountUserResponse, ComicDiscoveryPaginatedResponse, StatusResult};
+use models::{
+    APIResult, AccountUserResponse, ComicDiscoveryPaginatedResponse, ComicSearchResponse,
+    ComicStatus, StatusResult,
+};
 use reqwest_cookie_store::CookieStoreMutex;
 use sha2::{Digest, Sha256};
 use tokio::io::AsyncWriteExt;
@@ -249,6 +252,64 @@ impl AMClient {
                 reqwest::Method::POST,
                 "/mypage/favOfficialComicList.json",
                 None,
+            )
+            .await?;
+
+        result
+            .result
+            .content
+            .ok_or_else(|| anyhow::anyhow!("No content in response"))
+    }
+
+    /// Search for comics.
+    ///
+    /// # Arguments
+    /// * `query` - The query to search for.
+    /// * `page` - The page to search for. (default to 1)
+    /// * `limit` - The limit of results per page. (default to 30)
+    pub async fn search(
+        &self,
+        query: &str,
+        status: Option<ComicStatus>,
+        tag_id: Option<u64>,
+        page: Option<u64>,
+        limit: Option<u64>,
+    ) -> anyhow::Result<ComicSearchResponse> {
+        let mut json_body = HashMap::new();
+
+        let mut conditions = serde_json::Map::new();
+        conditions.insert(
+            "free_word".to_string(),
+            serde_json::Value::String(query.to_string()),
+        );
+        conditions.insert(
+            "tag_id".to_string(),
+            serde_json::Value::Number(serde_json::Number::from(tag_id.unwrap_or(0))),
+        );
+        if let Some(status) = status {
+            conditions.insert(
+                "complete".to_string(),
+                serde_json::Value::Number(serde_json::Number::from(status as i32)),
+            );
+        }
+        json_body.insert(
+            "conditions".to_string(),
+            serde_json::Value::Object(conditions),
+        );
+        json_body.insert(
+            "page".to_string(),
+            serde_json::Value::Number(serde_json::Number::from(page.unwrap_or(1))),
+        );
+        json_body.insert(
+            "limit".to_string(),
+            serde_json::Value::Number(serde_json::Number::from(limit.unwrap_or(30))),
+        );
+
+        let result = self
+            .request::<ComicSearchResponse>(
+                reqwest::Method::POST,
+                "/manga/official.json",
+                Some(json_body),
             )
             .await?;
 
