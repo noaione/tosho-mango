@@ -105,20 +105,27 @@ pub(super) fn do_print_search_information(
             text_data = cformat!("{} [<b,s>NEW</b,s>]", text_data);
         }
 
+        let mut add_url_pre = 1;
+        let mut last_upd: Option<String> = None;
         if let Some(last_update) = result.update_date {
             if let Some(last_update) = unix_timestamp_to_string(last_update) {
-                text_data = cformat!("{} [Last update: {}]", text_data, last_update);
+                last_upd = Some(cformat!("Last update: <s>{}</>", last_update));
+                add_url_pre += 1;
             }
         }
 
         let pre_space = " ".repeat(spacing);
-        let pre_space_url = " ".repeat(spacing + 1);
+        let pre_space_lupd = " ".repeat(spacing + 1);
+        let pre_space_url = " ".repeat(spacing + add_url_pre);
 
         match with_number {
             true => term.info(&format!("{}[{:02}] {}", pre_space, idx + 1, text_data)),
             false => term.info(&format!("{}{}", pre_space, text_data)),
         }
-        term.info(&format!("{}{}", pre_space_url, manga_url))
+        if let Some(last_upd) = last_upd {
+            term.info(&format!("{}{}", pre_space_lupd, last_upd));
+        }
+        term.info(&format!("{}{}", pre_space_url, manga_url));
     }
 }
 
