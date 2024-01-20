@@ -41,9 +41,18 @@ pub(super) fn select_single_account(account_id: Option<&str>) -> Option<Config> 
             }),
         })
         .collect();
+
     if all_configs.is_empty() {
         term.warn("No accounts found!");
         return None;
+    }
+
+    // if only 1, return
+    if all_configs.len() == 1 {
+        return match &all_configs[0] {
+            crate::config::ConfigImpl::Musq(c) => Some(c.clone()),
+            _ => unreachable!(),
+        };
     }
 
     let selected = term.choice("Select an account:", all_choices);
