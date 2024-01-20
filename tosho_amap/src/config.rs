@@ -9,7 +9,7 @@ lazy_static::lazy_static! {
     pub static ref SESSION_COOKIE_NAME: String = {
         String::from_utf8(
             general_purpose::STANDARD
-                .decode("YWxwaGFfbWFuZ2Ffc2Vzc2lvbl92Mg==")
+                .decode("YWxwbF92Ml9lbl9zZXNzaW9u")
                 .expect("Failed to decode base64 SESSION_COOKIE_NAME")
         )
         .expect("Invalid base64 string (SESSION_COOKIE_NAME)")
