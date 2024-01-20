@@ -47,7 +47,7 @@ pub struct LoginResult {
     #[serde(rename = "citi_id")]
     pub id: u64,
     #[serde(rename = "p_name")]
-    pub name: u64,
+    pub name: String,
     #[serde(rename = "profile_img_url")]
     pub image_url: String,
     pub temp: bool,
@@ -61,7 +61,7 @@ pub struct AccountUserInfo {
     #[serde(rename = "citi_id")]
     pub id: u64,
     #[serde(rename = "p_name")]
-    pub name: u64,
+    pub name: String,
     #[serde(rename = "prof_image_url")]
     pub image_url: String,
 }
