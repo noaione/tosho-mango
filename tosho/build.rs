@@ -1,3 +1,5 @@
+use std::process::Command;
+
 extern crate winres;
 
 fn main() {
@@ -15,5 +17,26 @@ fn main() {
         res.set("OriginalFilename", &format!("{}.exe", name).to_uppercase());
         res.set("LegalCopyright", "Copyright © 2023 noaione");
         res.compile().unwrap();
+    }
+
+    // check for RELEASE environment variable is set to true
+    // if it is, we will not set VERSION_WITH_HASH
+    if option_env!("RELEASE").is_none() {
+        let commit = Command::new("git")
+            .args(&["rev-parse", "--short", "HEAD"])
+            .output();
+        match commit {
+            Ok(commit) => {
+                let commit = String::from_utf8_lossy(&commit.stdout);
+                println!(
+                    "cargo:rustc-env=VERSION_WITH_HASH={}-{}",
+                    env!("CARGO_PKG_VERSION"),
+                    commit
+                );
+            }
+            Err(_) => {
+                println!("cargo:rustc-env=VERSION_WITH_HASH=unknown");
+            }
+        }
     }
 }
