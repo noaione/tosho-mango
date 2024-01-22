@@ -257,9 +257,10 @@ pub(crate) async fn musq_download(
                     match purchase_result {
                         Err(err) => {
                             console.error(&format!("   Failed to purchase chapter: {}", err));
-                            console.error(&format!(
+                            console.error(&cformat!(
                                 "    Skipping chapter <m,s>{}</> (<s>{}</>)",
-                                chapter.title, chapter.id
+                                chapter.title,
+                                chapter.id
                             ));
                         }
                         Ok(ch_view) => {
@@ -307,9 +308,10 @@ pub(crate) async fn musq_download(
                     .await;
                 if let Err(err) = ch_images {
                     console.error(&format!("Failed to download chapter: {}", err));
-                    console.error(&format!(
+                    console.error(&cformat!(
                         "   Skipping chapter <m,s>{}</> (<s>{}</>)",
-                        chapter.title, chapter.id
+                        chapter.title,
+                        chapter.id
                     ));
                     continue;
                 }

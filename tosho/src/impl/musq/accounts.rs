@@ -78,8 +78,8 @@ pub(crate) async fn musq_auth_session(
         }
     }
 
-    console.info(&format!(
-        "Authenticating with session ID {} ({})",
+    console.info(&cformat!(
+        "Authenticating with session ID <m,s>{}</> (<s>{}</>)",
         session_id,
         r#type.to_name()
     ));
