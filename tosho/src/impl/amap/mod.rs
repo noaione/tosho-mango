@@ -114,6 +114,12 @@ pub(crate) enum AMAPCommands {
         #[arg(short = 'a', long = "account", default_value = None)]
         account_id: Option<String>,
     },
+    /// Revoke or delete an account
+    Revoke {
+        /// Account ID to use
+        #[arg(short = 'a', long = "account", default_value = None)]
+        account_id: Option<String>,
+    },
     /// Search for a title
     Search {
         /// Query to search for

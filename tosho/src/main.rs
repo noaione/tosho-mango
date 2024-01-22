@@ -405,6 +405,9 @@ async fn main() {
                 )
                 .await
             }
+            AMAPCommands::Revoke { account_id } => {
+                r#impl::amap::accounts::amap_account_revoke(account_id.as_deref(), &t)
+            }
             AMAPCommands::Search { query, account_id } => {
                 r#impl::amap::manga::amap_search(query.as_str(), account_id.as_deref(), &t).await
             }
