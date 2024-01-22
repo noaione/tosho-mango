@@ -1,0 +1,44 @@
+name: ✨ Source request
+description: New source request for tosho.
+labels: [x-triage, c-source]
+
+body:
+  - type: input
+    id: source-name
+    attributes:
+      label: Source name
+      description: What the source is called? Please mask the name.
+      placeholder: |
+        Example:
+          "MD"
+    validations:
+      required: true
+
+  - type: textarea
+    id: other-details
+    attributes:
+      label: Details
+      description: |
+        Please provide as much details as possible.
+
+        PLEASE DO NOT PROVIDE LINKS TO THE SOURCE.
+      placeholder: |
+        Additional details and attachmentss
+
+  - type: checkboxes
+    id: acknowledgements
+    attributes:
+      label: Acknowledgements
+      description: Your issue will be closed if you haven't done these steps.
+      options:
+        - label: I have searched the existing issues and this is a new ticket, **NOT** a duplicate or related to another open or closed issue.
+          required: true
+        - label: I have written a short but informative title.
+          required: true
+        - label: I have updated the app to version **[0.2.0](https://github.com/noaione/tosho-mango/releases)**.
+          required: true
+        - label: This is not a feature request rather request for a new source to be added.
+          required: true
+        - label: I will fill out all of the requested information in this form.
+          required: true
+
