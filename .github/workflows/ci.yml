@@ -29,6 +29,8 @@ permissions:
 jobs:
   prepare:
     runs-on: ubuntu-latest
+    # do not run if commit starts with docs:
+    if: ${{ !startsWith(github.event.head_commit.message, 'docs:') }}
     steps:
       - name: Cancel tasks
         uses: n1hility/cancel-previous-runs@v3
