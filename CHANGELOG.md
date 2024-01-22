@@ -10,6 +10,7 @@ Starting from Rust port of the project, all changes will be put into this file.
 - Add missing help description for `tosho tools`
 - Make terminal looks more consisten
 - `MU`: Fix rankings selector not working as intended
+- `AM`: Simplify `strptime` to only show `YYYY-MM-DD`
 
 ## [0.2.0] 2024-01-22
 ### New Features

@@ -142,8 +142,8 @@ pub(super) fn unix_timestamp_to_string(timestamp: u64) -> Option<String> {
         Some(dt) => {
             let local = dt.with_timezone(&chrono::Local);
 
-            // Format YYYY-MM-DD HH:MM:SS
-            Some(local.format("%Y-%m-%d %H:%M:%S").to_string())
+            // Format YYYY-MM-DD
+            Some(local.format("%Y-%m-%d").to_string())
         }
         None => None,
     }
