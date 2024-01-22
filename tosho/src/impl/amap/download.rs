@@ -209,7 +209,7 @@ pub(crate) async fn amap_download(
 
                     let consume = consume.unwrap();
 
-                    let purchase_result = client.get_comic_viewer(chapter.info.id, &consume).await;
+                    let purchase_result = client.get_comic_viewer(title_id, &consume).await;
 
                     match purchase_result {
                         Err(err) => {
@@ -268,7 +268,7 @@ pub(crate) async fn amap_download(
                     ..Default::default()
                 };
 
-                let ch_view = client.get_comic_viewer(chapter.info.id, &consume).await;
+                let ch_view = client.get_comic_viewer(title_id, &consume).await;
                 if let Err(err) = ch_view {
                     console.error(&format!("Failed to download chapter: {}", err));
                     console.error(&cformat!(
