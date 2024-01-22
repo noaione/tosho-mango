@@ -1,0 +1,21 @@
+name: Issue Management
+
+on:
+  issues:
+    types:
+      - opened
+
+jobs:
+  auto-assign:
+    runs-on: ubuntu-latest
+    # run on issue opened, and run in my repo
+    if: github.event.issue.pull_request == null && github.event.repository.owner.login == 'noaione'
+    permissions:
+      issues: write
+    steps:
+      - name: Assign author
+        uses: pozil/auto-assign-issue@v1
+        with:
+          assignees: noaione
+          numOfAssignee: 1
+          allowSelfAssign: true
