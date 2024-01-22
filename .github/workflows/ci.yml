@@ -83,7 +83,9 @@ jobs:
 
       - name: Build
         run: |
+          sed -i 's/# CI-PROFILE-MARK/[profile.release]\nopt-level = "z"\nlto = true\ncodegen-units = 1\npanic = "abort"/' Cargo.toml
           cargo build --release --verbose --all --target ${{ matrix.os[1] }}
+        shell: bash
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
