@@ -40,7 +40,7 @@ pub(crate) async fn musq_home_rankings(
                     .rankings
                     .iter()
                     .map(|r| ConsoleChoice {
-                        name: r.tag_id.to_string(),
+                        name: r.name.clone(),
                         value: r.name.clone(),
                     })
                     .collect::<Vec<ConsoleChoice>>();
@@ -56,7 +56,7 @@ pub(crate) async fn musq_home_rankings(
                         let ranking = results
                             .rankings
                             .iter()
-                            .find(|r| r.tag_id == select.name.parse::<u64>().unwrap())
+                            .find(|r| r.name == select.name)
                             .unwrap();
 
                         console.info(&cformat!(
