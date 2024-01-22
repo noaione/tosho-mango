@@ -172,3 +172,15 @@ jobs:
           prerelease: false
           token: ${{ secrets.GITHUB_TOKEN }}
           body_path: CHANGELOG-GENERATED.md
+
+      - name: Create discussions
+        uses: nvdaes/build-discussion@v1
+        with:
+          title: Release ${{ github.ref_name }}
+          body: |
+            Release **${{ github.ref_name }}** is now available for **[download](https://github.com/noaione/tosho-mango/releases/tag/${{ github.ref_name }})**.
+
+            Please see the [changelog](https://github.com/noaione/tosho-mango/blob/master/CHANGELOG.md) for more information.
+
+            Report any issues you found in the [issue tracker](https://github.com/noaione/tosho-mango/issues/new/choose)
+          category-position: 1  # Announcements
