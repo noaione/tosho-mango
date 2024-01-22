@@ -11,6 +11,7 @@ use crate::r#impl::Implementations;
 pub enum ConfigImpl {
     Kmkc(crate::r#impl::kmkc::config::Config),
     Musq(crate::r#impl::musq::config::Config),
+    Amap(crate::r#impl::amap::config::Config),
 }
 
 impl From<crate::r#impl::kmkc::config::Config> for ConfigImpl {
@@ -35,6 +36,12 @@ impl From<crate::r#impl::kmkc::config::ConfigMobile> for ConfigImpl {
 impl From<crate::r#impl::musq::config::Config> for ConfigImpl {
     fn from(config: crate::r#impl::musq::config::Config) -> Self {
         ConfigImpl::Musq(config)
+    }
+}
+
+impl From<crate::r#impl::amap::config::Config> for ConfigImpl {
+    fn from(config: crate::r#impl::amap::config::Config) -> Self {
+        ConfigImpl::Amap(config)
     }
 }
 
@@ -119,6 +126,30 @@ fn get_config_musq(id: &str, user_path: PathBuf) -> Option<crate::r#impl::musq::
     read_musq_config(user_conf)
 }
 
+fn read_amap_config(user_conf: PathBuf) -> Option<crate::r#impl::amap::config::Config> {
+    if !user_conf.exists() {
+        None
+    } else {
+        let mut file = std::fs::File::open(user_conf).unwrap();
+        let mut buffer = Vec::new();
+        file.read_to_end(&mut buffer).unwrap();
+        drop(file);
+        let conf = crate::r#impl::amap::config::Config::decode(&mut Cursor::new(buffer)).unwrap();
+        Some(conf)
+    }
+}
+
+fn get_config_amap(id: &str, user_path: PathBuf) -> Option<crate::r#impl::amap::config::Config> {
+    let mut user_conf = user_path;
+    user_conf.push(format!(
+        "{}.{}.tmconf",
+        crate::r#impl::amap::config::PREFIX,
+        id
+    ));
+
+    read_amap_config(user_conf)
+}
+
 pub fn get_config(
     id: &str,
     r#impl: Implementations,
@@ -135,6 +166,10 @@ pub fn get_config(
             let conf = get_config_musq(id, user_path);
             conf.map(ConfigImpl::Musq)
         }
+        Implementations::Amap => {
+            let conf = get_config_amap(id, user_path);
+            conf.map(ConfigImpl::Amap)
+        }
     }
 }
 
@@ -150,6 +185,7 @@ pub fn get_all_config(r#impl: Implementations, user_path: Option<PathBuf>) -> Ve
     let prefix = match r#impl {
         Implementations::Kmkc => crate::r#impl::kmkc::config::PREFIX,
         Implementations::Musq => crate::r#impl::musq::config::PREFIX,
+        Implementations::Amap => crate::r#impl::amap::config::PREFIX,
     };
     glob_path.push(format!("{}.*.tmconf", prefix));
 
@@ -169,6 +205,12 @@ pub fn get_all_config(r#impl: Implementations, user_path: Option<PathBuf>) -> Ve
                 let conf = read_musq_config(entry);
                 if let Some(conf) = conf {
                     matched_entries.push(ConfigImpl::Musq(conf));
+                }
+            }
+            Implementations::Amap => {
+                let conf = read_amap_config(entry);
+                if let Some(conf) = conf {
+                    matched_entries.push(ConfigImpl::Amap(conf));
                 }
             }
         }
@@ -224,6 +266,20 @@ pub fn save_config(config: ConfigImpl, user_path: Option<PathBuf>) {
             file.write_all(&buffer).unwrap();
             drop(file);
         }
+        ConfigImpl::Amap(config) => {
+            let mut user_conf = user_path.clone();
+            user_conf.push(format!(
+                "{}.{}.tmconf",
+                crate::r#impl::amap::config::PREFIX,
+                config.id
+            ));
+
+            let mut file = std::fs::File::create(user_conf).unwrap();
+            let mut buffer = Vec::new();
+            config.encode(&mut buffer).unwrap();
+            file.write_all(&buffer).unwrap();
+            drop(file);
+        }
     }
 }
 
@@ -238,6 +294,7 @@ pub fn try_remove_config(
     let prefix = match r#impl {
         Implementations::Kmkc => crate::r#impl::kmkc::config::PREFIX,
         Implementations::Musq => crate::r#impl::musq::config::PREFIX,
+        Implementations::Amap => crate::r#impl::amap::config::PREFIX,
     };
     user_conf.push(format!("{}.{}.tmconf", prefix, id));
 

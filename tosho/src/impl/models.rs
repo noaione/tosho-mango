@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use tosho_amap::models::{ComicEpisodeInfo, ComicEpisodeInfoNode};
 use tosho_kmkc::models::EpisodeNode;
 use tosho_musq::proto::ChapterV2;
 
@@ -87,6 +88,27 @@ impl From<EpisodeNode> for ChapterDetailDump {
             timestamp: Some(start_time_ts),
             sub_name: None,
         }
+    }
+}
+
+impl From<ComicEpisodeInfoNode> for ChapterDetailDump {
+    /// Convert from [`tosho_amap::models::ComicEpisodeInfoNode`] into [`ChapterDetailDump`]
+    /// `_info.json` format.
+    fn from(value: ComicEpisodeInfoNode) -> Self {
+        Self {
+            main_name: value.title,
+            id: value.id,
+            timestamp: Some(value.update_date as i64),
+            sub_name: None,
+        }
+    }
+}
+
+impl From<ComicEpisodeInfo> for ChapterDetailDump {
+    /// Convert from [`tosho_amap::models::ComicEpisodeInfo`] into [`ChapterDetailDump`]
+    /// `_info.json` format.
+    fn from(value: ComicEpisodeInfo) -> Self {
+        Self::from(value.info)
     }
 }
 

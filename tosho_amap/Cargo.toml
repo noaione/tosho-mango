@@ -1,17 +1,17 @@
 [package]
-name = "tosho-kmkc"
+name = "tosho-amap"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
-description = "An asynchronous client of KM API by KC."
+description = "An asynchronous client of AM API by AP."
 readme = "./README.md"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 tokio.workspace = true
-reqwest = { workspace = true, features = ["cookies", "stream"] }
+reqwest = { workspace = true, features = ["cookies", "stream", "json"] }
 futures-util.workspace = true
 serde.workspace = true
 serde_json.workspace = true
@@ -23,9 +23,6 @@ time.workspace = true
 cookie_store.workspace = true
 reqwest_cookie_store.workspace = true
 sha2.workspace = true
-image = "0.24.7"
-urlencoding = "2.1.3"
-md-5 = "0.10.6"
-documented = "*"
+rand = "0.8.5"
 
 tosho-macros = { path = "../tosho_macros" }

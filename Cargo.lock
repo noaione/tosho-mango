@@ -2135,11 +2135,33 @@ dependencies = [
  "serde_json",
  "supports-hyperlinks",
  "tokio",
+ "tosho-amap",
  "tosho-kmkc",
  "tosho-macros",
  "tosho-musq",
  "uuid",
  "windows-sys 0.52.0",
+]
+
+[[package]]
+name = "tosho-amap"
+version = "0.2.0"
+dependencies = [
+ "anyhow",
+ "base64",
+ "chrono",
+ "cookie_store 0.20.0",
+ "futures-util",
+ "lazy_static",
+ "rand",
+ "reqwest",
+ "reqwest_cookie_store",
+ "serde",
+ "serde_json",
+ "sha2",
+ "time",
+ "tokio",
+ "tosho-macros",
 ]
 
 [[package]]

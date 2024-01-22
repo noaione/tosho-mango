@@ -12,6 +12,7 @@ description = "A downloader for some official mango website"
 # Sources deps
 tosho-musq = { path = "../tosho_musq" }
 tosho-kmkc = { path = "../tosho_kmkc" }
+tosho-amap = { path = "../tosho_amap" }
 tosho-macros = { path = "../tosho_macros" }
 
 # External deps

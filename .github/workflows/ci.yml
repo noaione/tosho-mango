@@ -27,8 +27,18 @@ permissions:
   contents: write
 
 jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cancel tasks
+        uses: n1hility/cancel-previous-runs@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          workflow: ci.yml
+
   tests:
     runs-on: ubuntu-latest
+    needs: prepare
 
     steps:
       - name: Checkout repo
@@ -51,7 +61,7 @@ jobs:
         run: cargo test --verbose --all
 
   build:
-    needs: tests
+    needs: [prepare, tests]
     strategy:
       matrix:
         os:
@@ -83,7 +93,9 @@ jobs:
 
       - name: Build
         run: |
+          sed -i'' -e 's/# CI-PROFILE-MARK/[profile.release]\nopt-level = "z"\nlto = true\ncodegen-units = 1\npanic = "abort"/g' Cargo.toml
           cargo build --release --verbose --all --target ${{ matrix.os[1] }}
+        shell: bash
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4

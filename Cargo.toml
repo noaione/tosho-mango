@@ -4,6 +4,7 @@ members = [
     "tosho",
     "tosho_musq",
     "tosho_kmkc",
+    "tosho_amap",
     "tosho_macros"
 ]
 
@@ -25,3 +26,9 @@ anyhow = "1"
 base64 = "0.21.5"
 chrono = "0.4"
 futures-util = "0.3"
+cookie_store = "0.20.0"
+reqwest_cookie_store = "0.6.0"
+sha2 = "0.10.8"
+time = "0.3.31"
+
+# CI-PROFILE-MARK

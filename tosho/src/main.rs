@@ -2,6 +2,8 @@ use std::path::PathBuf;
 
 use clap::Parser;
 use cli::ToshoCommands;
+use r#impl::amap::download::AMDownloadCliConfig;
+use r#impl::amap::AMAPCommands;
 use r#impl::parser::WeeklyCodeCli;
 use r#impl::tools::ToolsCommands;
 use r#impl::{kmkc::download::KMDownloadCliConfig, musq::download::MUDownloadCliConfig};
@@ -303,6 +305,111 @@ async fn main() {
                 };
 
                 r#impl::kmkc::manga::kmkc_search_weekly(weekday, account_id.as_deref(), &t).await
+            }
+        },
+        ToshoCommands::Amap { subcommand } => match subcommand {
+            AMAPCommands::Auth { email, password } => {
+                r#impl::amap::accounts::amap_account_login(email, password, &t).await
+            }
+            AMAPCommands::Account { account_id } => {
+                r#impl::amap::accounts::amap_account_info(account_id.as_deref(), &t).await
+            }
+            AMAPCommands::Accounts => r#impl::amap::accounts::amap_accounts(&t),
+            AMAPCommands::AutoDownload {
+                title_id,
+                no_purchase,
+                start_from,
+                end_until,
+                no_paid_ticket,
+                no_premium_ticket,
+                output,
+                account_id,
+            } => {
+                let config = AMDownloadCliConfig {
+                    auto_purchase: !no_purchase,
+                    no_input: true,
+                    start_from,
+                    end_at: end_until,
+                    no_premium: no_paid_ticket,
+                    no_purchased: no_premium_ticket,
+                    ..Default::default()
+                };
+
+                r#impl::amap::download::amap_download(
+                    title_id,
+                    config,
+                    account_id.as_deref(),
+                    output.unwrap_or_else(get_default_download_dir),
+                    &mut t_mut,
+                )
+                .await
+            }
+            AMAPCommands::Balance { account_id } => {
+                r#impl::amap::accounts::amap_account_balance(account_id.as_deref(), &t).await
+            }
+            AMAPCommands::Discovery { account_id } => {
+                r#impl::amap::rankings::amap_discovery(account_id.as_deref(), &t).await
+            }
+            AMAPCommands::Download {
+                title_id,
+                chapters,
+                show_all,
+                auto_purchase,
+                output,
+                account_id,
+            } => {
+                let config = AMDownloadCliConfig {
+                    auto_purchase,
+                    show_all,
+                    chapter_ids: chapters.unwrap_or_default(),
+                    ..Default::default()
+                };
+
+                r#impl::amap::download::amap_download(
+                    title_id,
+                    config,
+                    account_id.as_deref(),
+                    output.unwrap_or_else(get_default_download_dir),
+                    &mut t_mut,
+                )
+                .await
+            }
+            AMAPCommands::Info {
+                title_id,
+                account_id,
+                show_chapters,
+            } => {
+                r#impl::amap::manga::amap_title_info(
+                    title_id,
+                    account_id.as_deref(),
+                    show_chapters,
+                    &t,
+                )
+                .await
+            }
+            AMAPCommands::Purchase {
+                title_id,
+                account_id,
+            } => {
+                r#impl::amap::purchases::amap_purchase(title_id, account_id.as_deref(), &mut t_mut)
+                    .await
+            }
+            AMAPCommands::Precalculate {
+                title_id,
+                account_id,
+            } => {
+                r#impl::amap::purchases::amap_purchase_precalculate(
+                    title_id,
+                    account_id.as_deref(),
+                    &t,
+                )
+                .await
+            }
+            AMAPCommands::Revoke { account_id } => {
+                r#impl::amap::accounts::amap_account_revoke(account_id.as_deref(), &t)
+            }
+            AMAPCommands::Search { query, account_id } => {
+                r#impl::amap::manga::amap_search(query.as_str(), account_id.as_deref(), &t).await
             }
         },
         ToshoCommands::Tools { subcommand } => match subcommand {

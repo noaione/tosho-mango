@@ -25,7 +25,7 @@ pub(super) fn select_single_account(account_id: Option<&str>) -> Option<Config> 
         if let Some(config) = config {
             return match config {
                 crate::config::ConfigImpl::Kmkc(c) => Some(c),
-                crate::config::ConfigImpl::Musq(_) => None,
+                _ => None,
             };
         }
 
@@ -63,7 +63,7 @@ pub(super) fn select_single_account(account_id: Option<&str>) -> Option<Config> 
         let config = all_configs.first().unwrap();
         return match config {
             crate::config::ConfigImpl::Kmkc(c) => Some(c.clone()),
-            crate::config::ConfigImpl::Musq(_) => None,
+            _ => None,
         };
     }
 
@@ -77,13 +77,13 @@ pub(super) fn select_single_account(account_id: Option<&str>) -> Option<Config> 
                         super::config::Config::Mobile(cc) => cc.id == selected.name,
                         super::config::Config::Web(cc) => cc.id == selected.name,
                     },
-                    crate::config::ConfigImpl::Musq(_) => false,
+                    _ => false,
                 })
                 .unwrap();
 
             match config {
                 crate::config::ConfigImpl::Kmkc(c) => Some(c.clone()),
-                crate::config::ConfigImpl::Musq(_) => None,
+                _ => None,
             }
         }
         None => None,
