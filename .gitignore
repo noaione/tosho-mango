@@ -38,3 +38,4 @@ cobertura.xml
 /sandbox
 /**/tests/*.json
 /**/tests/*.proto
+CHANGELOG-GENERATED.md
