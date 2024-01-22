@@ -2,9 +2,9 @@
 
 Starting from Rust port of the project, all changes will be put into this file.
 
-## Unreleased (git)
-
-Nothing for now
+## [0.2.1] (Unreleased/git master)
+### Build
+- Add proper version hash if build as nightly or by yourself.
 
 ## [0.2.0] 2024-01-22
 ### New Features
