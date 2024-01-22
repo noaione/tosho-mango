@@ -110,7 +110,7 @@ jobs:
         shell: bash
         run: |
           cd target/${{ matrix.os[1] }}/release
-          zip -r tosho-${{ runner.os }}.zip tosho*
+          tar -czvf tosho-${{ matrix.os[1] }}.tar.gz tosho
           cd ../../..
 
       - name: Prepare release (Win32)
@@ -126,6 +126,7 @@ jobs:
         with:
           files: |
             target/${{ matrix.os[1] }}/release/tosho-${{ matrix.os[1] }}.zip
+            target/${{ matrix.os[1] }}/release/tosho-${{ matrix.os[1] }}.tar.gz
           draft: true
           prerelease: false
           token: ${{ secrets.GITHUB_TOKEN }}
