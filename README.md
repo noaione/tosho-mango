@@ -12,37 +12,37 @@
   <p>A simple downloader for some official mango.</p>
 </div>
 
-`tosho-mango` (or `tosho`) is a downloader but can also be said as an almost full-blown replacement of the app/web version with the exception of currency purchase as a simple CLI application.
+`tosho-mango` (or `tosho`) is a downloader but can also be considered an almost full-blown replacement for the app/web version, with the exception of currency purchase, as a simple CLI application.
 
-All of the implementations started as a personal script that I use before I decide to rewrite it into a proper CLI app with the help of other people to figure out some part that I have trouble with.
+All of the implementations started as a personal script that I used before I decided to rewrite it into a proper CLI app with the help of other people to figure out some parts that I had trouble with.
 
 ### But, why?
-- I hate using the app
-- I want to have my own local copy for my own self-hosted instance
-- And, I'm kinda burned out doing a *certain* thing and hope someone else can do it.
+- I hate using the app.
+- I want to have my own local copy for my self-hosted instance.
+- And, I'm kinda burned out from doing a *certain* thing and hope someone else can handle it.
 
-This is just a fun project and as a disclaimer, I'm not condoning anything that will get you into trouble.<br />
-I mainly created this project to get my own local copy of stuff I read so I can have it indefinitely on my own server.
+This is just a fun side project, and as a disclaimer, I'm not condoning anything that will get you into trouble.
 
 ## Installation
 
-**Requirements**
+**Requirements:**
 - Rust 1.72+
 - 64-bit devices (ARM64/aarch64 support might be experimental)
 - Modern enough terminal (VT support)
 
-You can get the binary by either compiling everything yourself by running:
-1. Clone the repository
-2. Run `cargo build --release --all`
-3. Execute `target/release/tosho` (or `target/release/tosho.exe` on Windows)
+You can get the binary by either compiling everything yourself by following these steps:
+1. Clone the repository.
+2. Run `cargo build --release --all`.
+3. Execute `target/release/tosho` (or `target/release/tosho.exe` on Windows).
 
-Or, you can get the precompiled binary:
-- **Stable** release from the **[Releases](https://github.com/noaione/tosho-mango/releases)** tab.
-- **Beta/canary** release from any latest successful commits: [Master CI](https://github.com/noaione/tosho-mango/actions/workflows/ci.yml?query=branch%3Amaster)
+Alternatively, you can obtain the precompiled binary from:
+- The **Stable** release in the **[Releases](https://github.com/noaione/tosho-mango/releases)** tab.
+- The **Nightly** release from any latest successful commits: [Master CI](https://github.com/noaione/tosho-mango/actions/workflows/ci.yml?query=branch%3Amaster).
 
 ## Usage
 
-See each sources folder on how to use (mainly authentication) each and utilize sources that I've created.
+Refer to each source's folder for information on authenticating each source with `tosho`.<br />
+For a list of available commands, use the `--help` argument.
 
 ## License
 
@@ -55,4 +55,4 @@ See each sources folder on how to use (mainly authentication) each and utilize s
 
 ### Legacy Python Code
 
-The codebase has been rewritten to Rust, you can see the original Python version in [`legacy-snek`](https://github.com/noaione/tosho-mango/tree/legacy-snek) branch.
+The codebase has been rewritten in Rust. You can find the original Python version in the [`legacy-snek`](https://github.com/noaione/tosho-mango/tree/legacy-snek) branch.

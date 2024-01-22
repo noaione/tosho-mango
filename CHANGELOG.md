@@ -14,4 +14,7 @@ Nothing for now
 
 ### Changed
 - Port everything into Rust, legacy Python can be seen from [legacy-snek](https://github.com/noaione/tosho-mango/tree/legacy-snek) branch.
-- Split every sources into their own Rust crates. (prefixed with `tosho_` or `tosho-` in packages)
+- Split every sources into their own Rust crates. (prefixed with `tosho_` in folder or `tosho-` in crates name)
+
+### Incompatibility
+- You would need to re-authenticate your `KM` web session since there is a bit of changes and it might not be compatible anymore.
