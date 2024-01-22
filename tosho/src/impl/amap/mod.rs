@@ -8,6 +8,7 @@ pub(super) mod common;
 pub(crate) mod config;
 pub(crate) mod download;
 pub(crate) mod manga;
+pub(crate) mod purchases;
 
 #[derive(Subcommand)]
 pub(crate) enum AMAPCommands {
@@ -95,6 +96,22 @@ pub(crate) enum AMAPCommands {
         /// Show each chapter detailed information
         #[arg(short = 'c', long = "chapters")]
         show_chapters: bool,
+    },
+    /// Purchases chapters for a title
+    Purchase {
+        /// Title ID to use
+        title_id: u64,
+        /// Account ID to use
+        #[arg(short = 'a', long = "account", default_value = None)]
+        account_id: Option<String>,
+    },
+    /// Precalculate the amount of points needed to purchase chapters for a title
+    Precalculate {
+        /// Title ID to use
+        title_id: u64,
+        /// Account ID to use
+        #[arg(short = 'a', long = "account", default_value = None)]
+        account_id: Option<String>,
     },
     /// Search for a title
     Search {

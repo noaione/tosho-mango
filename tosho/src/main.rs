@@ -387,6 +387,24 @@ async fn main() {
                 )
                 .await
             }
+            AMAPCommands::Purchase {
+                title_id,
+                account_id,
+            } => {
+                r#impl::amap::purchases::amap_purchase(title_id, account_id.as_deref(), &mut t_mut)
+                    .await
+            }
+            AMAPCommands::Precalculate {
+                title_id,
+                account_id,
+            } => {
+                r#impl::amap::purchases::amap_purchase_precalculate(
+                    title_id,
+                    account_id.as_deref(),
+                    &t,
+                )
+                .await
+            }
             AMAPCommands::Search { query, account_id } => {
                 r#impl::amap::manga::amap_search(query.as_str(), account_id.as_deref(), &t).await
             }
