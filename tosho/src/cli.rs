@@ -46,6 +46,7 @@ pub(crate) enum ToshoCommands {
         #[command(subcommand)]
         subcommand: AMAPCommands,
     },
+    /// Additional tools to manage your downloaded manga
     Tools {
         #[command(subcommand)]
         subcommand: ToolsCommands,

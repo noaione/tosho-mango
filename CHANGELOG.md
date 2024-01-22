@@ -6,6 +6,9 @@ Starting from Rust port of the project, all changes will be put into this file.
 ### Build
 - Add proper version hash if build as nightly or by yourself.
 
+### Changes
+- Add missing help description for `tosho tools`
+
 ## [0.2.0] 2024-01-22
 ### New Features
 - Added `AM` as a new source
