@@ -43,3 +43,6 @@ mime = "*"
 [target.'cfg(windows)'.dependencies]
 # Windows deps
 windows-sys = { version = "*", features = ["Win32_Foundation", "Win32_System_Console"] }
+
+[build-dependencies]
+winres = "0.1"
