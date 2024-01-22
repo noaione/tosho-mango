@@ -2,15 +2,22 @@
 
 Starting from Rust port of the project, all changes will be put into this file.
 
-## [0.2.1] (Unreleased/git master)
+## Unreleased (git master)
+
+Nothing yet.
+
+## [0.2.1] 2024-01-22
 ### Build
-- Add proper version hash if build as nightly or by yourself.
+- Add proper version hash if `tosho` built as nightly or by yourself.
 
 ### Changes
 - Add missing help description for `tosho tools`
 - Make terminal looks more consisten
 - `MU`: Fix rankings selector not working as intended
 - `AM`: Simplify `strptime` to only show `YYYY-MM-DD`
+
+### Docs
+- Rewording and grammar fixes
 
 ## [0.2.0] 2024-01-22
 ### New Features
