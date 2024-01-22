@@ -12,6 +12,6 @@ Nothing for now
 - Support proper login for `KM` source
 - Support mobile source (both Android and iOS) for `KM` source.
 
-## Changed
+### Changed
 - Port everything into Rust, legacy Python can be seen from [legacy-snek](https://github.com/noaione/tosho-mango/tree/legacy-snek) branch.
 - Split every sources into their own Rust crates. (prefixed with `tosho_` or `tosho-` in packages)
