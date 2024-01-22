@@ -1,6 +1,11 @@
 use chrono::TimeZone;
 use color_print::cformat;
-use tosho_amap::{constants::BASE_HOST, models::ComicSimpleInfo, AMConfig};
+use num_format::{Locale, ToFormattedString};
+use tosho_amap::{
+    constants::BASE_HOST,
+    models::{ComicEpisodeInfo, ComicInfo, ComicSimpleInfo, IAPInfo},
+    AMClient, AMConfig,
+};
 
 use crate::{
     config::{get_all_config, get_config},
@@ -85,7 +90,6 @@ pub(super) fn make_client(config: &AMConfig) -> tosho_amap::AMClient {
     tosho_amap::AMClient::new(config.clone())
 }
 
-#[allow(dead_code)]
 pub(super) fn do_print_search_information(
     results: &[ComicSimpleInfo],
     with_number: bool,
@@ -142,5 +146,144 @@ pub(super) fn unix_timestamp_to_string(timestamp: u64) -> Option<String> {
             Some(local.format("%Y-%m-%d %H:%M:%S").to_string())
         }
         None => None,
+    }
+}
+
+pub(super) async fn common_purchase_select(
+    title_id: u64,
+    account: &Config,
+    download_mode: bool,
+    show_all: bool,
+    no_input: bool,
+    console: &crate::term::Terminal,
+) -> (
+    anyhow::Result<Vec<ComicEpisodeInfo>>,
+    Option<ComicInfo>,
+    AMClient,
+    Option<IAPInfo>,
+) {
+    console.info(&cformat!(
+        "Fetching for ID <magenta,bold>{}</>...",
+        title_id
+    ));
+    let config: AMConfig = account.clone().into();
+    let client = make_client(&config);
+
+    let results = client.get_comic(title_id).await;
+    match results {
+        Ok(result) => {
+            let balance = &result.account;
+            let total_ticket = balance.sum().to_formatted_string(&Locale::en);
+            let purchased = balance.purchased.to_formatted_string(&Locale::en);
+            let premium = balance.premium.to_formatted_string(&Locale::en);
+            let total_point = balance.sum_point().to_formatted_string(&Locale::en);
+
+            console.info("Your current point balance:");
+            console.info(&cformat!(
+                "  - <s>Total</>: <magenta,bold><reverse>{}</>T</magenta,bold>",
+                total_ticket
+            ));
+            console.info(&cformat!(
+                "  - <s>Purchased</>: <yellow,bold><reverse>{}</>T</yellow,bold>",
+                purchased
+            ));
+            console.info(&cformat!(
+                "  - <s>Premium</>: <green,bold><reverse>{}</>T</green,bold>",
+                premium
+            ));
+            console.info(&cformat!(
+                "  - <s>Total point</>: <cyan!,bold><reverse>{}</>p</cyan!,bold>",
+                total_point
+            ));
+
+            if no_input {
+                return (
+                    Ok(result.info.episodes.clone()),
+                    Some(result.info.clone()),
+                    client,
+                    Some(balance.clone()),
+                );
+            }
+
+            let select_choices: Vec<ConsoleChoice> = result
+                .info
+                .episodes
+                .iter()
+                .filter_map(|ch| {
+                    if download_mode && !show_all && !ch.info.is_available() {
+                        None
+                    } else {
+                        let value = if ch.info.is_available() {
+                            ch.info.title.clone()
+                        } else {
+                            format!("{} ({}T)", ch.info.title, ch.info.price)
+                        };
+                        Some(ConsoleChoice {
+                            name: ch.info.id.to_string(),
+                            value,
+                        })
+                    }
+                })
+                .collect();
+
+            if select_choices.is_empty() {
+                console.warn("No chapters selected, aborting...");
+
+                return (Ok(vec![]), None, client, Some(balance.clone()));
+            }
+
+            let sel_prompt = if download_mode {
+                "Select chapter to download"
+            } else {
+                "Select chapter to purchase"
+            };
+            let selected = console.select(sel_prompt, select_choices);
+
+            match selected {
+                Some(selected) => {
+                    if selected.is_empty() {
+                        console.warn("No chapter selected, aborting...");
+
+                        return (Ok(vec![]), None, client, Some(balance.clone()));
+                    }
+
+                    let mut selected_chapters: Vec<ComicEpisodeInfo> = vec![];
+
+                    for chapter in selected {
+                        let ch_id = chapter.name.parse::<u64>().unwrap();
+                        let ch = result
+                            .info
+                            .episodes
+                            .iter()
+                            .find(|&ch| ch.info.id == ch_id)
+                            .unwrap()
+                            .clone();
+
+                        selected_chapters.push(ch);
+                    }
+
+                    (
+                        Ok(selected_chapters),
+                        Some(result.info),
+                        client,
+                        Some(balance.clone()),
+                    )
+                }
+                None => {
+                    console.warn("Aborted");
+                    (
+                        Err(anyhow::anyhow!("Aborted")),
+                        Some(result.info.clone()),
+                        client,
+                        Some(result.account.clone()),
+                    )
+                }
+            }
+        }
+        Err(e) => {
+            console.error(&cformat!("Unable to connect to MU!: {}", e));
+
+            (Err(e), None, client, None)
+        }
     }
 }

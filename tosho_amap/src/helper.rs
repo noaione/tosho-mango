@@ -5,6 +5,7 @@ use rand::{thread_rng, Rng};
 /// A comic purchase info.
 ///
 /// Created from a [`ComicInfo`], [`ComicEpisodeInfoNode`], and [`IAPInfo`].
+#[derive(Clone, Debug, Default)]
 pub struct ComicPurchase {
     pub id: u64,
     pub rental_term: Option<String>,
