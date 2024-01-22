@@ -6,7 +6,8 @@ ROOT_DIR = Path(__file__).parent.parent.absolute()
 CHANGELOG_FILE = ROOT_DIR / "CHANGELOG.md"
 INNER_DESC = """The following are an automatically generated release notes based on the git tags.
 
-You can find the full changelog [here](https://github.com/noaione/tosho-mango/blob/master/CHANGELOG.md)"""
+You can find the full changelog [here](https://github.com/noaione/tosho-mango/blob/master/CHANGELOG.md)
+Please report any problem that you've encountered on the [issues](https://github.com/noaione/tosho-mango/issues) page."""  # noqa: E501
 
 # ref/tags/v1.0.0
 GIT_TAGS = os.getenv("VERSION")
