@@ -48,14 +48,14 @@ impl Terminal {
 
     /// Log info to terminal
     pub fn info(&self, msg: &str) {
-        println!("{}", cformat!("[<cyan,strong>INFO</cyan,strong>] {}", msg))
+        println!("{}", cformat!(" [<cyan,strong>INFO</cyan,strong>] {}", msg))
     }
 
     /// Log warning to terminal
     pub fn warn(&self, msg: &str) {
         println!(
             "{}",
-            cformat!("[<yellow,strong>WARN</yellow,strong>] {}", msg)
+            cformat!(" [<yellow,strong>WARN</yellow,strong>] {}", msg)
         )
     }
 
@@ -69,7 +69,7 @@ impl Terminal {
         if self.debug >= 1 {
             println!(
                 "{}",
-                cformat!("[<magenta,strong>LOG</magenta,strong>] {}", msg)
+                cformat!("  [<magenta,strong>LOG</magenta,strong>] {}", msg)
             )
         }
     }
@@ -117,7 +117,19 @@ impl Terminal {
         spinner.set_style(
             ProgressStyle::with_template("{spinner:.blue} {msg}")
                 .unwrap()
-                .tick_strings(&["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏", "✓"]),
+                .tick_strings(&[
+                    "⠋",
+                    "⠙",
+                    "⠹",
+                    "⠸",
+                    "⠼",
+                    "⠴",
+                    "⠦",
+                    "⠧",
+                    "⠇",
+                    "⠏",
+                    &cformat!(" [<cyan,strong>INFO</cyan,strong>]"),
+                ]),
         );
         spinner
     }

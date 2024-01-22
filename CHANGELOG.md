@@ -8,6 +8,7 @@ Starting from Rust port of the project, all changes will be put into this file.
 
 ### Changes
 - Add missing help description for `tosho tools`
+- Make terminal looks more consisten
 
 ## [0.2.0] 2024-01-22
 ### New Features
