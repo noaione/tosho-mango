@@ -348,7 +348,7 @@ async fn main() {
                 r#impl::amap::accounts::amap_account_balance(account_id.as_deref(), &t).await
             }
             AMAPCommands::Discovery { account_id } => {
-                r#impl::amap::manga::amap_discovery(account_id.as_deref(), &t).await
+                r#impl::amap::rankings::amap_discovery(account_id.as_deref(), &t).await
             }
             AMAPCommands::Download {
                 title_id,
