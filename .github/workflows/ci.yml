@@ -87,7 +87,7 @@ jobs:
 
       - name: Build (Nightly)
         run: |
-          sed -i'' -e 's/# CI-PROFILE-MARK/[profile.release]\nopt-level = "z"\nlto = true\ncodegen-units = 1\npanic = "abort"/g' Cargo.toml
+          sed -i'' -e 's/# CI-PROFILE-MARK/[profile.release]\nopt-level = "z"\nlto = true\ncodegen-units = 1\npanic = "abort"\nstrip = "debuginfo"/g' Cargo.toml
           cargo build --release --verbose --all --target ${{ matrix.os[1] }}
         shell: bash
 
