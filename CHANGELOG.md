@@ -3,8 +3,8 @@
 Starting from Rust port of the project, all changes will be put into this file.
 
 ## Unreleased (git master)
-
-Nothing yet.
+### Changes
+- `KM`: Fix favorite status deserialization
 
 ## [0.2.1] 2024-01-22
 ### Build
@@ -12,7 +12,7 @@ Nothing yet.
 
 ### Changes
 - Add missing help description for `tosho tools`
-- Make terminal looks more consisten
+- Make terminal looks more consistent
 - `MU`: Fix rankings selector not working as intended
 - `AM`: Simplify `strptime` to only show `YYYY-MM-DD`
 

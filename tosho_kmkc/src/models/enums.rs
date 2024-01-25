@@ -290,6 +290,8 @@ pub enum FavoriteStatus {
     None = 0,
     /// Title is favorited.
     Favorite = 1,
+    /// Title is purchased?
+    Purchased = 2,
 }
 
 /// The support status of the titles.
