@@ -2,7 +2,11 @@
 
 Starting from Rust port of the project, all changes will be put into this file.
 
-## [0.2.2] (unreleased; git master)
+## Unreleased (git master)
+
+Nothing for now.
+
+## [0.2.2] 2024-01-29
 ### New Features
 - `AM`: Add `favorites` command
 - `KM`: Add `favorites` command

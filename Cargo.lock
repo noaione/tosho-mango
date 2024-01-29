@@ -2122,7 +2122,7 @@ dependencies = [
 
 [[package]]
 name = "tosho"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "anstream",
  "anyhow",
@@ -2155,7 +2155,7 @@ dependencies = [
 
 [[package]]
 name = "tosho-amap"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "anyhow",
  "base64",
@@ -2176,7 +2176,7 @@ dependencies = [
 
 [[package]]
 name = "tosho-kmkc"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "anyhow",
  "base64",
@@ -2200,7 +2200,7 @@ dependencies = [
 
 [[package]]
 name = "tosho-macros"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "quote",
  "syn 2.0.42",
@@ -2208,7 +2208,7 @@ dependencies = [
 
 [[package]]
 name = "tosho-musq"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "anyhow",
  "base64",
