@@ -11,6 +11,12 @@ Starting from Rust port of the project, all changes will be put into this file.
 - `KM`: Fix favorite status deserialization
 - `AM`: Replace session v2 cookie in each request
 
+### Docs
+- Add missing documentation for `tosho-amap`
+
+### Build
+- Pin and bump dependencies on GitHub CI
+
 ## [0.2.1] 2024-01-22
 ### Build
 - Add proper version hash if `tosho` built as nightly or by yourself.

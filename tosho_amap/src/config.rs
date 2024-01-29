@@ -18,7 +18,9 @@ lazy_static::lazy_static! {
 
 #[derive(Debug, Clone)]
 pub struct AMConfig {
+    /// The token of the account
     pub token: String,
+    /// The identifier (guest ID) of the account, tied to token.
     pub identifier: String,
     /// The cookie of session_v2
     pub session_v2: String,

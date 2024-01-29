@@ -12,7 +12,9 @@ pub struct IAPInfo {
     /// Point that you have
     #[serde(rename = "pp")]
     pub point: u64,
+    /// New bonus ticket
     pub new_bonus: u64,
+    /// The request payload
     pub payload: String,
     #[serde(rename = "next_pp_second")]
     pub next_point_second: u64,
@@ -21,6 +23,9 @@ pub struct IAPInfo {
     #[serde(rename = "next_pp")]
     pub next_point: u64,
     pub available_wall: bool,
+    /// The account identifier for the user
+    ///
+    /// This is different between each token.
     pub guest_id: String,
 }
 
@@ -38,53 +43,69 @@ impl IAPInfo {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct IAPProductInfoNode {
+    /// The product identifier
     #[serde(rename = "product_id")]
     pub id: String,
+    /// The product notice (sometimes is the name or description)
     pub notice: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct IAPProductInfo {
+    /// The product information
     #[serde(rename = "iap_product_info")]
     pub info: IAPProductInfoNode,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct IAPRemainder {
+    /// The in-app purchase information
     #[serde(rename = "iap_info")]
     pub info: IAPInfo,
+    /// The in-app purchase product list
     #[serde(rename = "iap_product_list")]
     pub product_list: Option<Vec<IAPProductInfo>>,
+    /// The in-app purchase product version
     #[serde(rename = "iap_product_version")]
     pub version: Option<u64>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LoginResult {
+    /// The account ID
     #[serde(rename = "citi_id")]
     pub id: u64,
+    /// The account username
     #[serde(rename = "p_name")]
     pub name: String,
+    /// The account image URL
     #[serde(rename = "profile_img_url")]
     pub image_url: String,
+    /// Is the account a guest account?
     pub temp: bool,
+    /// The login message, if any
     pub login_message: Option<String>,
+    /// In-app purchase information
     #[serde(rename = "iap_info")]
     pub info: IAPInfo,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AccountUserInfo {
+    /// The account ID
     #[serde(rename = "citi_id")]
     pub id: u64,
+    /// The account username
     #[serde(rename = "p_name")]
     pub name: String,
+    /// The account image URL
     #[serde(rename = "prof_image_url")]
     pub image_url: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AccountUserResponse {
+    /// The account information
     #[serde(rename = "user_info")]
     pub info: AccountUserInfo,
 }

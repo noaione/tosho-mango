@@ -7,12 +7,19 @@ use rand::{thread_rng, Rng};
 /// Created from a [`ComicInfo`], [`ComicEpisodeInfoNode`], and [`IAPInfo`].
 #[derive(Clone, Debug, Default)]
 pub struct ComicPurchase {
+    /// The comic episode ID
     pub id: u64,
+    /// The comic episode rental term
     pub rental_term: Option<String>,
+    /// Bonus tickets used
     pub bonus: u64,
+    /// Purchased tickets used
     pub purchased: u64,
+    /// Premium tickets used
     pub premium: u64,
+    /// Points used
     pub point: Option<u64>,
+    /// Use free daily ticket
     pub is_free_daily: bool,
 }
 
