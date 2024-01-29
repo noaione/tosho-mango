@@ -1,3 +1,4 @@
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 use super::{FavoriteStatus, MagazineCategory, PublishCategory, SupportStatus};
@@ -246,9 +247,59 @@ pub struct TitlePurchaseResponse {
 /// Title sharing data
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TitleShare {
+    /// The title name.
     #[serde(rename = "title_name")]
-    title: String,
+    pub title: String,
+    /// The title social media post text.
     #[serde(rename = "twitter_post_text")]
-    post_text: String,
-    url: String,
+    pub post_text: String,
+    /// The share URL.
+    pub url: String,
+}
+
+/// Favorite title node
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TitleFavoriteNode {
+    /// The title ID.
+    #[serde(rename = "title_id")]
+    pub id: i32,
+    /// The update cycle for when new episodes are released.
+    #[serde(
+        rename = "paid_episode_updated",
+        serialize_with = "super::datetime::serialize_opt",
+        deserialize_with = "super::datetime::deserialize_opt"
+    )]
+    pub update_cycle: Option<DateTime<Utc>>,
+    /// The update cycle for when new free episodes are released.
+    #[serde(
+        rename = "free_episode_updated",
+        serialize_with = "super::datetime::serialize_opt",
+        deserialize_with = "super::datetime::deserialize_opt"
+    )]
+    pub free_update_cycle: Option<DateTime<Utc>>,
+    /// The title purchase status.
+    pub purchase_status: i32,
+    /// The title ticket recover time.
+    #[serde(
+        serialize_with = "super::datetime::serialize_opt",
+        deserialize_with = "super::datetime::deserialize_opt"
+    )]
+    pub ticket_recover_time: Option<DateTime<Utc>>,
+}
+
+/// Represents the user favorite title list response.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TitleFavoriteResponse {
+    /// The list of favorite title nodes.
+    #[serde(rename = "favorite_title_list")]
+    pub favorites: Vec<TitleFavoriteNode>,
+    /// The list of title nodes.
+    #[serde(rename = "title_list")]
+    pub titles: Vec<TitleNode>,
+    /// Favorite count
+    #[serde(rename = "favorite_num")]
+    pub count: u64,
+    /// Maximum favorite count
+    #[serde(rename = "max_favorite_num")]
+    pub max_count: u64,
 }

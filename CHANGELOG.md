@@ -5,6 +5,7 @@ Starting from Rust port of the project, all changes will be put into this file.
 ## [0.2.2] (unreleased; git master)
 ### New Features
 - `AM`: Add `favorites` command
+- `KM`: Add `favorites` command
 
 ### Changes
 - `KM`: Fix favorite status deserialization

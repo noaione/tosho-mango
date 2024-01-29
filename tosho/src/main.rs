@@ -239,6 +239,9 @@ async fn main() {
                 )
                 .await
             }
+            KMKCCommands::Favorites { account_id } => {
+                r#impl::kmkc::favorites::kmkc_my_favorites(account_id.as_deref(), &t).await
+            }
             KMKCCommands::Info {
                 title_id,
                 account_id,

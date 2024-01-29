@@ -12,8 +12,8 @@ use models::{
     AccountResponse, BulkEpisodePurchaseResponse, EpisodeNode, EpisodePurchaseResponse,
     EpisodeViewerFinishResponse, EpisodeViewerResponse, EpisodesListResponse, GenreSearchResponse,
     KMAPINotEnoughPointsError, MagazineCategoryResponse, MobileEpisodeViewerResponse,
-    RankingListResponse, SearchResponse, StatusResponse, TicketInfoType, TitleListResponse,
-    TitleNode, TitlePurchaseNode, TitlePurchaseResponse, TitleTicketListNode,
+    RankingListResponse, SearchResponse, StatusResponse, TicketInfoType, TitleFavoriteResponse,
+    TitleListResponse, TitleNode, TitlePurchaseNode, TitlePurchaseResponse, TitleTicketListNode,
     TitleTicketListResponse, UserAccount, UserInfoResponse, UserPoint, UserPointResponse,
     WebEpisodeViewerResponse, WeeklyListResponse,
 };
@@ -600,6 +600,27 @@ impl KMClient {
             .await?;
 
         Ok(response.titles)
+    }
+
+    /// Get the user's favorites.
+    pub async fn get_favorites(&self) -> anyhow::Result<TitleFavoriteResponse> {
+        let mut params = HashMap::new();
+        params.insert("limit".to_owned(), "0".to_owned());
+        params.insert("offset".to_owned(), "0".to_owned());
+        // give back title list too
+        params.insert("needs_title_list".to_owned(), "1".to_owned());
+
+        let response = self
+            .request::<TitleFavoriteResponse>(
+                reqwest::Method::GET,
+                "/favorite/list",
+                None,
+                Some(params),
+                None,
+            )
+            .await?;
+
+        Ok(response)
     }
 
     /// Get the magazine list.
