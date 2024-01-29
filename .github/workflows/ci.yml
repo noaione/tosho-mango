@@ -41,7 +41,7 @@ jobs:
           lfs: true
 
       - name: Setup rust cache
-        uses: Swatinem/rust-cache@3cf7f8cc28d1b4e7d01e3783be10a97d55d483c8
+        uses: Swatinem/rust-cache@378c8285a4eaf12899d11bea686a763e906956af
         with:
           prefix-key: "${{ runner.os }}-tosho-rust"
 
@@ -81,7 +81,7 @@ jobs:
           rustup target add ${{ matrix.os[1] }}
 
       - name: Setup rust cache
-        uses: Swatinem/rust-cache@3cf7f8cc28d1b4e7d01e3783be10a97d55d483c8
+        uses: Swatinem/rust-cache@378c8285a4eaf12899d11bea686a763e906956af
         with:
           prefix-key: "${{ runner.os }}-${{ matrix.os[1] }}-tosho-build-rust"
 
