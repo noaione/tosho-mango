@@ -3,6 +3,9 @@
 Starting from Rust port of the project, all changes will be put into this file.
 
 ## [0.2.2] (unreleased; git master)
+### New Features
+- `AM`: Add `favorites` command
+
 ### Changes
 - `KM`: Fix favorite status deserialization
 - `AM`: Replace session v2 cookie in each request

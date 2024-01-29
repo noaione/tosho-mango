@@ -374,6 +374,9 @@ async fn main() {
                 )
                 .await
             }
+            AMAPCommands::Favorites { account_id } => {
+                r#impl::amap::favorites::amap_my_favorites(account_id.as_deref(), &t).await
+            }
             AMAPCommands::Info {
                 title_id,
                 account_id,

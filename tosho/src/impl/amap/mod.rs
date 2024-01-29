@@ -7,6 +7,7 @@ pub(crate) mod accounts;
 pub(super) mod common;
 pub(crate) mod config;
 pub(crate) mod download;
+pub(crate) mod favorites;
 pub(crate) mod manga;
 pub(crate) mod purchases;
 pub(crate) mod rankings;
@@ -83,6 +84,12 @@ pub(crate) enum AMAPCommands {
         /// Output directory to use
         #[arg(short = 'o', long = "output", default_value = None)]
         output: Option<PathBuf>,
+        /// Account ID to use
+        #[arg(short = 'a', long = "account", default_value = None)]
+        account_id: Option<String>,
+    },
+    /// Get your account favorites list
+    Favorites {
         /// Account ID to use
         #[arg(short = 'a', long = "account", default_value = None)]
         account_id: Option<String>,
