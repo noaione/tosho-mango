@@ -41,11 +41,7 @@ pub(crate) async fn kmkc_my_favorites(
                 .filter_map(|favorite| {
                     let title = results.titles.iter().find(|title| title.id == favorite.id);
 
-                    if let Some(title) = title {
-                        Some(title.clone())
-                    } else {
-                        None
-                    }
+                    title.cloned()
                 })
                 .collect();
 
