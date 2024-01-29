@@ -85,10 +85,14 @@ jobs:
         with:
           prefix-key: "${{ runner.os }}-${{ matrix.os[1] }}-tosho-build-rust"
 
+      - name: Prepare build
+        run: |
+          sed -i'' -e 's/# CI-PROFILE-MARK/[profile.release]\nopt-level = "z"\nlto = true\ncodegen-units = 1\npanic = "abort"\nstrip = "debuginfo"/g' Cargo.toml
+        shell: bash
+
       - name: Build (Nightly)
         if: startsWith(github.ref, 'refs/tags/v') != true
         run: |
-          sed -i'' -e 's/# CI-PROFILE-MARK/[profile.release]\nopt-level = "z"\nlto = true\ncodegen-units = 1\npanic = "abort"\nstrip = "debuginfo"/g' Cargo.toml
           cargo build --release --verbose --all --target ${{ matrix.os[1] }}
         shell: bash
 
