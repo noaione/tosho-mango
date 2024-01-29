@@ -128,7 +128,7 @@ jobs:
         uses: actions/upload-artifact@26f96dfa697d77e81fd5907df203aa23a56210a8
         if: startsWith(github.ref, 'refs/tags/v')
         with:
-          name: tosho-packages
+          name: tosho-packages-${{ matrix.os[1] }}
           path: |
             tosho-${{ matrix.os[1] }}.zip
             tosho-${{ matrix.os[1] }}.tar.gz
@@ -144,7 +144,9 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@bb3fa7fd35ab8113a980912eb9f59b846d14e3ff
         with:
-          name: tosho-packages
+          path: tosho-packages
+          pattern: tosho-packages-*
+          merge-multiple: true
 
       - name: Create changelog
         run: |

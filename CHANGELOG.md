@@ -20,6 +20,7 @@ Nothing for now.
 
 ### Build
 - Pin and bump dependencies on GitHub CI
+- Smaller size by stripping debuginfo properly from `std`
 
 ## [0.2.1] 2024-01-22
 ### Build
