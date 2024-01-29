@@ -29,6 +29,8 @@ pub(crate) async fn amap_discovery(
 
     match results {
         Ok(results) => {
+            super::common::save_session_config(&client, &acc_info);
+
             // updated
             for updated in results.updated.iter() {
                 console.info(&format!("{}:", updated.header.title));

@@ -231,6 +231,7 @@ pub(crate) async fn amap_download(
                                 ticket_purse.bonus -= consume.bonus;
                                 ticket_purse.purchased -= consume.purchased;
                                 ticket_purse.premium -= consume.premium;
+                                super::common::save_session_config(&client, &account);
                             }
                         }
                     }
@@ -288,6 +289,9 @@ pub(crate) async fn amap_download(
                     ));
                     continue;
                 }
+
+                // save session_v2
+                super::common::save_session_config(&client, &account);
 
                 let ch_pages = ch_view.info.pages;
                 let ch_dir =

@@ -2,9 +2,10 @@
 
 Starting from Rust port of the project, all changes will be put into this file.
 
-## Unreleased (git master)
+## [0.2.2] (unreleased; git master)
 ### Changes
 - `KM`: Fix favorite status deserialization
+- `AM`: Replace session v2 cookie in each request
 
 ## [0.2.1] 2024-01-22
 ### Build

@@ -29,6 +29,8 @@ pub(crate) async fn amap_search(
 
     match results {
         Ok(results) => {
+            super::common::save_session_config(&client, &acc_info);
+
             if results.comics.is_empty() {
                 console.warn("No results found");
                 return 1;

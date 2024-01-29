@@ -152,6 +152,8 @@ pub(crate) async fn amap_account_info(
 
             match account {
                 Ok(account) => {
+                    super::common::save_session_config(&client, &acc_info);
+
                     let info = account.info;
 
                     console.info(&cformat!(
@@ -199,6 +201,8 @@ pub(crate) async fn amap_account_balance(
 
     match remainder {
         Ok(remainder) => {
+            super::common::save_session_config(&client, &acc_info);
+
             let balance = &remainder.info;
 
             console.info("Your current point balance:");

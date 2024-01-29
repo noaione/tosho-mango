@@ -4,11 +4,11 @@ use num_format::{Locale, ToFormattedString};
 use tosho_amap::{
     constants::BASE_HOST,
     models::{ComicEpisodeInfo, ComicInfo, ComicSimpleInfo, IAPInfo},
-    AMClient, AMConfig,
+    AMClient, AMConfig, SESSION_COOKIE_NAME,
 };
 
 use crate::{
-    config::{get_all_config, get_config},
+    config::{get_all_config, get_config, save_config},
     linkify,
     term::{get_console, ConsoleChoice},
 };
@@ -172,6 +172,8 @@ pub(super) async fn common_purchase_select(
     let results = client.get_comic(title_id).await;
     match results {
         Ok(result) => {
+            save_session_config(&client, account);
+
             let balance = &result.account;
             let total_ticket = balance.sum().to_formatted_string(&Locale::en);
             let purchased = balance.purchased.to_formatted_string(&Locale::en);
@@ -286,4 +288,17 @@ pub(super) async fn common_purchase_select(
             (Err(e), None, client, None)
         }
     }
+}
+
+pub(super) fn save_session_config(client: &AMClient, config: &Config) {
+    let mut config = config.clone();
+    let masked_cookie = SESSION_COOKIE_NAME.as_str();
+    let store = client.get_cookie_store();
+    for cookie in store.iter_any() {
+        if cookie.name() == masked_cookie {
+            config.session = cookie.value().to_string();
+        }
+    }
+
+    save_config(crate::config::ConfigImpl::Amap(config), None);
 }
