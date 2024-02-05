@@ -219,7 +219,7 @@ impl ConfigWeb {
     pub fn with_user_account(&self, account: &tosho_kmkc::models::UserAccount) -> Self {
         let mut config = self.clone();
 
-        config.username = account.name.clone();
+        config.username = account.name.clone().unwrap_or("Unknown".to_string());
         config.email = account.email.clone();
         config.account_id = account.id;
         config.device_id = account.user_id;
@@ -250,7 +250,7 @@ impl ConfigMobile {
     pub fn with_user_account(&self, account: &tosho_kmkc::models::UserAccount) -> Self {
         let mut config = self.clone();
 
-        config.username = account.name.clone();
+        config.username = account.name.clone().unwrap_or("Unknown".to_string());
         config.email = account.email.clone();
         config.account_id = account.id;
         config.device_id = account.user_id;

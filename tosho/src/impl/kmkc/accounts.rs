@@ -94,7 +94,7 @@ pub(crate) async fn kmkc_account_login_web(
 
     match account {
         Ok(account) => {
-            console.info(&cformat!("Authenticated as <m,s>{}</>", account.name));
+            console.info(&cformat!("Authenticated as <m,s>{}</>", account.email));
             let old_config = all_configs.iter().find(|&c| match c {
                 crate::config::ConfigImpl::Kmkc(super::config::Config::Web(cc)) => {
                     cc.account_id == account.id && cc.device_id == account.user_id
@@ -192,7 +192,7 @@ pub(crate) async fn kmkc_account_login_mobile(
 
     match account {
         Ok(account) => {
-            console.info(&cformat!("Authenticated as <m,s>{}</>", account.name));
+            console.info(&cformat!("Authenticated as <m,s>{}</>", account.email));
 
             let mut acc_config =
                 super::config::ConfigMobile::from(config).with_user_account(&account);
@@ -268,7 +268,7 @@ pub async fn kmkc_account_login(
         Ok(config) => {
             console.info(&cformat!(
                 "Authenticated as <m,s>{}</>",
-                config.account.name
+                config.account.email
             ));
 
             let acc_config = match super::config::Config::from(config.config) {
@@ -352,7 +352,7 @@ pub async fn kmkc_account_login_adapt(
                 Ok(account) => {
                     let user_info = client.get_user(account.id).await.unwrap();
 
-                    console.info(&cformat!("Authenticated as <m,s>{}</>", account.name));
+                    console.info(&cformat!("Authenticated as <m,s>{}</>", account.email));
 
                     let mobile_config = KMConfigMobile {
                         user_id: account.id.to_string(),
@@ -445,7 +445,8 @@ pub(crate) async fn kmkc_account_info(
 
                     console.info(&cformat!("  <s>ID:</>: {}", account.id));
                     console.info(&cformat!("  <s>User ID:</>: {}", account.user_id));
-                    console.info(&cformat!("  <s>Username:</>: {}", account.name));
+                    let username = account.name.unwrap_or("Unknown".to_string());
+                    console.info(&cformat!("  <s>Username:</>: {}", username));
                     console.info(&cformat!("  <s>Email:</>: {}", account.email));
                     console.info(&cformat!("  <s>Registered?</>: {}", account.registered));
 
