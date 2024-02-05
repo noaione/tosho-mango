@@ -179,14 +179,14 @@ pub struct UserAccount {
     pub user_id: u32,
     /// The user name
     #[serde(rename = "nickname")]
-    pub name: String,
+    pub name: Option<String>,
     /// The user email
     pub email: String,
     /// The user gender
-    pub gender: GenderType,
+    pub gender: Option<GenderType>,
     /// The user birth year
     #[serde(rename = "birthyear")]
-    pub birth_year: i32,
+    pub birth_year: Option<i32>,
     /// The list of registered devices
     #[serde(rename = "device_list")]
     pub devices: Vec<UserAccountDevice>,

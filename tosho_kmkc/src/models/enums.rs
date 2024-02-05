@@ -79,6 +79,8 @@ pub enum EpisodeBadge {
 /// The device platform type.
 #[derive(Debug, Clone, SerializeEnum32, DeserializeEnum32, PartialEq, EnumName)]
 pub enum DevicePlatform {
+    // Is Apple/iOS
+    Apple = 1,
     // Is Android
     Android = 2,
     /// Is Website

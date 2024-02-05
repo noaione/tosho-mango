@@ -3,8 +3,8 @@
 Starting from Rust port of the project, all changes will be put into this file.
 
 ## Unreleased (git master)
-
-Nothing for now.
+### Changes
+- `KM`: Fix invalid deserialization on `/account`
 
 ## [0.2.2] 2024-01-29
 ### New Features
