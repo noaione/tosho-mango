@@ -44,6 +44,8 @@ Alternatively, you can obtain the precompiled binary from:
 Refer to each source's folder for information on authenticating each source with `tosho`.<br />
 For a list of available commands, use the `--help` argument.
 
+[![asciicast](https://asciinema.org/a/636303.svg)](https://asciinema.org/a/636303)
+
 ## License
 
 [MIT License](LICENSE)
