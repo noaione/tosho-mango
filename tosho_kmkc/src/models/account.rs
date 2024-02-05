@@ -213,7 +213,7 @@ pub struct UserInfoResponse {
     /// The user email
     pub email: String,
     /// The user gender
-    pub gender: GenderType,
+    pub gender: Option<GenderType>,
     /// The user hash key
     pub hash_key: String,
 }
