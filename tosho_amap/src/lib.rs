@@ -21,6 +21,25 @@ pub mod models;
 
 const SCREEN_INCH: f64 = 61.1918658356194;
 
+/// Main client for interacting with the AP AM
+///
+/// # Example
+/// ```no_run,ignore
+/// use tosho_amap::{AMClient, AMConfig};
+///
+/// #[tokio::main]
+/// async fn main() {
+///     let config = AMConfig {
+///         token: "123",
+///         identifier: "abcxyz",
+///         session_v2: "xyz987abc",
+///     };
+///
+///     let client = AMClient::new(config);
+///     let manga = client.get_comic(48000051).await.unwrap();
+///     println!("{:?}", manga);
+/// }
+/// ```
 #[derive(Clone)]
 pub struct AMClient {
     inner: reqwest::Client,
@@ -30,7 +49,25 @@ pub struct AMClient {
 }
 
 impl AMClient {
+    /// Create a new client instance.
+    ///
+    /// # Parameters
+    /// * `config` - The configuration to use for the client.
     pub fn new(config: AMConfig) -> Self {
+        Self::make_client(config, None)
+    }
+
+    /// Attach a proxy to the client.
+    ///
+    /// This will clone the client and return a new client with the proxy attached.
+    ///
+    /// # Arguments
+    /// * `proxy` - The proxy to attach to the client
+    pub fn with_proxy(&self, proxy: reqwest::Proxy) -> Self {
+        Self::make_client(self.config.clone(), Some(proxy))
+    }
+
+    fn make_client(config: AMConfig, proxy: Option<reqwest::Proxy>) -> Self {
         let mut headers = reqwest::header::HeaderMap::new();
         headers.insert(
             reqwest::header::ACCEPT,
@@ -51,9 +88,12 @@ impl AMClient {
 
         let client = reqwest::Client::builder()
             .default_headers(headers)
-            .cookie_provider(std::sync::Arc::clone(&cookie_store))
-            .build()
-            .unwrap();
+            .cookie_provider(std::sync::Arc::clone(&cookie_store));
+
+        let client = match proxy {
+            Some(proxy) => client.proxy(proxy).build().unwrap(),
+            None => client.build().unwrap(),
+        };
 
         Self {
             inner: client,
