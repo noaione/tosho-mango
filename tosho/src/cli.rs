@@ -21,6 +21,14 @@ pub(crate) struct ToshoCli {
     /// Increase message verbosity
     #[arg(short, long, action = clap::ArgAction::Count)]
     pub(crate) verbose: u8,
+    /// Use proxy for all requests
+    ///
+    /// Format: `http(s)://<ip>:<port>` or `socks5://<ip>:<port>`.
+    ///
+    /// You can also add username and password to the URL like this:
+    /// `http(s)://<username>:<password>@<ip>:<port>` or `socks5://<username>:<password>@<ip>:<port>`.
+    #[arg(long)]
+    pub(crate) proxy: Option<String>,
 
     #[command(subcommand)]
     pub(crate) command: ToshoCommands,
@@ -31,18 +39,30 @@ pub(crate) enum ToshoCommands {
     /// Download manga from MU!
     #[command(name = "mu")]
     Musq {
+        /// Account ID to use
+        #[arg(short = 'a', long = "account", default_value = None)]
+        account_id: Option<String>,
+
         #[command(subcommand)]
         subcommand: MUSQCommands,
     },
     /// Download manga from KM
     #[command(name = "km")]
     Kmkc {
+        /// Account ID to use
+        #[arg(short = 'a', long = "account", default_value = None)]
+        account_id: Option<String>,
+
         #[command(subcommand)]
         subcommand: KMKCCommands,
     },
     /// Download manga from AM
     #[command(name = "am")]
     Amap {
+        /// Account ID to use
+        #[arg(short = 'a', long = "account", default_value = None)]
+        account_id: Option<String>,
+
         #[command(subcommand)]
         subcommand: AMAPCommands,
     },

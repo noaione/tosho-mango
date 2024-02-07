@@ -1,26 +1,19 @@
 use color_print::cformat;
+use tosho_musq::MUClient;
 
 use crate::{cli::ExitCode, term::ConsoleChoice};
 
-use super::common::{do_print_search_information, make_client, select_single_account};
+use super::common::do_print_search_information;
 
 pub(crate) async fn musq_home_rankings(
-    account_id: Option<&str>,
+    client: &MUClient,
+    account: &super::config::Config,
     console: &crate::term::Terminal,
 ) -> ExitCode {
-    let account = select_single_account(account_id);
-
-    if account.is_none() {
-        console.warn("Aborted");
-        return 1;
-    }
-
-    let account = account.unwrap();
     console.info(&cformat!(
         "Getting rankings list for user <m,s>{}</>",
         account.id
     ));
-    let client = make_client(&account);
 
     let results = client.get_my_home().await;
 

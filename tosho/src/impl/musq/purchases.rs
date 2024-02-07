@@ -2,27 +2,19 @@ use tokio::time::{sleep, Duration};
 
 use color_print::cformat;
 use num_format::{Locale, ToFormattedString};
-use tosho_musq::proto::ChapterV2;
+use tosho_musq::{proto::ChapterV2, MUClient};
 
 use crate::cli::ExitCode;
 
-use super::common::{common_purchase_select, select_single_account};
+use super::common::common_purchase_select;
 
 pub(crate) async fn musq_purchase(
     title_id: u64,
-    account_id: Option<&str>,
+    client: &MUClient,
     console: &mut crate::term::Terminal,
 ) -> ExitCode {
-    let account = select_single_account(account_id);
-
-    if account.is_none() {
-        console.warn("Aborted");
-        return 1;
-    }
-
-    let account = account.unwrap();
-    let (results, _, client, user_bal) =
-        common_purchase_select(title_id, &account, false, true, false, console).await;
+    let (results, _, user_bal) =
+        common_purchase_select(title_id, client, false, true, false, console).await;
 
     match (results, user_bal) {
         (Ok(results), Some(user_bal)) => {
@@ -100,19 +92,11 @@ pub(crate) async fn musq_purchase(
 
 pub(crate) async fn musq_purchase_precalculate(
     title_id: u64,
-    account_id: Option<&str>,
+    client: &MUClient,
     console: &crate::term::Terminal,
 ) -> ExitCode {
-    let account = select_single_account(account_id);
-
-    if account.is_none() {
-        console.warn("Aborted");
-        return 1;
-    }
-
-    let account = account.unwrap();
-    let (results, _, _, user_bal) =
-        common_purchase_select(title_id, &account, false, true, false, console).await;
+    let (results, _, user_bal) =
+        common_purchase_select(title_id, client, false, true, false, console).await;
 
     match (results, user_bal) {
         (Ok(results), Some(user_bal)) => {

@@ -4,6 +4,7 @@ use color_print::cformat;
 use tosho_amap::{
     helper::ComicPurchase,
     models::{ComicEpisodeInfo, ComicInfo},
+    AMClient,
 };
 
 use crate::{
@@ -11,7 +12,7 @@ use crate::{
     r#impl::models::{ChapterDetailDump, MangaDetailDump},
 };
 
-use super::common::{common_purchase_select, select_single_account};
+use super::{common::common_purchase_select, config::Config};
 
 #[derive(Clone, Debug, Default)]
 pub(crate) struct AMDownloadCliConfig {
@@ -98,21 +99,15 @@ fn get_output_directory(
 pub(crate) async fn amap_download(
     title_id: u64,
     dl_config: AMDownloadCliConfig,
-    account_id: Option<&str>,
     output_dir: PathBuf,
+    client: &AMClient,
+    account: &Config,
     console: &mut crate::term::Terminal,
 ) -> ExitCode {
-    let account = select_single_account(account_id);
-
-    if account.is_none() {
-        console.warn("Aborted");
-        return 1;
-    }
-
-    let account = account.unwrap();
-    let (results, manga_detail, client, user_bal) = common_purchase_select(
+    let (results, manga_detail, user_bal) = common_purchase_select(
         title_id,
-        &account,
+        client,
+        account,
         true,
         dl_config.show_all,
         dl_config.no_input,
@@ -231,7 +226,7 @@ pub(crate) async fn amap_download(
                                 ticket_purse.bonus -= consume.bonus;
                                 ticket_purse.purchased -= consume.purchased;
                                 ticket_purse.premium -= consume.premium;
-                                super::common::save_session_config(&client, &account);
+                                super::common::save_session_config(client, account);
                             }
                         }
                     }
@@ -291,7 +286,7 @@ pub(crate) async fn amap_download(
                 }
 
                 // save session_v2
-                super::common::save_session_config(&client, &account);
+                super::common::save_session_config(client, account);
 
                 let ch_pages = ch_view.info.pages;
                 let ch_dir =

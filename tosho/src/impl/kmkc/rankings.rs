@@ -1,10 +1,13 @@
 use clap::ValueEnum;
 use color_print::cformat;
-use tosho_kmkc::constants::{RankingTab, RANKING_TABS};
+use tosho_kmkc::{
+    constants::{RankingTab, RANKING_TABS},
+    KMClient,
+};
 
 use crate::cli::ExitCode;
 
-use super::common::{do_print_search_information, select_single_account};
+use super::common::do_print_search_information;
 
 #[derive(Debug, Clone, ValueEnum, Default)]
 pub enum RankingType {
@@ -31,16 +34,10 @@ impl RankingType {
 
 pub(crate) async fn kmkc_home_rankings(
     ranking: Option<RankingType>,
-    account_id: Option<&str>,
     limit: Option<u32>,
+    client: &KMClient,
     console: &crate::term::Terminal,
 ) -> ExitCode {
-    let account = select_single_account(account_id);
-
-    if account.is_none() {
-        console.warn("Aborted");
-        return 1;
-    }
     let ranking = ranking.unwrap_or_default();
 
     let rank_tab = match ranking.get_tab() {
@@ -52,12 +49,10 @@ pub(crate) async fn kmkc_home_rankings(
     };
     let limit = limit.unwrap_or(25);
 
-    let account = account.unwrap();
     console.info(&cformat!(
         "Getting ranking <magenta,bold>{}</>...",
         rank_tab.name
     ));
-    let client = super::common::make_client(&account.into());
 
     let results = client
         .get_all_rankings(rank_tab.id, Some(limit), Some(0))

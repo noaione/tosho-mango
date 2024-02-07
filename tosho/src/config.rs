@@ -8,6 +8,7 @@ use std::{
 use crate::r#impl::Implementations;
 
 /// The many type of config files.
+#[derive(Clone)]
 pub enum ConfigImpl {
     Kmkc(crate::r#impl::kmkc::config::Config),
     Musq(crate::r#impl::musq::config::Config),
@@ -152,7 +153,7 @@ fn get_config_amap(id: &str, user_path: PathBuf) -> Option<crate::r#impl::amap::
 
 pub fn get_config(
     id: &str,
-    r#impl: Implementations,
+    r#impl: &Implementations,
     user_path: Option<PathBuf>,
 ) -> Option<ConfigImpl> {
     let user_path = user_path.unwrap_or(get_user_path());
@@ -173,7 +174,7 @@ pub fn get_config(
     }
 }
 
-pub fn get_all_config(r#impl: Implementations, user_path: Option<PathBuf>) -> Vec<ConfigImpl> {
+pub fn get_all_config(r#impl: &Implementations, user_path: Option<PathBuf>) -> Vec<ConfigImpl> {
     let user_path = user_path.unwrap_or(get_user_path());
 
     if !user_path.exists() {

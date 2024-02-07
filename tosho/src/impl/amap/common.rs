@@ -4,90 +4,25 @@ use num_format::{Locale, ToFormattedString};
 use tosho_amap::{
     constants::BASE_HOST,
     models::{ComicEpisodeInfo, ComicInfo, ComicSimpleInfo, IAPInfo},
-    AMClient, AMConfig, SESSION_COOKIE_NAME,
+    AMClient, SESSION_COOKIE_NAME,
 };
 
 use crate::{
-    config::{get_all_config, get_config, save_config},
+    config::save_config,
     linkify,
     term::{get_console, ConsoleChoice},
 };
 
 use super::config::Config;
 
-pub(super) fn select_single_account(account_id: Option<&str>) -> Option<Config> {
-    let term: crate::term::Terminal = get_console(0);
-
-    if let Some(account_id) = account_id {
-        let config = get_config(account_id, crate::r#impl::Implementations::Amap, None);
-
-        if let Some(config) = config {
-            return match config {
-                crate::config::ConfigImpl::Amap(c) => Some(c),
-                _ => unreachable!(),
-            };
-        }
-
-        term.warn(&format!("Account ID {} not found!", account_id));
-    }
-
-    let all_configs = get_all_config(crate::r#impl::Implementations::Amap, None);
-    let all_choices: Vec<ConsoleChoice> = all_configs
-        .iter()
-        .filter_map(|c| match c {
-            crate::config::ConfigImpl::Amap(c) => Some(ConsoleChoice {
-                name: c.id.clone(),
-                value: format!("{} - {} [{}]", c.id, c.email, c.r#type().to_name()),
-            }),
-            _ => None,
-        })
-        .collect();
-
-    if all_configs.is_empty() {
-        term.warn("No accounts found!");
-        return None;
-    }
-
-    // only 1? return
-    if all_configs.len() == 1 {
-        return match &all_configs[0] {
-            crate::config::ConfigImpl::Amap(c) => Some(c.clone()),
-            _ => unreachable!(),
-        };
-    }
-
-    let selected = term.choice("Select an account:", all_choices);
-    match selected {
-        Some(selected) => {
-            let config = all_configs
-                .iter()
-                .find(|&c| match c {
-                    crate::config::ConfigImpl::Amap(c) => c.id == selected.name,
-                    _ => false,
-                })
-                .unwrap();
-
-            match config {
-                crate::config::ConfigImpl::Amap(c) => Some(c.clone()),
-                _ => unreachable!(),
-            }
-        }
-        None => None,
-    }
-}
-
-impl From<Config> for tosho_amap::AMConfig {
-    fn from(value: Config) -> Self {
-        Self {
-            token: value.token,
-            identifier: value.identifier,
-            session_v2: value.session,
+impl From<super::config::Config> for tosho_amap::AMConfig {
+    fn from(config: super::config::Config) -> Self {
+        tosho_amap::AMConfig {
+            token: config.token,
+            identifier: config.identifier,
+            session_v2: config.session,
         }
     }
-}
-
-pub(super) fn make_client(config: &AMConfig) -> tosho_amap::AMClient {
-    tosho_amap::AMClient::new(config.clone())
 }
 
 pub(super) fn do_print_search_information(
@@ -151,6 +86,7 @@ pub(super) fn unix_timestamp_to_string(timestamp: u64) -> Option<String> {
 
 pub(super) async fn common_purchase_select(
     title_id: u64,
+    client: &AMClient,
     account: &Config,
     download_mode: bool,
     show_all: bool,
@@ -159,20 +95,17 @@ pub(super) async fn common_purchase_select(
 ) -> (
     anyhow::Result<Vec<ComicEpisodeInfo>>,
     Option<ComicInfo>,
-    AMClient,
     Option<IAPInfo>,
 ) {
     console.info(&cformat!(
         "Fetching for ID <magenta,bold>{}</>...",
         title_id
     ));
-    let config: AMConfig = account.clone().into();
-    let client = make_client(&config);
 
     let results = client.get_comic(title_id).await;
     match results {
         Ok(result) => {
-            save_session_config(&client, account);
+            save_session_config(client, account);
 
             let balance = &result.account;
             let total_ticket = balance.sum().to_formatted_string(&Locale::en);
@@ -202,7 +135,6 @@ pub(super) async fn common_purchase_select(
                 return (
                     Ok(result.info.episodes.clone()),
                     Some(result.info.clone()),
-                    client,
                     Some(balance.clone()),
                 );
             }
@@ -231,7 +163,7 @@ pub(super) async fn common_purchase_select(
             if select_choices.is_empty() {
                 console.warn("No chapters selected, aborting...");
 
-                return (Ok(vec![]), None, client, Some(balance.clone()));
+                return (Ok(vec![]), None, Some(balance.clone()));
             }
 
             let sel_prompt = if download_mode {
@@ -246,7 +178,7 @@ pub(super) async fn common_purchase_select(
                     if selected.is_empty() {
                         console.warn("No chapter selected, aborting...");
 
-                        return (Ok(vec![]), None, client, Some(balance.clone()));
+                        return (Ok(vec![]), None, Some(balance.clone()));
                     }
 
                     let mut selected_chapters: Vec<ComicEpisodeInfo> = vec![];
@@ -267,7 +199,6 @@ pub(super) async fn common_purchase_select(
                     (
                         Ok(selected_chapters),
                         Some(result.info),
-                        client,
                         Some(balance.clone()),
                     )
                 }
@@ -276,7 +207,6 @@ pub(super) async fn common_purchase_select(
                     (
                         Err(anyhow::anyhow!("Aborted")),
                         Some(result.info.clone()),
-                        client,
                         Some(result.account.clone()),
                     )
                 }
@@ -285,7 +215,7 @@ pub(super) async fn common_purchase_select(
         Err(e) => {
             console.error(&cformat!("Unable to connect to MU!: {}", e));
 
-            (Err(e), None, client, None)
+            (Err(e), None, None)
         }
     }
 }

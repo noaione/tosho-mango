@@ -5,7 +5,7 @@ use clap::ValueEnum;
 use color_print::cformat;
 use tosho_musq::{
     proto::{ChapterV2, MangaDetailV2},
-    ImageQuality,
+    ImageQuality, MUClient,
 };
 
 use crate::{
@@ -13,7 +13,7 @@ use crate::{
     r#impl::models::{ChapterDetailDump, MangaDetailDump},
 };
 
-use super::common::{common_purchase_select, select_single_account};
+use super::common::common_purchase_select;
 
 #[derive(Debug, Clone, Default)]
 pub(crate) enum DownloadImageQuality {
@@ -137,21 +137,13 @@ fn get_output_directory(
 pub(crate) async fn musq_download(
     title_id: u64,
     dl_config: MUDownloadCliConfig,
-    account_id: Option<&str>,
     output_dir: PathBuf,
+    client: &MUClient,
     console: &mut crate::term::Terminal,
 ) -> ExitCode {
-    let account = select_single_account(account_id);
-
-    if account.is_none() {
-        console.warn("Aborted");
-        return 1;
-    }
-
-    let account = account.unwrap();
-    let (results, manga_detail, client, user_bal) = common_purchase_select(
+    let (results, manga_detail, user_bal) = common_purchase_select(
         title_id,
-        &account,
+        client,
         true,
         dl_config.show_all,
         dl_config.no_input,

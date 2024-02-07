@@ -1,14 +1,17 @@
 use std::path::{Path, PathBuf};
 
 use color_print::cformat;
-use tosho_kmkc::models::{EpisodeNode, EpisodeViewerResponse, TicketInfoType, TitleNode};
+use tosho_kmkc::{
+    models::{EpisodeNode, EpisodeViewerResponse, TicketInfoType, TitleNode},
+    KMClient,
+};
 
 use crate::{
     cli::ExitCode,
     r#impl::models::{ChapterDetailDump, MangaDetailDump},
 };
 
-use super::common::{common_purchase_select, select_single_account};
+use super::{common::common_purchase_select, config::Config};
 
 #[derive(Clone, Debug, Default)]
 pub(crate) struct KMDownloadCliConfig {
@@ -87,17 +90,11 @@ fn get_output_directory(
 pub(crate) async fn kmkc_download(
     title_id: i32,
     dl_config: KMDownloadCliConfig,
-    account_id: Option<&str>,
     output_dir: PathBuf,
+    client: &KMClient,
+    account: &Config,
     console: &mut crate::term::Terminal,
 ) -> ExitCode {
-    let account = select_single_account(account_id);
-
-    if account.is_none() {
-        console.warn("Aborted");
-        return 1;
-    }
-
     if let (Some(start), Some(end)) = (dl_config.start_from, dl_config.end_at) {
         if start > end {
             console.error("Start chapter is greater than end chapter!");
@@ -105,10 +102,10 @@ pub(crate) async fn kmkc_download(
         }
     }
 
-    let account = account.unwrap();
-    let (results, title_detail, all_chapters, client, user_point) = common_purchase_select(
+    let (results, title_detail, all_chapters, user_point) = common_purchase_select(
         title_id,
-        &account,
+        client,
+        account,
         true,
         dl_config.show_all,
         dl_config.no_input,

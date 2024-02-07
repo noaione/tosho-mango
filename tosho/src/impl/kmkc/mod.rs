@@ -55,11 +55,7 @@ pub(crate) enum KMKCCommands {
         r#type: crate::r#impl::kmkc::accounts::DeviceKind,
     },
     /// Get an account information
-    Account {
-        /// Account ID to use
-        #[arg(short = 'a', long = "account", default_value = None)]
-        account_id: Option<String>,
-    },
+    Account,
     /// See all the accounts you have authenticated with
     Accounts,
     /// Automatically/batch download a chapter(s) from a title
@@ -85,16 +81,9 @@ pub(crate) enum KMKCCommands {
         /// Output directory to use
         #[arg(short = 'o', long = "output", default_value = None)]
         output: Option<PathBuf>,
-        /// Account ID to use
-        #[arg(short = 'a', long = "account", default_value = None)]
-        account_id: Option<String>,
     },
     /// Get your account point balance
-    Balance {
-        /// Account ID to use
-        #[arg(short = 'a', long = "account", default_value = None)]
-        account_id: Option<String>,
-    },
+    Balance,
     /// Download a chapters from a title
     Download {
         /// Title ID to use
@@ -111,60 +100,33 @@ pub(crate) enum KMKCCommands {
         /// Output directory to use
         #[arg(short = 'o', long = "output", default_value = None)]
         output: Option<PathBuf>,
-        /// Account ID to use
-        #[arg(short = 'a', long = "account", default_value = None)]
-        account_id: Option<String>,
     },
     /// Get your account favorites list
-    Favorites {
-        /// Account ID to use
-        #[arg(short = 'a', long = "account", default_value = None)]
-        account_id: Option<String>,
-    },
+    Favorites,
     /// Get a title information
     Info {
         /// Title ID to use
         title_id: i32,
-        /// Account ID to use
-        #[arg(short = 'a', long = "account", default_value = None)]
-        account_id: Option<String>,
         /// Show each chapter detailed information
         #[arg(short = 'c', long = "chapters")]
         show_chapters: bool,
     },
     /// Get magazines list information
-    Magazines {
-        /// Account ID to use
-        #[arg(short = 'a', long = "account", default_value = None)]
-        account_id: Option<String>,
-    },
+    Magazines,
     /// Purchases chapters for a title
     Purchase {
         /// Title ID to use
         title_id: i32,
-        /// Account ID to use
-        #[arg(short = 'a', long = "account", default_value = None)]
-        account_id: Option<String>,
     },
     /// See purchased titles for an account
-    Purchased {
-        /// Account ID to use
-        #[arg(short = 'a', long = "account", default_value = None)]
-        account_id: Option<String>,
-    },
+    Purchased,
     /// Precalculate the amount of points needed to purchase chapters for a title
     Precalculate {
         /// Title ID to use
         title_id: i32,
-        /// Account ID to use
-        #[arg(short = 'a', long = "account", default_value = None)]
-        account_id: Option<String>,
     },
     /// Get the current title rankings
     Rankings {
-        /// Account ID to use
-        #[arg(short = 'a', long = "account", default_value = None)]
-        account_id: Option<String>,
         /// Which ranking tab to use
         #[arg(short = 'r', long = "ranking", default_value = None)]
         ranking_tab: Option<RankingType>,
@@ -173,27 +135,17 @@ pub(crate) enum KMKCCommands {
         limit: Option<u32>,
     },
     /// Revoke or delete an account
-    Revoke {
-        /// Account ID to use
-        #[arg(short = 'a', long = "account", default_value = None)]
-        account_id: Option<String>,
-    },
+    Revoke,
     /// Search for a title
     Search {
         /// Query to search for
         query: String,
-        /// Account ID to use
-        #[arg(short = 'a', long = "account", default_value = None)]
-        account_id: Option<String>,
     },
     /// Get weekly releases
     Weekly {
         /// Day of the week to get releases for
         #[arg(short = 'd', long = "day", value_enum, default_value = None)]
         weekday: Option<WeeklyCodeCli>,
-        /// Account ID to use
-        #[arg(short = 'a', long = "account", default_value = None)]
-        account_id: Option<String>,
     },
 }
 

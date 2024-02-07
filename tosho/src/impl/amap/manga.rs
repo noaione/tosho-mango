@@ -1,35 +1,25 @@
 use color_print::cformat;
-use tosho_amap::{constants::BASE_HOST, models::ComicTagInfo};
+use tosho_amap::{constants::BASE_HOST, models::ComicTagInfo, AMClient};
 
 use crate::{cli::ExitCode, linkify};
 
-use super::common::{
-    do_print_search_information, make_client, select_single_account, unix_timestamp_to_string,
+use super::{
+    common::{do_print_search_information, unix_timestamp_to_string},
+    config::Config,
 };
 
 pub(crate) async fn amap_search(
     query: &str,
-    account_id: Option<&str>,
+    client: &AMClient,
+    acc_info: &Config,
     console: &crate::term::Terminal,
 ) -> ExitCode {
-    let acc_info = select_single_account(account_id);
-
-    if acc_info.is_none() {
-        console.warn("Aborted!");
-
-        return 1;
-    }
-
-    let acc_info = acc_info.unwrap();
-
-    let client = make_client(&acc_info.clone().into());
-
     console.info(&cformat!("Searching for <magenta,bold>{}</>...", query));
     let results = client.search(query, None, None, None, None).await;
 
     match results {
         Ok(results) => {
-            super::common::save_session_config(&client, &acc_info);
+            super::common::save_session_config(client, acc_info);
 
             if results.comics.is_empty() {
                 console.warn("No results found");
@@ -64,22 +54,10 @@ fn format_tags(tags: Vec<ComicTagInfo>) -> String {
 
 pub(crate) async fn amap_title_info(
     title_id: u64,
-    account_id: Option<&str>,
     show_chapters: bool,
+    client: &AMClient,
     console: &crate::term::Terminal,
 ) -> ExitCode {
-    let acc_info = select_single_account(account_id);
-
-    if acc_info.is_none() {
-        console.warn("Aborted!");
-
-        return 1;
-    }
-
-    let acc_info = acc_info.unwrap();
-
-    let client = make_client(&acc_info.clone().into());
-
     console.info(&cformat!(
         "Fetching info for ID <magenta,bold>{}</>...",
         title_id

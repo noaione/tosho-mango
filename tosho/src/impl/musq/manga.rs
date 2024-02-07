@@ -1,25 +1,16 @@
 use color_print::cformat;
-use tosho_musq::{constants::BASE_HOST, proto::Tag, WeeklyCode};
+use tosho_musq::{constants::BASE_HOST, proto::Tag, MUClient, WeeklyCode};
 
 use crate::{cli::ExitCode, linkify};
 
-use super::common::{do_print_search_information, select_single_account};
+use super::common::do_print_search_information;
 
 pub(crate) async fn musq_search(
     query: &str,
-    account_id: Option<&str>,
+    client: &MUClient,
     console: &crate::term::Terminal,
 ) -> ExitCode {
-    let account = select_single_account(account_id);
-
-    if account.is_none() {
-        console.warn("Aborted");
-        return 1;
-    }
-
-    let account = account.unwrap();
     console.info(&cformat!("Searching for <magenta,bold>{}</>...", query));
-    let client = super::common::make_client(&account);
 
     let results = client.search(query).await;
     match results {
@@ -50,22 +41,13 @@ pub(crate) async fn musq_search(
 
 pub(crate) async fn musq_search_weekly(
     weekday: WeeklyCode,
-    account_id: Option<&str>,
+    client: &MUClient,
     console: &crate::term::Terminal,
 ) -> ExitCode {
-    let account = select_single_account(account_id);
-
-    if account.is_none() {
-        console.warn("Aborted");
-        return 1;
-    }
-
-    let account = account.unwrap();
     console.info(&cformat!(
         "Getting weekly manga for week <magenta,bold>{}</>...",
         weekday.to_name()
     ));
-    let client = super::common::make_client(&account);
 
     let results = client.get_weekly_titles(weekday).await;
     match results {
@@ -108,24 +90,15 @@ fn format_tags(tags: Vec<Tag>) -> String {
 
 pub(crate) async fn musq_title_info(
     title_id: u64,
-    account_id: Option<&str>,
     show_chapters: bool,
     show_related: bool,
+    client: &MUClient,
     console: &crate::term::Terminal,
 ) -> ExitCode {
-    let account = select_single_account(account_id);
-
-    if account.is_none() {
-        console.warn("Aborted");
-        return 1;
-    }
-
-    let account = account.unwrap();
     console.info(&cformat!(
         "Fetching info for ID <magenta,bold>{}</>...",
         title_id
     ));
-    let client = super::common::make_client(&account);
 
     let result = client.get_manga(title_id).await;
 

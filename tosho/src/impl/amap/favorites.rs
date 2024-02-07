@@ -1,26 +1,14 @@
 use color_print::cformat;
+use tosho_amap::AMClient;
 
-use super::common::do_print_search_information;
-use super::common::make_client;
-use super::common::select_single_account;
+use super::{common::do_print_search_information, config::Config};
 use crate::cli::ExitCode;
 
 pub(crate) async fn amap_my_favorites(
-    account_id: Option<&str>,
+    client: &AMClient,
+    acc_info: &Config,
     console: &crate::term::Terminal,
 ) -> ExitCode {
-    let acc_info = select_single_account(account_id);
-
-    if acc_info.is_none() {
-        console.warn("Aborted!");
-
-        return 1;
-    }
-
-    let acc_info = acc_info.unwrap();
-
-    let client = make_client(&acc_info.clone().into());
-
     console.info(&cformat!(
         "Getting favorites list for <magenta,bold>{}</>...",
         acc_info.email

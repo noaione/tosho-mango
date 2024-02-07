@@ -24,11 +24,7 @@ pub(crate) enum MUSQCommands {
         r#type: crate::r#impl::musq::accounts::DeviceKind,
     },
     /// Get an account information
-    Account {
-        /// Account ID to use
-        #[arg(short = 'a', long = "account", default_value = None)]
-        account_id: Option<String>,
-    },
+    Account,
     /// See all the accounts you have authenticated with
     Accounts,
     /// Automatically/batch download a chapter(s) from a title
@@ -57,16 +53,9 @@ pub(crate) enum MUSQCommands {
         /// Output directory to use
         #[arg(short = 'o', long = "output", default_value = None)]
         output: Option<PathBuf>,
-        /// Account ID to use
-        #[arg(short = 'a', long = "account", default_value = None)]
-        account_id: Option<String>,
     },
     /// Get your account point balance
-    Balance {
-        /// Account ID to use
-        #[arg(short = 'a', long = "account", default_value = None)]
-        account_id: Option<String>,
-    },
+    Balance,
     /// Download a chapters from a title
     Download {
         /// Title ID to use
@@ -86,29 +75,15 @@ pub(crate) enum MUSQCommands {
         /// Output directory to use
         #[arg(short = 'o', long = "output", default_value = None)]
         output: Option<PathBuf>,
-        /// Account ID to use
-        #[arg(short = 'a', long = "account", default_value = None)]
-        account_id: Option<String>,
     },
     /// Get your account favorites list
-    Favorites {
-        /// Account ID to use
-        #[arg(short = 'a', long = "account", default_value = None)]
-        account_id: Option<String>,
-    },
+    Favorites,
     /// Get your account reading history
-    History {
-        /// Account ID to use
-        #[arg(short = 'a', long = "account", default_value = None)]
-        account_id: Option<String>,
-    },
+    History,
     /// Get a title information
     Info {
         /// Title ID to use
         title_id: u64,
-        /// Account ID to use
-        #[arg(short = 'a', long = "account", default_value = None)]
-        account_id: Option<String>,
         /// Show each chapter detailed information
         #[arg(short = 'c', long = "chapters")]
         show_chapters: bool,
@@ -120,45 +95,25 @@ pub(crate) enum MUSQCommands {
     Purchase {
         /// Title ID to use
         title_id: u64,
-        /// Account ID to use
-        #[arg(short = 'a', long = "account", default_value = None)]
-        account_id: Option<String>,
     },
     /// Precalculate the amount of points needed to purchase chapters for a title
     Precalculate {
         /// Title ID to use
         title_id: u64,
-        /// Account ID to use
-        #[arg(short = 'a', long = "account", default_value = None)]
-        account_id: Option<String>,
     },
     /// Get the current title rankings
-    Rankings {
-        /// Account ID to use
-        #[arg(short = 'a', long = "account", default_value = None)]
-        account_id: Option<String>,
-    },
+    Rankings,
     /// Revoke or delete an account
-    Revoke {
-        /// Account ID to use
-        #[arg(short = 'a', long = "account", default_value = None)]
-        account_id: Option<String>,
-    },
+    Revoke,
     /// Search for a title
     Search {
         /// Query to search for
         query: String,
-        /// Account ID to use
-        #[arg(short = 'a', long = "account", default_value = None)]
-        account_id: Option<String>,
     },
     /// Get weekly releases
     Weekly {
         /// Day of the week to get releases for
         #[arg(short = 'd', long = "day", value_enum, default_value = None)]
         weekday: Option<WeeklyCodeCli>,
-        /// Account ID to use
-        #[arg(short = 'a', long = "account", default_value = None)]
-        account_id: Option<String>,
     },
 }

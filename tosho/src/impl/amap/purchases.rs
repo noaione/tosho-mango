@@ -2,27 +2,20 @@ use tokio::time::{sleep, Duration};
 
 use color_print::cformat;
 use num_format::{Locale, ToFormattedString};
-use tosho_amap::{helper::ComicPurchase, models::ComicEpisodeInfoNode};
+use tosho_amap::{helper::ComicPurchase, models::ComicEpisodeInfoNode, AMClient};
 
 use crate::cli::ExitCode;
 
-use super::common::{common_purchase_select, select_single_account};
+use super::{common::common_purchase_select, config::Config};
 
 pub(crate) async fn amap_purchase(
     title_id: u64,
-    account_id: Option<&str>,
+    client: &AMClient,
+    account: &Config,
     console: &mut crate::term::Terminal,
 ) -> ExitCode {
-    let account = select_single_account(account_id);
-
-    if account.is_none() {
-        console.warn("Aborted");
-        return 1;
-    }
-
-    let account = account.unwrap();
-    let (results, comic, client, user_bal) =
-        common_purchase_select(title_id, &account, false, false, false, console).await;
+    let (results, comic, user_bal) =
+        common_purchase_select(title_id, client, account, false, false, false, console).await;
 
     match (results, comic, user_bal) {
         (Ok(results), Some(comic), Some(user_bal)) => {
@@ -72,7 +65,7 @@ pub(crate) async fn amap_purchase(
                             continue;
                         }
 
-                        super::common::save_session_config(&client, &account);
+                        super::common::save_session_config(client, account);
 
                         // Sleep for 500ms to avoid being too fast
                         // and made the claiming failed
@@ -119,19 +112,12 @@ pub(crate) async fn amap_purchase(
 
 pub(crate) async fn amap_purchase_precalculate(
     title_id: u64,
-    account_id: Option<&str>,
+    client: &AMClient,
+    account: &Config,
     console: &crate::term::Terminal,
 ) -> ExitCode {
-    let account = select_single_account(account_id);
-
-    if account.is_none() {
-        console.warn("Aborted");
-        return 1;
-    }
-
-    let account = account.unwrap();
-    let (results, _, _, user_bal) =
-        common_purchase_select(title_id, &account, false, true, false, console).await;
+    let (results, _, user_bal) =
+        common_purchase_select(title_id, client, account, false, true, false, console).await;
 
     match (results, user_bal) {
         (Ok(results), Some(balance)) => {
