@@ -44,6 +44,20 @@ impl MUClient {
     /// * `secret` - The secret key to use for the client.
     /// * `constants` - The constants to use for the client.
     pub fn new(secret: &str, constants: Constants) -> Self {
+        Self::make_client(secret, constants, None)
+    }
+
+    /// Attach a proxy to the client.
+    ///
+    /// This will clone the client and return a new client with the proxy attached.
+    ///
+    /// # Arguments
+    /// * `proxy` - The proxy to attach to the client
+    pub fn with_proxy(&self, proxy: reqwest::Proxy) -> Self {
+        Self::make_client(&self.secret, self.constants.clone(), Some(proxy))
+    }
+
+    fn make_client(secret: &str, constants: Constants, proxy: Option<reqwest::Proxy>) -> Self {
         let mut headers = reqwest::header::HeaderMap::new();
         headers.insert(
             "Host",
@@ -54,10 +68,12 @@ impl MUClient {
             reqwest::header::HeaderValue::from_str(&constants.api_ua).unwrap(),
         );
 
-        let client = reqwest::Client::builder()
-            .default_headers(headers)
-            .build()
-            .unwrap();
+        let client = reqwest::Client::builder().default_headers(headers);
+
+        let client = match proxy {
+            Some(proxy) => client.proxy(proxy).build().unwrap(),
+            None => client.build().unwrap(),
+        };
 
         Self {
             inner: client,
