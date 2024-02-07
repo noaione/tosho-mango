@@ -14,6 +14,10 @@ Starting from Rust port of the project, all changes will be put into this file.
 - `KM`: Fix invalid deserialization on `/account`
 - `KM`: Fix invalid deserialization on `/user`
 
+### Build
+- Bump dependencies
+- Use native M1 CI for building macOS arm64 version
+
 ## [0.2.2] 2024-01-29
 ### New Features
 - `AM`: Add `favorites` command

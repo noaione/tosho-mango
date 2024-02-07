@@ -22,6 +22,3 @@ reqwest = { workspace = true, features = ["stream"] }
 futures-util.workspace = true
 
 tosho-macros = { path = "../tosho_macros" }
-
-[build-dependencies]
-prost-build = "0.12"

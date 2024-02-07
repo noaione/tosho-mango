@@ -27,13 +27,13 @@ chrono.workspace = true
 reqwest.workspace = true
 
 # CLI deps
-clap = { version = "4.4.13", features = ["derive"] }
-anstream = "0.6.5"
+clap = { version = "4.4.18", features = ["derive"] }
+anstream = "0.6.11"
 color-print = "0.3.5"
 inquire = "0.6.2"
 indicatif = "0.17.7"
 directories = "5.0.1"
-uuid = { version = "1.6.1", features = ["v4", "fast-rng"] }
+uuid = { version = "1.7.0", features = ["v4", "fast-rng"] }
 glob = "0.3.1"
 supports-hyperlinks = "3.0.0"
 num-format = "0.4.4"
