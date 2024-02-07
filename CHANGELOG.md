@@ -3,6 +3,10 @@
 Starting from Rust port of the project, all changes will be put into this file.
 
 ## Unreleased (git master)
+
+Nothing yet.
+
+## [0.2.3] 2024-02-07
 ### New Features
 - Proxy support (`--proxy` can be used globally)
   - Example: `tosho --proxy https://proxy.example km download 10007`
