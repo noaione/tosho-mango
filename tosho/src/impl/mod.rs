@@ -1,4 +1,5 @@
 pub(crate) mod amap;
+pub(crate) mod client;
 pub(crate) mod kmkc;
 pub(crate) mod models;
 pub(crate) mod musq;

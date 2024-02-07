@@ -5,94 +5,15 @@ use num_format::{Locale, ToFormattedString};
 use tosho_kmkc::{
     constants::BASE_HOST,
     models::{TitleNode, TitleTicketListNode, UserPointResponse},
-    KMClient, KMConfig, KMConfigWeb,
+    KMClient, KMConfigWeb,
 };
 
 use crate::{
-    config::{get_all_config, get_config},
     linkify,
     term::{get_console, ConsoleChoice},
 };
 
 use super::config::Config;
-
-pub(super) fn select_single_account(account_id: Option<&str>) -> Option<Config> {
-    let term = get_console(0);
-
-    if let Some(account_id) = account_id {
-        let config = get_config(account_id, crate::r#impl::Implementations::Musq, None);
-
-        if let Some(config) = config {
-            return match config {
-                crate::config::ConfigImpl::Kmkc(c) => Some(c),
-                _ => None,
-            };
-        }
-
-        term.warn(&format!("Account ID {} not found!", account_id));
-    }
-
-    let all_configs = get_all_config(crate::r#impl::Implementations::Kmkc, None);
-    let all_choices: Vec<ConsoleChoice> = all_configs
-        .iter()
-        .filter_map(|c| match c {
-            crate::config::ConfigImpl::Kmkc(c) => Some(match c {
-                super::config::Config::Mobile(cc) => ConsoleChoice {
-                    name: cc.id.clone(),
-                    value: format!(
-                        "{} [{} - {}]",
-                        cc.id,
-                        cc.r#type().to_name(),
-                        cc.platform().to_name()
-                    ),
-                },
-                super::config::Config::Web(cc) => ConsoleChoice {
-                    name: cc.id.clone(),
-                    value: format!("{} [{}]", cc.id, cc.r#type().to_name()),
-                },
-            }),
-            _ => None,
-        })
-        .collect();
-    if all_configs.is_empty() {
-        term.warn("No accounts found!");
-        return None;
-    }
-
-    if all_configs.len() == 1 {
-        let config = all_configs.first().unwrap();
-        return match config {
-            crate::config::ConfigImpl::Kmkc(c) => Some(c.clone()),
-            _ => None,
-        };
-    }
-
-    let selected = term.choice("Select an account:", all_choices);
-    match selected {
-        Some(selected) => {
-            let config = all_configs
-                .iter()
-                .find(|&c| match c {
-                    crate::config::ConfigImpl::Kmkc(c) => match c {
-                        super::config::Config::Mobile(cc) => cc.id == selected.name,
-                        super::config::Config::Web(cc) => cc.id == selected.name,
-                    },
-                    _ => false,
-                })
-                .unwrap();
-
-            match config {
-                crate::config::ConfigImpl::Kmkc(c) => Some(c.clone()),
-                _ => None,
-            }
-        }
-        None => None,
-    }
-}
-
-pub(super) fn make_client(config: &KMConfig) -> tosho_kmkc::KMClient {
-    tosho_kmkc::KMClient::new(config.clone())
-}
 
 pub(super) fn do_print_search_information(
     results: Vec<TitleNode>,
@@ -158,6 +79,7 @@ pub(super) struct PurchasePoint {
 
 pub(super) async fn common_purchase_select(
     title_id: i32,
+    client: &KMClient,
     account: &Config,
     download_mode: bool,
     show_all: bool,
@@ -167,10 +89,8 @@ pub(super) async fn common_purchase_select(
     anyhow::Result<Vec<tosho_kmkc::models::EpisodeNode>>,
     Option<TitleNode>,
     Vec<tosho_kmkc::models::EpisodeNode>,
-    KMClient,
     Option<PurchasePoint>,
 ) {
-    let client = super::common::make_client(&account.into());
     console.info(&cformat!(
         "Getting user point for <m,s>{}</>...",
         account.get_username()
@@ -178,7 +98,7 @@ pub(super) async fn common_purchase_select(
     let user_point = client.get_user_point().await;
     if let Err(error) = user_point {
         console.error(&format!("Unable to get user point: {}", error));
-        return (Err(error), None, vec![], client, None);
+        return (Err(error), None, vec![], None);
     }
     let user_point = user_point.unwrap();
 
@@ -189,7 +109,7 @@ pub(super) async fn common_purchase_select(
     let results = client.get_titles(vec![title_id]).await;
     if let Err(error) = results {
         console.error(&format!("Failed to get title information: {}", error));
-        return (Err(error), None, vec![], client, None);
+        return (Err(error), None, vec![], None);
     }
 
     let results = results.unwrap();
@@ -199,7 +119,6 @@ pub(super) async fn common_purchase_select(
             Err(anyhow::anyhow!("Unable to find title information")),
             None,
             vec![],
-            client,
             None,
         );
     }
@@ -213,7 +132,7 @@ pub(super) async fn common_purchase_select(
     let ticket_entry = client.get_title_ticket(result.id).await;
     if let Err(error) = ticket_entry {
         console.error(&format!("Failed to get title ticket: {}", error));
-        return (Err(error), Some(result.clone()), vec![], client, None);
+        return (Err(error), Some(result.clone()), vec![], None);
     }
 
     let ticket_entry = ticket_entry.unwrap();
@@ -229,7 +148,6 @@ pub(super) async fn common_purchase_select(
                 Err(error),
                 Some(result.clone()),
                 chapters_entry,
-                client,
                 Some(PurchasePoint {
                     point: user_point,
                     ticket: ticket_entry,
@@ -282,7 +200,6 @@ pub(super) async fn common_purchase_select(
             Ok(chapters_entry.clone()),
             Some(result.clone()),
             chapters_entry,
-            client,
             Some(PurchasePoint {
                 point: user_point,
                 ticket: ticket_entry,
@@ -341,7 +258,6 @@ pub(super) async fn common_purchase_select(
                     Ok(vec![]),
                     Some(result.clone()),
                     chapters_entry,
-                    client,
                     Some(PurchasePoint {
                         point: user_point,
                         ticket: ticket_entry,
@@ -353,7 +269,6 @@ pub(super) async fn common_purchase_select(
                 Ok(mapped_chapters),
                 Some(result.clone()),
                 chapters_entry,
-                client,
                 Some(PurchasePoint {
                     point: user_point,
                     ticket: ticket_entry,
@@ -366,7 +281,6 @@ pub(super) async fn common_purchase_select(
                 Err(anyhow::anyhow!("Aborted!")),
                 Some(result.clone()),
                 chapters_entry,
-                client,
                 Some(PurchasePoint {
                     point: user_point,
                     ticket: ticket_entry,

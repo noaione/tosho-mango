@@ -1,85 +1,15 @@
 use color_print::cformat;
 use num_format::{Locale, ToFormattedString};
 use tosho_musq::{
-    constants::{get_constants, BASE_HOST},
+    constants::BASE_HOST,
     proto::{BadgeManga, ChapterV2, LabelBadgeManga, MangaDetailV2, MangaResultNode, UserPoint},
     MUClient,
 };
 
 use crate::{
-    config::{get_all_config, get_config},
     linkify,
     term::{get_console, ConsoleChoice},
 };
-
-use super::config::Config;
-
-pub(super) fn select_single_account(account_id: Option<&str>) -> Option<Config> {
-    let term = get_console(0);
-
-    if let Some(account_id) = account_id {
-        let config = get_config(account_id, crate::r#impl::Implementations::Musq, None);
-
-        if let Some(config) = config {
-            return match config {
-                crate::config::ConfigImpl::Musq(c) => Some(c),
-                _ => unreachable!(),
-            };
-        }
-
-        term.warn(&format!("Account ID {} not found!", account_id));
-    }
-
-    let all_configs = get_all_config(crate::r#impl::Implementations::Musq, None);
-    let all_choices: Vec<ConsoleChoice> = all_configs
-        .iter()
-        .filter_map(|c| match c {
-            crate::config::ConfigImpl::Musq(c) => Some(ConsoleChoice {
-                name: c.id.clone(),
-                value: format!("{} [{}]", c.id, c.r#type().to_name()),
-            }),
-            _ => None,
-        })
-        .collect();
-
-    if all_configs.is_empty() {
-        term.warn("No accounts found!");
-        return None;
-    }
-
-    // if only 1, return
-    if all_configs.len() == 1 {
-        return match &all_configs[0] {
-            crate::config::ConfigImpl::Musq(c) => Some(c.clone()),
-            _ => unreachable!(),
-        };
-    }
-
-    let selected = term.choice("Select an account:", all_choices);
-    match selected {
-        Some(selected) => {
-            let config = all_configs
-                .iter()
-                .find(|&c| match c {
-                    crate::config::ConfigImpl::Musq(c) => c.id == selected.name,
-                    _ => false,
-                })
-                .unwrap();
-
-            match config {
-                crate::config::ConfigImpl::Musq(c) => Some(c.clone()),
-                _ => unreachable!(),
-            }
-        }
-        None => None,
-    }
-}
-
-pub(super) fn make_client(config: &Config) -> tosho_musq::MUClient {
-    let constants = get_constants(config.r#type() as u8);
-
-    tosho_musq::MUClient::new(&config.session, constants.clone())
-}
 
 pub(super) fn do_print_search_information(
     results: Vec<MangaResultNode>,
@@ -128,7 +58,7 @@ pub(super) fn do_print_search_information(
 
 pub(super) async fn common_purchase_select(
     title_id: u64,
-    account: &Config,
+    client: &MUClient,
     download_mode: bool,
     show_all: bool,
     no_input: bool,
@@ -136,14 +66,12 @@ pub(super) async fn common_purchase_select(
 ) -> (
     anyhow::Result<Vec<ChapterV2>>,
     Option<MangaDetailV2>,
-    MUClient,
     Option<UserPoint>,
 ) {
     console.info(&cformat!(
         "Fetching for ID <magenta,bold>{}</>...",
         title_id
     ));
-    let client = super::common::make_client(account);
 
     let results = client.get_manga(title_id).await;
     match results {
@@ -169,7 +97,6 @@ pub(super) async fn common_purchase_select(
                 return (
                     Ok(result.chapters.clone()),
                     Some(result.clone()),
-                    client,
                     Some(user_bal),
                 );
             }
@@ -197,7 +124,7 @@ pub(super) async fn common_purchase_select(
             if select_choices.is_empty() {
                 console.warn("No chapters selected, aborting...");
 
-                return (Ok(vec![]), None, client, Some(user_bal));
+                return (Ok(vec![]), None, Some(user_bal));
             }
 
             let sel_prompt = if download_mode {
@@ -212,7 +139,7 @@ pub(super) async fn common_purchase_select(
                     if selected.is_empty() {
                         console.warn("No chapter selected, aborting...");
 
-                        return (Ok(vec![]), None, client, Some(user_bal));
+                        return (Ok(vec![]), None, Some(user_bal));
                     }
 
                     let mut selected_chapters: Vec<ChapterV2> = vec![];
@@ -229,14 +156,13 @@ pub(super) async fn common_purchase_select(
                         selected_chapters.push(ch);
                     }
 
-                    (Ok(selected_chapters), Some(result), client, Some(user_bal))
+                    (Ok(selected_chapters), Some(result), Some(user_bal))
                 }
                 None => {
                     console.warn("Aborted");
                     (
                         Err(anyhow::anyhow!("Aborted")),
                         Some(result.clone()),
-                        client,
                         Some(user_bal),
                     )
                 }
@@ -245,7 +171,7 @@ pub(super) async fn common_purchase_select(
         Err(e) => {
             console.error(&cformat!("Unable to connect to MU!: {}", e));
 
-            (Err(e), None, client, None)
+            (Err(e), None, None)
         }
     }
 }

@@ -3,27 +3,21 @@ use num_format::{Locale, ToFormattedString};
 use tosho_kmkc::{
     constants::BASE_HOST,
     models::{EpisodeNode, TicketInfoType},
+    KMClient,
 };
 
 use crate::{cli::ExitCode, linkify};
 
-use super::common::{common_purchase_select, select_single_account};
+use super::{common::common_purchase_select, config::Config};
 
 pub(crate) async fn kmkc_purchase(
     title_id: i32,
-    account_id: Option<&str>,
+    client: &KMClient,
+    account: &Config,
     console: &mut crate::term::Terminal,
 ) -> ExitCode {
-    let account = select_single_account(account_id);
-
-    if account.is_none() {
-        console.warn("Aborted");
-        return 1;
-    }
-
-    let account = account.unwrap();
-    let (results, _, _, client, user_point) =
-        common_purchase_select(title_id, &account, false, false, false, console).await;
+    let (results, _, _, user_point) =
+        common_purchase_select(title_id, client, account, false, false, false, console).await;
 
     match (results, user_point) {
         (Ok(results), Some(user_point)) => {
@@ -203,24 +197,14 @@ pub(crate) async fn kmkc_purchase(
 }
 
 pub(crate) async fn kmkc_purchased(
-    account_id: Option<&str>,
+    client: &KMClient,
+    account: &Config,
     console: &crate::term::Terminal,
 ) -> ExitCode {
-    let account = select_single_account(account_id);
-
-    if account.is_none() {
-        console.warn("Aborted");
-        return 1;
-    }
-
-    let account = account.unwrap();
     console.info(&cformat!(
         "Getting user purchased title for <m,s>{}</>...",
         account.get_username()
     ));
-
-    let client = super::common::make_client(&account.into());
-
     let results = client.get_purchased().await;
 
     match results {
@@ -254,19 +238,12 @@ pub(crate) async fn kmkc_purchased(
 
 pub(crate) async fn kmkc_purchase_precalculate(
     title_id: i32,
-    account_id: Option<&str>,
+    client: &KMClient,
+    account: &Config,
     console: &mut crate::term::Terminal,
 ) -> ExitCode {
-    let account = select_single_account(account_id);
-
-    if account.is_none() {
-        console.warn("Aborted");
-        return 1;
-    }
-
-    let account = account.unwrap();
-    let (results, _, _, _, user_point) =
-        common_purchase_select(title_id, &account, false, false, false, console).await;
+    let (results, _, _, user_point) =
+        common_purchase_select(title_id, client, account, false, false, false, console).await;
 
     match (results, user_point) {
         (Ok(results), Some(user_point)) => {

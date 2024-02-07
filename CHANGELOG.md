@@ -3,6 +3,13 @@
 Starting from Rust port of the project, all changes will be put into this file.
 
 ## Unreleased (git master)
+### New Features
+- Proxy support (`--proxy` can be used globally)
+  - Example: `tosho --proxy https://proxy.example km download 10007`
+- **BREAKING CHANGE**: Moved `-a` or `--account-id` to each source subcommand instead of each commands:
+  - Before: `tosho km download 10007 -a 123`
+  - After: `tosho km -a 123 download 10007`
+
 ### Changes
 - `KM`: Fix invalid deserialization on `/account`
 - `KM`: Fix invalid deserialization on `/user`

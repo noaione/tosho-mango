@@ -5,12 +5,10 @@ use tosho_amap::AMClient;
 use crate::{
     cli::ExitCode,
     config::{get_all_config, save_config, try_remove_config},
+    r#impl::client::make_amap_client,
 };
 
-use super::{
-    common::{make_client, select_single_account},
-    config::Config,
-};
+use super::config::Config;
 
 pub async fn amap_account_login(
     email: String,
@@ -23,7 +21,7 @@ pub async fn amap_account_login(
         password
     ));
 
-    let all_configs = get_all_config(crate::r#impl::Implementations::Amap, None);
+    let all_configs = get_all_config(&crate::r#impl::Implementations::Amap, None);
 
     let old_config = all_configs.iter().find(|&c| match c {
         crate::config::ConfigImpl::Amap(cc) => cc.email == email,
@@ -57,7 +55,7 @@ pub async fn amap_account_login(
                 email
             ));
 
-            let client = super::common::make_client(&session);
+            let client = make_amap_client(&session);
             let account = client.get_account().await;
 
             let as_config: Config = session.into();
@@ -98,7 +96,7 @@ pub async fn amap_account_login(
 }
 
 pub(crate) fn amap_accounts(console: &crate::term::Terminal) -> ExitCode {
-    let all_configs = get_all_config(crate::r#impl::Implementations::Amap, None);
+    let all_configs = get_all_config(&crate::r#impl::Implementations::Amap, None);
 
     match all_configs.len() {
         0 => {
@@ -130,69 +128,42 @@ pub(crate) fn amap_accounts(console: &crate::term::Terminal) -> ExitCode {
 }
 
 pub(crate) async fn amap_account_info(
-    account_id: Option<&str>,
+    client: &AMClient,
+    account: &Config,
     console: &crate::term::Terminal,
 ) -> ExitCode {
-    let acc_info = select_single_account(account_id);
+    let acc_resp = client.get_account().await;
 
-    match acc_info {
-        None => {
-            console.warn("Aborted!");
+    match acc_resp {
+        Ok(acc_resp) => {
+            super::common::save_session_config(client, account);
 
-            1
-        }
-        Some(acc_info) => {
+            let info = acc_resp.info;
+
             console.info(&cformat!(
-                "Fetching account info for <magenta,bold>{}</>...",
-                acc_info.id
+                "Account info for <magenta,bold>{}</>:",
+                account.id
             ));
 
-            let client = make_client(&acc_info.clone().into());
-            let account = client.get_account().await;
+            console.info(&cformat!("  <s>ID</>: {}", info.id));
+            console.info(&cformat!("  <s>Email</>: {}", account.email));
+            console.info(&cformat!("  <s>Username</>: {}", info.name));
 
-            match account {
-                Ok(account) => {
-                    super::common::save_session_config(&client, &acc_info);
+            0
+        }
+        Err(e) => {
+            console.error(&format!("Failed to fetch account info: {}", e));
 
-                    let info = account.info;
-
-                    console.info(&cformat!(
-                        "Account info for <magenta,bold>{}</>:",
-                        acc_info.id
-                    ));
-
-                    console.info(&cformat!("  <s>ID</>: {}", info.id));
-                    console.info(&cformat!("  <s>Email</>: {}", acc_info.email));
-                    console.info(&cformat!("  <s>Username</>: {}", info.name));
-
-                    0
-                }
-                Err(e) => {
-                    console.error(&format!("Failed to fetch account info: {}", e));
-
-                    1
-                }
-            }
+            1
         }
     }
 }
 
 pub(crate) async fn amap_account_balance(
-    account_id: Option<&str>,
+    client: &AMClient,
+    acc_info: &Config,
     console: &crate::term::Terminal,
 ) -> ExitCode {
-    let acc_info = select_single_account(account_id);
-
-    if acc_info.is_none() {
-        console.warn("Aborted!");
-
-        return 1;
-    }
-
-    let acc_info = acc_info.unwrap();
-
-    let client = make_client(&acc_info.clone().into());
-
     console.info(&cformat!(
         "Fetching balance for <magenta,bold>{}</>...",
         acc_info.id
@@ -201,7 +172,7 @@ pub(crate) async fn amap_account_balance(
 
     match remainder {
         Ok(remainder) => {
-            super::common::save_session_config(&client, &acc_info);
+            super::common::save_session_config(client, acc_info);
 
             let balance = &remainder.info;
 
@@ -238,18 +209,7 @@ pub(crate) async fn amap_account_balance(
     }
 }
 
-pub(crate) fn amap_account_revoke(
-    account_id: Option<&str>,
-    console: &crate::term::Terminal,
-) -> ExitCode {
-    let account = select_single_account(account_id);
-
-    if account.is_none() {
-        console.warn("Aborted");
-        return 1;
-    }
-
-    let account = account.unwrap();
+pub(crate) fn amap_account_revoke(account: &Config, console: &crate::term::Terminal) -> ExitCode {
     let confirm = console.confirm(Some(&cformat!(
         "Are you sure you want to delete <m,s>{}</>?\nThis action is irreversible!",
         account.id

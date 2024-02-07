@@ -2,28 +2,20 @@ use color_print::cformat;
 use tosho_kmkc::{
     constants::BASE_HOST,
     models::{GenreNode, MagazineCategory},
+    KMClient,
 };
 
 use super::super::parser::WeeklyCodeCli;
 use crate::{cli::ExitCode, linkify};
 
-use super::common::{do_print_search_information, select_single_account};
+use super::common::do_print_search_information;
 
 pub(crate) async fn kmkc_search(
     query: &str,
-    account_id: Option<&str>,
+    client: &KMClient,
     console: &crate::term::Terminal,
 ) -> ExitCode {
-    let account = select_single_account(account_id);
-
-    if account.is_none() {
-        console.warn("Aborted");
-        return 1;
-    }
-
-    let account = account.unwrap();
     console.info(&cformat!("Searching for <magenta,bold>{}</>...", query));
-    let client = super::common::make_client(&account.into());
 
     let results = client.search(query, Some(50)).await;
     match results {
@@ -51,22 +43,13 @@ pub(crate) async fn kmkc_search(
 
 pub(crate) async fn kmkc_search_weekly(
     weekday: WeeklyCodeCli,
-    account_id: Option<&str>,
+    client: &KMClient,
     console: &crate::term::Terminal,
 ) -> ExitCode {
-    let account = select_single_account(account_id);
-
-    if account.is_none() {
-        console.warn("Aborted");
-        return 1;
-    }
-
-    let account = account.unwrap();
     console.info(&cformat!(
         "Getting weekly manga for week <magenta,bold>{}</>...",
         weekday.to_name()
     ));
-    let client = super::common::make_client(&account.into());
 
     let results = client.get_weekly().await;
     match results {
@@ -138,24 +121,14 @@ fn format_tags(tags: Vec<GenreNode>) -> String {
 
 pub(crate) async fn kmkc_title_info(
     title_id: i32,
-    account_id: Option<&str>,
     show_chapters: bool,
+    client: &KMClient,
     console: &crate::term::Terminal,
 ) -> ExitCode {
-    let account = select_single_account(account_id);
-
-    if account.is_none() {
-        console.warn("Aborted");
-        return 1;
-    }
-
-    let account = account.unwrap();
     console.info(&cformat!(
         "Fetching info for ID <magenta,bold>{}</>...",
         title_id
     ));
-    let client = super::common::make_client(&account.into());
-
     let results = client.get_titles(vec![title_id]).await;
 
     match results {
@@ -312,19 +285,10 @@ pub(crate) async fn kmkc_title_info(
 }
 
 pub(crate) async fn kmkc_magazines_list(
-    account_id: Option<&str>,
+    client: &KMClient,
     console: &crate::term::Terminal,
 ) -> ExitCode {
-    let account = select_single_account(account_id);
-
-    if account.is_none() {
-        console.warn("Aborted");
-        return 1;
-    }
-
-    let account = account.unwrap();
     console.info("Fetching magazines list...");
-    let client = super::common::make_client(&account.into());
 
     let results = client.get_magazines().await;
 
