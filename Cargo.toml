@@ -5,7 +5,8 @@ members = [
     "tosho_musq",
     "tosho_kmkc",
     "tosho_amap",
-    "tosho_macros"
+    "tosho_sjv",
+    "tosho_macros",
 ]
 
 [workspace.package]
