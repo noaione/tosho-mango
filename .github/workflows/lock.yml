@@ -1,0 +1,33 @@
+name: 'Lock Threads'
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: lock-threads
+
+jobs:
+  action:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: dessant/lock-threads@1bf7ec25051fe7c00bdd17e6a7cf3d7bfb7dc771
+        with:
+          github-token: ${{ github.token }}
+          pr-inactive-days: '30'
+          issue-inactive-days: '30'
+          exclude-any-pr-labels: 'x-wip'
+          pr-comment: >
+            This pull request has been locked because it has been inactive for 30 days.
+            Please open a new pull request if you are still working on this issue.
+          pr-lock-reason: 'resolved'
+          exclude-any-issue-labels: 'x-upstream, x-need-help, x-do-not-autoclose'
+          issue-comment: >
+            This issue has been locked because it has been inactive for 30 days.
+            Please open a new issue if you are still experiencing this problem.
+          log-output: false
