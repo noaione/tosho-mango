@@ -470,9 +470,9 @@ dependencies = [
 
 [[package]]
 name = "documented"
-version = "0.2.0"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "338daf1e84e9d9e2299ac5e0ae0152b622583644f6a57dfcc0dc86397c10b531"
+checksum = "e2f2016be31b2ee8ca5950d0b985e53d2802bbe646634e41cdf70f668fc66049"
 dependencies = [
  "documented-derive",
  "phf",
@@ -481,9 +481,9 @@ dependencies = [
 
 [[package]]
 name = "documented-derive"
-version = "0.2.0"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a1645da77791db962740589b429872f411db68edc7d18af1bf23121393d794e1"
+checksum = "83095afc77f3f21d50be46d608d0a1cfa463cc97e4f3aedab871d6e0baf91870"
 dependencies = [
  "quote",
  "syn 2.0.48",
@@ -1864,18 +1864,18 @@ dependencies = [
 
 [[package]]
 name = "thiserror"
-version = "1.0.55"
+version = "1.0.56"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6e3de26b0965292219b4287ff031fcba86837900fe9cd2b34ea8ad893c0953d2"
+checksum = "d54378c645627613241d077a3a79db965db602882668f9136ac42af9ecb730ad"
 dependencies = [
  "thiserror-impl",
 ]
 
 [[package]]
 name = "thiserror-impl"
-version = "1.0.55"
+version = "1.0.56"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "268026685b2be38d7103e9e507c938a1fcb3d7e6eb15e87870b617bf37b6d581"
+checksum = "fa0faa943b50f3db30a20aa7e265dbc66076993efed8463e8de414e5d06d3471"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2044,7 +2044,7 @@ dependencies = [
  "tosho-macros",
  "tosho-musq",
  "uuid",
- "windows-sys 0.45.0",
+ "windows-sys 0.52.0",
  "winres",
 ]
 
@@ -2055,7 +2055,6 @@ dependencies = [
  "anyhow",
  "base64",
  "chrono",
- "cookie_store",
  "futures-util",
  "lazy_static",
  "rand",
@@ -2076,7 +2075,6 @@ dependencies = [
  "anyhow",
  "base64",
  "chrono",
- "cookie_store",
  "documented",
  "futures-util",
  "image",

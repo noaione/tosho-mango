@@ -281,7 +281,7 @@ impl MagazineCategory {
 
     /// Get the documentation or docstring of the current magazine category.
     pub fn get_doc(&self) -> Result<&'static str, documented::Error> {
-        Self::get_field_comment(self.to_name())
+        Self::get_field_docs(self.to_name())
     }
 }
 

@@ -1,8 +1,7 @@
 use core::panic;
 
-use cookie_store::{Cookie, RawCookie};
 use reqwest::Url;
-use reqwest_cookie_store::CookieStoreMutex;
+use reqwest_cookie_store::{CookieStoreMutex, RawCookie};
 use time::OffsetDateTime;
 use tosho_macros::{EnumName, EnumU32};
 use urlencoding::{decode, encode};
@@ -69,16 +68,6 @@ impl Default for KMConfigWebKV {
     }
 }
 
-impl From<&Cookie<'_>> for KMConfigWebKV {
-    fn from(value: &Cookie<'_>) -> Self {
-        // unquote the value
-        let binding = value.value().to_string();
-        let data = decode(&binding).unwrap();
-        let parsed: KMConfigWebKV = serde_json::from_str(&data).unwrap();
-        parsed
-    }
-}
-
 impl From<&str> for KMConfigWebKV {
     fn from(value: &str) -> Self {
         let data = decode(value).unwrap();
@@ -132,17 +121,17 @@ impl From<reqwest_cookie_store::CookieStore> for KMConfigWeb {
         for cookie in value.iter_any() {
             match cookie.name() {
                 "uwt" => uwt = cookie.value().to_string(),
-                "birthday" => birthday = KMConfigWebKV::from(cookie),
+                "birthday" => birthday = KMConfigWebKV::from(cookie.value()),
                 "terms_of_service_adult" => {
                     tos_adult = match KMConfigWebKV64::try_from(cookie.value()) {
                         Ok(parsed) => KMConfigWebKV::from(parsed),
-                        Err(_) => KMConfigWebKV::from(cookie),
+                        Err(_) => KMConfigWebKV::from(cookie.value()),
                     }
                 }
                 "privacy_policy" => {
                     privacy = match KMConfigWebKV64::try_from(cookie.value()) {
                         Ok(parsed) => KMConfigWebKV::from(parsed),
-                        Err(_) => KMConfigWebKV::from(cookie),
+                        Err(_) => KMConfigWebKV::from(cookie.value()),
                     }
                 }
                 _ => (),

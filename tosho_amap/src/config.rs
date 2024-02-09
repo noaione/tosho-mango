@@ -1,9 +1,8 @@
 use base64::{engine::general_purpose, Engine as _};
 use reqwest::Url;
-use reqwest_cookie_store::CookieStoreMutex;
+use reqwest_cookie_store::{CookieStoreMutex, RawCookie};
 
 use crate::constants::BASE_HOST;
-use cookie_store::RawCookie;
 
 lazy_static::lazy_static! {
     pub static ref SESSION_COOKIE_NAME: String = {

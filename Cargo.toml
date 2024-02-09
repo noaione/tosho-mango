@@ -26,9 +26,9 @@ anyhow = "1"
 base64 = "0.21.7"
 chrono = "0.4"
 futures-util = "0.3"
-cookie_store = "0.20.0"
 reqwest_cookie_store = "0.6.0"
 sha2 = "0.10.8"
 time = "0.3.34"
+image = "0.24.8"
 
 # CI-PROFILE-MARK
