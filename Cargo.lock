@@ -982,6 +982,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "kamadak-exif"
+version = "0.5.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ef4fc70d0ab7e5b6bafa30216a6b48705ea964cdfc29c050f2412295eba58077"
+dependencies = [
+ "mutate_once",
+]
+
+[[package]]
 name = "lazy_static"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1091,6 +1100,12 @@ dependencies = [
  "wasi",
  "windows-sys 0.48.0",
 ]
+
+[[package]]
+name = "mutate_once"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "16cf681a23b4d0a43fc35024c176437f9dcd818db34e0f42ab456a0ee5ad497b"
 
 [[package]]
 name = "native-tls"
@@ -2123,14 +2138,14 @@ dependencies = [
  "anyhow",
  "base64",
  "chrono",
- "cookie_store",
  "futures-util",
+ "image",
+ "kamadak-exif",
  "lazy_static",
  "reqwest",
  "reqwest_cookie_store",
  "serde",
  "serde_json",
- "sha2",
  "time",
  "tokio",
  "tosho-macros",
