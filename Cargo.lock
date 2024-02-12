@@ -2142,11 +2142,10 @@ dependencies = [
  "image",
  "kamadak-exif",
  "lazy_static",
+ "rand",
  "reqwest",
- "reqwest_cookie_store",
  "serde",
  "serde_json",
- "time",
  "tokio",
  "tosho-macros",
 ]
