@@ -2,7 +2,8 @@ use std::str::FromStr;
 
 use serde::{Deserialize, Serialize};
 use tosho_macros::{
-    enum_error, DeserializeEnum, DeserializeEnum32, EnumName, SerializeEnum, SerializeEnum32,
+    enum_error, DeserializeEnum, DeserializeEnum32, DeserializeEnum32Fallback, EnumName,
+    EnumU32Fallback, SerializeEnum, SerializeEnum32,
 };
 
 /// A boolean type used by the API represented as an integer.
@@ -169,6 +170,92 @@ impl ToString for MangaRating {
             MangaRating::TeenPlus => "tp".to_string(),
             MangaRating::Mature => "m".to_string(),
         }
+    }
+}
+
+/// The magazine category type.
+#[derive(
+    Debug,
+    Clone,
+    SerializeEnum32,
+    DeserializeEnum32Fallback,
+    PartialEq,
+    EnumName,
+    EnumU32Fallback,
+    Default,
+)]
+pub enum MangaImprint {
+    /// Unknown imprint.
+    #[default]
+    Undefined = 0,
+    /// Shonen Jump, based on the popular Weekly Shonen Jump by Shueisha
+    ShonenJump = 1,
+    /// Shojo Beat, a more girl focused imprint
+    ShojoBeat = 2,
+    /// Weekly Shonen Sunday, a Shogakukan imprint or magazine
+    ShonenSunday = 3,
+    /// V Signature
+    VSignature = 4,
+    /// Shonen Jump Advacned, a more older teenage and young adult focused imprint.
+    ShonenJumpAdvanced = 5,
+    /// V Media, a general purpose label/imprint
+    VM = 6,
+    /// V Kids, a list for manga targeted for general audience or kids.
+    VKids = 7,
+    /// V Select, a curated list by the publisher.
+    VSelect = 8,
+    /// Haikasoru, a Space opera. Dark fantasy. Hard science related manga.
+    ///
+    /// The best in Japanese science fiction, fantasy and horror.
+    Haikasoru = 9,
+}
+
+impl MangaImprint {
+    /// Get the pretty name of the imprint category.
+    ///
+    /// # Examples
+    /// ```
+    /// use tosho_sjv::models::MangaImprint;
+    ///
+    /// let ssunday = MangaImprint::ShonenSunday;
+    ///
+    /// assert_eq!(ssunday.pretty_name(), "Shonen Sunday");
+    /// ```
+    pub fn pretty_name(&self) -> String {
+        let name = self.to_name();
+        let split_at_upper: Vec<_> = name.match_indices(char::is_uppercase).collect();
+        let mut splitted_name: Vec<&str> = vec![];
+        for (i, (start, _)) in split_at_upper.iter().enumerate() {
+            if i == 0 {
+                let data = &name[..*start];
+                if !data.is_empty() {
+                    splitted_name.push(data);
+                }
+            }
+            let next_start = split_at_upper.get(i + 1);
+            match next_start {
+                Some((end, _)) => splitted_name.push(&name[*start..*end]),
+                None => splitted_name.push(&name[*start..]),
+            }
+        }
+
+        let mut merge_back = splitted_name.join(" ");
+        for word in &["The", "A", "An"] {
+            merge_back =
+                merge_back.replace(&format!(" {}", *word), &format!(" {}", word.to_lowercase()))
+        }
+
+        if splitted_name.len() > 1 {
+            match splitted_name[0] {
+                "e" => merge_back = merge_back.replacen("e ", "e-", 1),
+                "D" => merge_back = merge_back.replacen("D ", "Digital ", 1),
+                _ => (),
+            }
+        }
+        if merge_back.contains('_') {
+            merge_back = merge_back.replace('_', " ");
+        }
+        merge_back
     }
 }
 
