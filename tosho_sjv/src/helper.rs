@@ -1,6 +1,8 @@
 use aho_corasick::AhoCorasick;
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
 
+use crate::models::MangaDetail;
+
 /// Generate a string of random characters used for token.
 ///
 /// The length of the string is 16.
@@ -13,10 +15,8 @@ pub(crate) fn generate_random_token() -> String {
 }
 
 /// Search the big cache JSON for specific title
-///
-/// TODO: Change contents to proper models
 #[allow(dead_code)]
-pub(crate) fn search_by_text(contents: Vec<String>, target: &str) -> Vec<String> {
+pub(crate) fn search_manga_by_text(contents: Vec<MangaDetail>, target: &str) -> Vec<MangaDetail> {
     // split by spaces
     let target: Vec<&str> = target.split_ascii_whitespace().collect();
 
@@ -27,7 +27,7 @@ pub(crate) fn search_by_text(contents: Vec<String>, target: &str) -> Vec<String>
 
     let mut matches = vec![];
     for content in contents {
-        if ac.find(&content).is_some() {
+        if ac.find(&content.title).is_some() {
             matches.push(content);
         }
     }
