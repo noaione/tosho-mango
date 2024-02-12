@@ -2,6 +2,7 @@ pub mod config;
 pub mod constants;
 pub mod helper;
 pub mod imaging;
+pub mod models;
 pub use config::*;
 use constants::{API_HOST, HEADER_PIECE, VALUE_PIECE};
 
