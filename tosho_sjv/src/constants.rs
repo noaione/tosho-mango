@@ -88,6 +88,24 @@ lazy_static! {
         )
         .expect("Invalid base64 string (VALUE_PIECE)")
     };
+    /// Data name for specific app ID
+    pub(crate) static ref DATA_APP_ID: String = {
+        String::from_utf8(
+            general_purpose::STANDARD
+                .decode("dml6X2FwcF9pZA==")
+                .expect("Failed to decode base64 DATA_APP_ID")
+        )
+        .expect("Invalid base64 string (DATA_APP_ID)")
+    };
+    /// Data name for specific app version code
+    pub(crate) static ref DATA_VERSION_CODE: String = {
+        String::from_utf8(
+            general_purpose::STANDARD
+                .decode("YW5kcm9pZF9hcHBfdmVyc2lvbl9jb2Rl")
+                .expect("Failed to decode base64 DATA_VERSION_CODE")
+        )
+        .expect("Invalid base64 string (DATA_VERSION_CODE)")
+    };
 }
 
 /// Returns the constants for the given device type.

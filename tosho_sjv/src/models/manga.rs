@@ -1,7 +1,7 @@
 use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Deserializer, Serialize};
 
-use super::{MangaImprint, MangaRating, SubscriptionType};
+use super::{MangaImprint, MangaRating, SimpleResponse, SubscriptionType};
 
 /// A node of a single chapter information.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -132,4 +132,18 @@ pub enum MangaStoreInfo {
 pub struct MangaStoreResponse {
     #[serde(rename = "data")]
     pub contents: Vec<MangaStoreInfo>,
+}
+
+/// A response for verifying manga chapter ownership
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MangaAuthResponse {
+    #[serde(rename = "archive_info")]
+    pub info: SimpleResponse,
+}
+
+/// A response for getting URL of a manga
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MangaUrlResponse {
+    #[serde(rename = "data")]
+    pub url: String,
 }

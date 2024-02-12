@@ -14,3 +14,10 @@ pub use manga::*;
 pub struct SimpleResponse {
     pub ok: IntBool,
 }
+
+impl SimpleResponse {
+    /// Check if response is OK
+    pub fn is_ok(&self) -> bool {
+        self.ok == IntBool::True
+    }
+}
