@@ -173,7 +173,7 @@ impl ToString for MangaRating {
     }
 }
 
-/// The magazine category type.
+/// The manga imprint type.
 #[derive(
     Debug,
     Clone,

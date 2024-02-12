@@ -1,5 +1,5 @@
 use chrono::{DateTime, FixedOffset};
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
 
 use super::{MangaImprint, MangaRating, SubscriptionType};
 
@@ -7,15 +7,14 @@ use super::{MangaImprint, MangaRating, SubscriptionType};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MangaChapterDetail {
     pub id: u32,
-    pub chapter: String,
-    pub volume: Option<String>,
+    pub chapter: Option<String>,
+    pub volume: Option<u32>,
     pub title: Option<String>,
     #[serde(rename = "publication_date", with = "super::datetime")]
     pub published_at: DateTime<FixedOffset>,
     pub author: String,
-    pub url: String,
     #[serde(rename = "thumburl")]
-    pub thumbnail: String,
+    pub thumbnail: Option<String>,
     pub description: String,
     #[serde(rename = "manga_series_common_id")]
     pub series_id: u32,
@@ -23,7 +22,7 @@ pub struct MangaChapterDetail {
     #[serde(rename = "series_vanityurl")]
     pub series_slug: String,
     pub series_title_sort: String,
-    pub subscription_type: SubscriptionType,
+    pub subscription_type: Option<SubscriptionType>,
     pub rating: MangaRating,
     #[serde(rename = "numpages")]
     pub pages: u32,
@@ -34,6 +33,8 @@ pub struct MangaChapterDetail {
     #[serde(rename = "epoch_exp_date")]
     pub expiry_at: Option<i64>,
     pub new: bool,
+    pub free: bool,
+    pub featured: bool,
 }
 
 impl MangaChapterDetail {
@@ -57,17 +58,28 @@ pub struct MangaDetail {
     #[serde(rename = "link_img_url")]
     pub thumbnail: String,
     #[serde(rename = "keyart_url")]
-    pub keyart: String,
+    pub keyart: Option<String>,
     #[serde(rename = "latest_author")]
     pub author: String,
     pub title_sort: String,
     #[serde(with = "super::datetime")]
     pub updated_at: DateTime<FixedOffset>,
-    pub subscription_type: SubscriptionType,
-    #[serde(rename = "imprint_id", default)]
+    pub subscription_type: Option<SubscriptionType>,
+    #[serde(
+        rename = "imprint_id",
+        deserialize_with = "parse_imprint_extra",
+        default
+    )]
     pub imprint: MangaImprint,
     #[serde(rename = "num_chapters")]
     pub total_chapters: u64,
+}
+
+fn parse_imprint_extra<'de, D>(d: D) -> Result<MangaImprint, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    Deserialize::deserialize(d).map(|x: Option<_>| x.unwrap_or(MangaImprint::Undefined))
 }
 
 /// A node of a chapter notice information.
@@ -98,16 +110,21 @@ pub struct MangaSeriesResponse {
 
 /// A wrapper for both MangaNode and MangaChapterNode
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
 pub enum MangaStoreInfo {
-    Manga {
-        #[serde(rename = "manga_series")]
-        manga: MangaChapterDetail,
-    },
-    Chapter {
-        #[serde(rename = "manga")]
-        chapter: MangaChapterDetail,
-    },
+    #[serde(rename = "manga_series")]
+    Manga(MangaDetail),
+    #[serde(rename = "manga")]
+    Chapter(MangaChapterDetail),
+    #[serde(rename = "featured_section_series_id")]
+    FeaturedSeriesId(Option<String>),
+    #[serde(rename = "featured_section_series")]
+    FeaturedSeries(Option<String>),
+    #[serde(rename = "featured_section_title")]
+    FeaturedTitle(Option<String>),
+    #[serde(rename = "featured_chapter_offset_start")]
+    FeaturedChapterStart(i32),
+    #[serde(rename = "featured_chapter_offset_end")]
+    FeaturedChapterEnd(i32),
 }
 
 /// A response for requesting cached manga list and featured data
