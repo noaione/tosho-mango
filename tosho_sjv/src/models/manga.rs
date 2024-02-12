@@ -69,3 +69,50 @@ pub struct MangaDetail {
     #[serde(rename = "num_chapters")]
     pub total_chapters: u64,
 }
+
+/// A node of a chapter notice information.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ChapterMessage {
+    #[serde(rename = "msg")]
+    pub message: String,
+    pub offset: u32,
+    #[serde(with = "super::datetime")]
+    pub show_from: DateTime<FixedOffset>,
+}
+
+/// A wrapper for [`MangaChapterDetail`]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MangaChapterNode {
+    #[serde(rename = "manga")]
+    pub chapter: MangaChapterDetail,
+}
+
+/// A response for requesting manga detail or chapter list
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MangaSeriesResponse {
+    #[serde(rename = "chpt_msgs")]
+    pub notices: Vec<ChapterMessage>,
+    #[serde(rename = "data")]
+    pub chapters: Vec<MangaChapterNode>,
+}
+
+/// A wrapper for both MangaNode and MangaChapterNode
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum MangaStoreInfo {
+    Manga {
+        #[serde(rename = "manga_series")]
+        manga: MangaChapterDetail,
+    },
+    Chapter {
+        #[serde(rename = "manga")]
+        chapter: MangaChapterDetail,
+    },
+}
+
+/// A response for requesting cached manga list and featured data
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MangaStoreResponse {
+    #[serde(rename = "data")]
+    pub contents: Vec<MangaStoreInfo>,
+}
