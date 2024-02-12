@@ -22,5 +22,6 @@ chrono.workspace = true
 image.workspace = true
 rand.workspace = true
 kamadak-exif = "0.5.5"
+aho-corasick = "1.1.2"
 
 tosho-macros = { path = "../tosho_macros" }
