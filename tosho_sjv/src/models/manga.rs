@@ -114,7 +114,7 @@ where
 pub struct ChapterMessage {
     #[serde(rename = "msg")]
     pub message: String,
-    pub offset: u32,
+    pub offset: f64,
     #[serde(with = "super::datetime")]
     pub show_from: DateTime<FixedOffset>,
 }
