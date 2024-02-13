@@ -75,7 +75,7 @@ lazy_static! {
     pub(crate) static ref HEADER_PIECE: String = {
         String::from_utf8(
             general_purpose::STANDARD
-                .decode("WC1EZXZpbC1GcnVpdA==")
+                .decode("eC1kZXZpbC1mcnVpdA==")
                 .expect("Failed to decode base64 HEADER_PIECE")
         )
         .expect("Invalid base64 string (HEADER_PIECE)")
