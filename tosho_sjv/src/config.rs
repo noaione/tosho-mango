@@ -47,10 +47,10 @@ impl SJConfig {
     /// # Arguments
     /// * `response` - The login response.
     /// * `instance` - The instance ID.
-    pub fn from_login_response(response: AccountLoginResponse, instance: String) -> Self {
+    pub fn from_login_response(response: &AccountLoginResponse, instance: String) -> Self {
         Self {
             user_id: response.id,
-            token: response.token,
+            token: response.token.clone(),
             instance,
         }
     }
