@@ -63,7 +63,8 @@ pub(crate) fn search_manga_by_text<'a>(
     target: &str,
 ) -> Vec<&'a MangaDetail> {
     // split by spaces
-    let target: Vec<&str> = target.split_ascii_whitespace().collect();
+    let clean_target = diacritics::remove_diacritics(target);
+    let target: Vec<&str> = clean_target.split_ascii_whitespace().collect();
 
     let ac = AhoCorasick::builder()
         .ascii_case_insensitive(true)
@@ -72,7 +73,8 @@ pub(crate) fn search_manga_by_text<'a>(
 
     let mut matches = vec![];
     for content in contents {
-        if ac.find(&content.title).is_some() {
+        let cleaned_title = diacritics::remove_diacritics(&content.title);
+        if ac.find(&cleaned_title).is_some() {
             matches.push(content);
         }
     }
