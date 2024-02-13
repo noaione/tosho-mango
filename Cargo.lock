@@ -2033,6 +2033,7 @@ dependencies = [
 name = "tosho"
 version = "0.2.4-dev"
 dependencies = [
+ "aho-corasick",
  "anstream",
  "anyhow",
  "chrono",
@@ -2058,6 +2059,7 @@ dependencies = [
  "tosho-kmkc",
  "tosho-macros",
  "tosho-musq",
+ "tosho-sjv",
  "uuid",
  "windows-sys 0.52.0",
  "winres",
@@ -2135,7 +2137,6 @@ dependencies = [
 name = "tosho-sjv"
 version = "0.2.4-dev"
 dependencies = [
- "aho-corasick",
  "anyhow",
  "base64",
  "chrono",

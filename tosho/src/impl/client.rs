@@ -45,6 +45,15 @@ pub(crate) fn select_single_account(
                 name: c.id.clone(),
                 value: format!("{} [{}]", c.id, c.r#type().to_name()),
             },
+            crate::config::ConfigImpl::Sjv(c) => ConsoleChoice {
+                name: c.id.clone(),
+                value: format!(
+                    "{} [{} - {}]",
+                    c.id,
+                    c.r#type().to_name(),
+                    c.mode().to_name()
+                ),
+            },
         })
         .collect();
 
@@ -70,6 +79,7 @@ pub(crate) fn select_single_account(
                         super::kmkc::config::Config::Web(cc) => cc.id == selected.name,
                     },
                     crate::config::ConfigImpl::Musq(c) => c.id == selected.name,
+                    crate::config::ConfigImpl::Sjv(c) => c.id == selected.name,
                 })
                 .unwrap();
 
@@ -91,4 +101,15 @@ pub(crate) fn make_kmkc_client(config: &tosho_kmkc::KMConfig) -> tosho_kmkc::KMC
 
 pub(crate) fn make_amap_client(config: &tosho_amap::AMConfig) -> tosho_amap::AMClient {
     tosho_amap::AMClient::new(config.clone())
+}
+
+pub(crate) fn make_sjv_client(config: &super::sjv::config::Config) -> tosho_sjv::SJClient {
+    let constants = match config.r#type() {
+        crate::r#impl::sjv::config::DeviceType::Android => tosho_sjv::constants::get_constants(1),
+    };
+    let mode = match config.mode() {
+        crate::r#impl::sjv::config::SJDeviceMode::SJ => tosho_sjv::SJMode::SJ,
+        crate::r#impl::sjv::config::SJDeviceMode::VM => tosho_sjv::SJMode::VM,
+    };
+    tosho_sjv::SJClient::new(config.clone().into(), constants, mode)
 }

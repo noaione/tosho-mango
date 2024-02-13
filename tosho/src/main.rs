@@ -6,6 +6,7 @@ use r#impl::amap::download::AMDownloadCliConfig;
 use r#impl::amap::AMAPCommands;
 use r#impl::client::select_single_account;
 use r#impl::parser::WeeklyCodeCli;
+use r#impl::sjv::SJVCommands;
 use r#impl::tools::ToolsCommands;
 use r#impl::Implementations;
 use r#impl::{kmkc::download::KMDownloadCliConfig, musq::download::MUDownloadCliConfig};
@@ -492,6 +493,56 @@ async fn main() {
                 AMAPCommands::Revoke => r#impl::amap::accounts::amap_account_revoke(&config, &t),
                 AMAPCommands::Search { query } => {
                     r#impl::amap::manga::amap_search(query.as_str(), &client, &config, &t).await
+                }
+            };
+
+            std::process::exit(exit_code as i32);
+        }
+        ToshoCommands::Sjv {
+            account_id,
+            subcommand,
+        } => {
+            if let SJVCommands::Auth {
+                email,
+                password,
+                mode,
+            } = subcommand
+            {
+                let exit_code =
+                    r#impl::sjv::accounts::sjv_account_login(email, password, mode, &t).await;
+                std::process::exit(exit_code as i32);
+            }
+
+            let config = select_single_account(account_id.as_deref(), Implementations::Sjv, &t);
+            let config = match config {
+                Some(config) => match config {
+                    config::ConfigImpl::Sjv(c) => c,
+                    _ => unreachable!(),
+                },
+                None => {
+                    t.warn("Aborted!");
+                    std::process::exit(1);
+                }
+            };
+
+            let client = r#impl::client::make_sjv_client(&config.clone());
+            let client = if let Some(proxy) = parsed_proxy {
+                client.with_proxy(proxy)
+            } else {
+                client
+            };
+
+            let exit_code = match subcommand {
+                SJVCommands::Auth {
+                    email: _,
+                    password: _,
+                    mode: _,
+                } => 0,
+                SJVCommands::Account => r#impl::sjv::accounts::sjv_account_info(&config, &t).await,
+                SJVCommands::Accounts => r#impl::sjv::accounts::sjv_accounts(&t),
+                SJVCommands::Revoke => r#impl::sjv::accounts::sjv_account_revoke(&config, &t),
+                SJVCommands::Subscription => {
+                    r#impl::sjv::accounts::sjv_account_subscriptions(&client, &config, &t).await
                 }
             };
 
