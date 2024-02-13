@@ -1,6 +1,6 @@
 use std::io::Cursor;
 
-use image::{GenericImage, GenericImageView};
+use image::{GenericImage, GenericImageView, ImageEncoder};
 
 fn u32_to_f32(n: u32) -> f32 {
     if n > i32::MAX as u32 {
@@ -121,9 +121,19 @@ pub fn descramble_image(
 
             // output image to Vec<u8>
             let mut buf = Cursor::new(Vec::new());
-            canvas
-                .write_to(&mut buf, image::ImageOutputFormat::Png)
-                .expect("Failed to write to buffer");
+
+            image::codecs::png::PngEncoder::new_with_quality(
+                &mut buf,
+                image::codecs::png::CompressionType::Best,
+                image::codecs::png::FilterType::Adaptive,
+            )
+            .write_image(
+                &canvas,
+                canvas.width(),
+                canvas.height(),
+                image::ColorType::Rgb8,
+            )?;
+
             buf.set_position(0);
 
             let data = buf.into_inner();
