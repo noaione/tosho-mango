@@ -6,6 +6,7 @@ use r#impl::amap::download::AMDownloadCliConfig;
 use r#impl::amap::AMAPCommands;
 use r#impl::client::select_single_account;
 use r#impl::parser::WeeklyCodeCli;
+use r#impl::sjv::download::SJDownloadCliConfig;
 use r#impl::sjv::SJVCommands;
 use r#impl::tools::ToolsCommands;
 use r#impl::Implementations;
@@ -546,6 +547,47 @@ async fn main() {
                 } => 0,
                 SJVCommands::Account => r#impl::sjv::accounts::sjv_account_info(&config, &t).await,
                 SJVCommands::Accounts => 0,
+                SJVCommands::AutoDownload {
+                    title_or_slug,
+                    start_from,
+                    end_until,
+                    output,
+                } => {
+                    let dl_config = SJDownloadCliConfig {
+                        start_from,
+                        end_at: end_until,
+                        no_input: true,
+                        ..Default::default()
+                    };
+
+                    r#impl::sjv::download::sjv_download(
+                        title_or_slug,
+                        dl_config,
+                        output.unwrap_or_else(get_default_download_dir),
+                        &client,
+                        &mut t_mut,
+                    )
+                    .await
+                }
+                SJVCommands::Download {
+                    title_or_slug,
+                    chapters,
+                    output,
+                } => {
+                    let dl_config = SJDownloadCliConfig {
+                        chapter_ids: chapters.unwrap_or_default(),
+                        ..Default::default()
+                    };
+
+                    r#impl::sjv::download::sjv_download(
+                        title_or_slug,
+                        dl_config,
+                        output.unwrap_or_else(get_default_download_dir),
+                        &client,
+                        &mut t_mut,
+                    )
+                    .await
+                }
                 SJVCommands::Info {
                     title_or_slug,
                     show_chapters,

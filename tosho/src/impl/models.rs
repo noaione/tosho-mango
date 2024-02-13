@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use tosho_amap::models::{ComicEpisodeInfo, ComicEpisodeInfoNode};
 use tosho_kmkc::models::EpisodeNode;
 use tosho_musq::proto::ChapterV2;
+use tosho_sjv::models::MangaChapterDetail;
 
 /// A dump info of a chapter
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -109,6 +110,19 @@ impl From<ComicEpisodeInfo> for ChapterDetailDump {
     /// `_info.json` format.
     fn from(value: ComicEpisodeInfo) -> Self {
         Self::from(value.info)
+    }
+}
+
+impl From<MangaChapterDetail> for ChapterDetailDump {
+    /// Convert from [`tosho_sjv::models::MangaChapterDetail`] into [`ChapterDetailDump`]
+    /// `_info.json` format.
+    fn from(value: MangaChapterDetail) -> Self {
+        Self {
+            main_name: value.pretty_title(),
+            id: value.id as u64,
+            timestamp: Some(value.published_at.timestamp()),
+            sub_name: None,
+        }
     }
 }
 
