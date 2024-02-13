@@ -106,6 +106,24 @@ lazy_static! {
         )
         .expect("Invalid base64 string (DATA_VERSION_CODE)")
     };
+    /// Expanded VM name
+    pub static ref EXPAND_VM_NAME: String = {
+        String::from_utf8(
+            general_purpose::STANDARD
+                .decode("dml6bWFuZ2E=")
+                .expect("Failed to decode base64 EXPAND_VM_NAME")
+        )
+        .expect("Invalid base64 string (EXPAND_VM_NAME)")
+    };
+    /// Expanded SJ name
+    pub static ref EXPAND_SJ_NAME: String = {
+        String::from_utf8(
+            general_purpose::STANDARD
+                .decode("c2hvbmVuanVtcA==")
+                .expect("Failed to decode base64 EXPAND_SJ_NAME")
+        )
+        .expect("Invalid base64 string (EXPAND_SJ_NAME)")
+    };
 }
 
 /// Returns the constants for the given device type.
