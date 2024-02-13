@@ -85,7 +85,7 @@ pub struct MangaDetail {
     #[serde(rename = "keyart_url")]
     pub keyart: Option<String>,
     #[serde(rename = "latest_author")]
-    pub author: String,
+    pub author: Option<String>,
     pub title_sort: String,
     #[serde(with = "super::datetime")]
     pub updated_at: DateTime<FixedOffset>,
@@ -143,15 +143,15 @@ pub enum MangaStoreInfo {
     #[serde(rename = "manga")]
     Chapter(MangaChapterDetail),
     #[serde(rename = "featured_section_series_id")]
-    FeaturedSeriesId(Option<String>),
+    FeaturedSeriesId(Option<serde_json::Value>),
     #[serde(rename = "featured_section_series")]
     FeaturedSeries(Option<String>),
     #[serde(rename = "featured_section_title")]
     FeaturedTitle(Option<String>),
     #[serde(rename = "featured_chapter_offset_start")]
-    FeaturedChapterStart(i32),
+    FeaturedChapterStart(f64),
     #[serde(rename = "featured_chapter_offset_end")]
-    FeaturedChapterEnd(i32),
+    FeaturedChapterEnd(f64),
 }
 
 /// A response for requesting cached manga list and featured data

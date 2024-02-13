@@ -116,6 +116,42 @@ fn test_store_cached_models() {
 }
 
 #[test]
+fn test_store_cached_alt_models_loaded() {
+    let json_file = common_reader("store_cached_alt");
+
+    match json_file {
+        Err(err) => {
+            assert!(true, "{}", err);
+        }
+        Ok(json_b64) => {
+            let json_data = decode_b64(&json_b64);
+
+            let store_cached = serde_json::from_str::<MangaStoreResponse>(&json_data);
+            let store_cached = match store_cached {
+                Ok(data) => data,
+                Err(error) => {
+                    let row_line = error.line() - 1;
+                    let split_lines = &json_data.split('\n').collect::<Vec<&str>>();
+                    let position = error.column();
+                    let start_index = position.saturating_sub(25); // Start 5 characters before the error position
+                    let end_index = position.saturating_add(25); // End 5 characters after the error position
+                    let excerpt = &split_lines[row_line][start_index..end_index];
+
+                    panic!(
+                        "Error parsing JSON at line {}, column {}: {}\nExcerpt: '{}'",
+                        error.line(),
+                        error.column(),
+                        error,
+                        excerpt
+                    );
+                }
+            };
+            assert!(store_cached.contents.len() > 0)
+        }
+    }
+}
+
+#[test]
 fn test_manga_detail() {
     let json_file = common_reader("manga_detail");
 
