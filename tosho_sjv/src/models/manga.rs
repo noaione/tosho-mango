@@ -42,6 +42,31 @@ impl MangaChapterDetail {
     pub fn is_available(&self) -> bool {
         self.expiry_at.is_none()
     }
+
+    /// Create pretty title for the chapter
+    pub fn pretty_title(&self) -> String {
+        let mut text_data = String::new();
+        if let Some(ref volume) = self.volume {
+            text_data.push_str(&format!("Vol. {:02} ", volume));
+        }
+        if let Some(ref chapter) = self.chapter {
+            text_data.push_str(&format!("Ch. {}", chapter));
+        }
+        if let Some(ref title) = self.title {
+            let pretty_title = if text_data.is_empty() {
+                title.clone()
+            } else {
+                format!(" - {}", title)
+            };
+            text_data.push_str(&pretty_title);
+        }
+
+        if text_data.is_empty() {
+            text_data = format!("ID: {}", self.id);
+        }
+
+        text_data.trim().to_string()
+    }
 }
 
 /// A node of a single series information.
