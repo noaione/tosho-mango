@@ -1409,15 +1409,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "prost-types"
-version = "0.12.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "193898f59edcf43c26227dcd4c8427f00d99d61e95dcde58dabd49fa291d470e"
-dependencies = [
- "prost",
-]
-
-[[package]]
 name = "psl-types"
 version = "2.0.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2055,7 +2046,6 @@ dependencies = [
  "mime_guess",
  "num-format",
  "prost",
- "prost-types",
  "regex",
  "reqwest",
  "serde",
@@ -2133,7 +2123,6 @@ dependencies = [
  "futures-util",
  "lazy_static",
  "prost",
- "prost-types",
  "reqwest",
  "serde",
  "tokio",

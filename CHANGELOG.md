@@ -12,6 +12,7 @@ Starting from Rust port of the project, all changes will be put into this file.
 
 ### Build
 - Remove `cookie-store` as direct dependency
+- Remove `prost-types` (unused)
 - Set `documented` to v0.3.0
 
 ## [0.2.3] 2024-02-07
