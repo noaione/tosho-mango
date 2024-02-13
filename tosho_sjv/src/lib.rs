@@ -5,9 +5,9 @@ use constants::{
 use futures_util::StreamExt;
 use helper::generate_random_token;
 use models::{
-    AccountLoginResponse, MangaAuthResponse, MangaChapterDetail, MangaDetail,
-    MangaReadMetadataResponse, MangaSeriesResponse, MangaStoreInfo, MangaStoreResponse,
-    MangaUrlResponse, SimpleResponse,
+    AccountEntitlementsResponse, AccountLoginResponse, MangaAuthResponse, MangaChapterDetail,
+    MangaDetail, MangaReadMetadataResponse, MangaSeriesResponse, MangaStoreInfo,
+    MangaStoreResponse, MangaUrlResponse, SimpleResponse,
 };
 use std::collections::HashMap;
 use tokio::io::{self, AsyncWriteExt};
@@ -302,6 +302,24 @@ impl SJClient {
         let metadata: MangaReadMetadataResponse = parse_response(metadata_resp).await?;
 
         Ok(metadata)
+    }
+
+    /// Get the current user entitlements.
+    ///
+    /// This contains subscription information and other details.
+    pub async fn get_entitlements(&self) -> anyhow::Result<AccountEntitlementsResponse> {
+        let data = common_data_hashmap(self.constants, &self.mode, Some(&self.config));
+
+        let response = self
+            .request::<AccountEntitlementsResponse>(
+                reqwest::Method::POST,
+                "/manga/entitled",
+                Some(data),
+                None,
+            )
+            .await?;
+
+        Ok(response)
     }
 
     /// Stream download the image from the given URL.
