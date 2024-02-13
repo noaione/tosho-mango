@@ -82,7 +82,7 @@ pub fn descramble_image(img_bytes: &[u8]) -> anyhow::Result<Vec<u8>> {
         .value
         .display_as(exif::Tag::ImageUniqueID)
         .to_string();
-    let img_unique_id = img_unique_id.replace("\"", "");
+    let img_unique_id = img_unique_id.replace('"', "");
 
     let keys: Vec<u32> = img_unique_id
         .split(':')
