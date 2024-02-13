@@ -3,6 +3,9 @@
 Starting from Rust port of the project, all changes will be put into this file.
 
 ## Unreleased (git master)
+### Changes
+- Fix some part of command locked behind account select
+
 ### Build
 - Remove `cookie-store` as direct dependency
 - Set `documented` to v0.3.0

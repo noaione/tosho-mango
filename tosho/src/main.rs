@@ -48,6 +48,19 @@ async fn main() {
             account_id,
             subcommand,
         } => {
+            let early_exit = match subcommand.clone() {
+                MUSQCommands::Auth { session_id, r#type } => {
+                    Some(r#impl::musq::accounts::musq_auth_session(session_id, r#type, &t).await)
+                }
+                MUSQCommands::Accounts => Some(r#impl::musq::accounts::musq_accounts(&t)),
+                _ => None,
+            };
+
+            // early exit
+            if let Some(early_exit) = early_exit {
+                std::process::exit(early_exit as i32);
+            }
+
             let config = select_single_account(account_id.as_deref(), Implementations::Musq, &t);
             let config = match config {
                 Some(config) => match config {
@@ -68,13 +81,14 @@ async fn main() {
             };
 
             let exit_code = match subcommand {
-                MUSQCommands::Auth { session_id, r#type } => {
-                    r#impl::musq::accounts::musq_auth_session(session_id, r#type, &t).await
-                }
+                MUSQCommands::Auth {
+                    session_id: _,
+                    r#type: _,
+                } => 0,
                 MUSQCommands::Account => {
                     r#impl::musq::accounts::musq_account_info(&client, &config, &t).await
                 }
-                MUSQCommands::Accounts => r#impl::musq::accounts::musq_accounts(&t),
+                MUSQCommands::Accounts => 0,
                 MUSQCommands::AutoDownload {
                     title_id,
                     no_purchase,
@@ -182,6 +196,39 @@ async fn main() {
             account_id,
             subcommand,
         } => {
+            let early_exit = match subcommand.clone() {
+                KMKCCommands::Auth {
+                    email,
+                    password,
+                    r#type,
+                } => Some(
+                    r#impl::kmkc::accounts::kmkc_account_login(email, password, r#type, &t).await,
+                ),
+                KMKCCommands::AuthMobile {
+                    user_id,
+                    hash_key,
+                    r#type,
+                } => Some(
+                    r#impl::kmkc::accounts::kmkc_account_login_mobile(
+                        user_id, hash_key, r#type, &t,
+                    )
+                    .await,
+                ),
+                KMKCCommands::AuthWeb { cookies } => {
+                    Some(r#impl::kmkc::accounts::kmkc_account_login_web(cookies, &t).await)
+                }
+                KMKCCommands::AuthAdapt { r#type } => {
+                    Some(r#impl::kmkc::accounts::kmkc_account_login_adapt(r#type, &t).await)
+                }
+                KMKCCommands::Accounts => Some(r#impl::kmkc::accounts::kmkc_accounts(&t)),
+                _ => None,
+            };
+
+            // exit early
+            if let Some(exit_code) = early_exit {
+                std::process::exit(exit_code as i32);
+            }
+
             let config = select_single_account(account_id.as_deref(), Implementations::Kmkc, &t);
             let config = match config {
                 Some(config) => match config {
@@ -203,28 +250,21 @@ async fn main() {
 
             let exit_code = match subcommand {
                 KMKCCommands::Auth {
-                    email,
-                    password,
-                    r#type,
-                } => r#impl::kmkc::accounts::kmkc_account_login(email, password, r#type, &t).await,
+                    email: _,
+                    password: _,
+                    r#type: _,
+                } => 0,
                 KMKCCommands::AuthMobile {
-                    user_id,
-                    hash_key,
-                    r#type,
-                } => {
-                    r#impl::kmkc::accounts::kmkc_account_login_mobile(user_id, hash_key, r#type, &t)
-                        .await
-                }
-                KMKCCommands::AuthWeb { cookies } => {
-                    r#impl::kmkc::accounts::kmkc_account_login_web(cookies, &t).await
-                }
-                KMKCCommands::AuthAdapt { r#type } => {
-                    r#impl::kmkc::accounts::kmkc_account_login_adapt(r#type, &t).await
-                }
+                    user_id: _,
+                    hash_key: _,
+                    r#type: _,
+                } => 0,
+                KMKCCommands::AuthWeb { cookies: _ } => 0,
+                KMKCCommands::AuthAdapt { r#type: _ } => 0,
                 KMKCCommands::Account => {
                     r#impl::kmkc::accounts::kmkc_account_info(&client, &config, &t).await
                 }
-                KMKCCommands::Accounts => r#impl::kmkc::accounts::kmkc_accounts(&t),
+                KMKCCommands::Accounts => 0,
                 KMKCCommands::AutoDownload {
                     title_id,
                     no_purchase,
@@ -330,6 +370,19 @@ async fn main() {
             account_id,
             subcommand,
         } => {
+            let early_exit = match subcommand.clone() {
+                AMAPCommands::Auth { email, password } => {
+                    Some(r#impl::amap::accounts::amap_account_login(email, password, &t).await)
+                }
+                AMAPCommands::Accounts => Some(r#impl::amap::accounts::amap_accounts(&t)),
+                _ => None,
+            };
+
+            // early exit
+            if let Some(early_exit) = early_exit {
+                std::process::exit(early_exit as i32);
+            }
+
             let config = select_single_account(account_id.as_deref(), Implementations::Amap, &t);
             let config = match config {
                 Some(config) => match config {
@@ -350,13 +403,14 @@ async fn main() {
             };
 
             let exit_code = match subcommand {
-                AMAPCommands::Auth { email, password } => {
-                    r#impl::amap::accounts::amap_account_login(email, password, &t).await
-                }
+                AMAPCommands::Auth {
+                    email: _,
+                    password: _,
+                } => 0,
                 AMAPCommands::Account => {
                     r#impl::amap::accounts::amap_account_info(&client, &config, &t).await
                 }
-                AMAPCommands::Accounts => r#impl::amap::accounts::amap_accounts(&t),
+                AMAPCommands::Accounts => 0,
                 AMAPCommands::AutoDownload {
                     title_id,
                     no_purchase,

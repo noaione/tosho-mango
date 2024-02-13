@@ -12,7 +12,7 @@ pub(crate) mod manga;
 pub(crate) mod purchases;
 pub(crate) mod rankings;
 
-#[derive(Subcommand)]
+#[derive(Subcommand, Clone)]
 pub(crate) enum AMAPCommands {
     /// Authenticate tosho with your AM account.
     Auth {
