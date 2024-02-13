@@ -1,12 +1,13 @@
 use std::io::Cursor;
 
-use image::{GenericImage, GenericImageView};
+use image::{GenericImage, GenericImageView, ImageEncoder};
 
 const CUT_WIDTH: u32 = 90;
 const CUT_HEIGHT: u32 = 140;
 const CELL_WIDTH_COUNT: u32 = 10;
 const CELL_HEIGHT_COUNT: u32 = 15;
 
+#[derive(Debug)]
 struct DrawTarget {
     dest_x: u32,
     dest_y: u32,
@@ -81,10 +82,15 @@ pub fn descramble_image(img_bytes: &[u8]) -> anyhow::Result<Vec<u8>> {
         .value
         .display_as(exif::Tag::ImageUniqueID)
         .to_string();
+    let img_unique_id = img_unique_id.replace("\"", "");
 
     let keys: Vec<u32> = img_unique_id
         .split(':')
-        .map(|x| u32::from_str_radix(x, 16).unwrap())
+        .map(|x| {
+            u32::from_str_radix(x, 16).unwrap_or_else(|_| {
+                panic!("Failed to parse ImageUniqueID: {} ({})", img_unique_id, x)
+            })
+        })
         .collect();
 
     let img = image::load_from_memory(img_bytes)?;
@@ -158,17 +164,17 @@ pub fn descramble_image(img_bytes: &[u8]) -> anyhow::Result<Vec<u8>> {
         },
     )?;
 
-    for key in keys {
+    for (idx, key) in keys.iter().enumerate() {
         draw_image(
             &mut descrambled_img,
             &img,
             DrawTarget {
-                dest_x: ((key % 8 + 1) * b),
-                dest_y: ((key / 8 + 1) * w),
+                dest_x: ((key % 8 + 1) * b) - 1,
+                dest_y: (key / 8 + 1) * w - 1,
                 dest_width: b,
                 dest_height: w,
-                src_x: (key % 8 + 1) * (b + 10),
-                src_y: (key / 8 + 1) * (w + 10),
+                src_x: (idx as u32 % 8 + 1) * (b + 10) - 1,
+                src_y: (idx as u32 / 8 + 1) * (w + 10) - 1,
                 src_width: b,
                 src_height: w,
             },
@@ -176,7 +182,19 @@ pub fn descramble_image(img_bytes: &[u8]) -> anyhow::Result<Vec<u8>> {
     }
 
     let mut buf = Cursor::new(Vec::new());
-    descrambled_img.write_to(&mut buf, image::ImageOutputFormat::Png)?;
+
+    image::codecs::png::PngEncoder::new_with_quality(
+        &mut buf,
+        image::codecs::png::CompressionType::Best,
+        image::codecs::png::FilterType::Adaptive,
+    )
+    .write_image(
+        &descrambled_img,
+        descrambled_img.width(),
+        descrambled_img.height(),
+        image::ColorType::Rgb8,
+    )?;
+
     buf.set_position(0);
 
     let data = buf.into_inner();
