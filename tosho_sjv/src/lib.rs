@@ -120,6 +120,11 @@ impl SJClient {
         }
     }
 
+    /// Return the mode of the client.
+    pub fn get_mode(&self) -> &SJMode {
+        &self.mode
+    }
+
     /// Make an authenticated request to the API.
     ///
     /// This request will automatically add all the required headers/cookies/auth method
