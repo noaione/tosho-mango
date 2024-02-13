@@ -405,7 +405,7 @@ impl SJClient {
 
         let mut data = common_data_hashmap(constants, &mode, None);
         data.insert("login".to_string(), email.to_string());
-        data.insert("password".to_string(), password.to_string());
+        data.insert("pass".to_string(), password.to_string());
 
         let instance_id = data.get("instance_id").unwrap().clone();
 
@@ -464,8 +464,11 @@ where
         url, stat_code, headers, raw_text
     ));
 
-    if !status_resp.is_ok() {
-        anyhow::bail!("Response is not OK")
+    if status_resp.is_err() {
+        anyhow::bail!(
+            "Response is not OK: {}",
+            status_resp.error.unwrap_or("unknown error".to_string())
+        )
     }
 
     let parsed = serde_json::from_str(&raw_text).unwrap_or_else(|err| {
