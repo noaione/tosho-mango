@@ -9,6 +9,22 @@ The following crate is used by the `tosho` app.
 Download the `tosho` app, or you can utilize this crate like any other Rust crate:
 
 ```rust
+use tosho_sjv::{SJClient, SJConfig, SJMode};
+use tosho_sjv::constants::get_constants;
+
+#[tokio::main]
+async fn main() {
+    let config = SJConfig {
+        user_id: 123,
+        token: "xyz987abc",
+        instance: "abcxyz",
+    };
+    let constants = get_constants(1);
+
+    let client = SJClient::new(config, constants, SJMode::VM);
+    let manga = client.get_manga(777).await.unwrap();
+    println!("{:?}", manga);
+}
 ```
 
 ## Authentication
