@@ -147,3 +147,17 @@ pub struct MangaUrlResponse {
     #[serde(rename = "data")]
     pub url: String,
 }
+
+/// A response containing metadata of a chapter for reading
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MangaReadMetadataResponse {
+    pub title: String,
+    pub height: u32,
+    pub width: u32,
+    #[serde(default, rename = "hdwidth")]
+    pub hd_width: Option<u32>,
+    #[serde(default, rename = "hdheight")]
+    pub hd_height: Option<u32>,
+    // pages: Vec<_>,
+    // spreads: Vec<_>,
+}

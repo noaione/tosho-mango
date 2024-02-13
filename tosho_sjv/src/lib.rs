@@ -10,10 +10,13 @@ use constants::{
     API_HOST, BASE_API, DATA_APP_ID, DATA_VERSION_CODE, HEADER_PIECE, LIB_VERSION, SJ_APP_ID,
     VALUE_PIECE, VM_APP_ID,
 };
+use futures_util::StreamExt;
+use helper::generate_random_token;
 use models::{
-    MangaAuthResponse, MangaChapterDetail, MangaDetail, MangaSeriesResponse, MangaStoreInfo,
-    MangaStoreResponse, MangaUrlResponse, SimpleResponse,
+    MangaAuthResponse, MangaChapterDetail, MangaDetail, MangaReadMetadataResponse,
+    MangaSeriesResponse, MangaStoreInfo, MangaStoreResponse, MangaUrlResponse, SimpleResponse,
 };
+use tokio::io::{self, AsyncWriteExt};
 
 /// Main client for interacting with the VM API.
 ///
@@ -237,7 +240,7 @@ impl SJClient {
     /// # Arguments
     /// * `id` - The chapter ID
     pub async fn verify_chapter(&self, id: u32) -> anyhow::Result<()> {
-        let mut data = common_data_hashmap(&self.config, self.constants, &self.mode);
+        let mut data = common_data_hashmap(self.constants, &self.mode, Some(&self.config));
         data.insert("manga_id".to_string(), id.to_string());
 
         self.request::<MangaAuthResponse>(reqwest::Method::POST, "/manga/auth", Some(data), None)
@@ -260,7 +263,7 @@ impl SJClient {
         metadata: bool,
         page: Option<u32>,
     ) -> anyhow::Result<String> {
-        let mut data = common_data_hashmap(&self.config, self.constants, &self.mode);
+        let mut data = common_data_hashmap(self.constants, &self.mode, Some(&self.config));
         data.insert("manga_id".to_string(), id.to_string());
 
         if !metadata && page.is_none() {
@@ -284,22 +287,78 @@ impl SJClient {
 
         Ok(resp.url)
     }
+
+    /// Get metadata for a chapter
+    ///
+    /// # Arguments
+    /// * `id` - The chapter ID
+    pub async fn get_chapter_metadata(&self, id: u32) -> anyhow::Result<MangaReadMetadataResponse> {
+        let response = self.get_manga_url(id, true, None).await?;
+
+        let metadata_resp = self.inner.get(response).send().await?;
+
+        let metadata: MangaReadMetadataResponse = parse_response(metadata_resp).await?;
+
+        Ok(metadata)
+    }
+
+    /// Stream download the image from the given URL.
+    ///
+    /// The URL can be obtained from [`SJClient::get_manga_url`].
+    ///
+    /// # Parameters
+    /// * `url` - The URL to download the image from.
+    /// * `writer` - The writer to write the image to.
+    pub async fn stream_download(
+        &self,
+        url: &str,
+        mut writer: impl io::AsyncWrite + Unpin,
+    ) -> anyhow::Result<()> {
+        let url_parse = reqwest::Url::parse(url)?;
+        let host = url_parse.host_str().unwrap();
+
+        let res = self
+            .inner
+            .get(url)
+            .header(
+                reqwest::header::HOST,
+                reqwest::header::HeaderValue::from_str(host).unwrap(),
+            )
+            .send()
+            .await?;
+
+        if !res.status().is_success() {
+            anyhow::bail!("Failed to download image: {}", res.status())
+        }
+
+        let mut stream = res.bytes_stream();
+        while let Some(item) = stream.next().await {
+            let item = item.unwrap();
+            writer.write_all(&item).await?;
+        }
+
+        Ok(())
+    }
 }
 
 fn common_data_hashmap(
-    config: &SJConfig,
     constants: &'static crate::constants::Constants,
     mode: &SJMode,
+    config: Option<&SJConfig>,
 ) -> HashMap<String, String> {
     let mut data: HashMap<String, String> = HashMap::new();
     let app_id = match mode {
         SJMode::VM => VM_APP_ID,
         SJMode::SJ => SJ_APP_ID,
     };
-    data.insert("trust_user_jwt".to_string(), config.token.clone());
-    data.insert("user_id".to_string(), config.user_id.to_string());
-    data.insert("instance_id".to_string(), config.instance.clone());
-    data.insert("device_token".to_string(), config.instance.clone());
+    if let Some(config) = config {
+        data.insert("trust_user_jwt".to_string(), config.token.clone());
+        data.insert("user_id".to_string(), config.user_id.to_string());
+        data.insert("instance_id".to_string(), config.instance.clone());
+        data.insert("device_token".to_string(), config.instance.clone());
+    } else {
+        data.insert("instance_id".to_string(), generate_random_token());
+    }
     data.insert("device_id".to_string(), constants.device_id.to_string());
     data.insert("version".to_string(), LIB_VERSION.to_string());
     data.insert(DATA_APP_ID.to_string(), app_id.to_string());
