@@ -53,7 +53,7 @@ impl From<crate::r#impl::sjv::config::Config> for ConfigImpl {
     }
 }
 
-fn get_user_path() -> std::path::PathBuf {
+pub(crate) fn get_user_path() -> std::path::PathBuf {
     #[cfg(windows)]
     let user_path = {
         let mut local_appdata: std::path::PathBuf =

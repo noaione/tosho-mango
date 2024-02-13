@@ -1,8 +1,11 @@
 use clap::Subcommand;
 
+use super::parser::NumberOrString;
+
 pub(crate) mod accounts;
 pub(crate) mod common;
 pub(crate) mod config;
+pub(crate) mod manga;
 
 #[derive(Subcommand, Clone)]
 pub(crate) enum SJVCommands {
@@ -20,8 +23,21 @@ pub(crate) enum SJVCommands {
     Account,
     /// See all the accounts you have authenticated with
     Accounts,
+    /// Get a title information
+    Info {
+        /// Title ID or Slug to use
+        title_or_slug: NumberOrString,
+        /// Show each chapter detailed information
+        #[arg(short = 'c', long = "chapters")]
+        show_chapters: bool,
+    },
     /// Revoke or delete an account
     Revoke,
+    /// Search for a title
+    Search {
+        /// Query to search for
+        query: String,
+    },
     /// Get account subscription info
     Subscription,
 }

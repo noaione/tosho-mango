@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use clap::ValueEnum;
 use tosho_macros::EnumName;
 
@@ -100,6 +102,31 @@ impl WeeklyCodeCli {
             WeeklyCodeCli::Saturday => 6,
             WeeklyCodeCli::Sunday => 7,
         }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub enum NumberOrString {
+    Number(usize),
+    Str(String),
+}
+
+impl std::fmt::Display for NumberOrString {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            NumberOrString::Number(n) => write!(f, "{}", n),
+            NumberOrString::Str(s) => write!(f, "{}", s),
+        }
+    }
+}
+
+impl FromStr for NumberOrString {
+    type Err = &'static str;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(s.parse::<usize>()
+            .map(NumberOrString::Number)
+            .unwrap_or_else(|_| NumberOrString::Str(s.to_string())))
     }
 }
 

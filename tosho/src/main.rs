@@ -546,7 +546,17 @@ async fn main() {
                 } => 0,
                 SJVCommands::Account => r#impl::sjv::accounts::sjv_account_info(&config, &t).await,
                 SJVCommands::Accounts => 0,
+                SJVCommands::Info {
+                    title_or_slug,
+                    show_chapters,
+                } => {
+                    r#impl::sjv::manga::sjv_title_info(title_or_slug, show_chapters, &client, &t)
+                        .await
+                }
                 SJVCommands::Revoke => r#impl::sjv::accounts::sjv_account_revoke(&config, &t),
+                SJVCommands::Search { query } => {
+                    r#impl::sjv::manga::sjv_search(query.as_str(), &client, &t).await
+                }
                 SJVCommands::Subscription => {
                     r#impl::sjv::accounts::sjv_account_subscriptions(&client, &config, &t).await
                 }
