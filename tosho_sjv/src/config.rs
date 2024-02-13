@@ -1,3 +1,5 @@
+use crate::models::AccountLoginResponse;
+
 /// The client mode to use.
 ///
 /// Since the original has two separate application.
@@ -36,6 +38,19 @@ impl SJConfig {
         Self {
             user_id,
             token,
+            instance,
+        }
+    }
+
+    /// Create a new configuration from a login response.
+    ///
+    /// # Arguments
+    /// * `response` - The login response.
+    /// * `instance` - The instance ID.
+    pub fn from_login_response(response: AccountLoginResponse, instance: String) -> Self {
+        Self {
+            user_id: response.id,
+            token: response.token,
             instance,
         }
     }

@@ -344,11 +344,18 @@ impl SJClient {
 
     /// Perform a login request.
     ///
+    /// Compared to other source crate, this method return the original response
+    /// instead of the parsed config.
+    ///
     /// # Arguments
     /// * `email` - The email of the user.
     /// * `password` - The password of the user.
     /// * `mode` - The mode to use for the login.
-    pub async fn login(email: &str, password: &str, mode: SJMode) -> anyhow::Result<SJConfig> {
+    pub async fn login(
+        email: &str,
+        password: &str,
+        mode: SJMode,
+    ) -> anyhow::Result<(AccountLoginResponse, String)> {
         let constants = crate::constants::get_constants(1);
         let mut headers = reqwest::header::HeaderMap::new();
         headers.insert(
@@ -397,11 +404,7 @@ impl SJClient {
 
         let account_resp: AccountLoginResponse = parse_response(response).await?;
 
-        Ok(SJConfig {
-            user_id: account_resp.id,
-            token: account_resp.token,
-            instance: instance_id,
-        })
+        Ok((account_resp, instance_id))
     }
 }
 
