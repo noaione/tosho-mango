@@ -1,11 +1,3 @@
-pub mod config;
-pub mod constants;
-pub mod helper;
-pub mod imaging;
-pub mod models;
-use std::collections::HashMap;
-
-pub use config::*;
 use constants::{
     API_HOST, BASE_API, DATA_APP_ID, DATA_VERSION_CODE, HEADER_PIECE, LIB_VERSION, SJ_APP_ID,
     VALUE_PIECE, VM_APP_ID,
@@ -13,10 +5,20 @@ use constants::{
 use futures_util::StreamExt;
 use helper::generate_random_token;
 use models::{
-    MangaAuthResponse, MangaChapterDetail, MangaDetail, MangaReadMetadataResponse,
-    MangaSeriesResponse, MangaStoreInfo, MangaStoreResponse, MangaUrlResponse, SimpleResponse,
+    AccountLoginResponse, MangaAuthResponse, MangaChapterDetail, MangaDetail,
+    MangaReadMetadataResponse, MangaSeriesResponse, MangaStoreInfo, MangaStoreResponse,
+    MangaUrlResponse, SimpleResponse,
 };
+use std::collections::HashMap;
 use tokio::io::{self, AsyncWriteExt};
+
+pub mod config;
+pub mod constants;
+pub mod helper;
+pub mod imaging;
+pub mod models;
+
+pub use config::*;
 
 /// Main client for interacting with the VM API.
 ///
@@ -338,6 +340,68 @@ impl SJClient {
         }
 
         Ok(())
+    }
+
+    /// Perform a login request.
+    ///
+    /// # Arguments
+    /// * `email` - The email of the user.
+    /// * `password` - The password of the user.
+    /// * `mode` - The mode to use for the login.
+    pub async fn login(email: &str, password: &str, mode: SJMode) -> anyhow::Result<SJConfig> {
+        let constants = crate::constants::get_constants(1);
+        let mut headers = reqwest::header::HeaderMap::new();
+        headers.insert(
+            reqwest::header::USER_AGENT,
+            reqwest::header::HeaderValue::from_static(constants.ua),
+        );
+        headers.insert(
+            reqwest::header::HOST,
+            reqwest::header::HeaderValue::from_static(&API_HOST),
+        );
+        let referer = match mode {
+            SJMode::VM => &constants.vm_name,
+            SJMode::SJ => &constants.sj_name,
+        };
+        headers.insert(
+            reqwest::header::REFERER,
+            reqwest::header::HeaderValue::from_str(referer).unwrap(),
+        );
+
+        let x_header = format!("{} {}", constants.app_ver, *VALUE_PIECE);
+        headers.insert(
+            reqwest::header::HeaderName::from_static(&HEADER_PIECE),
+            reqwest::header::HeaderValue::from_str(&x_header).unwrap(),
+        );
+
+        let client = reqwest::Client::builder()
+            .default_headers(headers)
+            .build()?;
+
+        let mut data = common_data_hashmap(constants, &mode, None);
+        data.insert("login".to_string(), email.to_string());
+        data.insert("password".to_string(), password.to_string());
+
+        let instance_id = data.get("instance_id").unwrap().clone();
+
+        let response = client
+            .post(format!("{}/manga/try_manga_login", BASE_API.as_str()))
+            .form(&data)
+            .header(
+                reqwest::header::CONTENT_TYPE,
+                reqwest::header::HeaderValue::from_str("application/x-www-form-urlencoded")
+                    .unwrap(),
+            )
+            .send()
+            .await?;
+
+        let account_resp: AccountLoginResponse = parse_response(response).await?;
+
+        Ok(SJConfig {
+            user_id: account_resp.id,
+            token: account_resp.token,
+            instance: instance_id,
+        })
     }
 }
 
