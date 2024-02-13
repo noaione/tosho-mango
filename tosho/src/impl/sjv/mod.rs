@@ -4,7 +4,7 @@ pub(crate) mod accounts;
 pub(crate) mod common;
 pub(crate) mod config;
 
-#[derive(Subcommand)]
+#[derive(Subcommand, Clone)]
 pub(crate) enum SJVCommands {
     /// Authenticate tosho with your AM account.
     Auth {

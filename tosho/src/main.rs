@@ -502,15 +502,21 @@ async fn main() {
             account_id,
             subcommand,
         } => {
-            if let SJVCommands::Auth {
-                email,
-                password,
-                mode,
-            } = subcommand
-            {
-                let exit_code =
-                    r#impl::sjv::accounts::sjv_account_login(email, password, mode, &t).await;
-                std::process::exit(exit_code as i32);
+            let early_exit = match subcommand.clone() {
+                SJVCommands::Auth {
+                    email,
+                    password,
+                    mode,
+                } => {
+                    Some(r#impl::sjv::accounts::sjv_account_login(email, password, mode, &t).await)
+                }
+                SJVCommands::Accounts => Some(r#impl::sjv::accounts::sjv_accounts(&t)),
+                _ => None,
+            };
+
+            // early exit
+            if let Some(early_exit) = early_exit {
+                std::process::exit(early_exit as i32);
             }
 
             let config = select_single_account(account_id.as_deref(), Implementations::Sjv, &t);
@@ -539,7 +545,7 @@ async fn main() {
                     mode: _,
                 } => 0,
                 SJVCommands::Account => r#impl::sjv::accounts::sjv_account_info(&config, &t).await,
-                SJVCommands::Accounts => r#impl::sjv::accounts::sjv_accounts(&t),
+                SJVCommands::Accounts => 0,
                 SJVCommands::Revoke => r#impl::sjv::accounts::sjv_account_revoke(&config, &t),
                 SJVCommands::Subscription => {
                     r#impl::sjv::accounts::sjv_account_subscriptions(&client, &config, &t).await
