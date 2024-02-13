@@ -156,7 +156,7 @@ pub(super) async fn get_cached_store_data(client: &SJClient) -> anyhow::Result<W
     Ok(wrapped)
 }
 
-pub(super) fn sort_chapters(chapters: &mut Vec<MangaChapterDetail>, reverse: bool) {
+pub(super) fn sort_chapters(chapters: &mut [MangaChapterDetail], reverse: bool) {
     // sort by "chapter" (which is a string of float)
     // then if "chapter" is None, sort by id
     // default to ascending; if reverse is true, reverse the order
