@@ -184,7 +184,7 @@ fn test_manga_detail() {
                 }
             };
 
-            assert_eq!(manga_detail.notices[0].offset, 88);
+            assert_eq!(manga_detail.notices[0].offset, 88.0);
             let first_ch = &manga_detail.chapters[0].chapter;
             assert_eq!(first_ch.chapter, Some("100.0".to_string()));
         }
