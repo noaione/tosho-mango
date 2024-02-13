@@ -73,6 +73,8 @@ pub struct MangaDetail {
     pub imprint: MangaImprint,
     #[serde(rename = "num_chapters")]
     pub total_chapters: u64,
+    #[serde(rename = "num_gns")]
+    pub total_volumes: u64,
 }
 
 fn parse_imprint_extra<'de, D>(d: D) -> Result<MangaImprint, D::Error>
