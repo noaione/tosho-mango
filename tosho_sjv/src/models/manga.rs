@@ -171,8 +171,10 @@ pub struct MangaAuthResponse {
 /// A response for getting URL of a manga
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MangaUrlResponse {
-    #[serde(rename = "data")]
-    pub url: String,
+    #[serde(rename = "data", default)]
+    pub url: Option<String>,
+    #[serde(default)]
+    pub metadata: Option<String>,
 }
 
 /// A response containing metadata of a chapter for reading

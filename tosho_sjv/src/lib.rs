@@ -292,7 +292,13 @@ impl SJClient {
             )
             .await?;
 
-        Ok(resp.url)
+        if let Some(url) = resp.url {
+            Ok(url)
+        } else if let Some(url) = resp.metadata {
+            Ok(url)
+        } else {
+            anyhow::bail!("No URL or metadata found")
+        }
     }
 
     /// Get metadata for a chapter
@@ -301,10 +307,21 @@ impl SJClient {
     /// * `id` - The chapter ID
     pub async fn get_chapter_metadata(&self, id: u32) -> anyhow::Result<MangaReadMetadataResponse> {
         let response = self.get_manga_url(id, true, None).await?;
+        let url_parse = reqwest::Url::parse(&response)?;
+        let host = url_parse.host_str().unwrap();
 
-        let metadata_resp = self.inner.get(response).send().await?;
+        let metadata_resp = self
+            .inner
+            .get(response)
+            .header(
+                reqwest::header::HOST,
+                reqwest::header::HeaderValue::from_str(host).unwrap(),
+            )
+            .send()
+            .await?;
 
-        let metadata: MangaReadMetadataResponse = parse_response(metadata_resp).await?;
+        let metadata: MangaReadMetadataResponse =
+            serde_json::from_str(&metadata_resp.text().await?)?;
 
         Ok(metadata)
     }
