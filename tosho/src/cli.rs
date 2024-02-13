@@ -7,7 +7,8 @@ use clap::{
 };
 
 use crate::r#impl::{
-    amap::AMAPCommands, kmkc::KMKCCommands, musq::MUSQCommands, tools::ToolsCommands,
+    amap::AMAPCommands, kmkc::KMKCCommands, musq::MUSQCommands, sjv::SJVCommands,
+    tools::ToolsCommands,
 };
 
 pub(crate) type ExitCode = u32;
@@ -65,6 +66,16 @@ pub(crate) enum ToshoCommands {
 
         #[command(subcommand)]
         subcommand: AMAPCommands,
+    },
+    /// Download manga from SJ/M
+    #[command(name = "sj")]
+    Sjv {
+        /// Account ID to use
+        #[arg(short = 'a', long = "account", default_value = None)]
+        account_id: Option<String>,
+
+        #[command(subcommand)]
+        subcommand: SJVCommands,
     },
     /// Additional tools to manage your downloaded manga
     Tools {

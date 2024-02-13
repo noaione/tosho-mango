@@ -13,6 +13,7 @@ description = "A downloader for some official mango website"
 tosho-musq = { path = "../tosho_musq" }
 tosho-kmkc = { path = "../tosho_kmkc" }
 tosho-amap = { path = "../tosho_amap" }
+tosho-sjv = { path = "../tosho_sjv" }
 tosho-macros = { path = "../tosho_macros" }
 
 # External deps
@@ -25,6 +26,8 @@ anyhow.workspace = true
 lazy_static.workspace = true
 chrono.workspace = true
 reqwest.workspace = true
+aho-corasick = "1.1.2"
+diacritics = "0.2.0"
 
 # CLI deps
 clap = { version = "4.4.18", features = ["derive"] }

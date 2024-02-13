@@ -4,6 +4,7 @@ pub(crate) mod kmkc;
 pub(crate) mod models;
 pub(crate) mod musq;
 pub(super) mod parser;
+pub(crate) mod sjv;
 pub(crate) mod tools;
 
 /// All available implementations
@@ -14,4 +15,6 @@ pub enum Implementations {
     Musq,
     /// AM by AP
     Amap,
+    /// SJ/M by V
+    Sjv,
 }

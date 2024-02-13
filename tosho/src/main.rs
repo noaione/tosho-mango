@@ -6,6 +6,8 @@ use r#impl::amap::download::AMDownloadCliConfig;
 use r#impl::amap::AMAPCommands;
 use r#impl::client::select_single_account;
 use r#impl::parser::WeeklyCodeCli;
+use r#impl::sjv::download::SJDownloadCliConfig;
+use r#impl::sjv::SJVCommands;
 use r#impl::tools::ToolsCommands;
 use r#impl::Implementations;
 use r#impl::{kmkc::download::KMDownloadCliConfig, musq::download::MUDownloadCliConfig};
@@ -492,6 +494,113 @@ async fn main() {
                 AMAPCommands::Revoke => r#impl::amap::accounts::amap_account_revoke(&config, &t),
                 AMAPCommands::Search { query } => {
                     r#impl::amap::manga::amap_search(query.as_str(), &client, &config, &t).await
+                }
+            };
+
+            std::process::exit(exit_code as i32);
+        }
+        ToshoCommands::Sjv {
+            account_id,
+            subcommand,
+        } => {
+            let early_exit = match subcommand.clone() {
+                SJVCommands::Auth {
+                    email,
+                    password,
+                    mode,
+                } => {
+                    Some(r#impl::sjv::accounts::sjv_account_login(email, password, mode, &t).await)
+                }
+                SJVCommands::Accounts => Some(r#impl::sjv::accounts::sjv_accounts(&t)),
+                _ => None,
+            };
+
+            // early exit
+            if let Some(early_exit) = early_exit {
+                std::process::exit(early_exit as i32);
+            }
+
+            let config = select_single_account(account_id.as_deref(), Implementations::Sjv, &t);
+            let config = match config {
+                Some(config) => match config {
+                    config::ConfigImpl::Sjv(c) => c,
+                    _ => unreachable!(),
+                },
+                None => {
+                    t.warn("Aborted!");
+                    std::process::exit(1);
+                }
+            };
+
+            let client = r#impl::client::make_sjv_client(&config.clone());
+            let client = if let Some(proxy) = parsed_proxy {
+                client.with_proxy(proxy)
+            } else {
+                client
+            };
+
+            let exit_code = match subcommand {
+                SJVCommands::Auth {
+                    email: _,
+                    password: _,
+                    mode: _,
+                } => 0,
+                SJVCommands::Account => r#impl::sjv::accounts::sjv_account_info(&config, &t).await,
+                SJVCommands::Accounts => 0,
+                SJVCommands::AutoDownload {
+                    title_or_slug,
+                    start_from,
+                    end_until,
+                    output,
+                } => {
+                    let dl_config = SJDownloadCliConfig {
+                        start_from,
+                        end_at: end_until,
+                        no_input: true,
+                        ..Default::default()
+                    };
+
+                    r#impl::sjv::download::sjv_download(
+                        title_or_slug,
+                        dl_config,
+                        output.unwrap_or_else(get_default_download_dir),
+                        &client,
+                        &mut t_mut,
+                    )
+                    .await
+                }
+                SJVCommands::Download {
+                    title_or_slug,
+                    chapters,
+                    output,
+                } => {
+                    let dl_config = SJDownloadCliConfig {
+                        chapter_ids: chapters.unwrap_or_default(),
+                        ..Default::default()
+                    };
+
+                    r#impl::sjv::download::sjv_download(
+                        title_or_slug,
+                        dl_config,
+                        output.unwrap_or_else(get_default_download_dir),
+                        &client,
+                        &mut t_mut,
+                    )
+                    .await
+                }
+                SJVCommands::Info {
+                    title_or_slug,
+                    show_chapters,
+                } => {
+                    r#impl::sjv::manga::sjv_title_info(title_or_slug, show_chapters, &client, &t)
+                        .await
+                }
+                SJVCommands::Revoke => r#impl::sjv::accounts::sjv_account_revoke(&config, &t),
+                SJVCommands::Search { query } => {
+                    r#impl::sjv::manga::sjv_search(query.as_str(), &client, &t).await
+                }
+                SJVCommands::Subscription => {
+                    r#impl::sjv::accounts::sjv_account_subscriptions(&client, &config, &t).await
                 }
             };
 

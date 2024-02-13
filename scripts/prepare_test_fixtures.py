@@ -19,3 +19,6 @@ for base_dir in ROOT_DIR.iterdir():
             # Encode
             encoded_file = json_file.parent / f"{json_file.stem}.tmfxture"
             encoded_file.write_bytes(b64encode(json.dumps(data).encode("utf-8")))
+            # Redump original to be pretty
+            json_file.write_text(json.dumps(data, indent=2))
+            print(f"Prepared {json_file} -> {encoded_file}")

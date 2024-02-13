@@ -438,6 +438,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "diacritics"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fec6444e5b31ce44f10cd5e51dee3923970ec090b39f7a806fbe57ef4c89c7e2"
+
+[[package]]
 name = "digest"
 version = "0.10.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -982,6 +988,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "kamadak-exif"
+version = "0.5.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ef4fc70d0ab7e5b6bafa30216a6b48705ea964cdfc29c050f2412295eba58077"
+dependencies = [
+ "mutate_once",
+]
+
+[[package]]
 name = "lazy_static"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1044,9 +1059,9 @@ dependencies = [
 
 [[package]]
 name = "memchr"
-version = "2.6.4"
+version = "2.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f665ee40bc4a3c5590afb1e9677db74a508659dfd71e126420da8274909a0167"
+checksum = "523dc4f511e55ab87b694dc30d0f820d60906ef06413f93d4d7a1385599cc149"
 
 [[package]]
 name = "mime"
@@ -1091,6 +1106,12 @@ dependencies = [
  "wasi",
  "windows-sys 0.48.0",
 ]
+
+[[package]]
+name = "mutate_once"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "16cf681a23b4d0a43fc35024c176437f9dcd818db34e0f42ab456a0ee5ad497b"
 
 [[package]]
 name = "native-tls"
@@ -2018,11 +2039,13 @@ dependencies = [
 name = "tosho"
 version = "0.2.4-dev"
 dependencies = [
+ "aho-corasick",
  "anstream",
  "anyhow",
  "chrono",
  "clap",
  "color-print",
+ "diacritics",
  "directories",
  "glob",
  "indicatif",
@@ -2043,6 +2066,7 @@ dependencies = [
  "tosho-kmkc",
  "tosho-macros",
  "tosho-musq",
+ "tosho-sjv",
  "uuid",
  "windows-sys 0.52.0",
  "winres",
@@ -2112,6 +2136,25 @@ dependencies = [
  "prost-types",
  "reqwest",
  "serde",
+ "tokio",
+ "tosho-macros",
+]
+
+[[package]]
+name = "tosho-sjv"
+version = "0.2.4-dev"
+dependencies = [
+ "anyhow",
+ "base64",
+ "chrono",
+ "futures-util",
+ "image",
+ "kamadak-exif",
+ "lazy_static",
+ "rand",
+ "reqwest",
+ "serde",
+ "serde_json",
  "tokio",
  "tosho-macros",
 ]

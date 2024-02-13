@@ -13,6 +13,7 @@ pub enum ConfigImpl {
     Kmkc(crate::r#impl::kmkc::config::Config),
     Musq(crate::r#impl::musq::config::Config),
     Amap(crate::r#impl::amap::config::Config),
+    Sjv(crate::r#impl::sjv::config::Config),
 }
 
 impl From<crate::r#impl::kmkc::config::Config> for ConfigImpl {
@@ -46,7 +47,13 @@ impl From<crate::r#impl::amap::config::Config> for ConfigImpl {
     }
 }
 
-fn get_user_path() -> std::path::PathBuf {
+impl From<crate::r#impl::sjv::config::Config> for ConfigImpl {
+    fn from(config: crate::r#impl::sjv::config::Config) -> Self {
+        ConfigImpl::Sjv(config)
+    }
+}
+
+pub(crate) fn get_user_path() -> std::path::PathBuf {
     #[cfg(windows)]
     let user_path = {
         let mut local_appdata: std::path::PathBuf =
@@ -151,6 +158,29 @@ fn get_config_amap(id: &str, user_path: PathBuf) -> Option<crate::r#impl::amap::
     read_amap_config(user_conf)
 }
 
+fn read_sjv_config(user_conf: PathBuf) -> Option<crate::r#impl::sjv::config::Config> {
+    if !user_conf.exists() {
+        None
+    } else {
+        let mut file = std::fs::File::open(user_conf).unwrap();
+        let mut buffer = Vec::new();
+        file.read_to_end(&mut buffer).unwrap();
+        drop(file);
+        let conf = crate::r#impl::sjv::config::Config::decode(&mut Cursor::new(buffer)).unwrap();
+        Some(conf)
+    }
+}
+
+fn get_config_sjv(id: &str, user_path: PathBuf) -> Option<crate::r#impl::sjv::config::Config> {
+    let mut user_conf = user_path;
+    user_conf.push(format!(
+        "{}.{}.tmconf",
+        crate::r#impl::sjv::config::PREFIX,
+        id
+    ));
+
+    read_sjv_config(user_conf)
+}
 pub fn get_config(
     id: &str,
     r#impl: &Implementations,
@@ -171,6 +201,10 @@ pub fn get_config(
             let conf = get_config_amap(id, user_path);
             conf.map(ConfigImpl::Amap)
         }
+        Implementations::Sjv => {
+            let conf = get_config_sjv(id, user_path);
+            conf.map(ConfigImpl::Sjv)
+        }
     }
 }
 
@@ -187,6 +221,7 @@ pub fn get_all_config(r#impl: &Implementations, user_path: Option<PathBuf>) -> V
         Implementations::Kmkc => crate::r#impl::kmkc::config::PREFIX,
         Implementations::Musq => crate::r#impl::musq::config::PREFIX,
         Implementations::Amap => crate::r#impl::amap::config::PREFIX,
+        Implementations::Sjv => crate::r#impl::sjv::config::PREFIX,
     };
     glob_path.push(format!("{}.*.tmconf", prefix));
 
@@ -212,6 +247,12 @@ pub fn get_all_config(r#impl: &Implementations, user_path: Option<PathBuf>) -> V
                 let conf = read_amap_config(entry);
                 if let Some(conf) = conf {
                     matched_entries.push(ConfigImpl::Amap(conf));
+                }
+            }
+            Implementations::Sjv => {
+                let conf = read_sjv_config(entry);
+                if let Some(conf) = conf {
+                    matched_entries.push(ConfigImpl::Sjv(conf));
                 }
             }
         }
@@ -281,6 +322,20 @@ pub fn save_config(config: ConfigImpl, user_path: Option<PathBuf>) {
             file.write_all(&buffer).unwrap();
             drop(file);
         }
+        ConfigImpl::Sjv(config) => {
+            let mut user_conf = user_path.clone();
+            user_conf.push(format!(
+                "{}.{}.tmconf",
+                crate::r#impl::sjv::config::PREFIX,
+                config.id
+            ));
+
+            let mut file = std::fs::File::create(user_conf).unwrap();
+            let mut buffer = Vec::new();
+            config.encode(&mut buffer).unwrap();
+            file.write_all(&buffer).unwrap();
+            drop(file);
+        }
     }
 }
 
@@ -296,6 +351,7 @@ pub fn try_remove_config(
         Implementations::Kmkc => crate::r#impl::kmkc::config::PREFIX,
         Implementations::Musq => crate::r#impl::musq::config::PREFIX,
         Implementations::Amap => crate::r#impl::amap::config::PREFIX,
+        Implementations::Sjv => crate::r#impl::sjv::config::PREFIX,
     };
     user_conf.push(format!("{}.{}.tmconf", prefix, id));
 

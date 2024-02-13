@@ -5,7 +5,8 @@ members = [
     "tosho_musq",
     "tosho_kmkc",
     "tosho_amap",
-    "tosho_macros"
+    "tosho_sjv",
+    "tosho_macros",
 ]
 
 [workspace.package]
@@ -30,5 +31,6 @@ reqwest_cookie_store = "0.6.0"
 sha2 = "0.10.8"
 time = "0.3.34"
 image = "0.24.8"
+rand = "0.8.5"
 
 # CI-PROFILE-MARK
