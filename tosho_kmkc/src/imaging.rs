@@ -95,7 +95,6 @@ pub fn descramble_image(
     // read img_source as image
     let img = image::load_from_memory(img_bytes)?;
 
-    #[cfg(not(tarpaulin_include))]
     let (width, height) = img.dimensions();
     let (width_rect, height_rect) = calc_block_size(width, height, rectbox);
 
@@ -113,7 +112,6 @@ pub fn descramble_image(
 
                 let binding = img.crop_imm(source_x, source_y, width_rect, height_rect);
                 let source_img = binding.as_rgb8().expect("Failed to convert to RGB8");
-                #[cfg(not(tarpaulin_include))]
                 canvas.copy_from(source_img, dest_x, dest_y).unwrap_or_else(|_| {
                     panic!("Failed to copy from source image to canvas. source_x: {}, source_y: {}, dest_x: {}, dest_y: {}", source_x, source_y, dest_x, dest_y)
                 });

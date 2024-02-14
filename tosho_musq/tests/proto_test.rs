@@ -6,7 +6,6 @@ use tosho_musq::proto::{
     PointHistoryView, PointShopView, Status,
 };
 
-#[cfg(not(tarpaulin_include))]
 fn common_reader(file_name: &str) -> Result<String, std::io::Error> {
     let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap();
 

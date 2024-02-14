@@ -29,7 +29,6 @@ impl ValueEnum for WeeklyCodeCli {
         }
     }
 
-    #[cfg(not(tarpaulin_include))]
     fn value_variants<'a>() -> &'a [Self] {
         &[
             WeeklyCodeCli::Sunday,
