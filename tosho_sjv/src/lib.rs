@@ -24,8 +24,7 @@ pub use config::*;
 ///
 /// # Examples
 /// ```no_run,ignore
-/// use tosho_sjv::{SJClient, SJConfig, SJMode};
-/// use tosho_sjv::constants::get_constants;
+/// use tosho_sjv::{SJClient, SJConfig, SJMode, SJPlatform};
 ///
 /// #[tokio::main]
 /// async fn main() {
@@ -33,10 +32,10 @@ pub use config::*;
 ///         user_id: 123,
 ///         token: "xyz987abc",
 ///         instance: "abcxyz",
+///         platform: SJPlatform::Android,
 ///     };
-///     let constants = get_constants(1);
 ///
-///     let client = SJClient::new(config, constants, SJMode::VM);
+///     let client = SJClient::new(config, SJMode::VM);
 ///     let manga = client.get_manga(777).await.unwrap();
 ///     println!("{:?}", manga);
 /// }
@@ -113,6 +112,11 @@ impl SJClient {
     /// Return the mode of the client.
     pub fn get_mode(&self) -> &SJMode {
         &self.mode
+    }
+
+    /// Return the platform of the client.
+    pub fn get_platform(&self) -> &SJPlatform {
+        &self.config.platform
     }
 
     /// Make an authenticated request to the API.
