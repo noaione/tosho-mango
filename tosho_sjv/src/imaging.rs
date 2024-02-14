@@ -20,7 +20,7 @@ struct DrawTarget {
 }
 
 fn draw_image(
-    dest: &mut image::RgbImage,
+    dest: &mut image::DynamicImage,
     src: &image::DynamicImage,
     target: DrawTarget,
 ) -> anyhow::Result<()> {
@@ -36,11 +36,7 @@ fn draw_image(
             target.dest_height,
             image::imageops::FilterType::CatmullRom,
         );
-    let src_rect_binding = src_rect.as_rgb8();
-    if src_rect_binding.is_none() {
-        anyhow::bail!("Failed to convert to RGB8");
-    }
-    let result = dest.copy_from(src_rect_binding.unwrap(), target.dest_x, target.dest_y);
+    let result = dest.copy_from(&src_rect, target.dest_x, target.dest_y);
     if result.is_err() {
         anyhow::bail!(
             "Failed to copy from source image to canvas. source_x: {}, source_y: {}, dest_x: {}, dest_y: {}",
@@ -101,7 +97,7 @@ pub fn descramble_image(img_bytes: &[u8]) -> anyhow::Result<Vec<u8>> {
     let b = x / CELL_WIDTH_COUNT;
     let w = v / CELL_HEIGHT_COUNT;
 
-    let mut descrambled_img = image::RgbImage::new(x, v);
+    let mut descrambled_img = image::DynamicImage::new(x, v, img.color());
 
     // Borders
     draw_image(
@@ -189,10 +185,10 @@ pub fn descramble_image(img_bytes: &[u8]) -> anyhow::Result<Vec<u8>> {
         image::codecs::png::FilterType::Adaptive,
     )
     .write_image(
-        &descrambled_img,
+        descrambled_img.as_bytes(),
         descrambled_img.width(),
         descrambled_img.height(),
-        image::ColorType::Rgb8,
+        descrambled_img.color(),
     )?;
 
     buf.set_position(0);

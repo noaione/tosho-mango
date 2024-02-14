@@ -104,12 +104,9 @@ pub(crate) fn make_amap_client(config: &tosho_amap::AMConfig) -> tosho_amap::AMC
 }
 
 pub(crate) fn make_sjv_client(config: &super::sjv::config::Config) -> tosho_sjv::SJClient {
-    let constants = match config.r#type() {
-        crate::r#impl::sjv::config::DeviceType::Android => tosho_sjv::constants::get_constants(1),
-    };
     let mode = match config.mode() {
         crate::r#impl::sjv::config::SJDeviceMode::SJ => tosho_sjv::SJMode::SJ,
         crate::r#impl::sjv::config::SJDeviceMode::VM => tosho_sjv::SJMode::VM,
     };
-    tosho_sjv::SJClient::new(config.clone().into(), constants, mode)
+    tosho_sjv::SJClient::new(config.clone().into(), mode)
 }

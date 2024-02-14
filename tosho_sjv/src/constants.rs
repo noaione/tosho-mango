@@ -44,6 +44,46 @@ lazy_static! {
             device_id: "4"
         }
     };
+    /// The constants used for Apple devices.
+    pub static ref APPLE_CONSTANTS: Constants = {
+        let vm_apple_name = String::from_utf8(
+            general_purpose::STANDARD
+                .decode("Y29tLnZpem1hbmdhLmFwcGxl")
+                .expect("Failed to decode base64 VM_APPLE_NAME"),
+        )
+        .expect("Invalid base64 string (VM_APPLE_NAME)");
+        let sj_apple_name = String::from_utf8(
+            general_purpose::STANDARD
+                .decode("Y29tLnZpei53c2ouYXBwbGU=")
+                .expect("Failed to decode base64 SJ_APPLE_NAME"),
+        )
+        .expect("Invalid base64 string (SJ_APPLE_NAME)");
+
+        Constants {
+            ua: "Alamofire/5.7.1/202307211728 CFNetwork/1410.0.3 Darwin/22.6.0",
+            vm_name: vm_apple_name,
+            sj_name: sj_apple_name,
+            app_ver: "143",
+            device_id: "1"
+        }
+    };
+    /// The constants used for Web devices.
+    pub static ref WEB_CONSTANTS: Constants = {
+        let common_web_name = String::from_utf8(
+            general_purpose::STANDARD
+                .decode("aHR0cHM6Ly92aXouY29t")
+                .expect("Failed to decode base64 COMMON_WEB_NAME"),
+        )
+        .expect("Invalid base64 string (COMMON_WEB_NAME)");
+
+        Constants {
+            ua: "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:122.0) Gecko/20100101 Firefox/122.0",
+            vm_name: common_web_name.clone(),
+            sj_name: common_web_name,
+            app_ver: "143",
+            device_id: "3"
+        }
+    };
     pub static ref BASE_API: String = {
         String::from_utf8(
             general_purpose::STANDARD
@@ -131,6 +171,11 @@ lazy_static! {
 /// # Arguments
 /// * `device_type` - The device type to get the constants for.
 ///
+/// # Available device types
+/// * `1` - Android
+/// * `2` - Apple
+/// * `3` - Web
+///
 /// # Panics
 /// Panics if the device type is invalid.
 ///
@@ -143,6 +188,8 @@ lazy_static! {
 pub fn get_constants(device_type: u8) -> &'static Constants {
     match device_type {
         1 => &ANDROID_CONSTANTS,
+        2 => &APPLE_CONSTANTS,
+        3 => &WEB_CONSTANTS,
         _ => panic!("Invalid device type"),
     }
 }

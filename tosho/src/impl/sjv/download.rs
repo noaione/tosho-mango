@@ -3,7 +3,7 @@ use std::path::{Path, PathBuf};
 use color_print::cformat;
 use tosho_sjv::{
     models::{MangaChapterDetail, MangaDetail},
-    SJClient,
+    SJClient, SJPlatform,
 };
 
 use crate::{
@@ -33,7 +33,7 @@ pub(crate) struct SJDownloadCliConfig {
     pub(crate) end_at: Option<u32>,
 }
 
-fn check_downloaded_image_count(image_dir: &PathBuf) -> Option<usize> {
+fn check_downloaded_image_count(image_dir: &PathBuf, extension: &str) -> Option<usize> {
     // check if dir exist
     if !image_dir.exists() {
         return None;
@@ -49,7 +49,7 @@ fn check_downloaded_image_count(image_dir: &PathBuf) -> Option<usize> {
     for entry in std::fs::read_dir(image_dir).unwrap() {
         let entry = entry.unwrap();
         let path = entry.path();
-        if path.is_file() && path.extension().unwrap() == "jpg" {
+        if path.is_file() && path.extension().unwrap() == extension {
             count += 1;
         }
     }
@@ -77,7 +77,7 @@ fn get_output_directory(
     create_folder: bool,
 ) -> PathBuf {
     let mut pathing = output_dir.to_path_buf();
-    pathing.push(title_id.to_string());
+    pathing.push(format!("SJV_{}", title_id));
 
     if let Some(chapter_id) = chapter_id {
         pathing.push(chapter_id.to_string());
@@ -268,7 +268,12 @@ pub(crate) async fn sjv_download(
 
                 let image_dir =
                     get_output_directory(&output_dir, title.id, Some(chapter.id), false);
-                if let Some(count) = check_downloaded_image_count(&image_dir) {
+                let image_ext = match client.get_platform() {
+                    SJPlatform::Web => "png",
+                    _ => "jpg",
+                };
+
+                if let Some(count) = check_downloaded_image_count(&image_dir, image_ext) {
                     if count >= chapter.pages as usize {
                         console.warn(&cformat!(
                             "   Chapter <m,s>{}</> (<s>{}</>) has been downloaded, skipping",
@@ -301,7 +306,7 @@ pub(crate) async fn sjv_download(
                         .await
                         .unwrap();
 
-                    let image_fn = format!("p{:03}.jpg", page);
+                    let image_fn = format!("p{:03}.{}", page, image_ext);
                     let img_dl_path = image_dir.join(&image_fn);
 
                     let writer = tokio::fs::File::create(&img_dl_path)

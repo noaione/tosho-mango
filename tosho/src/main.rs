@@ -508,9 +508,11 @@ async fn main() {
                     email,
                     password,
                     mode,
-                } => {
-                    Some(r#impl::sjv::accounts::sjv_account_login(email, password, mode, &t).await)
-                }
+                    platform,
+                } => Some(
+                    r#impl::sjv::accounts::sjv_account_login(email, password, mode, platform, &t)
+                        .await,
+                ),
                 SJVCommands::Accounts => Some(r#impl::sjv::accounts::sjv_accounts(&t)),
                 _ => None,
             };
@@ -544,6 +546,7 @@ async fn main() {
                     email: _,
                     password: _,
                     mode: _,
+                    platform: _,
                 } => 0,
                 SJVCommands::Account => r#impl::sjv::accounts::sjv_account_info(&config, &t).await,
                 SJVCommands::Accounts => 0,

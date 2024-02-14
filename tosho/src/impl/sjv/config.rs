@@ -2,7 +2,7 @@
 
 use clap::ValueEnum;
 use tosho_macros::EnumName;
-use tosho_sjv::{SJConfig, SJMode};
+use tosho_sjv::{SJConfig, SJMode, SJPlatform};
 
 pub const PREFIX: &str = "sjv";
 
@@ -13,6 +13,48 @@ pub const PREFIX: &str = "sjv";
 pub enum DeviceType {
     /// Android device.
     Android = 4,
+    /// Apple/iOS device.
+    Apple = 1,
+    /// Web device.
+    Web = 3,
+}
+
+impl From<SJPlatform> for DeviceType {
+    fn from(value: SJPlatform) -> Self {
+        match value {
+            SJPlatform::Android => Self::Android,
+            SJPlatform::Apple => Self::Apple,
+            SJPlatform::Web => Self::Web,
+        }
+    }
+}
+
+impl ValueEnum for DeviceType {
+    fn to_possible_value(&self) -> Option<clap::builder::PossibleValue> {
+        match self {
+            Self::Android => Some(clap::builder::PossibleValue::new("android")),
+            Self::Apple => Some(clap::builder::PossibleValue::new("apple")),
+            Self::Web => Some(clap::builder::PossibleValue::new("web")),
+        }
+    }
+
+    fn value_variants<'a>() -> &'a [Self] {
+        &[Self::Android, Self::Apple, Self::Web]
+    }
+
+    fn from_str(input: &str, ignore_case: bool) -> Result<Self, String> {
+        let input = if ignore_case {
+            input.to_lowercase()
+        } else {
+            input.to_string()
+        };
+        match input.as_str() {
+            "android" => Ok(Self::Android),
+            "apple" => Ok(Self::Apple),
+            "web" => Ok(Self::Web),
+            _ => Err(format!("Invalid SJ device mode: {}", input)),
+        }
+    }
 }
 
 /// Device type for AM by AP session.
@@ -93,6 +135,11 @@ pub struct Config {
 impl From<SJConfig> for Config {
     fn from(value: SJConfig) -> Self {
         let new_uuid = uuid::Uuid::new_v4().to_string();
+        let platform = match value.platform {
+            SJPlatform::Android => DeviceType::Android,
+            SJPlatform::Apple => DeviceType::Apple,
+            SJPlatform::Web => DeviceType::Web,
+        };
         Self {
             id: new_uuid.clone(),
             email: format!("{}@sjv.xyz", new_uuid),
@@ -100,7 +147,7 @@ impl From<SJConfig> for Config {
             user_id: value.user_id,
             token: value.token,
             instance: value.instance,
-            r#type: DeviceType::Android as i32,
+            r#type: platform as i32,
             mode: SJDeviceMode::SJ as i32,
         }
     }
@@ -110,8 +157,13 @@ impl From<Config> for SJConfig {
     fn from(value: Config) -> Self {
         Self {
             user_id: value.user_id,
-            token: value.token,
-            instance: value.instance,
+            token: value.token.clone(),
+            instance: value.instance.clone(),
+            platform: match value.r#type() {
+                DeviceType::Android => SJPlatform::Android,
+                DeviceType::Apple => SJPlatform::Apple,
+                DeviceType::Web => SJPlatform::Web,
+            },
         }
     }
 }

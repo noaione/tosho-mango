@@ -24,8 +24,7 @@ pub use config::*;
 ///
 /// # Examples
 /// ```no_run,ignore
-/// use tosho_sjv::{SJClient, SJConfig, SJMode};
-/// use tosho_sjv::constants::get_constants;
+/// use tosho_sjv::{SJClient, SJConfig, SJMode, SJPlatform};
 ///
 /// #[tokio::main]
 /// async fn main() {
@@ -33,17 +32,16 @@ pub use config::*;
 ///         user_id: 123,
 ///         token: "xyz987abc",
 ///         instance: "abcxyz",
+///         platform: SJPlatform::Android,
 ///     };
-///     let constants = get_constants(1);
 ///
-///     let client = SJClient::new(config, constants, SJMode::VM);
+///     let client = SJClient::new(config, SJMode::VM);
 ///     let manga = client.get_manga(777).await.unwrap();
 ///     println!("{:?}", manga);
 /// }
 /// ```
 #[derive(Debug)]
 pub struct SJClient {
-    #[allow(dead_code)]
     inner: reqwest::Client,
     config: SJConfig,
     constants: &'static crate::constants::Constants,
@@ -55,14 +53,9 @@ impl SJClient {
     ///
     /// # Parameters
     /// * `config` - The configuration to use for the client.
-    /// * `constants` - The constants to use for the client.
     /// * `mode` - The mode to use for the client.
-    pub fn new(
-        config: SJConfig,
-        constants: &'static crate::constants::Constants,
-        mode: SJMode,
-    ) -> Self {
-        Self::make_client(config, constants, mode, None)
+    pub fn new(config: SJConfig, mode: SJMode) -> Self {
+        Self::make_client(config, mode, None)
     }
 
     /// Attach a proxy to the client.
@@ -72,15 +65,11 @@ impl SJClient {
     /// # Arguments
     /// * `proxy` - The proxy to attach to the client
     pub fn with_proxy(&self, proxy: reqwest::Proxy) -> Self {
-        Self::make_client(self.config.clone(), self.constants, self.mode, Some(proxy))
+        Self::make_client(self.config.clone(), self.mode, Some(proxy))
     }
 
-    fn make_client(
-        config: SJConfig,
-        constants: &'static crate::constants::Constants,
-        mode: SJMode,
-        proxy: Option<reqwest::Proxy>,
-    ) -> Self {
+    fn make_client(config: SJConfig, mode: SJMode, proxy: Option<reqwest::Proxy>) -> Self {
+        let constants = crate::constants::get_constants(config.platform as u8);
         let mut headers = reqwest::header::HeaderMap::new();
         headers.insert(
             reqwest::header::USER_AGENT,
@@ -123,6 +112,11 @@ impl SJClient {
     /// Return the mode of the client.
     pub fn get_mode(&self) -> &SJMode {
         &self.mode
+    }
+
+    /// Return the platform of the client.
+    pub fn get_platform(&self) -> &SJPlatform {
+        &self.config.platform
     }
 
     /// Make an authenticated request to the API.
@@ -283,21 +277,41 @@ impl SJClient {
             data.insert("page".to_string(), page.unwrap().to_string());
         }
 
-        let resp = self
-            .request::<MangaUrlResponse>(
-                reqwest::Method::POST,
-                "/manga/get_manga_url",
-                Some(data),
-                None,
-            )
-            .await?;
+        match &self.config.platform {
+            SJPlatform::Web => {
+                // web didn't return JSON response but direct URL
+                let response = self
+                    .inner
+                    .post(format!("{}/manga/get_manga_url", BASE_API.as_str()))
+                    .form(&data)
+                    .send()
+                    .await?;
 
-        if let Some(url) = resp.url {
-            Ok(url)
-        } else if let Some(url) = resp.metadata {
-            Ok(url)
-        } else {
-            anyhow::bail!("No URL or metadata found")
+                if !response.status().is_success() {
+                    anyhow::bail!("Failed to get manga URL: {}", response.status())
+                }
+
+                let url = response.text().await?;
+                Ok(url)
+            }
+            _ => {
+                let resp = self
+                    .request::<MangaUrlResponse>(
+                        reqwest::Method::POST,
+                        "/manga/get_manga_url",
+                        Some(data),
+                        None,
+                    )
+                    .await?;
+
+                if let Some(url) = resp.url {
+                    Ok(url)
+                } else if let Some(url) = resp.metadata {
+                    Ok(url)
+                } else {
+                    anyhow::bail!("No URL or metadata found")
+                }
+            }
         }
     }
 
@@ -373,13 +387,24 @@ impl SJClient {
             anyhow::bail!("Failed to download image: {}", res.status())
         }
 
-        let mut stream = res.bytes_stream();
-        while let Some(item) = stream.next().await {
-            let item = item.unwrap();
-            writer.write_all(&item).await?;
+        match &self.config.platform {
+            SJPlatform::Web => {
+                let image_bytes = res.bytes().await?;
+                match crate::imaging::descramble_image(&image_bytes) {
+                    Ok(descrambled) => writer.write_all(&descrambled).await?,
+                    Err(e) => anyhow::bail!("Failed to descramble image: {}", e),
+                }
+                Ok(())
+            }
+            _ => {
+                let mut stream = res.bytes_stream();
+                while let Some(item) = stream.next().await {
+                    let item = item.unwrap();
+                    writer.write_all(&item).await?;
+                }
+                Ok(())
+            }
         }
-
-        Ok(())
     }
 
     /// Perform a login request.
