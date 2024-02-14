@@ -43,7 +43,6 @@ pub use config::*;
 /// ```
 #[derive(Debug)]
 pub struct SJClient {
-    #[allow(dead_code)]
     inner: reqwest::Client,
     config: SJConfig,
     constants: &'static crate::constants::Constants,
@@ -55,14 +54,9 @@ impl SJClient {
     ///
     /// # Parameters
     /// * `config` - The configuration to use for the client.
-    /// * `constants` - The constants to use for the client.
     /// * `mode` - The mode to use for the client.
-    pub fn new(
-        config: SJConfig,
-        constants: &'static crate::constants::Constants,
-        mode: SJMode,
-    ) -> Self {
-        Self::make_client(config, constants, mode, None)
+    pub fn new(config: SJConfig, mode: SJMode) -> Self {
+        Self::make_client(config, mode, None)
     }
 
     /// Attach a proxy to the client.
@@ -72,15 +66,11 @@ impl SJClient {
     /// # Arguments
     /// * `proxy` - The proxy to attach to the client
     pub fn with_proxy(&self, proxy: reqwest::Proxy) -> Self {
-        Self::make_client(self.config.clone(), self.constants, self.mode, Some(proxy))
+        Self::make_client(self.config.clone(), self.mode, Some(proxy))
     }
 
-    fn make_client(
-        config: SJConfig,
-        constants: &'static crate::constants::Constants,
-        mode: SJMode,
-        proxy: Option<reqwest::Proxy>,
-    ) -> Self {
+    fn make_client(config: SJConfig, mode: SJMode, proxy: Option<reqwest::Proxy>) -> Self {
+        let constants = crate::constants::get_constants(config.platform as u8);
         let mut headers = reqwest::header::HeaderMap::new();
         headers.insert(
             reqwest::header::USER_AGENT,
@@ -283,21 +273,41 @@ impl SJClient {
             data.insert("page".to_string(), page.unwrap().to_string());
         }
 
-        let resp = self
-            .request::<MangaUrlResponse>(
-                reqwest::Method::POST,
-                "/manga/get_manga_url",
-                Some(data),
-                None,
-            )
-            .await?;
+        match &self.config.platform {
+            SJPlatform::Web => {
+                // web didn't return JSON response but direct URL
+                let response = self
+                    .inner
+                    .post("/manga/get_manga_url")
+                    .form(&data)
+                    .send()
+                    .await?;
 
-        if let Some(url) = resp.url {
-            Ok(url)
-        } else if let Some(url) = resp.metadata {
-            Ok(url)
-        } else {
-            anyhow::bail!("No URL or metadata found")
+                if !response.status().is_success() {
+                    anyhow::bail!("Failed to get manga URL: {}", response.status())
+                }
+
+                let url = response.text().await?;
+                Ok(url)
+            }
+            _ => {
+                let resp = self
+                    .request::<MangaUrlResponse>(
+                        reqwest::Method::POST,
+                        "/manga/get_manga_url",
+                        Some(data),
+                        None,
+                    )
+                    .await?;
+
+                if let Some(url) = resp.url {
+                    Ok(url)
+                } else if let Some(url) = resp.metadata {
+                    Ok(url)
+                } else {
+                    anyhow::bail!("No URL or metadata found")
+                }
+            }
         }
     }
 
