@@ -209,8 +209,12 @@ jobs:
           cargo publish -p tosho-macros
           cargo publish -p tosho-musq
           cargo publish -p tosho-kmkc
+          # Wait 2 minutes to avoid rate limit
+          sleep 120
           cargo publish -p tosho-amap
           cargo publish -p tosho-sjv
+          # Wait 3 minutes to avoid rate limit
+          sleep 180
           cargo publish -p tosho
         env:
           RELEASE: true

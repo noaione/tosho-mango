@@ -43,13 +43,13 @@ uuid = { version = "1.7.0", features = ["v4", "fast-rng"] }
 glob = "0.3.1"
 supports-hyperlinks = "3.0.0"
 num-format = "0.4.4"
-regex = "*"
+regex = "1.10.3"
 mime_guess = "2.0.4"
-mime = "*"
+mime = "0.3.17"
 
 [target.'cfg(windows)'.dependencies]
 # Windows deps
-windows-sys = { version = "*", features = ["Win32_Foundation", "Win32_System_Console"] }
+windows-sys = { version = "0.52.0", features = ["Win32_Foundation", "Win32_System_Console"] }
 
 [build-dependencies]
 winres = "0.1"
