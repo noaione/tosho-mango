@@ -77,7 +77,7 @@ fn get_output_directory(
     create_folder: bool,
 ) -> PathBuf {
     let mut pathing = output_dir.to_path_buf();
-    pathing.push(title_id.to_string());
+    pathing.push(format!("SJV_{}", title_id));
 
     if let Some(chapter_id) = chapter_id {
         pathing.push(chapter_id.to_string());
