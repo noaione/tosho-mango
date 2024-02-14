@@ -383,13 +383,24 @@ impl SJClient {
             anyhow::bail!("Failed to download image: {}", res.status())
         }
 
-        let mut stream = res.bytes_stream();
-        while let Some(item) = stream.next().await {
-            let item = item.unwrap();
-            writer.write_all(&item).await?;
+        match &self.config.platform {
+            SJPlatform::Web => {
+                let image_bytes = res.bytes().await?;
+                match crate::imaging::descramble_image(&image_bytes) {
+                    Ok(descrambled) => writer.write_all(&descrambled).await?,
+                    Err(e) => anyhow::bail!("Failed to descramble image: {}", e),
+                }
+                Ok(())
+            }
+            _ => {
+                let mut stream = res.bytes_stream();
+                while let Some(item) = stream.next().await {
+                    let item = item.unwrap();
+                    writer.write_all(&item).await?;
+                }
+                Ok(())
+            }
         }
-
-        Ok(())
     }
 
     /// Perform a login request.
