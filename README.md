@@ -25,6 +25,17 @@ This is just a fun side project, and as a disclaimer, I'm not condoning anything
 
 ## Installation
 
+```
+cargo install tosho
+```
+
+Or, with [`cargo-binstall`](https://github.com/cargo-bins/cargo-binstall):
+```
+cargo binstall tosho
+```
+
+Or, if you want to build manually:
+
 **Requirements:**
 - Rust 1.72+
 - 64-bit devices (ARM64/aarch64 support might be experimental)

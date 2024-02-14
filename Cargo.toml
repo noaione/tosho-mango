@@ -10,10 +10,12 @@ members = [
 ]
 
 [workspace.package]
-version = "0.2.4-dev"
+version = "0.3.0"
 edition = "2021"
 authors = ["noaione <noaione@n4o.xyz>"]
 license = "MIT"
+repository = "https://github.com/noaione/tosho-mango"
+homepage = "https://github.com/noaione/tosho-mango"
 
 [workspace.dependencies]
 tokio = { version = "1.35.1", features = ["full"] }

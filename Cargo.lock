@@ -2028,7 +2028,7 @@ dependencies = [
 
 [[package]]
 name = "tosho"
-version = "0.2.4-dev"
+version = "0.3.0"
 dependencies = [
  "aho-corasick",
  "anstream",
@@ -2058,13 +2058,13 @@ dependencies = [
  "tosho-musq",
  "tosho-sjv",
  "uuid",
- "windows-sys 0.52.0",
+ "windows-sys 0.45.0",
  "winres",
 ]
 
 [[package]]
 name = "tosho-amap"
-version = "0.2.4-dev"
+version = "0.3.0"
 dependencies = [
  "anyhow",
  "base64",
@@ -2084,7 +2084,7 @@ dependencies = [
 
 [[package]]
 name = "tosho-kmkc"
-version = "0.2.4-dev"
+version = "0.3.0"
 dependencies = [
  "anyhow",
  "base64",
@@ -2107,7 +2107,7 @@ dependencies = [
 
 [[package]]
 name = "tosho-macros"
-version = "0.2.4-dev"
+version = "0.3.0"
 dependencies = [
  "quote",
  "syn 2.0.48",
@@ -2115,7 +2115,7 @@ dependencies = [
 
 [[package]]
 name = "tosho-musq"
-version = "0.2.4-dev"
+version = "0.3.0"
 dependencies = [
  "anyhow",
  "base64",
@@ -2131,7 +2131,7 @@ dependencies = [
 
 [[package]]
 name = "tosho-sjv"
-version = "0.2.4-dev"
+version = "0.3.0"
 dependencies = [
  "anyhow",
  "base64",

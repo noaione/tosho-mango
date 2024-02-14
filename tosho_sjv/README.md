@@ -33,3 +33,7 @@ The following sources only have one method of authentication, and that method us
 ```bash
 $ tosho sj auth email password
 ```
+
+## License
+
+This project is licensed with MIT License ([LICENSE](https://github.com/noaione/tosho-mango/blob/master/LICENSE) or http://opensource.org/licenses/MIT)

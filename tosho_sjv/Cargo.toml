@@ -4,8 +4,15 @@ version.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+keywords = ["api", "library"]
 description = "An asynchronous client of SJ/M by V"
 readme = "./README.md"
+# Do not include tests in crates.io package
+exclude = [
+    "tests/*",
+]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

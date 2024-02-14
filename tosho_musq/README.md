@@ -26,7 +26,7 @@ The following sources do not have any easy authentication method.
 
 The command to authenticate is `tosho mu auth`.
 
-It's recommended that you set up network intercepting first; please read [INTERCEPTING](../INTERCEPTING.md).
+It's recommended that you set up network intercepting first; please read [INTERCEPTING](https://github.com/noaione/tosho-mango/blob/master/INTERCEPTING.md).
 
 ```bash
 $ tosho mu auth secret -t android
@@ -50,3 +50,7 @@ $ tosho mu auth secret -t ios
 3. Return to the Stream app and click `Sniff History`, then select the most recent item.
 4. Find the request that goes to the API of the source app and locate the request that has `secret=xxxxx` in them.
 5. Copy the link and save the secret value somewhere so you can authenticate with `tosho`.
+
+## License
+
+This project is licensed with MIT License ([LICENSE](https://github.com/noaione/tosho-mango/blob/master/LICENSE) or http://opensource.org/licenses/MIT)

@@ -51,3 +51,7 @@ $ tosho km auth email password -t ios
 ```
 
 There is no significant difference between Android and iOS.
+
+## License
+
+This project is licensed with MIT License ([LICENSE](https://github.com/noaione/tosho-mango/blob/master/LICENSE) or http://opensource.org/licenses/MIT)

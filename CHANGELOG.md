@@ -3,6 +3,10 @@
 Starting from Rust port of the project, all changes will be put into this file.
 
 ## Unreleased (git master)
+
+Nothing yet!
+
+## [0.3.0] 2024-02-14
 ### New Features
 - Added **`SJ/M`** as a new source
 
