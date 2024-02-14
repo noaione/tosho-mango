@@ -282,7 +282,7 @@ impl SJClient {
                 // web didn't return JSON response but direct URL
                 let response = self
                     .inner
-                    .post("/manga/get_manga_url")
+                    .post(format!("{}/manga/get_manga_url", BASE_API.as_str()))
                     .form(&data)
                     .send()
                     .await?;
