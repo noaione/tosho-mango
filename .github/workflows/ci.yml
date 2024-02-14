@@ -92,6 +92,11 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v') != true
         run: |
           cargo build --release --verbose --all --target ${{ matrix.os[1] }}
+          if [ ${{ matrix.os[0] }} != 'windows-latest' ] then
+            cd target/${{ matrix.os[1] }}/release
+            chmod +x tosho
+            cd ../../..
+          fi
         shell: bash
 
       - name: Upload artifact
@@ -116,6 +121,7 @@ jobs:
         shell: bash
         run: |
           cd target/${{ matrix.os[1] }}/release
+          chmod +x tosho
           tar -czvf tosho-${{ matrix.os[1] }}.tar.gz tosho
           mv tosho-${{ matrix.os[1] }}.tar.gz ../../..
           cd ../../..
