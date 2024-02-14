@@ -27,4 +27,4 @@ chrono.workspace = true
 reqwest = { workspace = true, features = ["stream"] }
 futures-util.workspace = true
 
-tosho-macros = { path = "../tosho_macros" }
+tosho-macros = { path = "../tosho_macros", version = "0.3.0" }

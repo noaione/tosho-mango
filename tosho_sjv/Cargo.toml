@@ -30,4 +30,4 @@ image.workspace = true
 rand.workspace = true
 kamadak-exif = "0.5.5"
 
-tosho-macros = { path = "../tosho_macros" }
+tosho-macros = { path = "../tosho_macros", version = "0.3.0" }

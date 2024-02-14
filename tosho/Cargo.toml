@@ -14,11 +14,11 @@ readme = "./README.md"
 
 [dependencies]
 # Sources deps
-tosho-musq = { path = "../tosho_musq" }
-tosho-kmkc = { path = "../tosho_kmkc" }
-tosho-amap = { path = "../tosho_amap" }
-tosho-sjv = { path = "../tosho_sjv" }
-tosho-macros = { path = "../tosho_macros" }
+tosho-musq = { path = "../tosho_musq", version = "0.3.0" }
+tosho-kmkc = { path = "../tosho_kmkc", version = "0.3.0" }
+tosho-amap = { path = "../tosho_amap", version = "0.3.0" }
+tosho-sjv = { path = "../tosho_sjv", version = "0.3.0" }
+tosho-macros = { path = "../tosho_macros", version = "0.3.0" }
 
 # External deps
 tokio.workspace = true
