@@ -4,7 +4,7 @@ Starting from Rust port of the project, all changes will be put into this file.
 
 ## Unreleased (git master)
 ### Build
-- Pin `mime` and `windows-sys` dependencies
+- Pin `mime` and `windows-sys` dependencies (If you use crates.io, this is already pinned in `0.3.0`)
 
 ## [0.3.0] 2024-02-14
 ### New Features
