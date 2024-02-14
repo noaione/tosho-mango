@@ -9,6 +9,7 @@ Starting from Rust port of the project, all changes will be put into this file.
 ### Changes
 - Fix some part of command locked behind account select
 - `KM`: Optimize descrambled PNG size (Web only)
+- `KM`: Descrambled image now follow the original color type instead of always saving as RGB8
 
 ### Build
 - Remove `cookie-store` as direct dependency

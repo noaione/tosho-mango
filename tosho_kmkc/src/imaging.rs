@@ -100,7 +100,8 @@ pub fn descramble_image(
 
     match (width_rect, height_rect) {
         (Some(width_rect), Some(height_rect)) => {
-            let mut canvas = image::RgbImage::new(width_rect * rectbox, height_rect * rectbox);
+            let mut canvas =
+                image::DynamicImage::new(width_rect * rectbox, height_rect * rectbox, img.color());
 
             for ((source_x, source_y), (dest_x, dest_y)) in
                 generate_copy_targets(rectbox, scramble_seed)
@@ -110,9 +111,8 @@ pub fn descramble_image(
                 let dest_x = dest_x * width_rect;
                 let dest_y = dest_y * height_rect;
 
-                let binding = img.crop_imm(source_x, source_y, width_rect, height_rect);
-                let source_img = binding.as_rgb8().expect("Failed to convert to RGB8");
-                canvas.copy_from(source_img, dest_x, dest_y).unwrap_or_else(|_| {
+                let cropped_img = img.crop_imm(source_x, source_y, width_rect, height_rect);
+                canvas.copy_from(&cropped_img, dest_x, dest_y).unwrap_or_else(|_| {
                     panic!("Failed to copy from source image to canvas. source_x: {}, source_y: {}, dest_x: {}, dest_y: {}", source_x, source_y, dest_x, dest_y)
                 });
             }
@@ -126,10 +126,10 @@ pub fn descramble_image(
                 image::codecs::png::FilterType::Adaptive,
             )
             .write_image(
-                &canvas,
+                canvas.as_bytes(),
                 canvas.width(),
                 canvas.height(),
-                image::ColorType::Rgb8,
+                canvas.color(),
             )?;
 
             buf.set_position(0);
