@@ -1,5 +1,5 @@
 use color_print::cformat;
-use tosho_sjv::{SJClient, SJConfig, SJMode};
+use tosho_sjv::{SJClient, SJConfig, SJMode, SJPlatform};
 
 use crate::{
     cli::ExitCode,
@@ -8,13 +8,14 @@ use crate::{
 
 use super::{
     common::unix_timestamp_to_string,
-    config::{Config, SJDeviceMode},
+    config::{Config, DeviceType, SJDeviceMode},
 };
 
 pub async fn sjv_account_login(
     email: String,
     password: String,
     mode: SJDeviceMode,
+    platform: DeviceType,
     console: &crate::term::Terminal,
 ) -> ExitCode {
     console.info(&cformat!(
@@ -23,10 +24,18 @@ pub async fn sjv_account_login(
         password
     ));
 
+    let sj_platform = match platform {
+        DeviceType::Android => SJPlatform::Android,
+        DeviceType::Apple => SJPlatform::Apple,
+        DeviceType::Web => SJPlatform::Web,
+    };
+
     let all_configs = get_all_config(&crate::r#impl::Implementations::Sjv, None);
 
     let old_config = all_configs.iter().find(|&c| match c {
-        crate::config::ConfigImpl::Sjv(cc) => cc.email == email && cc.mode() == mode,
+        crate::config::ConfigImpl::Sjv(cc) => {
+            cc.email == email && cc.mode() == mode && cc.r#type() == platform
+        }
         _ => false,
     });
 
@@ -56,7 +65,9 @@ pub async fn sjv_account_login(
 
     match results {
         Ok((account, instance_id)) => {
-            let config: SJConfig = SJConfig::from_login_response(&account, instance_id);
+            let config: SJConfig =
+                SJConfig::from_login_response(&account, instance_id, sj_platform);
+
             console.info(&cformat!(
                 "Authenticated as <m,s>{}</> ({})",
                 account.username,

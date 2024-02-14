@@ -21,6 +21,8 @@ pub(crate) enum SJVCommands {
         /// Mode to use
         #[arg(short, long, value_enum, default_value = "sj")]
         mode: crate::r#impl::sjv::config::SJDeviceMode,
+        #[arg(short, long, value_enum, default_value = "web")]
+        platform: crate::r#impl::sjv::config::DeviceType,
     },
     /// Get an account information
     Account,

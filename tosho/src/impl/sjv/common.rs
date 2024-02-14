@@ -125,10 +125,17 @@ pub(super) async fn get_cached_store_data(client: &SJClient) -> anyhow::Result<W
     let term = get_console(0);
 
     let base_path = get_user_path();
-    let filename = match client.get_mode() {
-        tosho_sjv::SJMode::SJ => "sjv_sj_cache.json",
-        tosho_sjv::SJMode::VM => "sjv_vm_cache.json",
+    let mode_name = match client.get_mode() {
+        tosho_sjv::SJMode::SJ => "sj",
+        tosho_sjv::SJMode::VM => "vm",
     };
+    let plat_name = match client.get_platform() {
+        tosho_sjv::SJPlatform::Android => "android",
+        tosho_sjv::SJPlatform::Apple => "apple",
+        tosho_sjv::SJPlatform::Web => "web",
+    };
+
+    let filename = format!("sjv_store_cache_{}_{}.json", mode_name, plat_name);
     let cache_path = base_path.join(filename);
     if cache_path.exists() {
         let read_data = tokio::fs::read(&cache_path).await;
