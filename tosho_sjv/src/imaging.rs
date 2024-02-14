@@ -185,7 +185,7 @@ pub fn descramble_image(img_bytes: &[u8]) -> anyhow::Result<Vec<u8>> {
         image::codecs::png::FilterType::Adaptive,
     )
     .write_image(
-        &descrambled_img.as_bytes(),
+        descrambled_img.as_bytes(),
         descrambled_img.width(),
         descrambled_img.height(),
         descrambled_img.color(),
