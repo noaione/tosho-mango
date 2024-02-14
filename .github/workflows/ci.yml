@@ -96,7 +96,7 @@ jobs:
             cd target/${{ matrix.os[1] }}/release
             chmod +x tosho
             cd ../../..
-          fik
+          fi
         shell: bash
 
       - name: Upload artifact
