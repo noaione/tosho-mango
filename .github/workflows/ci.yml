@@ -198,6 +198,10 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
 
+      - name: Prepare publish
+        run: |
+          python3 scripts/prepare_publish.py
+
       - name: Publish (Dry run)
         run: |
           cargo publish -p tosho-macros --dry-run
