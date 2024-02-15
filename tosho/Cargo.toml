@@ -45,7 +45,6 @@ supports-hyperlinks = "3.0.0"
 num-format = "0.4.4"
 regex = "1.10.3"
 mime_guess = "2.0.4"
-mime = "0.3.17"
 
 [target.'cfg(windows)'.dependencies]
 # Windows deps

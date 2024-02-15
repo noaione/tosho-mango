@@ -391,7 +391,7 @@ fn is_image(path: &PathBuf) -> bool {
 
     match guess.first() {
         Some(mima) => {
-            if mima.type_() == ::mime::IMAGE {
+            if mima.type_() == mime_guess::mime::IMAGE {
                 true
             } else {
                 guess_from_ext(path).is_some()
