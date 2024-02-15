@@ -16,8 +16,9 @@ lazy_static::lazy_static! {
     static ref TITLE_REGEX: regex::Regex = regex::Regex::new(
         r"(?:[\w\.]+ |#|[\w]+)(?P<base>0?[\d]+)?(?:[\(-\. ][\(-\. ]?)?(?P<split>[\d]+)?(?:[\)])?"
     ).unwrap();
-    static ref MODERN_IMAGE_EXT: [&'static str; 5] = ["avif", "jxl", "webp", "heif", "heic"];
 }
+
+const MODERN_IMAGE_EXT: [&str; 5] = ["avif", "jxl", "webp", "heif", "heic"];
 
 #[derive(Clone, Debug, Default)]
 pub(crate) struct ToolsMergeConfig {
