@@ -82,6 +82,8 @@ pub(crate) enum ToshoCommands {
         #[command(subcommand)]
         subcommand: ToolsCommands,
     },
+    /// Update tosho to the latest version
+    Update,
 }
 
 fn cli_styles() -> Styles {

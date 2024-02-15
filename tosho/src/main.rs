@@ -18,6 +18,7 @@ mod cli;
 pub(crate) mod config;
 pub(crate) mod r#impl;
 pub(crate) mod term;
+pub(crate) mod updater;
 pub(crate) mod win_term;
 use crate::cli::ToshoCli;
 
@@ -638,6 +639,14 @@ async fn main() {
                 }
             };
             std::process::exit(exit_code as i32)
+        }
+        ToshoCommands::Update => {
+            updater::perform_update(&t).await.unwrap_or_else(|e| {
+                t.error(&format!("Failed to update: {}", e));
+                std::process::exit(1);
+            });
+
+            std::process::exit(0)
         }
     };
 }

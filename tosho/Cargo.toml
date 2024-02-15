@@ -46,6 +46,8 @@ num-format = "0.4.4"
 regex = "1.10.3"
 mime_guess = "2.0.4"
 
+self_update = { version = "0.39.0", features = ["archive-tar", "archive-zip", "compression-flate2"] }
+
 [target.'cfg(windows)'.dependencies]
 # Windows deps
 windows-sys = { version = "0.52.0", features = ["Win32_Foundation", "Win32_System_Console"] }

@@ -8,6 +8,18 @@ INNER_DESC = """The following release notes are automatically generated.
 
 For the complete changelog, visit [here](https://github.com/noaione/tosho-mango/blob/master/CHANGELOG.md).
 If you encounter any problems, please report them on the [issues](https://github.com/noaione/tosho-mango/issues/new/choose) page.
+
+### Updating
+
+Since [v0.3.1](https://github.com/noaione/tosho-mango/releases/tag/v0.3.1), you can update `tosho` using the following command:
+
+```bash
+$ tosho update
+```
+
+Which will automatically download the latest version of `tosho` and replace the old one.
+
+## Changelog
 """  # noqa: E501
 
 # ref/tags/v1.0.0
@@ -40,7 +52,7 @@ EXTRACTED_CHANGELOG = EXTRACTED_CHANGELOG.strip()
 
 # Write into CHANGELOG-GENERATED.md
 if not EXTRACTED_CHANGELOG:
-    EXTRACTED_CHANGELOG = "## Unreleased\n\nNo changelog for this release"
+    EXTRACTED_CHANGELOG = f"{INNER_DESC}\n\nNo changelog found for version {VERSION}"
 
 CHANGELOG_GENERATED_FILE = ROOT_DIR / "CHANGELOG-GENERATED.md"
 CHANGELOG_GENERATED_FILE.write_text(EXTRACTED_CHANGELOG)
