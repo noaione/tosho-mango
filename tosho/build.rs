@@ -35,7 +35,10 @@ fn main() {
                 );
             }
             Err(_) => {
-                println!("cargo:rustc-env=VERSION_WITH_HASH=unknown");
+                println!(
+                    "cargo:rustc-env=VERSION_WITH_HASH={}",
+                    env!("CARGO_PKG_VERSION")
+                );
             }
         }
     }
