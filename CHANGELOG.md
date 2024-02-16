@@ -10,6 +10,7 @@ Starting from Rust port of the project, all changes will be put into this file.
 - `SJ`: Fix broken serde on renew field at account subcriptions
 - `SJ`: Allow downloading "expired" chapters if you have subscription for it.
 - `SJ`: Fix failed deser on chapters
+- `SJ`: Show excerpt of data when deser fails
 
 ### Build
 - Pin `windows-sys` dependencies (If you use crates.io, this is already pinned in `0.3.0`)

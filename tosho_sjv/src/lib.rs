@@ -518,10 +518,17 @@ where
         )
     }
 
-    let parsed = serde_json::from_str(&raw_text).unwrap_or_else(|err| {
+    let parsed = serde_json::from_str(&raw_text).unwrap_or_else(|error| {
+        let row_line = error.line() - 1;
+        let split_lines = &raw_text.split('\n').collect::<Vec<&str>>();
+        let position = error.column();
+        let start_index = position.saturating_sub(25); // Start 25 characters before the error position
+        let end_index = position.saturating_add(25); // End 25 characters after the error position
+        let excerpt = &split_lines[row_line][start_index..end_index];
+
         panic!(
-            "Failed when deserializing response, error: {}\nURL: {}\nContents: {}",
-            err, url, raw_text
+            "Failed when deserializing response, error: {}\nURL: {}\nExcerpt: {}",
+            error, url, excerpt
         )
     });
 
