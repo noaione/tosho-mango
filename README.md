@@ -10,8 +10,7 @@
   <a href="https://github.com/noaione/tosho-mango/blob/master/LICENSE"><img src="https://img.shields.io/github/license/noaione/tosho-mango" alt="License: MIT" /></a><br />
   <img alt="Crates.io Version" src="https://img.shields.io/crates/v/tosho">
   <a href="https://crates.io/crates/tosho"><img src="https://img.shields.io/crates/d/tosho?logo=rust" alt="Crates.io Total Downloads" /></a>
-  <a href="https://github.com/noaione/tosho-mango/releases"><img src="https://img.shields.io/github/downloads/noaione/tosho-mango/total?logo=github
-  " alt="GitHub Total Downloads" /></a>
+  <a href="https://github.com/noaione/tosho-mango/releases"><img src="https://img.shields.io/github/downloads/noaione/tosho-mango/total?logo=github" alt="GitHub Total Downloads" /></a>
   <br /><br />
   <p>A simple downloader for some official mango.</p>
 </div>
