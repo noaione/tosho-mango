@@ -210,7 +210,6 @@ jobs:
           cargo publish -p tosho-kmkc --dry-run
           cargo publish -p tosho-amap --dry-run
           cargo publish -p tosho-sjv --dry-run
-          cargo publish -p tosho --dry-run
         env:
           RELEASE: true
           CARGO_REGISTRY_TOKEN: ${{ secrets.RUST_CARGO_REGISTRY }}
