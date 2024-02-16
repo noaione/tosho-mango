@@ -114,6 +114,14 @@ fn do_chapter_select(
 
     let select_choices: Vec<ConsoleChoice> = chapters_entry
         .iter()
+        .filter(|&ch| {
+            // Hide future chapters because we're not time traveler
+            if let Some(pub_at) = ch.published_at {
+                pub_at.timestamp() <= chrono::Utc::now().timestamp()
+            } else {
+                true
+            }
+        })
         .filter_map(|ch| {
             if ch.is_available() || has_subs {
                 Some(ConsoleChoice {
@@ -268,6 +276,14 @@ pub(crate) async fn sjv_download(
                     }
                 })
                 .filter(|&ch| ch.is_available() || has_subs)
+                .filter(|&ch| {
+                    // Hide future chapters because we're not time traveler
+                    if let Some(pub_at) = ch.published_at {
+                        pub_at.timestamp() <= chrono::Utc::now().timestamp()
+                    } else {
+                        true
+                    }
+                })
                 .collect();
 
             if download_chapters.is_empty() {
