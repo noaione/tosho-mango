@@ -3,10 +3,9 @@ from pathlib import Path
 
 TARGET_CRATES = [
     "tosho",
-    "tosho_amap",
-    "tosho_musq",
-    "tosho_kmkc",
-    "tosho_sjv",
+]
+IGNORE_CRATES = [
+    "tosho-macros",
 ]
 
 ROOT_DIR = Path(__file__).absolute().parent.parent
@@ -25,6 +24,15 @@ for CRATE in TARGET_CRATES:
     crate_content = crate_toml.read_text()
 
     for line in crate_content.split("\n"):
+        # Ignore
+        ignore_line = False
+        for ignore_crate in IGNORE_CRATES:
+            if line.startswith(ignore_crate):
+                print(f"Ignoring {CRATE} due to {ignore_crate}")
+                ignore_line = True
+                break
+        if ignore_line:
+            continue
         if line.startswith("tosho-") and "path" in line:
             print(f"Updating {CRATE} to version {package_version}")
             new_line = line.replace("path = ", f'version = "{package_version}", path = ')
