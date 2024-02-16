@@ -54,7 +54,3 @@ $ tosho mu auth secret -t ios
 ## License
 
 This project is licensed with MIT License ([LICENSE](https://github.com/noaione/tosho-mango/blob/master/LICENSE) or http://opensource.org/licenses/MIT)
-
-### Versioning
-
-The following crates follow the [`tosho`](https://crates.io/crates/tosho) crates version, please see [CHANGELOG](https://github.com/noaione/tosho-mango/blob/master/CHANGELOG.md) to see if there is any changes to this crates.
