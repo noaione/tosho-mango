@@ -2321,7 +2321,7 @@ dependencies = [
 
 [[package]]
 name = "tosho-macros"
-version = "0.3.1-dev"
+version = "0.3.0"
 dependencies = [
  "quote",
  "syn 2.0.48",
