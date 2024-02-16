@@ -2,7 +2,7 @@ use std::path::{Path, PathBuf};
 
 use color_print::cformat;
 use tosho_sjv::{
-    models::{MangaChapterDetail, MangaDetail},
+    models::{AccountSubscription, MangaChapterDetail, MangaDetail, SubscriptionType},
     SJClient, SJPlatform,
 };
 
@@ -93,6 +93,7 @@ fn get_output_directory(
 fn do_chapter_select(
     chapters_entry: Vec<MangaChapterDetail>,
     result: &MangaDetail,
+    subs_info: &AccountSubscription,
     console: &mut crate::term::Terminal,
 ) -> Vec<MangaChapterDetail> {
     console.info("Title information:");
@@ -103,10 +104,18 @@ fn do_chapter_select(
         chapters_entry.len()
     ));
 
+    let has_subs = match result.subscription_type {
+        None => false,
+        Some(subs) => match subs {
+            SubscriptionType::SJ => subs_info.is_sj_active(),
+            SubscriptionType::VM => subs_info.is_vm_active(),
+        },
+    };
+
     let select_choices: Vec<ConsoleChoice> = chapters_entry
         .iter()
         .filter_map(|ch| {
-            if ch.is_available() {
+            if ch.is_available() || has_subs {
                 Some(ConsoleChoice {
                     name: ch.id.to_string(),
                     value: ch.pretty_title(),
@@ -173,6 +182,15 @@ pub(crate) async fn sjv_download(
         return 1;
     }
 
+    console.info(&format!("Fetching subscription info..."));
+    let subs_resp = client.get_entitlements().await;
+    if let Err(e) = subs_resp {
+        console.error(&format!("Failed to fetch subscription info: {}", e));
+        return 1;
+    }
+
+    let subs_resp = subs_resp.unwrap();
+
     let results = results.unwrap();
     let title = results.series.iter().find(|x| {
         if let NumberOrString::Number(n) = title_or_slug {
@@ -215,7 +233,7 @@ pub(crate) async fn sjv_download(
             let select_chapters = if dl_config.no_input {
                 chapters.clone()
             } else {
-                do_chapter_select(chapters.clone(), title, console)
+                do_chapter_select(chapters.clone(), title, &subs_resp.subscriptions, console)
             };
 
             let mut download_chapters: Vec<&MangaChapterDetail> = select_chapters

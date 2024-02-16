@@ -12,7 +12,7 @@ pub(crate) mod manga;
 
 #[derive(Subcommand, Clone)]
 pub(crate) enum SJVCommands {
-    /// Authenticate tosho with your AM account.
+    /// Authenticate tosho with your SJ/M account.
     Auth {
         /// Email to use
         email: String,
