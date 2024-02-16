@@ -182,7 +182,7 @@ pub(crate) async fn sjv_download(
         return 1;
     }
 
-    console.info(&format!("Fetching subscription info..."));
+    console.info("Fetching subscription info...");
     let subs_resp = client.get_entitlements().await;
     if let Err(e) = subs_resp {
         console.error(&format!("Failed to fetch subscription info: {}", e));
@@ -236,6 +236,14 @@ pub(crate) async fn sjv_download(
                 do_chapter_select(chapters.clone(), title, &subs_resp.subscriptions, console)
             };
 
+            let has_subs = match title.subscription_type {
+                None => false,
+                Some(subs) => match subs {
+                    SubscriptionType::SJ => subs_resp.subscriptions.is_sj_active(),
+                    SubscriptionType::VM => subs_resp.subscriptions.is_vm_active(),
+                },
+            };
+
             let mut download_chapters: Vec<&MangaChapterDetail> = select_chapters
                 .iter()
                 .filter(|&ch| {
@@ -259,7 +267,7 @@ pub(crate) async fn sjv_download(
                             || dl_config.chapter_ids.contains(&(ch.id as usize))
                     }
                 })
-                .filter(|&ch| ch.is_available())
+                .filter(|&ch| ch.is_available() || has_subs)
                 .collect();
 
             if download_chapters.is_empty() {
