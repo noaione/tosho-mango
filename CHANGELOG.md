@@ -3,6 +3,10 @@
 Starting from Rust port of the project, all changes will be put into this file.
 
 ## Unreleased (git master)
+
+Nothing yet!
+
+## [0.3.1] 2024-02-16
 ### New features
 - Added self updater, you can now do `tosho update` to update tosho for supported platform/architecture.
 
@@ -16,6 +20,7 @@ Starting from Rust port of the project, all changes will be put into this file.
 ### Build
 - Pin `windows-sys` dependencies (If you use crates.io, this is already pinned in `0.3.0`)
 - Remove `mime` as direct dependency
+- `tosho-macros` now pinned to 0.3.0 unless there's any changes
 
 ## [0.3.0] 2024-02-14
 ### New Features
