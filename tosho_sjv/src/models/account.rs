@@ -1,4 +1,4 @@
-use serde::{Deserialize, Deserializer, Serialize};
+use serde::{Deserialize, Serialize};
 
 use super::{IntBool, SubscriptionType};
 
@@ -24,18 +24,10 @@ pub struct AccountLoginResponse {
 /// Some field are discarded for simplicity.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AccountSubscription {
-    #[serde(
-        rename = "is_auto_renew",
-        deserialize_with = "auto_renew_deser",
-        serialize_with = "auto_renew_ser"
-    )]
-    pub sj_auto_renew: bool,
-    #[serde(
-        rename = "vm_is_auto_renew",
-        deserialize_with = "auto_renew_deser",
-        serialize_with = "auto_renew_ser"
-    )]
-    pub vm_auto_renew: bool,
+    #[serde(rename = "is_auto_renew")]
+    pub sj_auto_renew: String,
+    #[serde(rename = "vm_is_auto_renew")]
+    pub vm_auto_renew: String,
     #[serde(rename = "valid_from")]
     pub sj_valid_from: Option<i64>,
     #[serde(rename = "valid_to")]
@@ -63,32 +55,6 @@ impl AccountSubscription {
         } else {
             false
         }
-    }
-}
-
-fn auto_renew_deser<'de, D>(d: D) -> Result<bool, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    let s = String::deserialize(d)?;
-    match s.as_str() {
-        "yes" => Ok(true),
-        "no" => Ok(false),
-        _ => Err(serde::de::Error::custom(format!(
-            "Invalid auto renew value: {}",
-            s
-        ))),
-    }
-}
-
-fn auto_renew_ser<S>(v: &bool, s: S) -> Result<S::Ok, S::Error>
-where
-    S: serde::Serializer,
-{
-    if *v {
-        s.serialize_str("yes")
-    } else {
-        s.serialize_str("no")
     }
 }
 

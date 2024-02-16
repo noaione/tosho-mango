@@ -6,6 +6,9 @@ Starting from Rust port of the project, all changes will be put into this file.
 ### New features
 - Added self updater, you can now do `tosho update` to update tosho for supported platform/architecture.
 
+### Changes
+- `SJ`: Fix broken serde on renew field at account subcriptions
+
 ### Build
 - Pin `windows-sys` dependencies (If you use crates.io, this is already pinned in `0.3.0`)
 - Remove `mime` as direct dependency
