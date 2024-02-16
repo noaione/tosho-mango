@@ -10,8 +10,12 @@ pub struct MangaChapterDetail {
     pub chapter: Option<String>,
     pub volume: Option<u32>,
     pub title: Option<String>,
-    #[serde(rename = "publication_date", with = "super::datetime")]
-    pub published_at: DateTime<FixedOffset>,
+    #[serde(
+        rename = "publication_date",
+        deserialize_with = "super::datetime::deserialize_opt",
+        serialize_with = "super::datetime::serialize_opt"
+    )]
+    pub published_at: Option<DateTime<FixedOffset>>,
     pub author: String,
     #[serde(rename = "thumburl")]
     pub thumbnail: Option<String>,
@@ -28,8 +32,11 @@ pub struct MangaChapterDetail {
     pub pages: u32,
     #[serde(with = "super::datetime")]
     pub created_at: DateTime<FixedOffset>,
-    #[serde(with = "super::datetime")]
-    pub updated_at: DateTime<FixedOffset>,
+    #[serde(
+        deserialize_with = "super::datetime::deserialize_opt",
+        serialize_with = "super::datetime::serialize_opt"
+    )]
+    pub updated_at: Option<DateTime<FixedOffset>>,
     #[serde(rename = "epoch_exp_date")]
     pub expiry_at: Option<i64>,
     pub new: bool,
