@@ -182,15 +182,6 @@ pub(crate) async fn sjv_download(
         return 1;
     }
 
-    console.info("Fetching subscription info...");
-    let subs_resp = client.get_entitlements().await;
-    if let Err(e) = subs_resp {
-        console.error(&format!("Failed to fetch subscription info: {}", e));
-        return 1;
-    }
-
-    let subs_resp = subs_resp.unwrap();
-
     let results = results.unwrap();
     let title = results.series.iter().find(|x| {
         if let NumberOrString::Number(n) = title_or_slug {
@@ -203,6 +194,15 @@ pub(crate) async fn sjv_download(
         console.warn("No match found");
         return 1;
     }
+
+    console.info("Fetching subscription info...");
+    let subs_resp = client.get_entitlements().await;
+    if let Err(e) = subs_resp {
+        console.error(&format!("Failed to fetch subscription info: {}", e));
+        return 1;
+    }
+
+    let subs_resp = subs_resp.unwrap();
 
     let title = title.unwrap();
     console.info(&cformat!(
