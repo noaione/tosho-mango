@@ -120,7 +120,7 @@ impl From<MangaChapterDetail> for ChapterDetailDump {
         Self {
             main_name: value.pretty_title(),
             id: value.id as u64,
-            timestamp: Some(value.published_at.timestamp()),
+            timestamp: value.published_at.map(|d| d.timestamp()),
             sub_name: None,
         }
     }
