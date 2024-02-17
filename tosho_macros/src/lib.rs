@@ -214,7 +214,13 @@ pub fn enum_error(item: TokenStream) -> TokenStream {
     let input = syn::parse_macro_input!(item as EnumErrorMacroInput);
     // enum_error
     let name = &input.name;
+    let stripped_name = name.to_string();
+    let stripped_name = stripped_name.strip_suffix("FromStrError").unwrap();
+
     let tokens = quote::quote! {
+        #[doc = "Error struct when parsing `"]
+        #[doc = #stripped_name]
+        #[doc = "` from string fails"]
         #[derive(Debug)]
         pub struct #name {
             original: String,
@@ -222,9 +228,7 @@ pub fn enum_error(item: TokenStream) -> TokenStream {
 
         impl std::fmt::Display for #name {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                let s: &str = stringify!(#name);
-                // remove FromStrError
-                let s = s.strip_suffix("FromStrError").unwrap_or(s);
+                let s: &str = stringify!(#stripped_name);
                 write!(f, "\"{}\" is not a valid {} type", self.original, s)
             }
         }
