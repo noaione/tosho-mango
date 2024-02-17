@@ -14,6 +14,8 @@ pub struct Constants {
     pub(crate) app_ver: &'static str,
     /// Device ID used for requests
     pub(crate) device_id: &'static str,
+    /// Version body name used for requests
+    pub(crate) version_body: Option<String>,
 }
 
 pub const VM_APP_ID: &str = "1";
@@ -35,13 +37,22 @@ lazy_static! {
                 .expect("Failed to decode base64 SJ_ANDROID_NAME"),
         )
         .expect("Invalid base64 string (SJ_ANDROID_NAME)");
+        let android_version_body: String = {
+            String::from_utf8(
+                general_purpose::STANDARD
+                    .decode("YW5kcm9pZF9hcHBfdmVyc2lvbl9jb2Rl")
+                    .expect("Failed to decode base64 ANDROID_VERSION_BODY")
+            )
+            .expect("Invalid base64 string (ANDROID_VERSION_BODY)")
+        };
 
         Constants {
             ua: "Dalvik/2.1.0 (Linux; U; Android 12; SM-G935F Build/SQ3A.220705.004)",
             vm_name: vm_android_name,
             sj_name: sj_android_name,
             app_ver: "143", // 4.4.9
-            device_id: "4"
+            device_id: "4",
+            version_body: Some(android_version_body)
         }
     };
     /// The constants used for Apple devices.
@@ -64,7 +75,9 @@ lazy_static! {
             vm_name: vm_apple_name,
             sj_name: sj_apple_name,
             app_ver: "143",
-            device_id: "1"
+            device_id: "1",
+            // Might need to add later
+            version_body: None
         }
     };
     /// The constants used for Web devices.
@@ -81,7 +94,8 @@ lazy_static! {
             vm_name: common_web_name.clone(),
             sj_name: common_web_name,
             app_ver: "143",
-            device_id: "3"
+            device_id: "3",
+            version_body: None
         }
     };
     pub static ref BASE_API: String = {
@@ -136,15 +150,6 @@ lazy_static! {
                 .expect("Failed to decode base64 DATA_APP_ID")
         )
         .expect("Invalid base64 string (DATA_APP_ID)")
-    };
-    /// Data name for specific app version code
-    pub(crate) static ref DATA_VERSION_CODE: String = {
-        String::from_utf8(
-            general_purpose::STANDARD
-                .decode("YW5kcm9pZF9hcHBfdmVyc2lvbl9jb2Rl")
-                .expect("Failed to decode base64 DATA_VERSION_CODE")
-        )
-        .expect("Invalid base64 string (DATA_VERSION_CODE)")
     };
     /// Expanded VM name
     pub static ref EXPAND_VM_NAME: String = {

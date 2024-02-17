@@ -61,7 +61,7 @@ pub async fn sjv_account_login(
         SJDeviceMode::VM => SJMode::VM,
     };
 
-    let results = SJClient::login(&email, &password, act_mode).await;
+    let results = SJClient::login(&email, &password, act_mode, sj_platform).await;
 
     match results {
         Ok((account, instance_id)) => {

@@ -3,8 +3,9 @@
 Starting from Rust port of the project, all changes will be put into this file.
 
 ## Unreleased (git master)
-
-Nothing yet!
+### Changes
+- `SJ`: Properly login with requested platform.
+- `SJ`: Make `DATA_VERSION_CODE` optional when sending requests
 
 ## [0.3.1] 2024-02-16
 ### New features

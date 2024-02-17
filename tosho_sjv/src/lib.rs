@@ -1,6 +1,5 @@
 use constants::{
-    API_HOST, BASE_API, DATA_APP_ID, DATA_VERSION_CODE, HEADER_PIECE, LIB_VERSION, SJ_APP_ID,
-    VALUE_PIECE, VM_APP_ID,
+    API_HOST, BASE_API, DATA_APP_ID, HEADER_PIECE, LIB_VERSION, SJ_APP_ID, VALUE_PIECE, VM_APP_ID,
 };
 use futures_util::StreamExt;
 use helper::generate_random_token;
@@ -420,8 +419,15 @@ impl SJClient {
         email: &str,
         password: &str,
         mode: SJMode,
+        platform: SJPlatform,
     ) -> anyhow::Result<(AccountLoginResponse, String)> {
-        let constants = crate::constants::get_constants(1);
+        let const_plat = match platform {
+            SJPlatform::Android => 1_u8,
+            SJPlatform::Apple => 2,
+            SJPlatform::Web => 3,
+        };
+
+        let constants = crate::constants::get_constants(const_plat);
         let mut headers = reqwest::header::HeaderMap::new();
         headers.insert(
             reqwest::header::USER_AGENT,
@@ -494,7 +500,9 @@ fn common_data_hashmap(
     data.insert("device_id".to_string(), constants.device_id.to_string());
     data.insert("version".to_string(), LIB_VERSION.to_string());
     data.insert(DATA_APP_ID.to_string(), app_id.to_string());
-    data.insert(DATA_VERSION_CODE.to_string(), constants.app_ver.to_string());
+    if let Some(version_body) = &constants.version_body {
+        data.insert(version_body.clone(), constants.app_ver.to_string());
+    }
     data
 }
 
