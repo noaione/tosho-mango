@@ -2242,7 +2242,7 @@ dependencies = [
 
 [[package]]
 name = "tosho"
-version = "0.3.3"
+version = "0.3.4-dev"
 dependencies = [
  "aho-corasick",
  "anstream",
