@@ -6,6 +6,7 @@ Starting from Rust port of the project, all changes will be put into this file.
 ### Changes
 - `SJ`: Properly login with requested platform.
 - `SJ`: Make `DATA_VERSION_CODE` optional when sending requests
+- `MU`: Use `&static Constants` for `MUClient::new()` params (**BREAKING CHANGES**)
 - `Macros`: Add docs for `enum_error!()` macro
 
 ### Docs

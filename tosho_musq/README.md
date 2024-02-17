@@ -10,11 +10,11 @@ Download the `tosho` app, or you can utilize this crate like any other Rust crat
 
 ```rust
 use tosho_musq::MUClient;
-use tosho_musq::constants::ANDROID_CONSTANTS;
+use tosho_musq::constants::get_constants;
 
 #[tokio::main]
 async fn main() {
-    let client = MUClient::new("1234", ANDROID_CONSTANTS);
+    let client = MUClient::new("1234", get_constants(1));
     let manga = client.get_manga(240).await.unwrap();
     println!("{:?}", manga);
 }
@@ -28,13 +28,19 @@ The command to authenticate is `tosho mu auth`.
 
 It's recommended that you set up network intercepting first; please read [INTERCEPTING](https://github.com/noaione/tosho-mango/blob/master/INTERCEPTING.md).
 
+Using the CLI, you can do this:
+
 ```bash
 $ tosho mu auth secret -t android
 ```
 
+Or, with Apple constants:
+
 ```bash
 $ tosho mu auth secret -t ios
 ```
+
+With crates, you can follow the above usages.
 
 ### Android
 

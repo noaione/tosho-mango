@@ -92,7 +92,7 @@ pub(crate) fn select_single_account(
 pub(crate) fn make_musq_client(config: &super::musq::config::Config) -> tosho_musq::MUClient {
     let constants = tosho_musq::constants::get_constants(config.r#type() as u8);
 
-    tosho_musq::MUClient::new(&config.session, constants.clone())
+    tosho_musq::MUClient::new(&config.session, constants)
 }
 
 pub(crate) fn make_kmkc_client(config: &tosho_kmkc::KMConfig) -> tosho_kmkc::KMClient {

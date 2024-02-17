@@ -5,13 +5,13 @@ use serde::{Deserialize, Serialize};
 
 /// Weekly code for manga updates.
 ///
-/// Used with [``MUClient::get_weekly_titles``] to get manga updates for each week.
+/// Used with [`crate::MUClient::get_weekly_titles`] to get manga updates for each week.
 ///
 /// # Example
 /// ```no_run
 /// use tosho_musq::{constants::get_constants, MUClient};
 ///
-/// let client = MUClient::new("123456", get_constants(1).clone());
+/// let client = MUClient::new("123456", get_constants(1));
 ///
 /// let weekly_titles = client.get_weekly_titles(tosho_musq::WeeklyCode::today());
 /// ```
@@ -124,13 +124,13 @@ impl WeeklyCode {
 
 /// The image quality to be downloaded.
 ///
-/// Used with [``MUClient::get_chapter_images``] to select image quality.
+/// Used with [`crate::MUClient::get_chapter_images`] to select image quality.
 ///
 /// # Example
 /// ```no_run
 /// use tosho_musq::{constants::get_constants, MUClient, ImageQuality};
 ///
-/// let client = MUClient::new("123456", get_constants(1).clone());
+/// let client = MUClient::new("123456", get_constants(1));
 ///
 /// let chapter_images = client.get_chapter_images(12345, ImageQuality::Normal, None);
 /// ```

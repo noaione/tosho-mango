@@ -19,13 +19,13 @@ use tokio::io::{self, AsyncWriteExt};
 /// Main client for interacting with the SQ MU!
 ///
 /// # Example
-/// ```no_run,ignore
+/// ```no_run
 /// use tosho_musq::MUClient;
-/// use tosho_musq::constants::ANDROID_CONSTANTS;
+/// use tosho_musq::constants::get_constants;
 ///
 /// #[tokio::main]
 /// async fn main() {
-///     let client = MUClient::new("1234", ANDROID_CONSTANTS);
+///     let client = MUClient::new("1234", get_constants(1));
 ///     let manga = client.get_manga(240).await.unwrap();
 ///     println!("{:?}", manga);
 /// }
@@ -34,7 +34,7 @@ use tokio::io::{self, AsyncWriteExt};
 pub struct MUClient {
     inner: reqwest::Client,
     secret: String,
-    constants: Constants,
+    constants: &'static Constants,
 }
 
 impl MUClient {
@@ -43,7 +43,7 @@ impl MUClient {
     /// # Parameters
     /// * `secret` - The secret key to use for the client.
     /// * `constants` - The constants to use for the client.
-    pub fn new(secret: &str, constants: Constants) -> Self {
+    pub fn new(secret: &str, constants: &'static Constants) -> Self {
         Self::make_client(secret, constants, None)
     }
 
@@ -54,10 +54,14 @@ impl MUClient {
     /// # Arguments
     /// * `proxy` - The proxy to attach to the client
     pub fn with_proxy(&self, proxy: reqwest::Proxy) -> Self {
-        Self::make_client(&self.secret, self.constants.clone(), Some(proxy))
+        Self::make_client(&self.secret, self.constants, Some(proxy))
     }
 
-    fn make_client(secret: &str, constants: Constants, proxy: Option<reqwest::Proxy>) -> Self {
+    fn make_client(
+        secret: &str,
+        constants: &'static Constants,
+        proxy: Option<reqwest::Proxy>,
+    ) -> Self {
         let mut headers = reqwest::header::HeaderMap::new();
         headers.insert(
             "Host",
