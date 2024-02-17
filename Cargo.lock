@@ -2242,7 +2242,7 @@ dependencies = [
 
 [[package]]
 name = "tosho"
-version = "0.3.2"
+version = "0.3.3"
 dependencies = [
  "aho-corasick",
  "anstream",
@@ -2871,6 +2871,7 @@ dependencies = [
  "byteorder",
  "crc32fast",
  "crossbeam-utils",
+ "flate2",
  "time",
 ]
 

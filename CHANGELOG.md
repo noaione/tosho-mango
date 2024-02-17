@@ -6,6 +6,10 @@ Starting from Rust port of the project, all changes will be put into this file.
 
 Nothing yet!
 
+## [0.3.3] 2024-02-18
+### Changes
+- Self update now should support windows zip properly.
+
 ## [0.3.2] 2024-02-17
 ### Changes
 - `SJ`: Properly login with requested platform.
