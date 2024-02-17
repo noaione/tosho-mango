@@ -1,0 +1,46 @@
+
+name: Publish to crates.io
+on:
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+  PKG_CONFIG_SYSROOT_DIR: /
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Publish to crates.io
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+
+      - name: Publish (Dry run)
+        run: |
+          cargo publish -p tosho-macros --dry-run
+          cargo publish -p tosho-musq --dry-run
+          cargo publish -p tosho-kmkc --dry-run
+          cargo publish -p tosho-amap --dry-run
+          cargo publish -p tosho-sjv --dry-run
+        env:
+          RELEASE: true
+          CARGO_REGISTRY_TOKEN: ${{ secrets.RUST_CARGO_REGISTRY }}
+
+      - name: Publish
+        run: |
+          cargo publish -p tosho-macros
+          cargo publish -p tosho-musq
+          cargo publish -p tosho-kmkc
+          # Wait 2 minutes to avoid rate limit
+          sleep 120
+          cargo publish -p tosho-amap
+          cargo publish -p tosho-sjv
+          # Wait 3 minutes to avoid rate limit
+          sleep 180
+          cargo publish -p tosho
+        env:
+          RELEASE: true
+          CARGO_REGISTRY_TOKEN: ${{ secrets.RUST_CARGO_REGISTRY }}
