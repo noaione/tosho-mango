@@ -163,8 +163,12 @@ jobs:
           merge-multiple: true
 
       - name: Create changelog
+        id: prepare-change
         run: |
           python3 scripts/create_changelog.py
+          # Fetch git tag contents subject
+          VERSION_SUBJ=$(git tag -l --format='%(contents:subject)' ${{ github.ref }})
+          echo "version_subject=$VERSION_SUBJ" >> "$GITHUB_OUTPUT"
         env:
           VERSION: ${{ github.ref }}
 
@@ -177,6 +181,7 @@ jobs:
           prerelease: false
           token: ${{ secrets.GITHUB_TOKEN }}
           body_path: CHANGELOG-GENERATED.md
+          name: ${{ steps.prepare-change.outputs.version_subject }}
 
       - name: Create discussions
         uses: nvdaes/build-discussion@eb17541dc7e507af05ae77f26983930f7e5fa323
