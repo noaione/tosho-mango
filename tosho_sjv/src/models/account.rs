@@ -1,3 +1,7 @@
+//! A module containing information related to user account.
+//!
+//! If something is missing, please [open an issue](https://github.com/noaione/tosho-mango/issues/new/choose) or a [pull request](https://github.com/noaione/tosho-mango/compare).
+
 use serde::{Deserialize, Serialize};
 
 use super::{IntBool, SubscriptionType};
@@ -5,15 +9,23 @@ use super::{IntBool, SubscriptionType};
 /// A login result.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AccountLoginResponse {
+    /// The user ID.
     #[serde(rename = "user_id")]
     pub id: u32,
+    /// Username used for login.
     #[serde(rename = "login")]
     pub username: String,
+    /// The session ID.
     pub session_id: String,
+    /// The token used for requests.
     #[serde(rename = "trust_user_jwt")]
     pub token: String,
+    /// ID token, not used for now.
     #[serde(rename = "trust_user_id_token")]
     pub id_token: String,
+    /// Firebase token, used for communicating with Firebase.
+    ///
+    /// Not used for now.
     #[serde(rename = "firebase_auth_jwt")]
     pub firebase_token: String,
 }
@@ -24,15 +36,33 @@ pub struct AccountLoginResponse {
 /// Some field are discarded for simplicity.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AccountSubscription {
+    /// The renewal status or type for SJ subscription.
+    ///
+    /// If `no` then it's not auto-renew, anything else is auto-renew.
     #[serde(rename = "is_auto_renew")]
     pub sj_auto_renew: String,
+    /// The renewal status or type for VM subscription.
+    ///
+    /// If `no` then it's not auto-renew, anything else is auto-renew.
     #[serde(rename = "vm_is_auto_renew")]
     pub vm_auto_renew: String,
+    /// The valid from date for SJ subscription.
+    ///
+    /// [`None`] if not subscribed.
     #[serde(rename = "valid_from")]
     pub sj_valid_from: Option<i64>,
+    /// The valid to date for SJ subscription.
+    ///
+    /// [`None`] if not subscribed.
     #[serde(rename = "valid_to")]
     pub sj_valid_to: Option<i64>,
+    /// The valid from date for VM subscription.
+    ///
+    /// [`None`] if not subscribed.
     pub vm_valid_from: Option<i64>,
+    /// The valid to date for VM subscription.
+    ///
+    /// [`None`] if not subscribed.
     pub vm_valid_to: Option<i64>,
 }
 

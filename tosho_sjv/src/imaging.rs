@@ -1,3 +1,16 @@
+//! Provides image descrambling functionality.
+//!
+//! The original image must be scrambled and contains
+//! relevant EXIF metadata to descramble the image.
+//!
+//! ```rust
+//! use tosho_sjv::imaging::descramble_image;
+//!
+//! let img_bytes = [0_u8; 100];
+//!
+//! let descrambled_img_bytes = descramble_image(&img_bytes).unwrap();
+//! ```
+
 use std::io::Cursor;
 
 use image::{GenericImage, GenericImageView, ImageEncoder};

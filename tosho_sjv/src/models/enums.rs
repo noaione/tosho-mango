@@ -1,3 +1,5 @@
+//! A module containing information related to enums used in the library.
+
 use std::str::FromStr;
 
 use serde::{Deserialize, Serialize};

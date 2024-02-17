@@ -1,9 +1,13 @@
+//! A module containing all the models used in the library.
+//!
+//! If something is missing, please [open an issue](https://github.com/noaione/tosho-mango/issues/new/choose) or a [pull request](https://github.com/noaione/tosho-mango/compare).
+
 use serde::{Deserialize, Serialize};
 
 pub mod account;
-pub mod datetime;
+pub(crate) mod datetime;
 pub mod enums;
-pub(super) mod manga;
+pub mod manga;
 
 pub use account::*;
 pub use enums::*;

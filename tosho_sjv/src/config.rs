@@ -1,3 +1,16 @@
+//! Provides the configuration Struct for the client.
+//!
+//! ```rust
+//! use tosho_sjv::{SJConfig, SJPlatform};
+//!
+//! let config = SJConfig {
+//!     user_id: 123,
+//!     token: "xyz987abc",
+//!     instance: "abcxyz",
+//!     platform: SJPlatform::Android,
+//! };
+//! ```
+
 use crate::models::AccountLoginResponse;
 
 /// The client mode to use.
@@ -37,11 +50,26 @@ pub enum SJPlatform {
 }
 
 /// The configuration for the client.
+///
+/// ```
+/// use tosho_sjv::{SJConfig, SJPlatform};
+///
+/// let config = SJConfig {
+///     user_id: 123,
+///     token: "xyz987abc",
+///     instance: "abcxyz",
+///     platform: SJPlatform::Android,
+/// }
+/// ```
 #[derive(Debug, Clone)]
 pub struct SJConfig {
+    /// User ID.
     pub user_id: u32,
+    /// Token or also known as trust_user_jwt
     pub token: String,
+    /// Instance ID or device token
     pub instance: String,
+    /// Platform to use.
     pub platform: SJPlatform,
 }
 
@@ -68,6 +96,22 @@ impl SJConfig {
     /// # Arguments
     /// * `response` - The login response.
     /// * `instance` - The instance ID.
+    ///
+    /// ```no_run
+    /// use tosho_sjv::{SJClient, SJConfig, SJMode, SJPlatform};
+    ///
+    /// #[tokio::main]
+    /// async fn main() {
+    ///     let (account, instance_id) = SJClient::login(
+    ///         "test@mail.com",
+    ///         "mypassword",
+    ///         SJMode::SJ,
+    ///         SJPlatform::Android
+    ///     ).await.unwrap();
+    ///
+    ///     let config = SJConfig::from_login_response(&account, instance_id, SJPlatform::Android);
+    /// }
+    /// ```
     pub fn from_login_response(
         response: &AccountLoginResponse,
         instance: String,

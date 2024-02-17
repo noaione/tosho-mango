@@ -1,3 +1,13 @@
+//! Provides constants used in the library.
+//!
+//! All the following structs are a lazy static.
+//!
+//! ```rust
+//! use tosho_sjv::constants::get_constants;
+//!
+//! let _ = get_constants(1); // Android
+//! ```
+
 use base64::{engine::general_purpose, Engine as _};
 use lazy_static::lazy_static;
 
@@ -18,8 +28,11 @@ pub struct Constants {
     pub(crate) version_body: Option<String>,
 }
 
+/// App ID for VM
 pub const VM_APP_ID: &str = "1";
+/// App ID for SJ
 pub const SJ_APP_ID: &str = "3";
+/// API library version
 pub const LIB_VERSION: &str = "9";
 
 lazy_static! {
@@ -98,6 +111,8 @@ lazy_static! {
             version_body: None
         }
     };
+
+    /// The base API used for overall requests.
     pub static ref BASE_API: String = {
         String::from_utf8(
             general_purpose::STANDARD
