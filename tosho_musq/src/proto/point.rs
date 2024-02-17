@@ -1,7 +1,14 @@
+//! A module containing information related to point acquisition and usage.
+//!
+//! If something is missing, please [open an issue](https://github.com/noaione/tosho-mango/issues/new/choose) or a [pull request](https://github.com/noaione/tosho-mango/compare).
+
 #![allow(clippy::derive_partial_eq_without_eq)]
 
 use super::SubscriptionStatus;
 
+/// The user point information.
+///
+/// This will be available on almost each request.
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct UserPoint {
     /// Free/daily coins that you have.

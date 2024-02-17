@@ -1,3 +1,7 @@
+//! A module containing information related to enums used in the library.
+//!
+//! If something is missing, please [open an issue](https://github.com/noaione/tosho-mango/issues/new/choose) or a [pull request](https://github.com/noaione/tosho-mango/compare).
+
 /// The status of each request
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 pub enum Status {

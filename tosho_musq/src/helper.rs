@@ -1,3 +1,15 @@
+//! Provides a collection of helper Structs that can be used.
+//!
+//! ```rust
+//! use tosho_musq::{WeeklyCode, ImageQuality, ConsumeCoin};
+//!
+//! let today = WeeklyCode::today();
+//! let hq_img = ImageQuality::High;
+//! let coins = ConsumeCoin::new(1, 2, 3, 4);
+//!
+//! assert!(coins.is_possible());
+//! ```
+
 use std::str::FromStr;
 
 use chrono::Datelike;

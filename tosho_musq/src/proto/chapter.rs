@@ -1,3 +1,7 @@
+//! A module containing information related to chapter.
+//!
+//! If something is missing, please [open an issue](https://github.com/noaione/tosho-mango/issues/new/choose) or a [pull request](https://github.com/noaione/tosho-mango/compare).
+
 #![allow(clippy::derive_partial_eq_without_eq)]
 
 use super::enums::{Badge, ConsumptionType, Status};
@@ -52,14 +56,28 @@ impl Chapter {
     /// Whether or not this chapter is free.
     ///
     /// # Examples
-    /// ```no_run,ignore
-    /// use tosho_musq::proto::chapter::Chapter;
+    /// ```
+    /// use tosho_musq::proto::Chapter;
     ///
-    /// let chapter: Chapter = ...;
+    /// let mut chapter = Chapter {
+    ///     id: 1,
+    ///     title: "Test".to_string(),
+    ///     subtitle: Some("Subtitle".to_string()),
+    ///     thumbnail_url: "https://example.com".to_string(),
+    ///     consumption: 1,
+    ///     price: 0,
+    ///     end_of_rental_period: Some(0),
+    ///     comments: Some(0),
+    ///     published_at: Some("2021-01-01T00:00:00Z".to_string()),
+    ///     badge: 0,
+    ///     first_page_url: "https://example.com".to_string(),
+    /// };
     ///
-    /// if chapter.is_free() {
-    ///    println!("This chapter is free!");
-    /// }
+    /// assert!(chapter.is_free());
+    ///
+    /// chapter.price = 10;
+    ///
+    /// assert!(!chapter.is_free());
     /// ```
     pub fn is_free(&self) -> bool {
         self.price == 0
@@ -67,15 +85,31 @@ impl Chapter {
 
     /// Format the chapter title and subtitle into a single string.
     ///
-    /// If the subtitle is ``None``, the title will be returned as is.
+    /// If the subtitle is [`None`], the title will be returned as is.
     ///
     /// # Examples
-    /// ```no_run,ignore
-    /// use tosho_musq::proto::chapter::Chapter;
+    /// ```
+    /// use tosho_musq::proto::Chapter;
     ///
-    /// let chapter: Chapter = ...;
+    /// let mut chapter = Chapter {
+    ///     id: 1,
+    ///     title: "Test".to_string(),
+    ///     subtitle: Some("Subtitle".to_string()),
+    ///     thumbnail_url: "https://example.com".to_string(),
+    ///     consumption: 1,
+    ///     price: 0,
+    ///     end_of_rental_period: Some(0),
+    ///     comments: Some(0),
+    ///     published_at: Some("2021-01-01T00:00:00Z".to_string()),
+    ///     badge: 0,
+    ///     first_page_url: "https://example.com".to_string(),
+    /// };
     ///
-    /// println!("Title: {}", chapter.as_chapter_title());
+    /// assert_eq!(chapter.as_chapter_title(), "Test — Subtitle");
+    ///
+    /// chapter.subtitle = None;
+    ///
+    /// assert_eq!(chapter.as_chapter_title(), "Test");
     /// ```
     pub fn as_chapter_title(&self) -> String {
         let base_title = self.title.clone();
@@ -146,14 +180,31 @@ impl ChapterV2 {
     /// Whether or not this chapter is free.
     ///
     /// # Examples
-    /// ```no_run,ignore
-    /// use tosho_musq::proto::chapter::ChapterV2;
+    /// ```
+    /// use tosho_musq::proto::ChapterV2;
     ///
-    /// let chapter: ChapterV2 = ...;
+    /// let mut chapter = ChapterV2 {
+    ///     id: 1,
+    ///     title: "Test".to_string(),
+    ///     subtitle: Some("Subtitle".to_string()),
+    ///     thumbnail_url: "https://example.com".to_string(),
+    ///     consumption: 1,
+    ///     price: 0,
+    ///     end_of_rental_period: Some(0),
+    ///     comments: Some(0),
+    ///     published_at: Some("2021-01-01T00:00:00Z".to_string()),
+    ///     badge: 0,
+    ///     first_page_url: "https://example.com".to_string(),
+    ///     final_chapter: false,
+    ///     page_count: 2,
+    ///     read_count: 0,
+    /// };
     ///
-    /// if chapter.is_free() {
-    ///    println!("This chapter is free!");
-    /// }
+    /// assert!(chapter.is_free());
+    ///
+    /// chapter.price = 10;
+    ///
+    /// assert!(!chapter.is_free());
     /// ```
     pub fn is_free(&self) -> bool {
         self.price == 0
@@ -161,15 +212,34 @@ impl ChapterV2 {
 
     /// Format the chapter title and subtitle into a single string.
     ///
-    /// If the subtitle is ``None``, the title will be returned as is.
+    /// If the subtitle is [`None`], the title will be returned as is.
     ///
     /// # Examples
-    /// ```no_run,ignore
-    /// use tosho_musq::proto::chapter::ChapterV2;
+    /// ```
+    /// use tosho_musq::proto::ChapterV2;
     ///
-    /// let chapter: ChapterV2 = ...;
+    /// let mut chapter = ChapterV2 {
+    ///     id: 1,
+    ///     title: "Test".to_string(),
+    ///     subtitle: Some("Subtitle".to_string()),
+    ///     thumbnail_url: "https://example.com".to_string(),
+    ///     consumption: 1,
+    ///     price: 0,
+    ///     end_of_rental_period: Some(0),
+    ///     comments: Some(0),
+    ///     published_at: Some("2021-01-01T00:00:00Z".to_string()),
+    ///     badge: 0,
+    ///     first_page_url: "https://example.com".to_string(),
+    ///     final_chapter: false,
+    ///     page_count: 2,
+    ///     read_count: 0,
+    /// };
     ///
-    /// println!("Title: {}", chapter.as_chapter_title());
+    /// assert_eq!(chapter.as_chapter_title(), "Test — Subtitle");
+    ///
+    /// chapter.subtitle = None;
+    ///
+    /// assert_eq!(chapter.as_chapter_title(), "Test");
     /// ```
     pub fn as_chapter_title(&self) -> String {
         let base_title = self.title.clone();
@@ -220,12 +290,18 @@ impl ChapterPage {
     /// The file name of the image.
     ///
     /// # Examples
-    /// ```no_run,ignore
-    /// use tosho_musq::proto::chapter::ChapterPage;
+    /// ```
+    /// use tosho_musq::proto::ChapterPage;
     ///
-    /// let page: ChapterPage = ...;
+    /// let page = ChapterPage {
+    ///     url: "/path/to/image.avif".to_string(),
+    ///     video_url: None,
+    ///     intent_url: None,
+    ///     extra_id: None,
+    /// };
     ///
-    /// println!("File name: {}", page.file_name());
+    /// assert_eq!(page.file_name(), "image.avif");
+    /// ```
     pub fn file_name(&self) -> String {
         let url = self.url.clone();
         // split at the last slash
@@ -238,12 +314,17 @@ impl ChapterPage {
     /// The file extension of the image.
     ///
     /// # Examples
-    /// ```no_run,ignore
-    /// use tosho_musq::proto::chapter::ChapterPage;
+    /// ```
+    /// use tosho_musq::proto::ChapterPage;
     ///
-    /// let page: ChapterPage = ...;
+    /// let page = ChapterPage {
+    ///     url: "/path/to/image.avif".to_string(),
+    ///     video_url: None,
+    ///     intent_url: None,
+    ///     extra_id: None,
+    /// };
     ///
-    /// println!("File extension: {}", page.extension());
+    /// assert_eq!(page.extension(), "avif");
     /// ```
     pub fn extension(&self) -> String {
         let file_name = self.file_name();
@@ -260,12 +341,17 @@ impl ChapterPage {
     /// The file stem of the image.
     ///
     /// # Examples
-    /// ```no_run,ignore
-    /// use tosho_musq::proto::chapter::ChapterPage;
+    /// ```
+    /// use tosho_musq::proto::ChapterPage;
     ///
-    /// let page: ChapterPage = ...;
+    /// let page = ChapterPage {
+    ///     url: "/path/to/image.avif".to_string(),
+    ///     video_url: None,
+    ///     intent_url: None,
+    ///     extra_id: None,
+    /// };
     ///
-    /// println!("File stem: {}", page.file_stem());
+    /// assert_eq!(page.file_stem(), "image");
     /// ```
     pub fn file_stem(&self) -> String {
         let file_name = self.file_name();

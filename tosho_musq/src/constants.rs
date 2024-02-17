@@ -1,3 +1,13 @@
+//! Provides constants used in the library.
+//!
+//! All the following structs are a lazy static.
+//!
+//! ```rust
+//! use tosho_musq::constants::get_constants;
+//!
+//! let _ = get_constants(1); // Android
+//! ```
+
 use base64::{engine::general_purpose, Engine as _};
 use lazy_static::lazy_static;
 
@@ -64,6 +74,8 @@ lazy_static! {
             app_ver: ios_app_ver.to_string(),
         }
     };
+
+    /// The base API used for overall requests.
     pub static ref BASE_API: String = {
         String::from_utf8(
             general_purpose::STANDARD
@@ -72,6 +84,7 @@ lazy_static! {
         )
         .expect("Invalid base64 string (BASE_API)")
     };
+    /// The base image URL used for image requests.
     pub static ref BASE_IMG: String = {
         String::from_utf8(
             general_purpose::STANDARD
