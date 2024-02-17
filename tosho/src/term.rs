@@ -229,21 +229,24 @@ pub fn get_console(debug: u8) -> Terminal {
     Terminal::new(debug)
 }
 
-/// Create a clickable link/text in terminal
-///
-/// Ref: [`GitHub Gist`](https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda)
-#[macro_export]
-macro_rules! linkify {
-    ($url:expr, $text:expr) => {
-        match supports_hyperlinks::on(supports_hyperlinks::Stream::Stdout) {
-            true => format!("\x1b]8;;{}\x1b\\{}\x1b]8;;\x1b\\", $url, $text),
-            false => match $crate::win_term::check_windows_vt_support() {
+pub(crate) mod macros {
+    /// Create a clickable link/text in terminal
+    ///
+    /// Ref: [`GitHub Gist`](https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda)
+    macro_rules! linkify {
+        ($url:expr, $text:expr) => {
+            match supports_hyperlinks::on(supports_hyperlinks::Stream::Stdout) {
                 true => format!("\x1b]8;;{}\x1b\\{}\x1b]8;;\x1b\\", $url, $text),
-                false => $text.to_string(),
-            },
-        }
-    };
-    ($url:expr) => {
-        linkify!($url, $url)
-    };
+                false => match $crate::win_term::check_windows_vt_support() {
+                    true => format!("\x1b]8;;{}\x1b\\{}\x1b]8;;\x1b\\", $url, $text),
+                    false => $text.to_string(),
+                },
+            }
+        };
+        ($url:expr) => {
+            linkify!($url, $url)
+        };
+    }
+
+    pub(crate) use linkify;
 }

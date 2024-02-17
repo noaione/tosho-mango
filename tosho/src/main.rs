@@ -21,6 +21,7 @@ pub(crate) mod term;
 pub(crate) mod updater;
 pub(crate) mod win_term;
 use crate::cli::ToshoCli;
+pub(crate) use term::macros::linkify;
 
 fn get_default_download_dir() -> PathBuf {
     let cwd = std::env::current_dir().unwrap();
