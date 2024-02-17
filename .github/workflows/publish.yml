@@ -21,14 +21,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
+        if: inputs.tag == 'latest'
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+
+      - name: Checkout repo (tag)
+        if: inputs.tag != 'latest'
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
         with:
-          fetch-tags: true
-
-      - name: Checkout tag
-        if: inputs.tag != 'latest'
-        run:
-          git checkout ${{ inputs.tag }}
+          ref: ${{ inputs.tag }}
 
       - name: Publish (Dry run)
         run: |
