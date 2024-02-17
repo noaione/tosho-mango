@@ -46,7 +46,7 @@ pub fn serializenum_derive(input: TokenStream) -> TokenStream {
 /// use serde::Deserialize;
 /// use tosho_macros::DeserializeEnum;
 ///
-/// #[derive(DeserializeEnum)]
+/// #[derive(DeserializeEnum, PartialEq, Eq, Debug)]
 /// enum TestEnum {
 ///     Create,
 ///     Read,
@@ -140,6 +140,8 @@ pub fn deserializeenum32fallback_derive(input: TokenStream) -> TokenStream {
 ///
 /// # Example
 /// ```
+/// use tosho_macros::EnumName;
+///
 /// #[derive(EnumName, Clone, Debug)]
 /// enum TestEnum {
 ///     Create,
@@ -159,13 +161,14 @@ pub fn enumname_derive(input: TokenStream) -> TokenStream {
 ///
 /// # Example
 /// ```
+/// use tosho_macros::EnumCount;
+///
 /// #[derive(EnumCount, Clone, Debug)]
 /// enum TestEnum {
 ///     Create,
 ///     Read,
 /// }
 ///
-/// let test_enum = TestEnum::Create;
 /// assert_eq!(TestEnum::count(), 2);
 /// ```
 #[proc_macro_derive(EnumCount)]
