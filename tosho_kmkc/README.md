@@ -2,11 +2,11 @@
 
 A minimal asynchronous client for the KM API by KC.
 
-The following crate is used by the `tosho` app.
+The following crate is used by the [`tosho`](tosho) app.
 
 ## Usage
 
-Download the `tosho` app, or you can utilize this crate like any other Rust crate:
+Download the [`tosho`](tosho) app, or you can utilize this crate like any other Rust crate:
 
 ```rust
 use tosho_kmkc::{KMClient, KMConfig, KMConfigMobile, KMConfigMobilePlatform};
@@ -68,3 +68,5 @@ There is no significant difference between Android and iOS.
 ## License
 
 This project is licensed with MIT License ([LICENSE](https://github.com/noaione/tosho-mango/blob/master/LICENSE) or http://opensource.org/licenses/MIT)
+
+[tosho]: https://crates.io/crates/tosho

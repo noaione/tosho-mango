@@ -2,13 +2,13 @@
 
 ![CI](https://github.com/noaione/tosho-mango/actions/workflows/ci.yml/badge.svg)
 
-`tosho-mango` (or `tosho`) is a downloader but can also be considered an almost full-blown replacement for the app/web version, with the exception of currency purchase, as a simple CLI application.
+[`tosho-mango`](tosho) (or `tosho`) is a downloader but can also be considered an almost full-blown replacement for the app/web version, with the exception of currency purchase, as a simple CLI application.
 
 Currently we support the following source:
-- MU! by SQ
-- KM by KC
-- AM by AP
-- SJ/M by V
+- [MU! by SQ](https://crates.io/crates/tosho-musq)
+- [KM by KC](https://crates.io/crates/tosho-kmkc)
+- [AM by AP](https://crates.io/crates/tosho-amap)
+- [SJ/M by V](https://crates.io/crates/tosho-sjv)
 
 ## Installation
 
@@ -28,7 +28,7 @@ $ cargo binstall tosho
 
 ## Usage
 
-Refer to the [repo](https://github.com/noaione/tosho-mango) on how to authenticate with each source.<br />
+Refer to the [repo](tosho) on how to authenticate with each source.<br />
 For a list of available commands, use the `--help` argument.
 
 [![asciicast](https://asciinema.org/a/636303.svg)](https://asciinema.org/a/636303)
@@ -36,3 +36,5 @@ For a list of available commands, use the `--help` argument.
 ## License
 
 This project is licensed with MIT License ([LICENSE](https://github.com/noaione/tosho-mango/blob/master/LICENSE) or http://opensource.org/licenses/MIT)
+
+[tosho]: https://github.com/noaione/tosho-mango
