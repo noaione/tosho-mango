@@ -2324,6 +2324,7 @@ name = "tosho-macros"
 version = "0.3.0"
 dependencies = [
  "quote",
+ "serde",
  "syn 2.0.48",
 ]
 

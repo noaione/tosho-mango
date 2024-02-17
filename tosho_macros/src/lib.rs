@@ -1,34 +1,135 @@
+//! # tosho-macros
+//!
+//! A collection of macros used by [`tosho`](https://github.com/noaione/tosho-mango) and the other sources crates.
+//!
+//! ## License
+//!
+//! This project is licensed with MIT License ([LICENSE](https://github.com/noaione/tosho-mango/blob/master/LICENSE) or <http://opensource.org/licenses/MIT>)
+
 use proc_macro::TokenStream;
 
-/// Derives [`serde::Serialize`] for an enum using [`ToString`]
+/// Derives [`serde::Serialize`](https://docs.rs/serde/latest/serde/trait.Serialize.html) for an enum using [`ToString`]
+///
+/// # Example
+/// ```
+/// use serde::Serialize;
+/// use tosho_macros::SerializeEnum;
+///
+/// #[derive(SerializeEnum)]
+/// enum TestEnum {
+///     Create,
+///     Read,
+/// }
+///
+/// impl ToString for TestEnum {
+///     fn to_string(&self) -> String {
+///         match self {
+///             TestEnum::Create => "create".to_string(),
+///             TestEnum::Read => "read".to_string(),
+///         }
+///     }
+/// }
+///
+/// let test_enum = TestEnum::Create;
+/// assert_eq!(test_enum.to_string(), "create");
+/// ```
 #[proc_macro_derive(SerializeEnum)]
 pub fn serializenum_derive(input: TokenStream) -> TokenStream {
     let ast = syn::parse(input).unwrap();
     impl_serenum_derive(&ast)
 }
 
-/// Derives [`serde::Deserialize`] for an enum using [`std::str::FromStr`]
+/// Derives [`serde::Deserialize`](https://docs.rs/serde/latest/serde/trait.Deserialize.html) for an enum using [`std::str::FromStr`]
+///
+/// # Example
+/// ```
+/// use serde::Deserialize;
+/// use tosho_macros::DeserializeEnum;
+///
+/// #[derive(DeserializeEnum)]
+/// enum TestEnum {
+///     Create,
+///     Read,
+/// }
+///
+/// tosho_macros::enum_error!(TestEnumFromStrError);
+///
+/// impl std::str::FromStr for TestEnum {
+///     type Err = TestEnumFromStrError;
+///     
+///     fn from_str(s: &str) -> Result<Self, Self::Err> {
+///          match s {
+///             "create" => Ok(TestEnum::Create),
+///             "read" => Ok(TestEnum::Read),
+///             _ => Err(TestEnumFromStrError {
+///                 original: s.to_string(),
+///             }),
+///         }
+///     }
+/// }
+///
+/// let test_enum: TestEnum = "create".parse().unwrap();
+/// assert_eq!(test_enum, TestEnum::Create);
+/// ```
 #[proc_macro_derive(DeserializeEnum)]
 pub fn deserializeenum_derive(input: TokenStream) -> TokenStream {
     let ast = syn::parse(input).unwrap();
     impl_deserenum_derive(&ast)
 }
 
-/// Derives [`serde::Serialize`] for an enum in i32 mode.
+/// Derives [`serde::Serialize`](https://docs.rs/serde/latest/serde/trait.Serialize.html) for an enum in i32 mode.
+///
+/// # Example
+/// ```
+/// use serde::Serialize;
+/// use tosho_macros::SerializeEnum32;
+///
+/// #[derive(SerializeEnum32)]
+/// enum TestEnum {
+///     Create = 0,
+///     Read = 1,
+/// }
+/// ```
 #[proc_macro_derive(SerializeEnum32)]
 pub fn serializenum32_derive(input: TokenStream) -> TokenStream {
     let ast = syn::parse(input).unwrap();
     impl_serenum32_derive(&ast)
 }
 
-/// Derives [`serde::Deserialize`] for an enum in i32 mode.
+/// Derives [`serde::Deserialize`](https://docs.rs/serde/latest/serde/trait.Deserialize.html) for an enum in i32 mode.
+///
+/// # Example
+/// ```
+/// use serde::Deserialize;
+/// use tosho_macros::DeserializeEnum32;
+///
+/// #[derive(DeserializeEnum32)]
+/// enum TestEnum {
+///     Create = 0,
+///     Read = 1,
+/// }
+/// ```
 #[proc_macro_derive(DeserializeEnum32)]
 pub fn deserializeenum32_derive(input: TokenStream) -> TokenStream {
     let ast = syn::parse(input).unwrap();
     impl_deserenum32_derive(&ast, false)
 }
 
-/// Derives [`serde::Deserialize`] for an enum in i32 mode with fallback to [`std::default::Default`].
+/// Derives [`serde::Deserialize`](https://docs.rs/serde/latest/serde/trait.Deserialize.html) for an enum in i32 mode with fallback to [`std::default::Default`].
+///
+/// # Example
+/// ```
+/// use serde::Deserialize;
+/// use tosho_macros::DeserializeEnum32Fallback;
+///
+/// #[derive(DeserializeEnum32Fallback, Default)]
+/// enum TestEnum {
+///     #[default]
+///     Unknown = -1,
+///     Create = 0,
+///     Read = 1,
+/// }
+/// ```
 #[proc_macro_derive(DeserializeEnum32Fallback)]
 pub fn deserializeenum32fallback_derive(input: TokenStream) -> TokenStream {
     let ast = syn::parse(input).unwrap();
@@ -36,6 +137,18 @@ pub fn deserializeenum32fallback_derive(input: TokenStream) -> TokenStream {
 }
 
 /// Derives an enum that would implement `.to_name()`
+///
+/// # Example
+/// ```
+/// #[derive(EnumName, Clone, Debug)]
+/// enum TestEnum {
+///     Create,
+///     Read,
+/// }
+///
+/// let test_enum = TestEnum::Create;
+/// assert_eq!(test_enum.to_name(), "Create");
+/// ```
 #[proc_macro_derive(EnumName)]
 pub fn enumname_derive(input: TokenStream) -> TokenStream {
     let ast = syn::parse(input).unwrap();
@@ -43,20 +156,32 @@ pub fn enumname_derive(input: TokenStream) -> TokenStream {
 }
 
 /// Derives an enum that would implement `::count()` to return the number of variants
+///
+/// # Example
+/// ```
+/// #[derive(EnumCount, Clone, Debug)]
+/// enum TestEnum {
+///     Create,
+///     Read,
+/// }
+///
+/// let test_enum = TestEnum::Create;
+/// assert_eq!(TestEnum::count(), 2);
+/// ```
 #[proc_macro_derive(EnumCount)]
 pub fn enumcount_derive(input: TokenStream) -> TokenStream {
     let ast = syn::parse(input).unwrap();
     impl_enumcount_derive(&ast)
 }
 
-/// Derives an enum that would implement From<u32>.
+/// Derives an enum that would implement [`From<u32>`].
 #[proc_macro_derive(EnumU32)]
 pub fn enumu32_derive(input: TokenStream) -> TokenStream {
     let ast = syn::parse(input).unwrap();
     impl_enumu32_derive(&ast, false)
 }
 
-/// Derives an enum that would implement From<u32> with fallback.
+/// Derives an enum that would implement [`From<u32>`] with fallback.
 #[proc_macro_derive(EnumU32Fallback)]
 pub fn enumu32fallback_derive(input: TokenStream) -> TokenStream {
     let ast = syn::parse(input).unwrap();
@@ -75,6 +200,15 @@ impl syn::parse::Parse for EnumErrorMacroInput {
     }
 }
 
+/// Create an error struct for an enum that implements [`std::fmt::Display`] that can be used
+/// when using other macros to derive [`std::str::FromStr`] for an enum.
+///
+/// # Example
+/// ```
+/// use tosho_macros::enum_error;
+///
+/// enum_error!(TestEnumFromStrError);
+/// ```
 #[proc_macro]
 pub fn enum_error(item: TokenStream) -> TokenStream {
     let input = syn::parse_macro_input!(item as EnumErrorMacroInput);

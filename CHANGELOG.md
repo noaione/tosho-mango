@@ -7,6 +7,9 @@ Starting from Rust port of the project, all changes will be put into this file.
 - `SJ`: Properly login with requested platform.
 - `SJ`: Make `DATA_VERSION_CODE` optional when sending requests
 
+### Docs
+- Add proper documentation for `tosho-macros`
+
 ## [0.3.1] 2024-02-16
 ### New features
 - Added self updater, you can now do `tosho update` to update tosho for supported platform/architecture.

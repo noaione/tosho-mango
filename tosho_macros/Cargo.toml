@@ -15,5 +15,8 @@ readme = "README.md"
 syn = "2.0"
 quote = "1.0"
 
+[dev-dependencies]
+serde.workspace = true
+
 [lib]
 proc-macro = true
