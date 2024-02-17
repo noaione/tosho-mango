@@ -1,3 +1,7 @@
+//! A module containing information related to episode/chapter.
+//!
+//! If something is missing, please [open an issue](https://github.com/noaione/tosho-mango/issues/new/choose) or a [pull request](https://github.com/noaione/tosho-mango/compare).
+
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
@@ -74,12 +78,16 @@ impl ImagePageNode {
     /// The file name of the image.
     ///
     /// # Examples
-    /// ```no_run,ignore
+    /// ```
     /// use tosho_kmkc::models::ImagePageNode;
     ///
-    /// let page: ImagePageNode = ..;
+    /// let page = ImagePageNode {
+    ///     index: 0,
+    ///     url: "https://example.com/image.jpg?test=ignore".to_string(),
+    /// };
     ///
-    /// println!("File name: {}", page.file_name());
+    /// assert_eq!(page.file_name(), "image.jpg");
+    /// ```
     pub fn file_name(&self) -> String {
         let url = self.url.as_str();
         let index = url.rfind('/').unwrap();
@@ -92,12 +100,15 @@ impl ImagePageNode {
     /// The file extension of the image.
     ///
     /// # Examples
-    /// ```no_run,ignore
+    /// ```
     /// use tosho_kmkc::models::ImagePageNode;
     ///
-    /// let page: ImagePageNode = ..;
+    /// let page = ImagePageNode {
+    ///     index: 0,
+    ///     url: "https://example.com/image.jpg?test=ignore".to_string(),
+    /// };
     ///
-    /// println!("File extension: {}", page.extension());
+    /// assert_eq!(page.extension(), "jpg");
     /// ```
     pub fn extension(&self) -> String {
         let file_name = self.file_name();
@@ -113,12 +124,15 @@ impl ImagePageNode {
     /// The file stem of the image.
     ///
     /// # Examples
-    /// ```no_run,ignore
+    /// ```
     /// use tosho_kmkc::models::ImagePageNode;
     ///
-    /// let page: ImagePageNode = ..;
+    /// let page = ImagePageNode {
+    ///     index: 0,
+    ///     url: "https://example.com/image.jpg?test=ignore".to_string(),
+    /// };
     ///
-    /// println!("File stem: {}", page.file_stem());
+    /// assert_eq!(page.file_stem(), "image");
     /// ```
     pub fn file_stem(&self) -> String {
         let file_name = self.file_name();
@@ -134,7 +148,7 @@ impl ImagePageNode {
 
 /// A simplified string version of the image page node.
 #[derive(Debug, Clone)]
-pub struct ImagePageNodeStr(String);
+pub struct ImagePageNodeStr(pub String);
 
 impl<'de> Deserialize<'de> for ImagePageNodeStr {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
@@ -162,12 +176,13 @@ impl ImagePageNodeStr {
     /// The file name of the image.
     ///
     /// # Examples
-    /// ```no_run,ignore
-    /// use tosho_kmkc::models::ImagePageNode;
+    /// ```
+    /// use tosho_kmkc::models::ImagePageNodeStr;
     ///
-    /// let page: ImagePageNode = ..;
+    /// let page = ImagePageNodeStr("https://example.com/image.jpg?test=ignore".to_string());
     ///
-    /// println!("File name: {}", page.file_name());
+    /// assert_eq!(page.file_name(), "image.jpg");
+    /// ```
     pub fn file_name(&self) -> String {
         let node = ImagePageNode::from(self.clone());
         node.file_name()
@@ -176,12 +191,12 @@ impl ImagePageNodeStr {
     /// The file extension of the image.
     ///
     /// # Examples
-    /// ```no_run,ignore
-    /// use tosho_kmkc::models::ImagePageNode;
+    /// ```
+    /// use tosho_kmkc::models::ImagePageNodeStr;
     ///
-    /// let page: ImagePageNode = ..;
+    /// let page = ImagePageNodeStr("https://example.com/image.jpg?test=ignore".to_string());
     ///
-    /// println!("File extension: {}", page.extension());
+    /// assert_eq!(page.extension(), "jpg");
     /// ```
     pub fn extension(&self) -> String {
         let node = ImagePageNode::from(self.clone());
@@ -191,12 +206,12 @@ impl ImagePageNodeStr {
     /// The file stem of the image.
     ///
     /// # Examples
-    /// ```no_run,ignore
-    /// use tosho_kmkc::models::ImagePageNode;
+    /// ```
+    /// use tosho_kmkc::models::ImagePageNodeStr;
     ///
-    /// let page: ImagePageNode = ..;
+    /// let page = ImagePageNodeStr("https://example.com/image.jpg?test=ignore".to_string());
     ///
-    /// println!("File stem: {}", page.file_stem());
+    /// assert_eq!(page.file_stem(), "image");
     /// ```
     pub fn file_stem(&self) -> String {
         let node = ImagePageNode::from(self.clone());

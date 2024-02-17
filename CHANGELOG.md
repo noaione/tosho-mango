@@ -12,6 +12,7 @@ Starting from Rust port of the project, all changes will be put into this file.
 ### Docs
 - Add proper documentation for `tosho-macros`
 - Add proper documentation for `tosho-musq`
+- Add proper documentation for `tosho-kmkc`
 - Add proper documentation for `tosho-sjv`
 
 ## [0.3.1] 2024-02-16

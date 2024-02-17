@@ -1,3 +1,76 @@
+//! # tosho-kmkc
+//!
+//! A minimal asynchronous client for the KM API by KC.
+//!
+//! The following crate is used by the [`tosho`] app.
+//!
+//! ## Usage
+//!
+//! Download the [`tosho`] app, or you can utilize this crate like any other Rust crate:
+//!
+//! ```rust,no_run
+//! use tosho_kmkc::{KMClient, KMConfig, KMConfigMobile, KMConfigMobilePlatform};
+//!
+//! #[tokio::main]
+//! async fn main() {
+//!     let config = KMConfigMobile {
+//!         user_id: "123".to_string(),
+//!         hash_key: "abcxyz".to_string(),
+//!         platform: KMConfigMobilePlatform::Android,
+//!     };
+//!
+//!     let client = KMClient::new(KMConfig::Mobile(config));
+//!
+//!     let manga = client.get_titles(vec![10007]).await.unwrap();
+//!     println!("{:?}", manga[0]);
+//! }
+//! ```
+//!
+//! ## Authentication
+//!
+//! The following source has many kinds of authentication methods:
+//! - `auth`: Experimental login system with email + password.
+//! - `auth-mobile`: Login by providing user ID and key.
+//! - `auth-web`: Login by providing a [Netscape Cookies file](http://fileformats.archiveteam.org/wiki/Netscape_cookies.txt).
+//! - `auth-adapt`: Convert a web authentication into mobile authentication.
+//!
+//! For the easiest method, use the `auth` command and then `auth-adapt` to obtain the mobile version.
+//!
+//! ```bash
+//! $ tosho km auth email password -t web
+//! ```
+//!
+//! Alternatively, if you only want the mobile version:
+//!
+//! ```bash
+//! $ tosho km auth email password -t android
+//! ```
+//!
+//! ```bash
+//! $ tosho km auth email password -t ios
+//! ```
+//!
+//! Or, if you use this crates as library:
+//!
+//! ```rust,no_run
+//! use tosho_kmkc::{KMClient, KMConfigMobilePlatform};
+//!
+//! #[tokio::main]
+//! async fn main() {
+//!     let login_res = KMClient::login("test@mail.com", "mypassword", None).await.unwrap();
+//!     // Or, with mobile platform
+//!     let login_res = KMClient::login("test@mail.com", "mypassword", Some(KMConfigMobilePlatform::Android)).await.unwrap();
+//! }
+//! ```
+//!
+//! There is no significant difference between Android and iOS.
+//!
+//! ## License
+//!
+//! This project is licensed with MIT License ([LICENSE](https://github.com/noaione/tosho-mango/blob/master/LICENSE) or <http://opensource.org/licenses/MIT>)
+//!
+//! [`tosho`]: https://crates.io/crates/tosho
+
 use std::{collections::HashMap, sync::MutexGuard};
 
 pub use config::*;
@@ -34,15 +107,21 @@ pub struct KMLoginResult {
 /// Main client for interacting with the SQ MU!
 ///
 /// # Example
-/// ```no_run,ignore
-/// use tosho_kmkc::KMClient;
+/// ```no_run
+/// use tosho_kmkc::{KMClient, KMConfig, KMConfigMobile, KMConfigMobilePlatform};
 ///
 /// #[tokio::main]
 /// async fn main() {
-///     let config = KMConfig::Web(..);
-///     let client = KMClient::new(config);
+///     let config = KMConfigMobile {
+///         user_id: "123".to_string(),
+///         hash_key: "abcxyz".to_string(),
+///         platform: KMConfigMobilePlatform::Android,
+///     };
+///
+///     let client = KMClient::new(KMConfig::Mobile(config));
+///
 ///     let manga = client.get_titles(vec![10007]).await.unwrap();
-///     println!("{:?}", manga);
+///     println!("{:?}", manga[0]);
 /// }
 /// ```
 #[derive(Clone)]
@@ -574,7 +653,7 @@ impl KMClient {
 
     /// Get a user information
     ///
-    /// This is different to [`get_account`] as it needs
+    /// This is different to [`Self::get_account`] as it needs
     /// the user ID to get the user information.
     pub async fn get_user(&self, user_id: u32) -> anyhow::Result<UserInfoResponse> {
         let mut params = HashMap::new();
@@ -658,7 +737,7 @@ impl KMClient {
 
     /// Get title rankings for a specific ranking ID.
     ///
-    /// See [`constants::RANKING_TABS`] for the list of available ranking IDs.
+    /// See [``static@constants::RANKING_TABS``] for the list of available ranking IDs.
     ///
     /// # Arguments
     /// * `ranking_id` - The ranking ID to get
@@ -690,7 +769,7 @@ impl KMClient {
 
     /// Stream download the image from the given URL.
     ///
-    /// The URL can be obtained from [`get_episode_viewer`](#method.get_episode_viewer).
+    /// The URL can be obtained from [`Self::get_episode_viewer`]
     ///
     /// The Web version will be automatically descrambled, so it will not be a "stream" download.
     ///

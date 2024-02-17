@@ -1,3 +1,7 @@
+//! A module containing information related to user account.
+//!
+//! If something is missing, please [open an issue](https://github.com/noaione/tosho-mango/issues/new/choose) or a [pull request](https://github.com/noaione/tosho-mango/compare).
+
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
@@ -130,7 +134,7 @@ pub struct UserTicket {
 
 /// Represents the user account point Response.
 ///
-/// You should use it in combination of [`StatusResponse`].
+/// You should use it in combination of [`crate::models::StatusResponse`].
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UserPointResponse {
     /// The user point information.

@@ -14,14 +14,14 @@ use tosho_kmkc::{KMClient, KMConfig, KMConfigMobile, KMConfigMobilePlatform};
 #[tokio::main]
 async fn main() {
     let config = KMConfigMobile {
-        user_id: "123",
-        hash_key: "abcxyz",
+        user_id: "123".to_string(),
+        hash_key: "abcxyz".to_string(),
         platform: KMConfigMobilePlatform::Android,
     };
 
     let client = KMClient::new(KMConfig::Mobile(config));
 
-    let manga = client.get_titles(vec![10007]).await.umwrap();
+    let manga = client.get_titles(vec![10007]).await.unwrap();
     println!("{:?}", manga[0]);
 }
 ```
@@ -48,6 +48,19 @@ $ tosho km auth email password -t android
 
 ```bash
 $ tosho km auth email password -t ios
+```
+
+Or, if you use this crates as library:
+
+```rust
+use tosho_kmkc::{KMClient, KMConfigMobilePlatform};
+
+#[tokio::main]
+async fn main() {
+    let login_res = KMClient::login("test@mail.com", "mypassword", None).await.unwrap();
+    // Or, with mobile platform
+    let login_res = KMClient::login("test@mail.com", "mypassword", Some(KMConfigMobilePlatform::Android)).await.unwrap();
+}
 ```
 
 There is no significant difference between Android and iOS.

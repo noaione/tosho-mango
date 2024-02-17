@@ -1,4 +1,14 @@
-use core::panic;
+//! Provides the configuration Struct for the client.
+//!
+//! ```rust
+//! use tosho_kmkc::{KMConfigMobile, KMConfigMobilePlatform};
+//!
+//! let config = KMConfigMobile {
+//!     user_id: "123".to_string(),
+//!     hash_key: "abcxyz".to_string(),
+//!     platform: KMConfigMobilePlatform::Android,
+//! };
+//! ```
 
 use reqwest::Url;
 use reqwest_cookie_store::{CookieStoreMutex, RawCookie};
@@ -8,6 +18,7 @@ use urlencoding::{decode, encode};
 
 use crate::constants::BASE_HOST;
 
+/// Key value mapping for web cookies
 #[derive(Debug, serde::Deserialize, serde::Serialize, Clone)]
 pub struct KMConfigWebKV {
     /// The value of the cookie/key
@@ -16,6 +27,7 @@ pub struct KMConfigWebKV {
     pub expires: i64,
 }
 
+/// Key value mapping for web cookies with [`i64`] as a value
 #[derive(Debug, serde::Deserialize, serde::Serialize, Clone)]
 pub struct KMConfigWebKV64 {
     /// The value of the cookie/key
@@ -261,6 +273,7 @@ fn parse_cookie_as_str_kv(cookie_value: &str) -> KMConfigWebKV {
     }
 }
 
+/// Error when parsing a netscape cookie string into a [`KMConfigWeb`] fails
 pub struct KMConfigWebFromStrError {
     line: String,
 }

@@ -1,3 +1,7 @@
+//! A module containing information related to titles/manga.
+//!
+//! If something is missing, please [open an issue](https://github.com/noaione/tosho-mango/issues/new/choose) or a [pull request](https://github.com/noaione/tosho-mango/compare).
+
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 

@@ -1,3 +1,18 @@
+//! Provides image descrambling functionality.
+//!
+//! As default, **`4`** is used for `rectbox` parameter while `seed` can be found in the
+//!
+//! [`crate::models::WebEpisodeViewerResponse`] response by requesting from
+//! [`crate::KMClient::get_episode_viewer`] method.
+//!
+//! ```rust,no_run
+//! use tosho_kmkc::imaging::descramble_image;
+//!
+//! let img_bytes = [0_u8; 100];
+//!
+//! let descrambled_img_bytes = descramble_image(&img_bytes, 4, 749191485).unwrap();
+//! ```
+
 use std::io::Cursor;
 
 use image::{GenericImage, GenericImageView, ImageEncoder};
@@ -76,7 +91,7 @@ fn generate_copy_targets(rectbox: u32, seed: u32) -> Vec<((u32, u32), (u32, u32)
 /// # Arguments
 /// * `img_bytes` - Image bytes to descramble.
 /// * `rectbox` - How much block that divide the images, usually `4`.
-/// * `scramble_seed` - The seed used to scramble the image. Available in the [`models::WebEpisodeViewerResponse`]
+/// * `scramble_seed` - The seed used to scramble the image. Available in the [`crate::models::WebEpisodeViewerResponse`]
 ///                     response.
 ///
 /// # Example

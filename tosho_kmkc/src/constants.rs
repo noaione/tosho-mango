@@ -1,3 +1,13 @@
+//! Provides constants used in the library.
+//!
+//! All the following structs are a lazy static.
+//!
+//! ```rust
+//! use tosho_kmkc::constants::get_constants;
+//!
+//! let _ = get_constants(2); // Android
+//! ```
+
 use base64::{engine::general_purpose, Engine as _};
 use lazy_static::lazy_static;
 
@@ -100,6 +110,8 @@ lazy_static! {
             hash: hash_header,
         }
     };
+
+    /// The base API used for overall requests.
     pub static ref BASE_API: String = {
         String::from_utf8(
             general_purpose::STANDARD
@@ -108,6 +120,7 @@ lazy_static! {
         )
         .expect("Invalid base64 string (BASE_API)")
     };
+    /// The base image URL used for image requests.
     pub static ref BASE_IMG: String = {
         String::from_utf8(
             general_purpose::STANDARD
@@ -145,6 +158,9 @@ lazy_static! {
         .expect("Invalid base64 string (IMAGE_HOST)")
     };
 
+    /// The ranking tabs used for the ranking endpoint.
+    ///
+    /// See: [`crate::KMClient::get_all_rankings`] for more info
     pub static ref RANKING_TABS: Vec<RankingTab> = vec![
         RankingTab::new(3, "Action", "action"),
         RankingTab::new(4, "Sports", "sports"),
