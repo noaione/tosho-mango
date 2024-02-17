@@ -15,13 +15,13 @@ use tosho_sjv::{SJClient, SJConfig, SJMode, SJPlatform};
 async fn main() {
     let config = SJConfig {
         user_id: 123,
-        token: "xyz987abc",
-        instance: "abcxyz",
+        token: "xyz987abc".to_string(),
+        instance: "abcxyz".to_string(),
         platform: SJPlatform::Android,
     };
 
     let client = SJClient::new(config, SJMode::VM);
-    let manga = client.get_manga(777).await.unwrap();
+    let manga = client.get_manga(vec![777]).await.unwrap();
     println!("{:?}", manga);
 }
 ```

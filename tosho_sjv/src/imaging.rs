@@ -3,7 +3,7 @@
 //! The original image must be scrambled and contains
 //! relevant EXIF metadata to descramble the image.
 //!
-//! ```rust
+//! ```rust,no_run
 //! use tosho_sjv::imaging::descramble_image;
 //!
 //! let img_bytes = [0_u8; 100];

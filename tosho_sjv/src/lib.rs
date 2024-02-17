@@ -8,20 +8,20 @@
 //!
 //! Download the [`tosho`] app, or you can utilize this crate like any other Rust crate:
 //!
-//! ```rust
+//! ```rust,no_run
 //! use tosho_sjv::{SJClient, SJConfig, SJMode, SJPlatform};
 //!
 //! #[tokio::main]
 //! async fn main() {
 //!     let config = SJConfig {
 //!         user_id: 123,
-//!         token: "xyz987abc",
-//!         instance: "abcxyz",
+//!         token: "xyz987abc".to_string(),
+//!         instance: "abcxyz".to_string(),
 //!         platform: SJPlatform::Android,
 //!     };
 //!
 //!     let client = SJClient::new(config, SJMode::VM);
-//!     let manga = client.get_manga(777).await.unwrap();
+//!     let manga = client.get_manga(vec![777]).await.unwrap();
 //!     println!("{:?}", manga);
 //! }
 //! ```
@@ -36,7 +36,7 @@
 //!
 //! Or, if you use the crates:
 //!
-//! ```rust
+//! ```rust,no_run
 //! use tosho_sjv::{SJClient, SJConfig, SJMode, SJPlatform};
 //!
 //! #[tokio::main]
@@ -87,13 +87,13 @@ pub use config::*;
 /// async fn main() {
 ///     let config = SJConfig {
 ///         user_id: 123,
-///         token: "xyz987abc",
-///         instance: "abcxyz",
+///         token: "xyz987abc".to_string(),
+///         instance: "abcxyz".to_string(),
 ///         platform: SJPlatform::Android,
 ///     };
 ///
 ///     let client = SJClient::new(config, SJMode::VM);
-///     let manga = client.get_manga(777).await.unwrap();
+///     let manga = client.get_manga(vec![777]).await.unwrap();
 ///     println!("{:?}", manga);
 /// }
 /// ```

@@ -5,8 +5,8 @@
 //!
 //! let config = SJConfig {
 //!     user_id: 123,
-//!     token: "xyz987abc",
-//!     instance: "abcxyz",
+//!     token: "xyz987abc".to_string(),
+//!     instance: "abcxyz".to_string(),
 //!     platform: SJPlatform::Android,
 //! };
 //! ```
@@ -56,10 +56,10 @@ pub enum SJPlatform {
 ///
 /// let config = SJConfig {
 ///     user_id: 123,
-///     token: "xyz987abc",
-///     instance: "abcxyz",
+///     token: "xyz987abc".to_string(),
+///     instance: "abcxyz".to_string(),
 ///     platform: SJPlatform::Android,
-/// }
+/// };
 /// ```
 #[derive(Debug, Clone)]
 pub struct SJConfig {
