@@ -1,3 +1,56 @@
+//! # tosho-amap
+//!
+//! A minimal asynchronous client for the AM API by AP.
+//!
+//! The following crate is used by the [`tosho`] app.
+//!
+//! ## Usage
+//!
+//! Download the [`tosho`] app, or you can utilize this crate like any other Rust crate:
+//!
+//! ```rust,no_run
+//! use tosho_amap::{AMClient, AMConfig};
+//!
+//! #[tokio::main]
+//! async fn main() {
+//!     let config = AMConfig {
+//!         token: "123".to_string(),
+//!         identifier: "abcxyz".to_string(),
+//!         session_v2: "xyz987abc".to_string(),
+//!     };
+//!
+//!     let client = AMClient::new(config);
+//!
+//!     let manga = client.get_comic(48000051).await.unwrap();
+//!     println!("{:?}", manga);
+//! }
+//! ```
+//!
+//! ## Authentication
+//!
+//! The following sources only have one method of authentication, and that method uses your email and password.
+//!
+//! ```bash
+//! $ tosho am auth email password
+//! ```
+//!
+//! Or, if you use this crates as library:
+//!
+//! ```rust,no_run
+//! use tosho_amap::AMClient;
+//!
+//! #[tokio::main]
+//! async fn main() {
+//!     let login_res = AMClient::login("test@mail.com", "mypassword").await.unwrap();
+//! }
+//! ```
+//!
+//! ## License
+//!
+//! This project is licensed with MIT License ([LICENSE](https://github.com/noaione/tosho-mango/blob/master/LICENSE) or <http://opensource.org/licenses/MIT>)
+//!
+//! [`tosho`]: https://crates.io/crates/tosho
+
 use std::{collections::HashMap, sync::MutexGuard};
 
 use constants::{
@@ -24,15 +77,15 @@ const SCREEN_INCH: f64 = 61.1918658356194;
 /// Main client for interacting with the AP AM
 ///
 /// # Example
-/// ```no_run,ignore
+/// ```no_run
 /// use tosho_amap::{AMClient, AMConfig};
 ///
 /// #[tokio::main]
 /// async fn main() {
 ///     let config = AMConfig {
-///         token: "123",
-///         identifier: "abcxyz",
-///         session_v2: "xyz987abc",
+///         token: "123".to_string(),
+///         identifier: "abcxyz".to_string(),
+///         session_v2: "xyz987abc".to_string(),
 ///     };
 ///
 ///     let client = AMClient::new(config);

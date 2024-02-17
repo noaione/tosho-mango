@@ -8,11 +8,13 @@ Starting from Rust port of the project, all changes will be put into this file.
 - `SJ`: Make `DATA_VERSION_CODE` optional when sending requests
 - `MU`: Use `&static Constants` for `MUClient::new()` params (**BREAKING CHANGES**)
 - `Macros`: Add docs for `enum_error!()` macro
+- Hide `linkify` from `tosho` crates to be crate-only
 
 ### Docs
 - Add proper documentation for `tosho-macros`
 - Add proper documentation for `tosho-musq`
 - Add proper documentation for `tosho-kmkc`
+- Add proper documentation for `tosho-amap`
 - Add proper documentation for `tosho-sjv`
 
 ## [0.3.1] 2024-02-16

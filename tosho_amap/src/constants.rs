@@ -1,3 +1,13 @@
+//! Provides constants used in the library.
+//!
+//! All the following structs are a lazy static.
+//!
+//! ```rust
+//! use tosho_amap::constants::get_constants;
+//!
+//! let _ = get_constants(1); // Android
+//! ```
+
 use base64::{engine::general_purpose, Engine as _};
 use lazy_static::lazy_static;
 
@@ -14,6 +24,7 @@ pub struct Constants {
     pub(crate) version: &'static str,
 }
 
+/// A struct containing the header names used in the library.
 #[derive(Debug, Clone)]
 pub struct HeaderMapping {
     pub(crate) i: String,
@@ -23,6 +34,7 @@ pub struct HeaderMapping {
 }
 
 lazy_static! {
+    /// The name of the application.
     pub static ref APP_NAME: String = {
         String::from_utf8(
             general_purpose::STANDARD
@@ -52,6 +64,8 @@ lazy_static! {
             version: app_version,
         }
     };
+
+    /// The base API used for overall requests.
     pub static ref BASE_API: String = {
         String::from_utf8(
             general_purpose::STANDARD
@@ -60,6 +74,7 @@ lazy_static! {
         )
         .expect("Invalid base64 string (BASE_API)")
     };
+    /// The base image URL used for image requests.
     pub static ref BASE_IMG: String = {
         String::from_utf8(
             general_purpose::STANDARD
@@ -131,6 +146,7 @@ lazy_static! {
         }
     };
 
+    /// The login route used for login requests.
     pub(crate) static ref MASKED_LOGIN: String = {
         String::from_utf8(
             general_purpose::STANDARD

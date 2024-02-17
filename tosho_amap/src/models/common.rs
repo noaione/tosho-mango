@@ -1,7 +1,12 @@
+//! A module containing common models used in the library.
+//!
+//! If something is missing, please [open an issue](https://github.com/noaione/tosho-mango/issues/new/choose) or a [pull request](https://github.com/noaione/tosho-mango/compare).
+
 use serde::{Deserialize, Serialize};
 
 use super::AMAPIError;
 
+/// The header of each request result.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct ResultHeader {
     /// The result of the request.
@@ -10,6 +15,7 @@ pub struct ResultHeader {
     pub message: Option<String>,
 }
 
+/// Wrapper for [`ResultHeader`]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StatusResult {
     /// The result of the request.
@@ -56,6 +62,7 @@ impl StatusResult {
     }
 }
 
+/// The result of the request.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AMResult<R> {
     /// The result of the request.
@@ -68,6 +75,9 @@ pub struct AMResult<R> {
     pub body: Option<R>,
 }
 
+/// The result of the request.
+///
+/// Wrapper for [`AMResult`]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct APIResult<R> {
     /// The content of the request.

@@ -1,3 +1,7 @@
+//! A module containing all the errors used in the library.
+//!
+//! If something is missing, please [open an issue](https://github.com/noaione/tosho-mango/issues/new/choose) or a [pull request](https://github.com/noaione/tosho-mango/compare).
+
 /// The used error type for the API.
 #[derive(Debug)]
 pub struct AMAPIError {

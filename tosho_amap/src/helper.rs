@@ -1,3 +1,5 @@
+//! Provides a collection of helper Structs that can be used.
+
 use crate::models::{ComicEpisodeInfoNode, ComicInfo, IAPInfo};
 use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};

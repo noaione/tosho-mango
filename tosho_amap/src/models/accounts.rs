@@ -1,5 +1,10 @@
+//! A module containing information related to user account.
+//!
+//! If something is missing, please [open an issue](https://github.com/noaione/tosho-mango/issues/new/choose) or a [pull request](https://github.com/noaione/tosho-mango/compare).
+
 use serde::{Deserialize, Serialize};
 
+/// User purchase information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct IAPInfo {
     /// Bonus ticket
@@ -41,6 +46,7 @@ impl IAPInfo {
     }
 }
 
+/// A node of each available purchase product
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct IAPProductInfoNode {
     /// The product identifier
@@ -50,6 +56,7 @@ pub struct IAPProductInfoNode {
     pub notice: String,
 }
 
+/// A wrapper for [`IAPProductInfoNode`]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct IAPProductInfo {
     /// The product information
@@ -57,6 +64,7 @@ pub struct IAPProductInfo {
     pub info: IAPProductInfoNode,
 }
 
+/// A complete in-app purchase information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct IAPRemainder {
     /// The in-app purchase information
@@ -70,6 +78,7 @@ pub struct IAPRemainder {
     pub version: Option<u64>,
 }
 
+/// The result of a login request
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LoginResult {
     /// The account ID
@@ -90,6 +99,7 @@ pub struct LoginResult {
     pub info: IAPInfo,
 }
 
+/// A minimal user account information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AccountUserInfo {
     /// The account ID
@@ -103,6 +113,7 @@ pub struct AccountUserInfo {
     pub image_url: String,
 }
 
+/// Response for user account information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AccountUserResponse {
     /// The account information

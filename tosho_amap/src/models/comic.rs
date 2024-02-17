@@ -1,7 +1,12 @@
+//! A module containing information related to comic/manga.
+//!
+//! If something is missing, please [open an issue](https://github.com/noaione/tosho-mango/issues/new/choose) or a [pull request](https://github.com/noaione/tosho-mango/compare).
+
 use serde::{Deserialize, Serialize};
 
 use super::{ComicStatus, IAPInfo};
 
+/// A simple comic information node used in search and discovery.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComicSimpleInfoNode {
     /// The comic ID
@@ -18,6 +23,7 @@ pub struct ComicSimpleInfoNode {
     pub new_update: bool,
 }
 
+/// Wrapper for [`ComicSimpleInfoNode`]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComicSimpleInfo {
     /// The comic information
@@ -25,6 +31,7 @@ pub struct ComicSimpleInfo {
     pub info: ComicSimpleInfoNode,
 }
 
+/// The current banner information for the comic discovery.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComicBannerInfoNode {
     /// The comic ID
@@ -35,6 +42,7 @@ pub struct ComicBannerInfoNode {
     pub cover_url: String,
 }
 
+/// Wrapper for [`ComicBannerInfoNode`]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComicBannerInfo {
     /// The comic banner information
@@ -42,6 +50,7 @@ pub struct ComicBannerInfo {
     pub info: ComicBannerInfoNode,
 }
 
+/// The comic discovery header information.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComicDiscoveryHeader {
     /// The comic discovery header ID
@@ -52,6 +61,7 @@ pub struct ComicDiscoveryHeader {
     pub complete: Option<u64>, // what?
 }
 
+/// The comic discovery node.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComicDiscoveryNode {
     /// The discovery node header
@@ -61,6 +71,7 @@ pub struct ComicDiscoveryNode {
     pub comics: Vec<ComicSimpleInfo>,
 }
 
+/// The paginated response for comic discovery.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComicDiscoveryPaginatedResponse {
     /// The discovery node comics
@@ -70,6 +81,7 @@ pub struct ComicDiscoveryPaginatedResponse {
     pub next_page: bool,
 }
 
+/// The search response for comic discovery.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComicSearchResponse {
     /// The discovery node comics
@@ -81,6 +93,7 @@ pub struct ComicSearchResponse {
     pub next_page: bool,
 }
 
+/// The comic discovery response.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComicDiscovery {
     /// The comic discovery banners
@@ -100,6 +113,7 @@ pub struct ComicDiscovery {
     pub completed: Vec<ComicDiscoveryNode>,
 }
 
+/// The comic free daily ticket usage information.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComicInfoFreeDaily {
     /// The next free daily time in UNIX timestamp
@@ -110,6 +124,7 @@ pub struct ComicInfoFreeDaily {
     pub term: String,
 }
 
+/// A single comic episode information node.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComicEpisodeInfoNode {
     /// The episode ID
@@ -162,6 +177,7 @@ impl ComicEpisodeInfoNode {
     }
 }
 
+/// Wrapper for [`ComicEpisodeInfoNode`]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComicEpisodeInfo {
     /// The episode information
@@ -169,6 +185,7 @@ pub struct ComicEpisodeInfo {
     pub info: ComicEpisodeInfoNode,
 }
 
+/// Author information node on a series/comic.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComicAuthorInfoNode {
     /// The author ID
@@ -185,6 +202,7 @@ pub struct ComicAuthorInfoNode {
     pub description: Option<String>,
 }
 
+/// Wrapper for [`ComicAuthorInfoNode`]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComicAuthorInfo {
     /// The author information
@@ -192,6 +210,7 @@ pub struct ComicAuthorInfo {
     pub info: ComicAuthorInfoNode,
 }
 
+/// Tag information node on a series/comic.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComicTagInfoNode {
     /// The tag ID
@@ -202,6 +221,7 @@ pub struct ComicTagInfoNode {
     pub name: String,
 }
 
+/// Wrapper for [`ComicTagInfoNode`]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComicTagInfo {
     /// The tag information
@@ -209,6 +229,7 @@ pub struct ComicTagInfo {
     pub info: ComicTagInfoNode,
 }
 
+/// A complete comic information.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComicInfo {
     /// The comic title
@@ -259,6 +280,7 @@ pub struct ComicInfo {
     pub free_daily: Option<ComicInfoFreeDaily>,
 }
 
+/// A single volume information node.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComicVolumeBookInfoNode {
     /// The volume title
@@ -269,6 +291,7 @@ pub struct ComicVolumeBookInfoNode {
     pub detail_url: String,
 }
 
+/// Wrapper for [`ComicVolumeBookInfoNode`]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComicVolumeBookInfo {
     /// The volume information
@@ -276,6 +299,7 @@ pub struct ComicVolumeBookInfo {
     pub info: ComicVolumeBookInfoNode,
 }
 
+/// The comic information response.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComicInfoResponse {
     /// The comic information
@@ -289,12 +313,14 @@ pub struct ComicInfoResponse {
     pub account: IAPInfo,
 }
 
+/// The comic read page information node.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComicReadPageNode {
     /// The page URL
     pub url: String,
 }
 
+/// Wrapper for [`ComicReadPageNode`]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComicReadPage {
     /// The page information
@@ -302,6 +328,7 @@ pub struct ComicReadPage {
     pub info: ComicReadPageNode,
 }
 
+/// The comic read information.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComicReadInfo {
     /// The episode ID
@@ -324,6 +351,7 @@ pub struct ComicReadInfo {
     pub last_page: Option<String>,
 }
 
+/// The comic read response.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComicReadResponse {
     /// The episode information

@@ -1,3 +1,15 @@
+//! Provides the configuration Struct for the client.
+//!
+//! ```rust
+//! use tosho_amap::AMConfig;
+//!
+//! let config = AMConfig {
+//!     token: "123".to_string(),
+//!     identifier: "abcxyz".to_string(),
+//!     session_v2: "xyz987abc".to_string(),
+//! };
+//! ```
+
 use base64::{engine::general_purpose, Engine as _};
 use reqwest::Url;
 use reqwest_cookie_store::{CookieStoreMutex, RawCookie};
@@ -5,6 +17,7 @@ use reqwest_cookie_store::{CookieStoreMutex, RawCookie};
 use crate::constants::BASE_HOST;
 
 lazy_static::lazy_static! {
+    /// The cookie name used for session_v2, lazy static.
     pub static ref SESSION_COOKIE_NAME: String = {
         String::from_utf8(
             general_purpose::STANDARD
@@ -15,6 +28,7 @@ lazy_static::lazy_static! {
     };
 }
 
+/// Represents the configuration for the client.
 #[derive(Debug, Clone)]
 pub struct AMConfig {
     /// The token of the account
