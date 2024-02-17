@@ -3,12 +3,16 @@
 Starting from Rust port of the project, all changes will be put into this file.
 
 ## Unreleased (git master)
+
+Nothing yet!
+
+## [0.3.2] 2024-02-17
 ### Changes
 - `SJ`: Properly login with requested platform.
 - `SJ`: Make `DATA_VERSION_CODE` optional when sending requests
 - `MU`: Use `&static Constants` for `MUClient::new()` params (**BREAKING CHANGES**)
 - `Macros`: Add docs for `enum_error!()` macro
-- Hide `linkify` from `tosho` crates to be crate-only
+- Make `linkify` from `tosho` crates to be crate-only (a.k.a hide it)
 
 ### Docs
 - Add proper documentation for `tosho-macros`
@@ -16,6 +20,9 @@ Starting from Rust port of the project, all changes will be put into this file.
 - Add proper documentation for `tosho-kmkc`
 - Add proper documentation for `tosho-amap`
 - Add proper documentation for `tosho-sjv`
+
+### Build
+- Make all source crate to not follow workspace version.
 
 ## [0.3.1] 2024-02-16
 ### New features
@@ -31,7 +38,7 @@ Starting from Rust port of the project, all changes will be put into this file.
 ### Build
 - Pin `windows-sys` dependencies (If you use crates.io, this is already pinned in `0.3.0`)
 - Remove `mime` as direct dependency
-- `tosho-macros` now pinned to 0.3.0 unless there's any changes
+- Make `tosho-macros` to not follow workspace versioning.
 
 ## [0.3.0] 2024-02-14
 ### New Features

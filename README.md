@@ -24,7 +24,7 @@ All of the implementations started as a personal script that I used before I dec
 - I want to have my own local copy for my self-hosted instance.
 - And, I'm kinda burned out from doing a *certain* thing and hope someone else can handle it.
 
-This is just a fun side project, and as a disclaimer, I'm not condoning anything that will get you into trouble.
+This is just a fun side project, and as a disclaimer, I'm not condoning anything that will get you into trouble and I'm not responsible if you got banned from the platform you're using.
 
 ## Installation
 
