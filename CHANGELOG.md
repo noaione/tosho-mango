@@ -6,7 +6,7 @@ Starting from Rust port of the project, all changes will be put into this file.
 
 Nothing yet!
 
-## [0.3.3] 2024-02-18
+## [0.3.3] 2024-02-17
 ### Changes
 - Self update now should support windows zip properly.
 
