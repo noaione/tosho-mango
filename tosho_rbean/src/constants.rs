@@ -3,7 +3,7 @@
 //! All the following structs are a lazy static.
 //!
 //! ```rust
-//! use tosho_amap::constants::get_constants;
+//! use tosho_rbean::constants::get_constants;
 //!
 //! let _ = get_constants(1); // Web
 //! ```
@@ -84,7 +84,7 @@ lazy_static! {
 ///
 /// # Examples
 /// ```
-/// use tosho_amap::constants::get_constants;
+/// use tosho_rbean::constants::get_constants;
 ///
 /// let _ = get_constants(1); // Web
 /// ```
