@@ -313,7 +313,7 @@ impl MUClient {
             .send()
             .await?;
 
-        Ok(parse_response(res).await?)
+        parse_response(res).await
     }
 
     // <-- PointEndpoints.kt
@@ -365,7 +365,7 @@ impl MUClient {
             .send()
             .await?;
 
-        Ok(parse_response(res).await?)
+        parse_response(res).await
     }
 
     /// Search manga by query.
@@ -385,7 +385,7 @@ impl MUClient {
             .send()
             .await?;
 
-        Ok(parse_response(res).await?)
+        parse_response(res).await
     }
 
     /// Search manga by tag.
@@ -405,7 +405,7 @@ impl MUClient {
             .send()
             .await?;
 
-        Ok(parse_response(res).await?)
+        parse_response(res).await
     }
 
     // <-- MangaEndpoints.kt
@@ -464,7 +464,7 @@ impl MUClient {
             .send()
             .await?;
 
-        Ok(parse_response(res).await?)
+        parse_response(res).await
     }
 
     /// Get your account setting.
@@ -476,7 +476,7 @@ impl MUClient {
             .send()
             .await?;
 
-        Ok(parse_response(res).await?)
+        parse_response(res).await
     }
 
     // <-- AccountEndpoints.kt
@@ -492,7 +492,7 @@ impl MUClient {
             .send()
             .await?;
 
-        Ok(parse_response(res).await?)
+        parse_response(res).await
     }
 
     /// Get your personalized home view.
@@ -511,7 +511,7 @@ impl MUClient {
             .send()
             .await?;
 
-        Ok(parse_response(res).await?)
+        parse_response(res).await
     }
 
     // <-- Api.kt (Personalized)
