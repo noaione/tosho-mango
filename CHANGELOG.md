@@ -3,8 +3,8 @@
 Starting from Rust port of the project, all changes will be put into this file.
 
 ## Unreleased (git master)
-
-Nothing yet!
+### Changes
+- `MU`: Refactor API response parsing
 
 ## [0.3.3] 2024-02-17
 ### Changes

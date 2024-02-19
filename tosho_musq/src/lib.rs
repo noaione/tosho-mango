@@ -76,7 +76,6 @@ use futures_util::StreamExt;
 pub use helper::ConsumeCoin;
 pub use helper::ImageQuality;
 pub use helper::WeeklyCode;
-use prost::Message;
 use std::collections::HashMap;
 use std::io::Cursor;
 use tokio::io::{self, AsyncWriteExt};
@@ -300,17 +299,9 @@ impl MUClient {
             .send()
             .await?;
 
-        if res.status().is_success() {
-            let bytes_data = res.bytes().await?;
-            let cursor = bytes_data.as_ref();
-
-            Ok(PointShopView::decode(&mut Cursor::new(cursor))
-                .unwrap()
-                .user_point
-                .unwrap())
-        } else {
-            anyhow::bail!("Failed to get user point: {}", res.status())
-        }
+        parse_response::<PointShopView>(res)
+            .await
+            .map(|x| x.user_point.unwrap())
     }
 
     /// Get your point acquisition history.
@@ -322,14 +313,7 @@ impl MUClient {
             .send()
             .await?;
 
-        if res.status().is_success() {
-            let bytes_data = res.bytes().await?;
-            let cursor = bytes_data.as_ref();
-
-            Ok(PointHistoryView::decode(&mut Cursor::new(cursor)).unwrap())
-        } else {
-            anyhow::bail!("Failed to get point history: {}", res.status())
-        }
+        Ok(parse_response(res).await?)
     }
 
     // <-- PointEndpoints.kt
@@ -355,19 +339,13 @@ impl MUClient {
             .send()
             .await?;
 
-        if res.status().is_success() {
-            let bytes_data = res.bytes().await?;
-            let cursor = bytes_data.as_ref();
+        let manga = parse_response::<MangaDetailV2>(res).await?;
 
-            let manga = MangaDetailV2::decode(&mut Cursor::new(cursor)).unwrap();
-            if manga.status() != Status::Success {
-                anyhow::bail!("Failed to get manga detail: {:?}", manga.status())
-            }
-
-            Ok(manga)
-        } else {
-            anyhow::bail!("Failed to get manga detail: {}", res.status())
+        if manga.status() != Status::Success {
+            anyhow::bail!("Failed to get manga detail: {:?}", manga.status())
         }
+
+        Ok(manga)
     }
 
     /// Get weekly manga updates.
@@ -387,14 +365,7 @@ impl MUClient {
             .send()
             .await?;
 
-        if res.status().is_success() {
-            let bytes_data = res.bytes().await?;
-            let cursor = bytes_data.as_ref();
-
-            Ok(MangaResults::decode(&mut Cursor::new(cursor)).unwrap())
-        } else {
-            anyhow::bail!("Failed to get weekly titles: {}", res.status())
-        }
+        Ok(parse_response(res).await?)
     }
 
     /// Search manga by query.
@@ -414,14 +385,7 @@ impl MUClient {
             .send()
             .await?;
 
-        if res.status().is_success() {
-            let bytes_data = res.bytes().await?;
-            let cursor = bytes_data.as_ref();
-
-            Ok(MangaResults::decode(&mut Cursor::new(cursor)).unwrap())
-        } else {
-            anyhow::bail!("Failed to search manga: {}", res.status())
-        }
+        Ok(parse_response(res).await?)
     }
 
     /// Search manga by tag.
@@ -441,14 +405,7 @@ impl MUClient {
             .send()
             .await?;
 
-        if res.status().is_success() {
-            let bytes_data = res.bytes().await?;
-            let cursor = bytes_data.as_ref();
-
-            Ok(MangaResults::decode(&mut Cursor::new(cursor)).unwrap())
-        } else {
-            anyhow::bail!("Failed to search manga by tag: {}", res.status())
-        }
+        Ok(parse_response(res).await?)
     }
 
     // <-- MangaEndpoints.kt
@@ -486,19 +443,12 @@ impl MUClient {
             .await
             .unwrap();
 
-        if res.status().is_success() {
-            let bytes_data = res.bytes().await.unwrap();
-            let cursor = bytes_data.as_ref();
-
-            let viewer = ChapterViewerV2::decode(&mut Cursor::new(cursor)).unwrap();
-            if viewer.status() != Status::Success {
-                anyhow::bail!("Failed to get chapter viewer: {:?}", viewer.status())
-            }
-
-            Ok(viewer)
-        } else {
-            anyhow::bail!("Failed to get chapter viewer: {}", res.status())
+        let viewer: ChapterViewerV2 = parse_response(res).await?;
+        if viewer.status() != Status::Success {
+            anyhow::bail!("Failed to get chapter viewer: {:?}", viewer.status())
         }
+
+        Ok(viewer)
     }
 
     // <-- ChapterEndpoints.kt
@@ -514,14 +464,7 @@ impl MUClient {
             .send()
             .await?;
 
-        if res.status().is_success() {
-            let bytes_data = res.bytes().await?;
-            let cursor = bytes_data.as_ref();
-
-            Ok(AccountView::decode(&mut Cursor::new(cursor)).unwrap())
-        } else {
-            anyhow::bail!("Failed to get account information: {}", res.status())
-        }
+        Ok(parse_response(res).await?)
     }
 
     /// Get your account setting.
@@ -533,14 +476,7 @@ impl MUClient {
             .send()
             .await?;
 
-        if res.status().is_success() {
-            let bytes_data = res.bytes().await?;
-            let cursor = bytes_data.as_ref();
-
-            Ok(SettingView::decode(&mut Cursor::new(cursor)).unwrap())
-        } else {
-            anyhow::bail!("Failed to get account setting: {}", res.status())
-        }
+        Ok(parse_response(res).await?)
     }
 
     // <-- AccountEndpoints.kt
@@ -556,14 +492,7 @@ impl MUClient {
             .send()
             .await?;
 
-        if res.status().is_success() {
-            let bytes_data = res.bytes().await?;
-            let cursor = bytes_data.as_ref();
-
-            Ok(MyPageView::decode(&mut Cursor::new(cursor)).unwrap())
-        } else {
-            anyhow::bail!("Failed to get my manga: {}", res.status())
-        }
+        Ok(parse_response(res).await?)
     }
 
     /// Get your personalized home view.
@@ -582,14 +511,7 @@ impl MUClient {
             .send()
             .await?;
 
-        if res.status().is_success() {
-            let bytes_data = res.bytes().await?;
-            let cursor = bytes_data.as_ref();
-
-            Ok(HomeViewV2::decode(&mut Cursor::new(cursor)).unwrap())
-        } else {
-            anyhow::bail!("Failed to get my home: {}", res.status())
-        }
+        Ok(parse_response(res).await?)
     }
 
     // <-- Api.kt (Personalized)
@@ -672,4 +594,18 @@ impl MUClient {
     }
 
     // <-- Downloader
+}
+
+async fn parse_response<T>(res: reqwest::Response) -> anyhow::Result<T>
+where
+    T: ::prost::Message + Default + Clone,
+{
+    if res.status().is_success() {
+        let bytes_data = res.bytes().await?;
+        let cursor = bytes_data.as_ref();
+
+        Ok(T::decode(&mut Cursor::new(cursor))?)
+    } else {
+        anyhow::bail!("MU! request failed with status: {}", res.status())
+    }
 }
