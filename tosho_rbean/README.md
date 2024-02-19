@@ -9,6 +9,19 @@ The following crate is used by the [`tosho`](tosho) app.
 Download the [`tosho`](tosho) app, or you can utilize this crate like any other Rust crate:
 
 ```rust
+use tosho_rbean::{RBClient, RBConfig, RBPlatform};
+
+#[tokio::main]
+async fn main() {
+    let config = RBConfig {
+        token: "123".to_string(),
+        refresh_token: "abcxyz".to_string(),
+        platform: RBPlatform::Android,
+    };
+    let mut client = RBClient::new(config);
+    // Refresh token
+    client.refresh_token().await.unwrap();
+}
 ```
 
 ## Authentication
