@@ -14,15 +14,38 @@ use lazy_static::lazy_static;
 /// A struct containing constants used in the library.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Constants {
-    /// The user agent string used for all requests.
-    pub(crate) ua: String,
+    /// The user agent string used for API requests.
+    pub(crate) ua: &'static str,
+    /// The user agent string used for image requests.
+    pub(crate) image_ua: &'static str,
+    /// Public key used for authentication.
+    pub(crate) public: String,
 }
 
 lazy_static! {
-    /// The constants used for Web devices.
-    pub static ref WEB_CONSTANTS: Constants = {
+    /// Token key used for authentication.
+    pub(crate) static ref TOKEN_AUTH: String = {
+        String::from_utf8(
+            general_purpose::STANDARD
+                .decode("QUl6YVN5Q0s1RFhJUlVIOGx0VHZtMzI2UHNzLVlGN1VEbTJidHJvDQo=")
+                .expect("Failed to decode base64 TOKEN_AUTH")
+        )
+        .expect("Invalid base64 string (TOKEN_AUTH)")
+    };
+
+    /// The constants used for Android devices.
+    pub static ref ANDROID_CONSTANTS: Constants = {
+        let public = String::from_utf8(
+            general_purpose::STANDARD
+                .decode("TVA2d2J1WkF3Mm5UTTlQUVQ4R2ZGNGZzDQo=")
+                .expect("Failed to decode base64 ANDROID_PUBLIC")
+        )
+        .expect("Invalid base64 string (ANDROID_PUBLIC)");
+
         Constants {
-            ua: "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:122.0) Gecko/20100101 Firefox/122.0".to_string(),
+            ua: "okhttp/4.9.0",
+            image_ua: "Dalvik/2.1.0 (Linux; U; Android 12; SM-G935F Build/SQ3A.220705.004)",
+            public,
         }
     };
 
@@ -86,11 +109,11 @@ lazy_static! {
 /// ```
 /// use tosho_rbean::constants::get_constants;
 ///
-/// let _ = get_constants(1); // Web
+/// let _ = get_constants(1); // Android
 /// ```
 pub fn get_constants(device_type: u8) -> &'static Constants {
     match device_type {
-        1 => &WEB_CONSTANTS,
+        1 => &ANDROID_CONSTANTS,
         _ => panic!("Invalid device type"),
     }
 }
