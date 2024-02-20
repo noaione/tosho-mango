@@ -3,6 +3,9 @@
 Starting from Rust port of the project, all changes will be put into this file.
 
 ## Unreleased (git master)
+### New Features
+- Added **`小豆 (Red Bean)`** as a new source
+
 ### Changes
 - `MU`: Refactor API response parsing
 
