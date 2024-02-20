@@ -281,6 +281,9 @@ impl RBClient {
             .json::<crate::models::accounts::google::SecureTokenResponse>()
             .await?;
 
+        let expires_in = secure_token_resp.expires_in.parse::<i64>().unwrap();
+        let expiry_at = chrono::Utc::now().timestamp() + expires_in - 3;
+
         // Step 4: Auth with 小豆
         let request = client
             .post(&format!("{}/user/v0", *BASE_API))
@@ -312,6 +315,7 @@ impl RBClient {
             platform,
             user: user_resp,
             google_account: goog_user,
+            expiry: expiry_at,
         })
     }
 }
@@ -333,4 +337,6 @@ pub struct RBLoginResponse {
     pub user: UserAccount,
     /// Detailed google account information
     pub google_account: crate::models::accounts::google::IdentityToolkitAccountInfo,
+    /// Expiry time of the token
+    pub expiry: i64,
 }
