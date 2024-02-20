@@ -1,3 +1,28 @@
+use serde::{Deserialize, Serialize};
+
+use super::Image;
+
+/// User account information
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UserAccount {
+    /// The UUID of the user.
+    pub uuid: String,
+    /// The username or handle of the user.
+    #[serde(rename = "handle")]
+    pub username: Option<String>,
+    /// The email address of the user.
+    #[serde(rename = "email_address")]
+    pub email: String,
+    /// The image or avatar of the user.
+    pub image: Option<Image>,
+    /// Does the account has premium?
+    pub is_premium: bool,
+    /// The date when the premium expires.
+    ///
+    /// If [`None`] then the account does not have premium.
+    pub premium_expiration_date: Option<String>,
+}
+
 pub mod google {
     use serde::{Deserialize, Serialize};
 
