@@ -93,6 +93,10 @@ impl RBClient {
         }
     }
 
+    pub fn set_expiry_at(&mut self, expiry_at: Option<i64>) {
+        self.expiry_at = expiry_at;
+    }
+
     /// Refresh the token of the client.
     ///
     /// The following function will be called on each request to ensure the token is always valid.
@@ -115,7 +119,7 @@ impl RBClient {
         let client = reqwest::Client::new();
         let request = client
             .post("https://securetoken.googleapis.com/v1/token")
-            .header("User-Agent", self.constants.image_ua)
+            .header(reqwest::header::USER_AGENT, self.constants.image_ua)
             .query(&[("key", TOKEN_AUTH.to_string())])
             .json(&json_data)
             .send()
@@ -286,7 +290,7 @@ impl RBClient {
 
         // Step 4: Auth with 小豆
         let request = client
-            .post(&format!("{}/user/v0", *BASE_API))
+            .get(&format!("{}/user/v0", *BASE_API))
             .headers({
                 let mut headers = reqwest::header::HeaderMap::new();
                 headers.insert(

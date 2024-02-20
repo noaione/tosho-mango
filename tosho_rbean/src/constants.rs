@@ -37,7 +37,7 @@ lazy_static! {
     pub static ref ANDROID_CONSTANTS: Constants = {
         let public = String::from_utf8(
             general_purpose::STANDARD
-                .decode("TVA2d2J1WkF3Mm5UTTlQUVQ4R2ZGNGZzDQo=")
+                .decode("TVA2d2J1WkF3Mm5UTTlQUVQ4R2ZGNGZz")
                 .expect("Failed to decode base64 ANDROID_PUBLIC")
         )
         .expect("Invalid base64 string (ANDROID_PUBLIC)");
