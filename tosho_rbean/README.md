@@ -21,6 +21,8 @@ async fn main() {
     let mut client = RBClient::new(config);
     // Refresh token
     client.refresh_token().await.unwrap();
+    let user = client.get_user().await.unwrap();
+    println!("{:?}", user);
 }
 ```
 

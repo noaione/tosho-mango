@@ -2,8 +2,11 @@ pub mod config;
 pub mod constants;
 pub mod models;
 
+use std::collections::HashMap;
+
+use crate::models::UserAccount;
 pub use config::*;
-use constants::API_HOST;
+use constants::{API_HOST, BASE_API};
 use serde_json::json;
 
 /// Main client for interacting with the 小豆 (Red Bean) API
@@ -23,6 +26,8 @@ use serde_json::json;
 ///     let mut client = RBClient::new(config);
 ///     // Refresh token
 ///     client.refresh_token().await.unwrap();
+///     let user = client.get_user().await.unwrap();
+///     println!("{:?}", user);
 /// }
 /// ```
 #[derive(Debug)]
@@ -127,4 +132,56 @@ impl RBClient {
 
         Ok(())
     }
+
+    /// Get the current token of the client.
+    pub fn token(&self) -> &str {
+        &self.token
+    }
+
+    /// Get the expiry time of the token.
+    pub fn expiry_at(&self) -> Option<i64> {
+        self.expiry_at
+    }
+
+    // <-- Common Helper
+
+    async fn request<T>(
+        &mut self,
+        method: reqwest::Method,
+        url: &str,
+        json_body: Option<HashMap<String, String>>,
+    ) -> anyhow::Result<T>
+    where
+        T: serde::de::DeserializeOwned,
+    {
+        self.refresh_token().await?;
+
+        let endpoint = format!("{}{}", *BASE_API, url);
+
+        let request = match json_body {
+            Some(json_body) => self.inner.request(method, endpoint).json(&json_body),
+            None => self.inner.request(method, endpoint),
+        };
+
+        let response = request.send().await?;
+
+        if response.status().is_success() {
+            let response = response.json::<T>().await?;
+
+            Ok(response)
+        } else {
+            anyhow::bail!("Request failed with status: {}", response.status())
+        }
+    }
+
+    // --> Common Helper
+
+    // <-- UserApiInterface.kt
+
+    /// Get the current user account information.
+    pub async fn get_user(&mut self) -> anyhow::Result<UserAccount> {
+        self.request(reqwest::Method::GET, "/user/v0", None).await
+    }
+
+    // --> UserApiInterface.kt
 }
