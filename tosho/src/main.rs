@@ -9,6 +9,7 @@
 //! - [KM by KC](https://crates.io/crates/tosho-kmkc)
 //! - [AM by AP](https://crates.io/crates/tosho-amap)
 //! - [SJ/M by V](https://crates.io/crates/tosho-sjv)
+//! - [小豆 (Red Bean) by KRKR](https://crates.io/crates/tosho-rbean)
 //!
 //! ## Installation
 //!
@@ -45,6 +46,7 @@ use r#impl::amap::download::AMDownloadCliConfig;
 use r#impl::amap::AMAPCommands;
 use r#impl::client::select_single_account;
 use r#impl::parser::WeeklyCodeCli;
+use r#impl::rbean::RBeanCommands;
 use r#impl::sjv::download::SJDownloadCliConfig;
 use r#impl::sjv::SJVCommands;
 use r#impl::tools::ToolsCommands;
@@ -646,6 +648,63 @@ async fn main() {
                 SJVCommands::Subscription => {
                     r#impl::sjv::accounts::sjv_account_subscriptions(&client, &config, &t).await
                 }
+            };
+
+            std::process::exit(exit_code as i32);
+        }
+        ToshoCommands::Rbean {
+            subcommand,
+            account_id,
+        } => {
+            let early_exit = match subcommand.clone() {
+                RBeanCommands::Auth {
+                    email,
+                    password,
+                    platform,
+                } => Some(
+                    r#impl::rbean::accounts::rbean_account_login(email, password, platform, &t)
+                        .await,
+                ),
+                RBeanCommands::Accounts => Some(r#impl::rbean::accounts::rbean_accounts(&t)),
+                _ => None,
+            };
+
+            // early exit
+            if let Some(early_exit) = early_exit {
+                std::process::exit(early_exit as i32);
+            }
+
+            let config = select_single_account(account_id.as_deref(), Implementations::Rbean, &t);
+            let config = match config {
+                Some(config) => match config {
+                    config::ConfigImpl::Rbean(c) => c,
+                    _ => unreachable!(),
+                },
+                None => {
+                    t.warn("Aborted!");
+                    std::process::exit(1);
+                }
+            };
+
+            let client = r#impl::client::make_rbean_client(&config);
+            let mut client = if let Some(proxy) = parsed_proxy {
+                client.with_proxy(proxy)
+            } else {
+                client
+            };
+
+            client.set_expiry_at(Some(config.expiry));
+
+            let exit_code = match subcommand {
+                RBeanCommands::Auth {
+                    email: _,
+                    password: _,
+                    platform: _,
+                } => 0,
+                RBeanCommands::Account => {
+                    r#impl::rbean::accounts::rbean_account_info(&mut client, &config, &t).await
+                }
+                RBeanCommands::Accounts => 0,
             };
 
             std::process::exit(exit_code as i32);

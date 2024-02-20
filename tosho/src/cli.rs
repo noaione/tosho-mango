@@ -77,6 +77,16 @@ pub(crate) enum ToshoCommands {
         #[command(subcommand)]
         subcommand: SJVCommands,
     },
+    /// Download manga from 小豆 (Red Bean)
+    #[command(name = "rb")]
+    Rbean {
+        /// Account ID to use
+        #[arg(short = 'a', long = "account", default_value = None)]
+        account_id: Option<String>,
+
+        #[command(subcommand)]
+        subcommand: crate::r#impl::rbean::RBeanCommands,
+    },
     /// Additional tools to manage your downloaded manga
     Tools {
         #[command(subcommand)]

@@ -2270,6 +2270,7 @@ dependencies = [
  "tosho-kmkc",
  "tosho-macros",
  "tosho-musq",
+ "tosho-rbean",
  "tosho-sjv",
  "uuid",
  "windows-sys 0.52.0",
