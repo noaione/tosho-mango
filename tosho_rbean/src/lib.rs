@@ -6,7 +6,7 @@ use std::collections::HashMap;
 
 use crate::models::UserAccount;
 pub use config::*;
-use constants::{API_HOST, BASE_API};
+use constants::{API_HOST, BASE_API, TOKEN_AUTH};
 use serde_json::json;
 
 /// Main client for interacting with the 小豆 (Red Bean) API
@@ -116,6 +116,7 @@ impl RBClient {
         let request = client
             .post("https://securetoken.googleapis.com/v1/token")
             .header("User-Agent", self.constants.image_ua)
+            .query(&[("key", TOKEN_AUTH.to_string())])
             .json(&json_data)
             .send()
             .await?;
@@ -184,4 +185,152 @@ impl RBClient {
     }
 
     // --> UserApiInterface.kt
+
+    pub async fn login(
+        email: &str,
+        password: &str,
+        platform: RBPlatform,
+    ) -> anyhow::Result<RBLoginResponse> {
+        let constants = crate::constants::get_constants(platform as u8);
+
+        let mut headers = reqwest::header::HeaderMap::new();
+        headers.insert(
+            reqwest::header::USER_AGENT,
+            reqwest::header::HeaderValue::from_static(constants.image_ua),
+        );
+
+        let client_type = match platform {
+            RBPlatform::Android => Some("CLIENT_TYPE_ANDROID"),
+            RBPlatform::Apple => Some("CLIENT_TYPE_IOS"),
+            _ => None,
+        };
+
+        let mut json_data = json!({
+            "email": email,
+            "password": password,
+            "returnSecureToken": true,
+        });
+        if let Some(client_type) = client_type {
+            json_data["clientType"] = client_type.into();
+        }
+
+        let client = reqwest::Client::builder()
+            .default_headers(headers)
+            .build()
+            .unwrap();
+
+        let key_param = &[("key", TOKEN_AUTH.to_string())];
+
+        // Step 1: Verify password
+        let request = client
+            .post("https://www.googleapis.com/identitytoolkit/v3/relyingparty/verifyPassword")
+            .query(key_param)
+            .json(&json_data)
+            .send()
+            .await?;
+
+        let verify_resp = request
+            .json::<crate::models::accounts::google::IdentityToolkitVerifyPasswordResponse>()
+            .await?;
+
+        // Step 2: Get account info
+        let json_data = json!({
+            "idToken": verify_resp.id_token,
+        });
+
+        let request = client
+            .post("https://www.googleapis.com/identitytoolkit/v3/relyingparty/getAccountInfo")
+            .query(key_param)
+            .json(&json_data)
+            .send()
+            .await?;
+
+        let acc_info_resp = request
+            .json::<crate::models::accounts::google::IdentityToolkitAccountInfoResponse>()
+            .await?;
+
+        // Step 2.5: Find user
+        let goog_user = acc_info_resp
+            .users
+            .iter()
+            .find(|user| user.local_id == verify_resp.local_id);
+
+        if goog_user.is_none() {
+            anyhow::bail!(
+                "Google user information not found for {}",
+                verify_resp.local_id
+            );
+        }
+
+        let goog_user = goog_user.unwrap().clone();
+
+        // Step 3: Refresh token
+        let json_data = json!({
+            "grantType": "refresh_token",
+            "refreshToken": verify_resp.refresh_token,
+        });
+
+        let request = client
+            .post("https://securetoken.googleapis.com/v1/token")
+            .query(key_param)
+            .json(&json_data)
+            .send()
+            .await?;
+
+        let secure_token_resp = request
+            .json::<crate::models::accounts::google::SecureTokenResponse>()
+            .await?;
+
+        // Step 4: Auth with 小豆
+        let request = client
+            .post(&format!("{}/user/v0", *BASE_API))
+            .headers({
+                let mut headers = reqwest::header::HeaderMap::new();
+                headers.insert(
+                    reqwest::header::USER_AGENT,
+                    reqwest::header::HeaderValue::from_static(constants.ua),
+                );
+                headers.insert(
+                    "public",
+                    reqwest::header::HeaderValue::from_static(&constants.public),
+                );
+                headers.insert(
+                    "x-user-token",
+                    reqwest::header::HeaderValue::from_str(&secure_token_resp.access_token)
+                        .unwrap(),
+                );
+                headers
+            })
+            .send()
+            .await?;
+
+        let user_resp = request.json::<UserAccount>().await?;
+
+        Ok(RBLoginResponse {
+            token: secure_token_resp.access_token,
+            refresh_token: secure_token_resp.refresh_token,
+            platform,
+            user: user_resp,
+            google_account: goog_user,
+        })
+    }
+}
+
+/// Represents the login response from the 小豆 (Red Bean) API
+///
+/// The following struct is returned when you use [`RBClient::login`] method.
+///
+/// This struct wraps some other struct that can be useful for config building yourself.
+#[derive(Debug, Clone)]
+pub struct RBLoginResponse {
+    /// The token of the account
+    pub token: String,
+    /// The refresh token of the account
+    pub refresh_token: String,
+    /// The platform of the account
+    pub platform: RBPlatform,
+    /// Detailed account information
+    pub user: UserAccount,
+    /// Detailed google account information
+    pub google_account: crate::models::accounts::google::IdentityToolkitAccountInfo,
 }

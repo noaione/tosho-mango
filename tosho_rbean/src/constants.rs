@@ -27,7 +27,7 @@ lazy_static! {
     pub(crate) static ref TOKEN_AUTH: String = {
         String::from_utf8(
             general_purpose::STANDARD
-                .decode("QUl6YVN5Q0s1RFhJUlVIOGx0VHZtMzI2UHNzLVlGN1VEbTJidHJvDQo=")
+                .decode("QUl6YVN5RHR5bjg0U2J1ZFptOWFoZkgwNnYtaUppV0JZWVp1c1lrDQo=")
                 .expect("Failed to decode base64 TOKEN_AUTH")
         )
         .expect("Invalid base64 string (TOKEN_AUTH)")
