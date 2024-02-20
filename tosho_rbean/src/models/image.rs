@@ -7,7 +7,7 @@ use std::cmp::Ordering;
 use serde::{Deserialize, Serialize};
 
 /// A struct containing each image source.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Ord)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ImageSource {
     /// The URL of the image.
     pub url: String,
@@ -117,6 +117,12 @@ impl PartialOrd for ImageSource {
             self.partial_cmp(other),
             Some(Ordering::Greater | Ordering::Equal)
         )
+    }
+}
+
+impl Ord for ImageSource {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.height.cmp(&other.height)
     }
 }
 
