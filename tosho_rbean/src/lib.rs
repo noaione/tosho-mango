@@ -352,7 +352,7 @@ impl RBClient {
 
     /// Get the home page information.
     pub async fn get_home_page(&mut self) -> anyhow::Result<HomeResponse> {
-        self.request(reqwest::Method::GET, "home/v0", None).await
+        self.request(reqwest::Method::GET, "/home/v0", None).await
     }
 
     /// Get specific publisher information by their slug.
