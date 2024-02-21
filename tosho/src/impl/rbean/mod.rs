@@ -1,6 +1,7 @@
 use clap::Subcommand;
 
 pub(crate) mod accounts;
+pub(super) mod common;
 pub(crate) mod config;
 
 #[derive(Subcommand, Clone)]

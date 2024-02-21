@@ -139,12 +139,12 @@ impl RBClient {
     }
 
     /// Get the current token of the client.
-    pub fn token(&self) -> &str {
+    pub fn get_token(&self) -> &str {
         &self.token
     }
 
     /// Get the expiry time of the token.
-    pub fn expiry_at(&self) -> Option<i64> {
+    pub fn get_expiry_at(&self) -> Option<i64> {
         self.expiry_at
     }
 

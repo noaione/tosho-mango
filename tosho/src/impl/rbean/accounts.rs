@@ -6,7 +6,10 @@ use crate::{
     config::{get_all_config, save_config},
 };
 
-use super::config::{Config, DeviceType};
+use super::{
+    common::save_session_config,
+    config::{Config, DeviceType},
+};
 
 pub async fn rbean_account_login(
     email: String,
@@ -125,6 +128,8 @@ pub(crate) async fn rbean_account_info(
 
     match acc_info {
         Ok(acc_info) => {
+            save_session_config(client, account);
+
             console.info(&cformat!(
                 "Account info for <magenta,bold>{}</>:",
                 account.id
