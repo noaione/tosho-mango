@@ -1,15 +1,62 @@
+use std::str::FromStr;
+
 use serde::{Deserialize, Serialize};
 use tosho_amap::models::{ComicEpisodeInfo, ComicEpisodeInfoNode};
 use tosho_kmkc::models::EpisodeNode;
 use tosho_musq::proto::ChapterV2;
+use tosho_rbean::models::Chapter;
 use tosho_sjv::models::MangaChapterDetail;
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[serde(untagged)]
+pub enum IdDump {
+    Number(u64),
+    Uuid(String),
+}
+
+impl From<u64> for IdDump {
+    fn from(value: u64) -> Self {
+        Self::Number(value)
+    }
+}
+
+impl From<String> for IdDump {
+    fn from(value: String) -> Self {
+        if value.parse::<u64>().is_ok() {
+            Self::Number(value.parse().unwrap())
+        } else {
+            Self::Uuid(value)
+        }
+    }
+}
+
+impl FromStr for IdDump {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        if s.parse::<u64>().is_ok() {
+            Ok(Self::Number(s.parse().unwrap()))
+        } else {
+            Ok(Self::Uuid(s.to_string()))
+        }
+    }
+}
+
+impl ToString for IdDump {
+    fn to_string(&self) -> String {
+        match self {
+            Self::Number(n) => n.to_string(),
+            Self::Uuid(s) => s.clone(),
+        }
+    }
+}
 
 /// A dump info of a chapter
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ChapterDetailDump {
     /// The chapter ID.
-    pub id: u64,
+    pub id: IdDump,
     /// The main chapter name.
     pub main_name: String,
     /// The timestamp of the chapter release date.
@@ -69,7 +116,7 @@ impl From<ChapterV2> for ChapterDetailDump {
         };
 
         Self {
-            id: value.id,
+            id: value.id.into(),
             main_name: value.title,
             timestamp: pub_at,
             sub_name: value.subtitle,
@@ -85,7 +132,7 @@ impl From<EpisodeNode> for ChapterDetailDump {
 
         Self {
             main_name: value.title,
-            id: value.id as u64,
+            id: (value.id as u64).into(),
             timestamp: Some(start_time_ts),
             sub_name: None,
         }
@@ -98,7 +145,7 @@ impl From<ComicEpisodeInfoNode> for ChapterDetailDump {
     fn from(value: ComicEpisodeInfoNode) -> Self {
         Self {
             main_name: value.title,
-            id: value.id,
+            id: value.id.into(),
             timestamp: Some(value.update_date as i64),
             sub_name: None,
         }
@@ -119,8 +166,21 @@ impl From<MangaChapterDetail> for ChapterDetailDump {
     fn from(value: MangaChapterDetail) -> Self {
         Self {
             main_name: value.pretty_title(),
-            id: value.id as u64,
+            id: (value.id as u64).into(),
             timestamp: value.published_at.map(|d| d.timestamp()),
+            sub_name: None,
+        }
+    }
+}
+
+impl From<Chapter> for ChapterDetailDump {
+    /// Convert from [`tosho_rbean::models::Chapter`] into [`ChapterDetailDump`]
+    /// `_info.json` format.
+    fn from(value: Chapter) -> Self {
+        Self {
+            id: value.uuid.clone().into(),
+            main_name: value.formatted_title(),
+            timestamp: value.published.map(|d| d.timestamp()),
             sub_name: None,
         }
     }
@@ -129,11 +189,48 @@ impl From<MangaChapterDetail> for ChapterDetailDump {
 #[derive(Clone, Default, Deserialize, Serialize, Debug)]
 pub struct MangaManualMergeChapterDetail {
     pub(crate) name: String,
-    pub(crate) chapters: Vec<u64>,
+    pub(crate) chapters: Vec<IdDump>,
 }
 
 #[derive(Clone, Default, Deserialize, Serialize, Debug)]
 pub struct MangaManualMergeDetail {
     pub(crate) title: String,
     pub(crate) chapters: Vec<MangaManualMergeChapterDetail>,
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_deser_chapter_uuid() {
+        let json = r#"{
+            "id": "uuid",
+            "mainName": "Chapter 1",
+            "timestamp": 1620000000,
+            "subName": "Sub Chapter"
+        }"#;
+
+        let chapter: super::ChapterDetailDump = serde_json::from_str(json).unwrap();
+
+        assert_eq!(chapter.id, super::IdDump::Uuid("uuid".to_string()));
+        assert_eq!(chapter.main_name, "Chapter 1");
+        assert_eq!(chapter.timestamp, Some(1620000000));
+        assert_eq!(chapter.sub_name, Some("Sub Chapter".to_string()));
+    }
+
+    #[test]
+    fn test_deser_chapter_number() {
+        let json = r#"{
+            "id": 1,
+            "mainName": "Chapter 1",
+            "timestamp": 1620000000,
+            "subName": "Sub Chapter"
+        }"#;
+
+        let chapter: super::ChapterDetailDump = serde_json::from_str(json).unwrap();
+
+        assert_eq!(chapter.id, super::IdDump::Number(1));
+        assert_eq!(chapter.main_name, "Chapter 1");
+        assert_eq!(chapter.timestamp, Some(1620000000));
+        assert_eq!(chapter.sub_name, Some("Sub Chapter".to_string()));
+    }
 }
