@@ -37,6 +37,13 @@ $ tosho rb auth email password --help
 Or, if you use the crates:
 
 ```rust
+use tosho_rbean::{RBClient, RBPlatform};
+
+#[tokio::main]
+async fn main() {
+    let login_results = RBClient::login("email@test.com", "mypassword", RBPlatform::Android).await.unwrap();
+    println!("{:?}", login_results);
+}
 ```
 
 ## License
