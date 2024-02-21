@@ -152,8 +152,6 @@ pub type Spread = (Option<i32>, Option<i32>);
 pub struct ChapterPage {
     /// The UUID of the page.
     pub uuid: String,
-    /// The index of the page.
-    pub index: i32,
     /// The image of the page.
     pub image: super::Image,
     /// The watermarked image of the page.

@@ -331,6 +331,7 @@ impl RBClient {
         let res = self
             .inner
             .get(url)
+            .query(&[("drm", "1")])
             .headers({
                 let mut headers = reqwest::header::HeaderMap::new();
                 headers.insert(
