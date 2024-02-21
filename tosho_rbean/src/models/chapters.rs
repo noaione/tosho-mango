@@ -40,8 +40,12 @@ pub struct Chapter {
     /// The title of the chapter.
     pub title: String,
     /// The release date of the chapter.
-    #[serde(rename = "release_date", with = "super::datetime")]
-    pub published: chrono::DateTime<chrono::FixedOffset>,
+    #[serde(
+        rename = "release_date",
+        serialize_with = "super::datetime::serialize_opt",
+        deserialize_with = "super::datetime::deserialize_opt"
+    )]
+    pub published: Option<chrono::DateTime<chrono::FixedOffset>>,
     /// The free release date of the chapter.
     #[serde(
         rename = "free_release_date",
@@ -74,6 +78,41 @@ pub struct Chapter {
     pub last_updated: Option<chrono::DateTime<chrono::FixedOffset>>,
     /// Volume UUID of the chapter.
     pub volume_uuid: Option<String>,
+}
+
+impl Chapter {
+    /// Get a formatted chapter number with the title.
+    ///
+    /// ```rust
+    /// use tosho_rbean::models::Chapter;
+    ///
+    /// let mut chapter = Chapter {
+    ///     uuid: "uuid".to_string(),
+    ///     chapter: "1".to_string(),
+    ///     title: "".to_string(),
+    ///     published: None,
+    ///     free_published: None,
+    ///     original_published: None,
+    ///     new: false,
+    ///     upcoming: false,
+    ///     premium: false,
+    ///     last_updated: None,
+    ///     volume_uuid: None,
+    /// };
+    ///
+    /// assert_eq!(chapter.formatted_title(), "Chapter 1");
+    ///
+    /// chapter.title = "Test Title".to_string();
+    ///
+    /// assert_eq!(chapter.formatted_title(), "Chapter 1 - Test Title");
+    /// ```
+    pub fn formatted_title(&self) -> String {
+        if self.title.is_empty() {
+            format!("Chapter {}", self.chapter)
+        } else {
+            format!("Chapter {} - {}", self.chapter, self.title)
+        }
+    }
 }
 
 /// A chapter detail response.
