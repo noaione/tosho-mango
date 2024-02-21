@@ -1,17 +1,20 @@
-pub mod config;
-pub mod constants;
-pub mod models;
-
 use std::collections::HashMap;
+use tokio::io::{self, AsyncWriteExt};
 
 use crate::models::UserAccount;
 pub use config::*;
-use constants::{API_HOST, BASE_API, TOKEN_AUTH};
+use constants::{API_HOST, BASE_API, IMAGE_HOST, TOKEN_AUTH};
 use models::{
     ChapterDetailsResponse, ChapterListResponse, ChapterPageDetailsResponse, HomeResponse, Manga,
     MangaListResponse, Publisher, ReadingListItem, SortOption,
 };
 use serde_json::json;
+
+pub mod config;
+pub mod constants;
+pub mod models;
+
+const PATTERN: [u8; 1] = [174];
 
 /// Main client for interacting with the 小豆 (Red Bean) API
 ///
@@ -311,6 +314,55 @@ impl RBClient {
         .await
     }
 
+    // --> Image
+
+    /// Stream download the image from the given URL.
+    ///
+    /// The URL can be obtained from [`RBClient::get_chapter_viewer`].
+    ///
+    /// # Parameters
+    /// * `url` - The URL to download the image from.
+    /// * `writer` - The writer to write the image to.
+    pub async fn stream_download(
+        &self,
+        url: &str,
+        mut writer: impl io::AsyncWrite + Unpin,
+    ) -> anyhow::Result<()> {
+        let res = self
+            .inner
+            .get(url)
+            .headers({
+                let mut headers = reqwest::header::HeaderMap::new();
+                headers.insert(
+                    reqwest::header::USER_AGENT,
+                    reqwest::header::HeaderValue::from_static(self.constants.image_ua),
+                );
+                headers.insert(
+                    reqwest::header::HOST,
+                    reqwest::header::HeaderValue::from_str(IMAGE_HOST.as_str()).unwrap(),
+                );
+                headers
+            })
+            .send()
+            .await?;
+
+        if !res.status().is_success() {
+            anyhow::bail!("Failed to download image: {}", res.status())
+        }
+
+        let image_bytes = res.bytes().await?;
+        let image_dec = decrypt_image(&image_bytes);
+        drop(image_bytes);
+
+        writer.write_all(&image_dec).await?;
+
+        drop(image_dec);
+
+        Ok(())
+    }
+
+    // <-- Image
+
     // --> MangaApiInterface.kt
 
     pub async fn login(
@@ -466,4 +518,18 @@ pub struct RBLoginResponse {
     pub google_account: crate::models::accounts::google::IdentityToolkitAccountInfo,
     /// Expiry time of the token
     pub expiry: i64,
+}
+
+/// A simple image decryptor for the 小豆 (Red Bean) API
+///
+/// # Arguments
+/// * `data` - The image data to decrypt
+pub fn decrypt_image(data: &[u8]) -> Vec<u8> {
+    let image_data = data.to_vec();
+    let length = image_data.len();
+    let mut decrypted: Vec<u8> = vec![0; length];
+    for i in 0..length {
+        decrypted[i] = PATTERN[0] ^ image_data[i];
+    }
+    decrypted
 }
