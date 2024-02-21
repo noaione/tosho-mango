@@ -3,8 +3,12 @@
 Starting from Rust port of the project, all changes will be put into this file.
 
 ## Unreleased (git master)
+### New Features
+- Added **`小豆 (Red Bean)`** as a new source
+
 ### Changes
 - `MU`: Refactor API response parsing
+- Internally change chapter dump to support both number (`u64`) and string (`UUID`-esque)
 
 ## [0.3.3] 2024-02-17
 ### Changes

@@ -2270,6 +2270,7 @@ dependencies = [
  "tosho-kmkc",
  "tosho-macros",
  "tosho-musq",
+ "tosho-rbean",
  "tosho-sjv",
  "uuid",
  "windows-sys 0.52.0",
@@ -2340,6 +2341,22 @@ dependencies = [
  "prost",
  "reqwest",
  "serde",
+ "tokio",
+ "tosho-macros",
+]
+
+[[package]]
+name = "tosho-rbean"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "base64",
+ "chrono",
+ "futures-util",
+ "lazy_static",
+ "reqwest",
+ "serde",
+ "serde_json",
  "tokio",
  "tosho-macros",
 ]

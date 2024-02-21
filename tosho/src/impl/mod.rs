@@ -4,6 +4,7 @@ pub(crate) mod kmkc;
 pub(crate) mod models;
 pub(crate) mod musq;
 pub(super) mod parser;
+pub(crate) mod rbean;
 pub(crate) mod sjv;
 pub(crate) mod tools;
 
@@ -17,4 +18,6 @@ pub enum Implementations {
     Amap,
     /// SJ/M by V
     Sjv,
+    /// 小豆 by KRKR
+    Rbean,
 }

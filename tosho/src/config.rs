@@ -14,6 +14,7 @@ pub enum ConfigImpl {
     Musq(crate::r#impl::musq::config::Config),
     Amap(crate::r#impl::amap::config::Config),
     Sjv(crate::r#impl::sjv::config::Config),
+    Rbean(crate::r#impl::rbean::config::Config),
 }
 
 impl From<crate::r#impl::kmkc::config::Config> for ConfigImpl {
@@ -50,6 +51,12 @@ impl From<crate::r#impl::amap::config::Config> for ConfigImpl {
 impl From<crate::r#impl::sjv::config::Config> for ConfigImpl {
     fn from(config: crate::r#impl::sjv::config::Config) -> Self {
         ConfigImpl::Sjv(config)
+    }
+}
+
+impl From<crate::r#impl::rbean::config::Config> for ConfigImpl {
+    fn from(config: crate::r#impl::rbean::config::Config) -> Self {
+        ConfigImpl::Rbean(config)
     }
 }
 
@@ -181,6 +188,31 @@ fn get_config_sjv(id: &str, user_path: PathBuf) -> Option<crate::r#impl::sjv::co
 
     read_sjv_config(user_conf)
 }
+
+fn read_rbean_config(user_conf: PathBuf) -> Option<crate::r#impl::rbean::config::Config> {
+    if !user_conf.exists() {
+        None
+    } else {
+        let mut file = std::fs::File::open(user_conf).unwrap();
+        let mut buffer = Vec::new();
+        file.read_to_end(&mut buffer).unwrap();
+        drop(file);
+        let conf = crate::r#impl::rbean::config::Config::decode(&mut Cursor::new(buffer)).unwrap();
+        Some(conf)
+    }
+}
+
+fn get_config_rbean(id: &str, user_path: PathBuf) -> Option<crate::r#impl::rbean::config::Config> {
+    let mut user_conf = user_path;
+    user_conf.push(format!(
+        "{}.{}.tmconf",
+        crate::r#impl::rbean::config::PREFIX,
+        id
+    ));
+
+    read_rbean_config(user_conf)
+}
+
 pub fn get_config(
     id: &str,
     r#impl: &Implementations,
@@ -205,6 +237,10 @@ pub fn get_config(
             let conf = get_config_sjv(id, user_path);
             conf.map(ConfigImpl::Sjv)
         }
+        Implementations::Rbean => {
+            let conf = get_config_rbean(id, user_path);
+            conf.map(ConfigImpl::Rbean)
+        }
     }
 }
 
@@ -222,6 +258,7 @@ pub fn get_all_config(r#impl: &Implementations, user_path: Option<PathBuf>) -> V
         Implementations::Musq => crate::r#impl::musq::config::PREFIX,
         Implementations::Amap => crate::r#impl::amap::config::PREFIX,
         Implementations::Sjv => crate::r#impl::sjv::config::PREFIX,
+        Implementations::Rbean => crate::r#impl::rbean::config::PREFIX,
     };
     glob_path.push(format!("{}.*.tmconf", prefix));
 
@@ -253,6 +290,12 @@ pub fn get_all_config(r#impl: &Implementations, user_path: Option<PathBuf>) -> V
                 let conf = read_sjv_config(entry);
                 if let Some(conf) = conf {
                     matched_entries.push(ConfigImpl::Sjv(conf));
+                }
+            }
+            Implementations::Rbean => {
+                let conf = read_rbean_config(entry);
+                if let Some(conf) = conf {
+                    matched_entries.push(ConfigImpl::Rbean(conf));
                 }
             }
         }
@@ -336,6 +379,20 @@ pub fn save_config(config: ConfigImpl, user_path: Option<PathBuf>) {
             file.write_all(&buffer).unwrap();
             drop(file);
         }
+        ConfigImpl::Rbean(config) => {
+            let mut user_conf = user_path.clone();
+            user_conf.push(format!(
+                "{}.{}.tmconf",
+                crate::r#impl::rbean::config::PREFIX,
+                config.id
+            ));
+
+            let mut file = std::fs::File::create(user_conf).unwrap();
+            let mut buffer = Vec::new();
+            config.encode(&mut buffer).unwrap();
+            file.write_all(&buffer).unwrap();
+            drop(file);
+        }
     }
 }
 
@@ -352,6 +409,7 @@ pub fn try_remove_config(
         Implementations::Musq => crate::r#impl::musq::config::PREFIX,
         Implementations::Amap => crate::r#impl::amap::config::PREFIX,
         Implementations::Sjv => crate::r#impl::sjv::config::PREFIX,
+        Implementations::Rbean => crate::r#impl::rbean::config::PREFIX,
     };
     user_conf.push(format!("{}.{}.tmconf", prefix, id));
 

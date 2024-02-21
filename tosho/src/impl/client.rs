@@ -54,6 +54,10 @@ pub(crate) fn select_single_account(
                     c.mode().to_name()
                 ),
             },
+            crate::config::ConfigImpl::Rbean(c) => ConsoleChoice {
+                name: c.id.clone(),
+                value: format!("{} [{} - {}]", c.id, c.email, c.platform().to_name()),
+            },
         })
         .collect();
 
@@ -80,6 +84,7 @@ pub(crate) fn select_single_account(
                     },
                     crate::config::ConfigImpl::Musq(c) => c.id == selected.name,
                     crate::config::ConfigImpl::Sjv(c) => c.id == selected.name,
+                    crate::config::ConfigImpl::Rbean(c) => c.id == selected.name,
                 })
                 .unwrap();
 
@@ -109,4 +114,8 @@ pub(crate) fn make_sjv_client(config: &super::sjv::config::Config) -> tosho_sjv:
         crate::r#impl::sjv::config::SJDeviceMode::VM => tosho_sjv::SJMode::VM,
     };
     tosho_sjv::SJClient::new(config.clone().into(), mode)
+}
+
+pub(crate) fn make_rbean_client(config: &super::rbean::config::Config) -> tosho_rbean::RBClient {
+    tosho_rbean::RBClient::new(config.clone().into())
 }

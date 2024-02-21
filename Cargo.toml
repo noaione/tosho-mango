@@ -6,6 +6,7 @@ members = [
     "tosho_kmkc",
     "tosho_amap",
     "tosho_sjv",
+    "tosho_rbean",
     "tosho_macros",
 ]
 

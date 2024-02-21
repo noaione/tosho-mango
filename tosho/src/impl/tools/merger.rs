@@ -1,7 +1,8 @@
 use crate::{
     cli::ExitCode,
     r#impl::models::{
-        ChapterDetailDump, MangaDetailDump, MangaManualMergeChapterDetail, MangaManualMergeDetail,
+        ChapterDetailDump, IdDump, MangaDetailDump, MangaManualMergeChapterDetail,
+        MangaManualMergeDetail,
     },
     term::ConsoleChoice,
 };
@@ -239,11 +240,11 @@ pub fn manual_chapters_collector(
     }
 
     let mut chapters_mapping: BTreeMap<String, Vec<ChapterDetailDump>> = BTreeMap::new();
-    let mut selected_chapters: Vec<u64> = vec![];
+    let mut selected_chapters: Vec<IdDump> = vec![];
     // map chapter id to chapter
-    let mut chapter_id_map: HashMap<u64, &ChapterDetailDump> = HashMap::new();
+    let mut chapter_id_map: HashMap<IdDump, &ChapterDetailDump> = HashMap::new();
     for chapter in chapters_dump.iter() {
-        chapter_id_map.insert(chapter.id, chapter);
+        chapter_id_map.insert(chapter.id.clone(), chapter);
     }
 
     let mut first_warn = true;
@@ -289,7 +290,7 @@ pub fn manual_chapters_collector(
                 } else {
                     Some(ConsoleChoice {
                         name: ch.id.to_string(),
-                        value: format!("{} ({})", ch.main_name, ch.id),
+                        value: format!("{} ({})", ch.main_name, ch.id.to_string()),
                     })
                 }
             })
@@ -307,8 +308,8 @@ pub fn manual_chapters_collector(
             Some(merge_choice) => {
                 let chapter_ids = merge_choice
                     .iter()
-                    .map(|choice| choice.name.parse::<u64>().unwrap())
-                    .collect::<Vec<u64>>();
+                    .map(|choice| choice.name.parse::<IdDump>().unwrap())
+                    .collect::<Vec<IdDump>>();
                 if chapter_ids.is_empty() {
                     console.warn("  No chapter selected, skipping...");
                     continue;
@@ -556,7 +557,7 @@ pub(crate) async fn tools_split_merge(
             if !source_dir.exists() {
                 console.warn(&format!(
                     "   Source directory for chapter {} does not exist, skipping...",
-                    chapter.id
+                    chapter.id.to_string()
                 ));
                 continue;
             }
@@ -617,7 +618,10 @@ pub(crate) async fn tools_split_merge(
                 .chapters
                 .push(MangaManualMergeChapterDetail {
                     name: name.clone(),
-                    chapters: chapters.iter().map(|ch| ch.id).collect::<Vec<u64>>(),
+                    chapters: chapters
+                        .iter()
+                        .map(|ch| ch.id.clone())
+                        .collect::<Vec<IdDump>>(),
                 })
         }
     }
