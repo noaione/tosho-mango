@@ -4,7 +4,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use super::Image;
+use super::{Image, Label, MangaNode};
 
 /// User account information
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -25,6 +25,15 @@ pub struct UserAccount {
     ///
     /// If [`None`] then the account does not have premium.
     pub premium_expiration_date: Option<String>,
+}
+
+/// User reading list history
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ReadingListItem {
+    /// The manga being read.
+    pub manga: MangaNode,
+    /// The specific chapter being read.
+    pub chapter: Option<Label>,
 }
 
 pub mod google {
