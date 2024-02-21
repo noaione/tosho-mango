@@ -221,6 +221,7 @@ pub struct Carousel {
     /// The carousel type
     #[serde(rename = "type")]
     pub carousel_type: String,
+    #[serde(rename = "mangas")]
     /// The carousel items
     pub items: Vec<MangaNode>,
 }
