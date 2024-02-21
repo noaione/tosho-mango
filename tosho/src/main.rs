@@ -46,6 +46,7 @@ use r#impl::amap::download::AMDownloadCliConfig;
 use r#impl::amap::AMAPCommands;
 use r#impl::client::select_single_account;
 use r#impl::parser::WeeklyCodeCli;
+use r#impl::rbean::download::RBDownloadConfigCli;
 use r#impl::rbean::RBeanCommands;
 use r#impl::sjv::download::SJDownloadCliConfig;
 use r#impl::sjv::SJVCommands;
@@ -705,6 +706,47 @@ async fn main() {
                     r#impl::rbean::accounts::rbean_account_info(&mut client, &config, &t).await
                 }
                 RBeanCommands::Accounts => 0,
+                RBeanCommands::AutoDownload {
+                    uuid,
+                    output,
+                    format,
+                } => {
+                    let dl_config = RBDownloadConfigCli {
+                        no_input: true,
+                        format,
+                        ..Default::default()
+                    };
+                    r#impl::rbean::download::rbean_download(
+                        &uuid,
+                        dl_config,
+                        output.unwrap_or_else(get_default_download_dir),
+                        &mut client,
+                        &config,
+                        &mut t_mut,
+                    )
+                    .await
+                }
+                RBeanCommands::Download {
+                    uuid,
+                    chapters,
+                    output,
+                    format,
+                } => {
+                    let dl_config = RBDownloadConfigCli {
+                        format,
+                        chapter_ids: chapters.unwrap_or_default(),
+                        ..Default::default()
+                    };
+                    r#impl::rbean::download::rbean_download(
+                        &uuid,
+                        dl_config,
+                        output.unwrap_or_else(get_default_download_dir),
+                        &mut client,
+                        &config,
+                        &mut t_mut,
+                    )
+                    .await
+                }
                 RBeanCommands::Info {
                     uuid,
                     show_chapters,

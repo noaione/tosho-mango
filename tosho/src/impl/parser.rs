@@ -4,6 +4,7 @@ use clap::ValueEnum;
 use tosho_macros::EnumName;
 
 pub(crate) type CommaSeparatedNumber = Vec<usize>;
+pub(crate) type CommaSeparatedString = Vec<String>;
 
 #[derive(Clone, EnumName)]
 pub enum WeeklyCodeCli {
@@ -143,6 +144,19 @@ pub(super) fn parse_comma_number(s: &str) -> Result<CommaSeparatedNumber, String
     }
 
     Ok(numbers)
+}
+
+/// Value parser for comma separated string
+pub(super) fn parse_comma_string(s: &str) -> Result<CommaSeparatedString, String> {
+    let mut strings: Vec<String> = Vec::new();
+
+    for strdata in s.split(',') {
+        let strdata = strdata.trim();
+
+        strings.push(strdata.to_string());
+    }
+
+    Ok(strings)
 }
 
 #[cfg(test)]

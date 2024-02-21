@@ -1,4 +1,8 @@
+use std::path::PathBuf;
+
 use clap::Subcommand;
+
+use super::parser::{parse_comma_string, CommaSeparatedString};
 
 pub(crate) mod accounts;
 pub(super) mod common;
@@ -22,6 +26,32 @@ pub(crate) enum RBeanCommands {
     Account,
     /// See all the accounts you have authenticated with
     Accounts,
+    /// Automatically/batch download a chapter(s) from a title
+    #[command(name = "autodownload")]
+    AutoDownload {
+        /// UUID of the title
+        uuid: String,
+        /// Output directory to use
+        #[arg(short = 'o', long = "output", default_value = None)]
+        output: Option<PathBuf>,
+        /// Format to use
+        #[arg(short = 'f', long = "format", default_value = "jpeg")]
+        format: crate::r#impl::rbean::download::CLIDownloadFormat,
+    },
+    /// Download a chapters from a title
+    Download {
+        /// UUID of the title
+        uuid: String,
+        /// Specify the chapter UUID to purchase (ex: uuid-1,uuid-2,uuid-3)
+        #[arg(short = 'c', long = "chapters", default_value = None, value_parser = parse_comma_string)]
+        chapters: Option<CommaSeparatedString>,
+        /// Output directory to use
+        #[arg(short = 'o', long = "output", default_value = None)]
+        output: Option<PathBuf>,
+        /// Format to use
+        #[arg(short = 'f', long = "format", default_value = "jpeg")]
+        format: crate::r#impl::rbean::download::CLIDownloadFormat,
+    },
     /// Get a title information
     Info {
         /// UUID of the title
