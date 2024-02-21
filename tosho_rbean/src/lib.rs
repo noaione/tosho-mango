@@ -232,9 +232,30 @@ impl RBClient {
         let response = request.send().await?;
 
         if response.status().is_success() {
-            let response = response.json::<T>().await?;
+            let response = response.text().await?;
 
-            Ok(response)
+            let json_de = serde_json::from_str::<T>(&response);
+
+            match json_de {
+                Ok(json_de) => Ok(json_de),
+                Err(error) => {
+                    std::fs::write("error.json", &response).unwrap();
+                    let row_line = error.line() - 1;
+                    let split_lines = &response.split('\n').collect::<Vec<&str>>();
+                    let position = error.column();
+                    let start_index = position.saturating_sub(25); // Start 25 characters before the error position
+                    let end_index = position.saturating_add(25); // End 25 characters after the error position
+                    let excerpt = &split_lines[row_line][start_index..end_index];
+
+                    anyhow::bail!(
+                        "Error parsing JSON at line {}, column {}: {}\nExcerpt: '{}'",
+                        error.line(),
+                        error.column(),
+                        error,
+                        excerpt
+                    )
+                }
+            }
         } else {
             anyhow::bail!("Request failed with status: {}", response.status())
         }

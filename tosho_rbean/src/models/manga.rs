@@ -4,7 +4,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use super::{ChapterListNode, Creator, HomeGenre, Image, Publisher, Tag};
+use super::{Chapter, ChapterListNode, Creator, HomeGenre, Image, Publisher, Tag};
 
 /// Reading modes available for a manga.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -210,20 +210,58 @@ pub struct FeaturedManga {
     pub manga: MangaNode,
 }
 
+/// A node for the carousel continue reading items
+///
+/// Used in [`HomeResponse`] at [`CarouselContinueReading`]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CarouselContinueReadingNode {
+    /// The manga info
+    pub manga: MangaNode,
+    /// The chapter info
+    pub chapter: Chapter,
+}
+
+/// A struct containing information about continue reading carousel
+///
+/// Used in [`HomeResponse`]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CarouselContinueReading {
+    /// The carousel title
+    #[serde(rename = "label")]
+    pub title: String,
+    /// The carousel items
+    #[serde(rename = "mangas")]
+    pub items: Vec<CarouselContinueReadingNode>,
+}
+
+/// A struct containing information about common carousels
+///
+/// Used in [`HomeResponse`]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CarouselCommon {
+    /// The carousel title
+    #[serde(rename = "label")]
+    pub title: String,
+    /// The carousel items
+    #[serde(rename = "mangas")]
+    pub items: Vec<MangaNode>,
+}
+
 /// A struct containing information about carousels in the home page
 ///
 /// Used in [`HomeResponse`]
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Carousel {
-    /// The carousel title
-    #[serde(rename = "label")]
-    pub title: String,
-    /// The carousel type
-    #[serde(rename = "type")]
-    pub carousel_type: String,
-    #[serde(rename = "mangas")]
-    /// The carousel items
-    pub items: Vec<MangaNode>,
+#[serde(tag = "type")]
+pub enum Carousel {
+    /// Continue reading carousel
+    #[serde(rename = "series_list_continue")]
+    ContinueReading(CarouselContinueReading),
+    /// Carousel with a list of manga that will always have [`MangaNode::latest_chapters`] filled
+    #[serde(rename = "series_list_chapters")]
+    MangaWithChapters(CarouselCommon),
+    /// Carousel with a list of manga
+    #[serde(rename = "manga_list_standard")]
+    MangaList(CarouselCommon),
 }
 
 /// A struct containing information about the home page response
