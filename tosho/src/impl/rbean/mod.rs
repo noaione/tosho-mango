@@ -3,6 +3,7 @@ use clap::Subcommand;
 pub(crate) mod accounts;
 pub(super) mod common;
 pub(crate) mod config;
+pub(crate) mod download;
 pub(crate) mod manga;
 
 #[derive(Subcommand, Clone)]
