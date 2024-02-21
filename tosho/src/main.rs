@@ -763,6 +763,9 @@ async fn main() {
                     )
                     .await
                 }
+                RBeanCommands::ReadList => {
+                    r#impl::rbean::favorites::rbean_read_list(&mut client, &config, &t).await
+                }
                 RBeanCommands::Revoke => r#impl::rbean::accounts::rbean_account_revoke(&config, &t),
                 RBeanCommands::Search { query, limit, sort } => {
                     r#impl::rbean::manga::rbean_search(

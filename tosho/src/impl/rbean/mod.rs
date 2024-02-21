@@ -8,6 +8,7 @@ pub(crate) mod accounts;
 pub(super) mod common;
 pub(crate) mod config;
 pub(crate) mod download;
+pub(crate) mod favorites;
 pub(crate) mod manga;
 pub(crate) mod rankings;
 
@@ -63,6 +64,9 @@ pub(crate) enum RBeanCommands {
         #[arg(short = 'c', long = "chapters")]
         show_chapters: bool,
     },
+    /// Get the read list of your account
+    #[command(name = "readlist")]
+    ReadList,
     /// Revoke or delete an account
     Revoke,
     /// Search for a title
