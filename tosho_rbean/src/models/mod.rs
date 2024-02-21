@@ -6,11 +6,13 @@ pub mod accounts;
 pub mod chapters;
 pub mod common;
 pub(crate) mod datetime;
+pub mod enums;
 pub mod image;
 pub mod manga;
 
 pub use accounts::*;
 pub use chapters::*;
 pub use common::*;
+pub use enums::*;
 pub use image::*;
 pub use manga::*;

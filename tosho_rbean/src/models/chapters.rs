@@ -143,6 +143,13 @@ pub struct ChapterPageDetails {
     pub pages: Vec<ChapterPage>,
 }
 
+/// A response for chapter pages.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ChapterPageDetailsResponse {
+    /// The pages information.
+    pub data: ChapterPageDetails,
+}
+
 #[cfg(test)]
 mod tests {
     #[test]

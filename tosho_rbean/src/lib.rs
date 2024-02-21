@@ -7,6 +7,10 @@ use std::collections::HashMap;
 use crate::models::UserAccount;
 pub use config::*;
 use constants::{API_HOST, BASE_API, TOKEN_AUTH};
+use models::{
+    ChapterDetailsResponse, ChapterListResponse, ChapterPageDetailsResponse, HomeResponse, Manga,
+    Publisher, ReadingListItem, SortOption,
+};
 use serde_json::json;
 
 /// Main client for interacting with the 小豆 (Red Bean) API
@@ -188,7 +192,126 @@ impl RBClient {
         self.request(reqwest::Method::GET, "/user/v0", None).await
     }
 
+    /// Get the current user reading list.
+    pub async fn get_reading_list(&mut self) -> anyhow::Result<Vec<ReadingListItem>> {
+        self.request(reqwest::Method::GET, "/user/reading_list/v0", None)
+            .await
+    }
+
     // --> UserApiInterface.kt
+
+    // <-- MangaApiInterface.kt
+
+    /// Get the manga information for a specific manga.
+    ///
+    /// # Arguments
+    /// * `uuid` - The UUID of the manga.
+    pub async fn get_manga(&mut self, uuid: &str) -> anyhow::Result<Manga> {
+        self.request(reqwest::Method::GET, &format!("/manga/{}/v0", uuid), None)
+            .await
+    }
+
+    /// Get the manga filters for searching manga.
+    pub async fn get_manga_filters(&mut self) -> anyhow::Result<Manga> {
+        self.request(reqwest::Method::GET, "/manga/filters/v0", None)
+            .await
+    }
+
+    /// Get chapter list for a specific manga.
+    ///
+    /// # Arguments
+    /// * `uuid` - The UUID of the manga.
+    pub async fn get_chapter_list(&mut self, uuid: &str) -> anyhow::Result<ChapterListResponse> {
+        self.request(
+            reqwest::Method::GET,
+            &format!("/mangas/{}/chapters/v4?order=asc&count=9999&offset=0", uuid),
+            None,
+        )
+        .await
+    }
+
+    /// Get the chapter details for a specific chapter.
+    ///
+    /// # Arguments
+    /// * `uuid` - The UUID of the chapter.
+    pub async fn get_chapter(&mut self, uuid: &str) -> anyhow::Result<ChapterDetailsResponse> {
+        self.request(
+            reqwest::Method::GET,
+            &format!("/chapters/{}/v2", uuid),
+            None,
+        )
+        .await
+    }
+
+    /// Get the chapter viewer for a specific chapter.
+    ///
+    /// # Arguments
+    /// * `uuid` - The UUID of the chapter.
+    pub async fn get_chapter_viewer(
+        &mut self,
+        uuid: &str,
+    ) -> anyhow::Result<ChapterPageDetailsResponse> {
+        self.request(
+            reqwest::Method::GET,
+            &format!("/chapters/{}/pages/v1", uuid),
+            None,
+        )
+        .await
+    }
+
+    /// Do a search for a manga.
+    ///
+    /// # Arguments
+    /// * `query` - The query to search for.
+    /// * `offset` - The offset of the search result, default to `0`
+    /// * `count` - The count of the search result, default to `999`
+    /// * `sort` - The sort option of the search result, default to [`SortOption::Alphabetical`]
+    pub async fn search(
+        &mut self,
+        query: &str,
+        offset: Option<u32>,
+        count: Option<u32>,
+        sort: Option<SortOption>,
+    ) -> anyhow::Result<HomeResponse> {
+        let offset = offset.unwrap_or(0);
+        let count = count.unwrap_or(999);
+        let sort = sort.unwrap_or(SortOption::Alphabetical);
+
+        let query_param = format!(
+            "sort={}&offset={}&count={}&tags=&search_string={}&publisher_slug=",
+            sort.to_string(),
+            offset,
+            count,
+            query
+        );
+
+        self.request(
+            reqwest::Method::GET,
+            &format!("/mangas/v1?{}", query_param),
+            None,
+        )
+        .await
+    }
+
+    /// Get the home page information.
+    pub async fn get_home_page(&mut self) -> anyhow::Result<HomeResponse> {
+        self.request(reqwest::Method::GET, "home/v0", None).await
+    }
+
+    /// Get specific publisher information by their slug.
+    ///
+    /// # Arguments
+    /// * `slug` - The slug of the publisher.
+    pub async fn get_publisher(&mut self, slug: &str) -> anyhow::Result<Publisher> {
+        self.request(
+            reqwest::Method::GET,
+            &format!("/publisher/slug/{}/v0", slug),
+            None,
+        )
+        .await
+    }
+
+    // --> MangaApiInterface.kt
 
     pub async fn login(
         email: &str,
