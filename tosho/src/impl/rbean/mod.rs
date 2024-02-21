@@ -9,6 +9,7 @@ pub(super) mod common;
 pub(crate) mod config;
 pub(crate) mod download;
 pub(crate) mod manga;
+pub(crate) mod rankings;
 
 #[derive(Subcommand, Clone)]
 pub(crate) enum RBeanCommands {
@@ -52,6 +53,8 @@ pub(crate) enum RBeanCommands {
         #[arg(short = 'f', long = "format", default_value = "jpeg")]
         format: crate::r#impl::rbean::download::CLIDownloadFormat,
     },
+    /// Get the home page of your account
+    Homepage,
     /// Get a title information
     Info {
         /// UUID of the title

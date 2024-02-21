@@ -747,6 +747,9 @@ async fn main() {
                     )
                     .await
                 }
+                RBeanCommands::Homepage => {
+                    r#impl::rbean::rankings::rbean_home_page(&mut client, &config, &t).await
+                }
                 RBeanCommands::Info {
                     uuid,
                     show_chapters,

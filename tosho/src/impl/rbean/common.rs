@@ -33,6 +33,20 @@ pub(super) fn do_print_search_information(
             updated_at
         ));
         term.info(&format!("{}{}", pre_space_url, manga_url));
+
+        if let Some(chapter_info) = &result.latest_chapters {
+            println!();
+            for chapter in chapter_info.iter() {
+                let chapter_url = format!(
+                    "https://{}/series/{}/chapter/{}",
+                    *BASE_HOST, result.slug, chapter.uuid
+                );
+                let linked = linkify!(&chapter_url, &format!("Chapter {}", chapter.chapter));
+                term.info(&cformat!("{}<s>Chapter</s>: {}", pre_space_lupd, linked));
+                term.info(&format!("{}{}", pre_space_url, chapter_url));
+            }
+            println!();
+        }
     }
 }
 
