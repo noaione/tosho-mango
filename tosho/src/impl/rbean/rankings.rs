@@ -112,10 +112,8 @@ pub(crate) async fn rbean_home_page(
                             Carousel::ContinueReading(c) => {
                                 c.items.iter().map(|i| i.manga.clone()).collect()
                             }
-                            Carousel::MangaList(c) => c.items.iter().map(|i| i.clone()).collect(),
-                            Carousel::MangaWithChapters(c) => {
-                                c.items.iter().map(|i| i.clone()).collect()
-                            }
+                            Carousel::MangaList(c) => c.items.to_vec(),
+                            Carousel::MangaWithChapters(c) => c.items.to_vec(),
                         };
 
                         console.info(&cformat!(
