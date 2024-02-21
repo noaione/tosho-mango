@@ -38,7 +38,7 @@ pub struct Chapter {
     #[serde(rename = "label")]
     pub chapter: String,
     /// The title of the chapter.
-    pub title: String,
+    pub title: Option<String>,
     /// The release date of the chapter.
     #[serde(
         rename = "release_date",
@@ -107,10 +107,11 @@ impl Chapter {
     /// assert_eq!(chapter.formatted_title(), "Chapter 1 - Test Title");
     /// ```
     pub fn formatted_title(&self) -> String {
-        if self.title.is_empty() {
+        let title = self.title.as_deref().unwrap_or("");
+        if title.is_empty() {
             format!("Chapter {}", self.chapter)
         } else {
-            format!("Chapter {} - {}", self.chapter, self.title)
+            format!("Chapter {} - {}", self.chapter, title)
         }
     }
 }
