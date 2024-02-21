@@ -278,10 +278,7 @@ pub(crate) async fn rbean_title_info(
                     let volume_uuid = ch.volume_uuid.clone().unwrap_or_else(|| "".to_string());
                     let ch_num = ch.chapter.clone();
                     ignored_uuid.push(ch.uuid.clone());
-                    volume_chapters
-                        .entry(volume_uuid)
-                        .or_insert_with(Vec::new)
-                        .push(ch_num);
+                    volume_chapters.entry(volume_uuid).or_default().push(ch_num);
                 }
 
                 console.info(&cformat!(
@@ -312,16 +309,14 @@ pub(crate) async fn rbean_title_info(
                         console.info(&cformat!("     <s>{}</>: {}", vol_url_linked, first_last));
                     }
                 }
+            } else if chapter.upcoming {
+                console.info(&cformat!("    <s,m>Upcoming</>: {}", ch_title));
             } else {
-                if chapter.upcoming {
-                    console.info(&cformat!("    <s,m>Upcoming</>: {}", ch_title));
-                } else {
-                    console.info(&banner_title);
-                    console.info(&format!("     {}", ch_url));
-                    if let Some(publish_at) = chapter.published {
-                        let publish_at = publish_at.format("%b %d, %Y").to_string();
-                        console.info(&cformat!("      <s>Published</>: {}", publish_at));
-                    }
+                console.info(&banner_title);
+                console.info(&format!("     {}", ch_url));
+                if let Some(publish_at) = chapter.published {
+                    let publish_at = publish_at.format("%b %d, %Y").to_string();
+                    console.info(&cformat!("      <s>Published</>: {}", publish_at));
                 }
             }
         }
