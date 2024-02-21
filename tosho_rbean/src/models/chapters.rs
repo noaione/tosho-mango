@@ -160,7 +160,8 @@ mod tests {
                 [1, 2],
                 [3, 4],
                 [5, null]
-            ]
+            ],
+            "pages": []
         }"#;
 
         let spreads: super::ChapterPageDetails = serde_json::from_str(json_test).unwrap();
