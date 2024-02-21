@@ -705,6 +705,7 @@ async fn main() {
                     r#impl::rbean::accounts::rbean_account_info(&mut client, &config, &t).await
                 }
                 RBeanCommands::Accounts => 0,
+                RBeanCommands::Revoke => r#impl::rbean::accounts::rbean_account_revoke(&config, &t),
             };
 
             std::process::exit(exit_code as i32);

@@ -20,4 +20,6 @@ pub(crate) enum RBeanCommands {
     Account,
     /// See all the accounts you have authenticated with
     Accounts,
+    /// Revoke or delete an account
+    Revoke,
 }

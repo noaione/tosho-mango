@@ -3,7 +3,7 @@ use tosho_rbean::{RBClient, RBPlatform};
 
 use crate::{
     cli::ExitCode,
-    config::{get_all_config, save_config},
+    config::{get_all_config, save_config, try_remove_config},
 };
 
 use super::{
@@ -140,10 +140,44 @@ pub(crate) async fn rbean_account_info(
             let username = acc_info.username.unwrap_or("[no username]".to_string());
             console.info(&cformat!("  <s>Username</>: {}", username));
 
+            if let Some(date_at) = acc_info.premium_expiration_date {
+                console.info(&cformat!("  <s>Premium until</>: {}", date_at));
+            }
+
             0
         }
         Err(e) => {
             console.error(&format!("Failed to get account info: {}", e));
+            1
+        }
+    }
+}
+
+pub(crate) fn rbean_account_revoke(account: &Config, console: &crate::term::Terminal) -> ExitCode {
+    let confirm = console.confirm(Some(&cformat!(
+        "Are you sure you want to delete <m,s>{}</>?\nThis action is irreversible!",
+        account.id
+    )));
+
+    if !confirm {
+        console.warn("Aborted");
+        return 0;
+    }
+
+    match try_remove_config(
+        account.id.as_str(),
+        crate::r#impl::Implementations::Rbean,
+        None,
+    ) {
+        Ok(_) => {
+            console.info(&cformat!(
+                "Successfully deleted <magenta,bold>{}</>",
+                account.id
+            ));
+            0
+        }
+        Err(err) => {
+            console.error(&format!("Failed to delete account: {}", err));
             1
         }
     }
