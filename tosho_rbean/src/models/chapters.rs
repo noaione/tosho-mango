@@ -89,7 +89,7 @@ impl Chapter {
     /// let mut chapter = Chapter {
     ///     uuid: "uuid".to_string(),
     ///     chapter: "1".to_string(),
-    ///     title: "".to_string(),
+    ///     title: Some("".to_string()),
     ///     published: None,
     ///     free_published: None,
     ///     original_published: None,
@@ -102,7 +102,7 @@ impl Chapter {
     ///
     /// assert_eq!(chapter.formatted_title(), "Chapter 1");
     ///
-    /// chapter.title = "Test Title".to_string();
+    /// chapter.title = Some("Test Title".to_string());
     ///
     /// assert_eq!(chapter.formatted_title(), "Chapter 1 - Test Title");
     /// ```
