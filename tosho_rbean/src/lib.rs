@@ -9,7 +9,7 @@ pub use config::*;
 use constants::{API_HOST, BASE_API, TOKEN_AUTH};
 use models::{
     ChapterDetailsResponse, ChapterListResponse, ChapterPageDetailsResponse, HomeResponse, Manga,
-    Publisher, ReadingListItem, SortOption,
+    MangaListResponse, Publisher, ReadingListItem, SortOption,
 };
 use serde_json::json;
 
@@ -272,7 +272,7 @@ impl RBClient {
         offset: Option<u32>,
         count: Option<u32>,
         sort: Option<SortOption>,
-    ) -> anyhow::Result<HomeResponse> {
+    ) -> anyhow::Result<MangaListResponse> {
         let offset = offset.unwrap_or(0);
         let count = count.unwrap_or(999);
         let sort = sort.unwrap_or(SortOption::Alphabetical);

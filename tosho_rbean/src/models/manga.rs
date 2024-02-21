@@ -169,7 +169,7 @@ pub struct MangaNode {
 pub struct MangaListResponse {
     /// The total count of the search result.
     #[serde(rename = "total_count")]
-    pub total: u32,
+    pub total: String,
     /// The search results of the manga.
     #[serde(rename = "mangas")]
     pub results: Vec<MangaNode>,
