@@ -4,6 +4,8 @@
 
 use serde::{Deserialize, Serialize};
 
+use super::Image;
+
 /// Creator or author of a manga.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Creator {
@@ -50,6 +52,15 @@ pub struct Tag {
     pub name: String,
     /// The slug of the tag.
     pub slug: String,
+}
+
+/// Genres available from [`crate::models::HomeResponse`].
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct HomeGenre {
+    /// The name of the genre.
+    pub name: String,
+    /// The tag of the genre.
+    pub tag: String,
 }
 
 /// A collection of manga filters.
@@ -126,14 +137,51 @@ pub struct SeparatorChapterGap {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(tag = "type")]
 pub enum Separator {
+    /// A separator for premium notice.
     #[serde(rename = "SEPARATOR_PREMIUM_NOTICE")]
     PremiumNotice(SeparatorChapterExplainer),
+    /// A separator for ala carte or volume purchase notice.
     #[serde(rename = "SEPARATOR_ALC_NOTICE")]
     AlaCarteNotice(SeparatorChapterExplainer),
+    /// A separator for chapter gap notice.
     #[serde(rename = "SEPARATOR_CHAPTER_GAP")]
     ChapterGap(SeparatorChapterGap),
+    /// Unknown separator.
     #[serde(rename = "SEPARATOR_UNKNOWN")]
     Unknown,
+}
+
+/// A volume release product.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Volume {
+    /// The UUID of the volume.
+    pub uuid: String,
+    /// The manga UUID of the volume.
+    #[serde(rename = "manga_uuid")]
+    pub manga: String,
+    /// The ISBN of the volume.
+    pub isbn: String,
+    /// The cover image of the volume.
+    #[serde(rename = "image")]
+    pub cover: Image,
+    /// The title of the volume.
+    #[serde(rename = "full_name")]
+    pub title: String,
+    /// The short title of the volume.
+    #[serde(rename = "short_name")]
+    pub short_title: String,
+    /// The volume number of the volume.
+    #[serde(rename = "label")]
+    pub volume: String,
+    /// Is DRM free
+    #[serde(rename = "is_drm_free")]
+    pub drm_free: bool,
+    /// The retail/product info of the volume.
+    #[serde(rename = "product", default)]
+    pub retail: Option<Product>,
+    /// The order of the volume.
+    #[serde(rename = "order_number")]
+    pub order: i32,
 }
 
 #[cfg(test)]
