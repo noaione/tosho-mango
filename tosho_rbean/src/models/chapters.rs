@@ -101,3 +101,66 @@ pub struct ChapterListResponse {
     #[serde(rename = "volume_uuid_order")]
     pub volume_order: Vec<String>,
 }
+
+/// A single spread of a chapter.
+///
+/// If one of them is [`None`], then it's a single page only (should not be a spread).
+pub type Spread = (Option<i32>, Option<i32>);
+
+/// A struct containing a single page information of a chapter.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ChapterPage {
+    /// The UUID of the page.
+    pub uuid: String,
+    /// The index of the page.
+    pub index: i32,
+    /// The image of the page.
+    pub image: super::Image,
+    /// The watermarked image of the page.
+    #[serde(rename = "image_wm")]
+    pub watermarked_image: super::Image,
+    /// Is double page?
+    #[serde(rename = "is_double_page")]
+    pub double_page: bool,
+    /// The index of the spread info.
+    ///
+    /// This is a tuple value of `(left, right)` from [`ChapterPageDetails`].
+    #[serde(rename = "spread_index")]
+    pub spread: i32,
+    /// The side of the page in the spread.
+    ///
+    /// Either `left` or `right`, you should realize that you need to reverse the side order if
+    /// using right-to-left reading mode.
+    pub side: String,
+}
+
+/// A struct containing information about a chapter pages.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ChapterPageDetails {
+    /// Spreads information mapping.
+    pub spreads: Vec<Spread>,
+    /// The pages of the chapter.
+    pub pages: Vec<ChapterPage>,
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_spreads_unpack() {
+        let json_test = r#"{
+            "spreads": [
+                [null, 0],
+                [1, 2],
+                [3, 4],
+                [5, null]
+            ]
+        }"#;
+
+        let spreads: super::ChapterPageDetails = serde_json::from_str(json_test).unwrap();
+        assert_eq!(spreads.spreads.len(), 4);
+        assert_eq!(spreads.spreads[0], (None, Some(0)));
+        assert_eq!(spreads.spreads[1], (Some(1), Some(2)));
+        assert_eq!(spreads.spreads[2], (Some(3), Some(4)));
+        assert_eq!(spreads.spreads[3], (Some(5), None));
+    }
+}
