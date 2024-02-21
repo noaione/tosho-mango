@@ -705,7 +705,31 @@ async fn main() {
                     r#impl::rbean::accounts::rbean_account_info(&mut client, &config, &t).await
                 }
                 RBeanCommands::Accounts => 0,
+                RBeanCommands::Info {
+                    uuid,
+                    show_chapters,
+                } => {
+                    r#impl::rbean::manga::rbean_title_info(
+                        &uuid,
+                        show_chapters,
+                        &mut client,
+                        &config,
+                        &t,
+                    )
+                    .await
+                }
                 RBeanCommands::Revoke => r#impl::rbean::accounts::rbean_account_revoke(&config, &t),
+                RBeanCommands::Search { query, limit, sort } => {
+                    r#impl::rbean::manga::rbean_search(
+                        &query,
+                        limit,
+                        sort,
+                        &mut client,
+                        &config,
+                        &t,
+                    )
+                    .await
+                }
             };
 
             std::process::exit(exit_code as i32);

@@ -160,7 +160,7 @@ pub struct Volume {
     #[serde(rename = "manga_uuid")]
     pub manga: String,
     /// The ISBN of the volume.
-    pub isbn: String,
+    pub isbn: Option<String>,
     /// The cover image of the volume.
     #[serde(rename = "image")]
     pub cover: Image,

@@ -3,6 +3,7 @@ use clap::Subcommand;
 pub(crate) mod accounts;
 pub(super) mod common;
 pub(crate) mod config;
+pub(crate) mod manga;
 
 #[derive(Subcommand, Clone)]
 pub(crate) enum RBeanCommands {
@@ -20,6 +21,25 @@ pub(crate) enum RBeanCommands {
     Account,
     /// See all the accounts you have authenticated with
     Accounts,
+    /// Get a title information
+    Info {
+        /// UUID of the title
+        uuid: String,
+        /// Show each chapter detailed information
+        #[arg(short = 'c', long = "chapters")]
+        show_chapters: bool,
+    },
     /// Revoke or delete an account
     Revoke,
+    /// Search for a title
+    Search {
+        /// Query to search for
+        query: String,
+        /// Limit the number of results
+        #[arg(short, long, default_value = "25")]
+        limit: Option<u32>,
+        /// Sort the results
+        #[arg(short, long, value_enum, default_value = "alphabetical")]
+        sort: Option<crate::r#impl::rbean::manga::CLISortOption>,
+    },
 }
