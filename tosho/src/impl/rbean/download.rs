@@ -10,7 +10,10 @@ use tosho_rbean::{
 
 use crate::{
     cli::ExitCode,
-    r#impl::models::{ChapterDetailDump, MangaDetailDump},
+    r#impl::{
+        clean_filename,
+        models::{ChapterDetailDump, MangaDetailDump},
+    },
     term::ConsoleChoice,
 };
 
@@ -107,10 +110,10 @@ fn get_output_directory(
     create_folder: bool,
 ) -> PathBuf {
     let mut pathing = output_dir.to_path_buf();
-    pathing.push(title_id);
+    pathing.push(format!("RB_{}", title_id));
 
     if let Some(chapter_id) = chapter_id {
-        pathing.push(&chapter_id);
+        pathing.push(clean_filename(&chapter_id));
     }
 
     if create_folder {
