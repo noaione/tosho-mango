@@ -9,6 +9,7 @@ Currently we support the following source:
 - [KM by KC](https://crates.io/crates/tosho-kmkc)
 - [AM by AP](https://crates.io/crates/tosho-amap)
 - [SJ/M by V](https://crates.io/crates/tosho-sjv)
+- [小豆 (Red Bean) by KRKR](https://crates.io/crates/tosho-rbean)
 
 ## Installation
 
