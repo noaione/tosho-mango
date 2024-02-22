@@ -97,7 +97,7 @@ pub use config::*;
 ///     println!("{:?}", manga);
 /// }
 /// ```
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct SJClient {
     inner: reqwest::Client,
     config: SJConfig,
