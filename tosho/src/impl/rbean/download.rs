@@ -65,6 +65,9 @@ pub(crate) struct RBDownloadConfigCli {
 
     /// The format to download the images in.
     pub(crate) format: CLIDownloadFormat,
+
+    /// Parallel download
+    pub(crate) parallel: bool,
 }
 
 fn check_downloaded_image_count(image_dir: &PathBuf, extension: &str) -> Option<usize> {
@@ -393,7 +396,13 @@ pub(crate) async fn rbean_download(
             })
             .collect();
 
-        futures::future::join_all(tasks).await;
+        if dl_config.parallel {
+            futures::future::join_all(tasks).await;
+        } else {
+            for task in tasks {
+                task.await.unwrap();
+            }
+        }
         progress.finish_with_message("Downloaded");
     }
 

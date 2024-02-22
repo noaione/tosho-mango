@@ -23,7 +23,11 @@ pub(crate) struct SJDownloadCliConfig {
     /// Disable all input prompt (a.k.a `autodownload`)
     pub(crate) no_input: bool,
 
+    /// The ID of the title to download.
     pub(crate) chapter_ids: Vec<usize>,
+
+    /// Parallel download
+    pub(crate) parallel: bool,
     /// The start chapter range.
     ///
     /// Used only when `no_input` is `true`.
@@ -401,7 +405,13 @@ pub(crate) async fn sjv_download(
                     })
                     .collect();
 
-                futures::future::join_all(tasks).await;
+                if dl_config.parallel {
+                    futures::future::join_all(tasks).await;
+                } else {
+                    for task in tasks {
+                        task.await.unwrap();
+                    }
+                }
                 progress.finish_with_message("Downloaded");
             }
 

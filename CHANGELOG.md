@@ -10,6 +10,9 @@ Starting from Rust port of the project, all changes will be put into this file.
   - [SJ/M by V](https://crates.io/crates/tosho-sjv)
   - [小豆 (Red Bean) by KRKR](https://crates.io/crates/tosho-rbean)
 
+By default, the download is sequential. If you want to enable parallel download pass `--parallel` into the
+argument list: `tosho km download 10007 --parallel`
+
 ### Changes
 - `MU`: Refactor API response parsing
 - `SJ`: Wrap descrambling with `tokio::task::spawn_blocking`

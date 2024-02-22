@@ -42,6 +42,9 @@ pub(crate) enum SJVCommands {
         /// Output directory to use
         #[arg(short = 'o', long = "output", default_value = None)]
         output: Option<PathBuf>,
+        /// Enable parallel download
+        #[arg(short = 'p', long = "parallel")]
+        parallel: bool,
     },
     /// Download a chapters from a title
     Download {
@@ -53,6 +56,9 @@ pub(crate) enum SJVCommands {
         /// Output directory to use
         #[arg(short = 'o', long = "output", default_value = None)]
         output: Option<PathBuf>,
+        /// Enable parallel download
+        #[arg(short = 'p', long = "parallel")]
+        parallel: bool,
     },
     /// Get a title information
     Info {

@@ -319,6 +319,7 @@ async fn main() {
                     no_ticket,
                     no_point,
                     output,
+                    parallel,
                 } => {
                     let main_config = KMDownloadCliConfig {
                         auto_purchase: !no_purchase,
@@ -327,6 +328,7 @@ async fn main() {
                         end_at: end_until,
                         no_point,
                         no_ticket,
+                        parallel,
                         ..Default::default()
                     };
 
@@ -349,11 +351,13 @@ async fn main() {
                     show_all,
                     auto_purchase,
                     output,
+                    parallel,
                 } => {
                     let main_config = KMDownloadCliConfig {
                         auto_purchase,
                         show_all,
                         chapter_ids: chapters.unwrap_or_default(),
+                        parallel,
                         ..Default::default()
                     };
 
@@ -599,11 +603,13 @@ async fn main() {
                     start_from,
                     end_until,
                     output,
+                    parallel,
                 } => {
                     let dl_config = SJDownloadCliConfig {
                         start_from,
                         end_at: end_until,
                         no_input: true,
+                        parallel,
                         ..Default::default()
                     };
 
@@ -620,9 +626,11 @@ async fn main() {
                     title_or_slug,
                     chapters,
                     output,
+                    parallel,
                 } => {
                     let dl_config = SJDownloadCliConfig {
                         chapter_ids: chapters.unwrap_or_default(),
+                        parallel,
                         ..Default::default()
                     };
 
@@ -710,10 +718,12 @@ async fn main() {
                     uuid,
                     output,
                     format,
+                    parallel,
                 } => {
                     let dl_config = RBDownloadConfigCli {
                         no_input: true,
                         format,
+                        parallel,
                         ..Default::default()
                     };
                     r#impl::rbean::download::rbean_download(
@@ -731,10 +741,12 @@ async fn main() {
                     chapters,
                     output,
                     format,
+                    parallel,
                 } => {
                     let dl_config = RBDownloadConfigCli {
                         format,
                         chapter_ids: chapters.unwrap_or_default(),
+                        parallel,
                         ..Default::default()
                     };
                     r#impl::rbean::download::rbean_download(

@@ -39,6 +39,9 @@ pub(crate) enum RBeanCommands {
         /// Format to use
         #[arg(short = 'f', long = "format", default_value = "jpeg")]
         format: crate::r#impl::rbean::download::CLIDownloadFormat,
+        /// Enable parallel download
+        #[arg(short = 'p', long = "parallel")]
+        parallel: bool,
     },
     /// Download a chapters from a title
     Download {
@@ -53,6 +56,9 @@ pub(crate) enum RBeanCommands {
         /// Format to use
         #[arg(short = 'f', long = "format", default_value = "jpeg")]
         format: crate::r#impl::rbean::download::CLIDownloadFormat,
+        /// Enable parallel download
+        #[arg(short = 'p', long = "parallel")]
+        parallel: bool,
     },
     /// Get the home page of your account
     Homepage,
