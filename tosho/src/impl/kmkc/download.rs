@@ -1,4 +1,5 @@
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 use color_print::cformat;
 use tosho_kmkc::{
@@ -352,63 +353,69 @@ pub(crate) async fn kmkc_download(
                     EpisodeViewerResponse::Mobile(_) => "jpg",
                     EpisodeViewerResponse::Web(_) => "png",
                 };
+
                 let total_image_count = image_blocks.len() as u64;
-                for (idx, image) in image_blocks.iter().enumerate() {
-                    let image_fn = format!("p{:03}.{}", idx, force_extensions);
-                    let img_dl_path = image_dir.join(&image_fn);
 
-                    let writer = tokio::fs::File::create(&img_dl_path)
-                        .await
-                        .expect("Failed to create image file!");
+                let progress = Arc::new(indicatif::ProgressBar::new(total_image_count));
+                progress.enable_steady_tick(std::time::Duration::from_millis(120));
+                progress.set_style(
+                    indicatif::ProgressStyle::with_template(
+                        "{spinner:.blue} {msg} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos}/{len}",
+                    )
+                    .unwrap()
+                    .progress_chars("#>-")
+                    .tick_strings(&["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏", " "]),
+                );
+                progress.set_message("Downloading");
 
-                    if console.is_debug() {
-                        console.log(&cformat!(
-                            "   Downloading image <s>{}</> to <s>{}</>...",
-                            image.file_name(),
-                            image_fn
-                        ));
-                    } else {
-                        console.progress(total_image_count, 1, Some("Downloading".to_string()));
-                    }
+                let tasks: Vec<_> = image_blocks
+                    .iter()
+                    .enumerate()
+                    .map(|(idx, image)| {
+                        // wrap function in async block
+                        let wrap_client = client.clone();
+                        let image_dir = image_dir.clone();
+                        let cnsl = console.clone();
+                        let image = image.clone();
+                        let progress = Arc::clone(&progress);
 
-                    match client
-                        .stream_download(&image.url, scramble_seed, writer)
-                        .await
-                    {
-                        Ok(_) => {}
-                        Err(err) => {
-                            console.error(&format!("    Failed to download image: {}", err));
-                            // silent delete the file
-                            tokio::fs::remove_file(&img_dl_path)
+                        tokio::spawn(async move {
+                            let image_fn = format!("p{:03}.{}", idx, force_extensions);
+                            let img_dl_path = image_dir.join(&image_fn);
+
+                            let writer = tokio::fs::File::create(&img_dl_path)
                                 .await
-                                .unwrap_or_default();
-                        }
-                    }
+                                .expect("Failed to create image file!");
 
-                    // claim bonus point (disable for now :D)
-                    // if chapters_with_bonus.contains(&chapter.id) {
-                    //     console.info(&cformat!(
-                    //         "   Claiming bonus point for chapter <m,s>{}</> (<s>{}</>)...",
-                    //         chapter.title,
-                    //         chapter.id
-                    //     ));
+                            if cnsl.is_debug() {
+                                cnsl.log(&cformat!(
+                                    "   Downloading image <s>{}</> to <s>{}</>...",
+                                    image.file_name(),
+                                    image_fn
+                                ));
+                            }
 
-                    //     match client.finish_episode_viewer(chapter).await {
-                    //         Ok(finish_res) => {
-                    //             console.info(&cformat!(
-                    //                 "    Claimed <s,yellow>{}</> bonus point for chapter <m,s>{}</> (<s>{}</>)",
-                    //                 finish_res.bonus_point,
-                    //                 chapter.title,
-                    //                 chapter.id
-                    //             ));
-                    //         }
-                    //         Err(err) => {
-                    //             console.error(&format!("    Failed to claim bonus point: {}", err));
-                    //         }
-                    //     }
-                    // }
-                }
-                console.stop_progress(Some("Downloaded".to_string()));
+                            match wrap_client
+                                .stream_download(&image.url, scramble_seed, writer)
+                                .await
+                            {
+                                Ok(_) => {}
+                                Err(err) => {
+                                    cnsl.error(&format!("    Failed to download image: {}", err));
+                                    // silent delete the file
+                                    tokio::fs::remove_file(&img_dl_path)
+                                        .await
+                                        .unwrap_or_default();
+                                }
+                            }
+
+                            progress.inc(1);
+                        })
+                    })
+                    .collect();
+
+                futures::future::join_all(tasks).await;
+                progress.finish_with_message("Downloaded");
             }
 
             0

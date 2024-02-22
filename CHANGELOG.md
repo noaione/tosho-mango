@@ -6,6 +6,7 @@ Starting from Rust port of the project, all changes will be put into this file.
 ### New Features
 - Added **`小豆 (Red Bean)`** as a new source
 - Introduce threaded/parallel image download (not chapter) for the following source:
+  - [KM by KC](https://crates.io/crates/tosho-kmkc)
   - [SJ/M by V](https://crates.io/crates/tosho-sjv)
   - [小豆 (Red Bean) by KRKR](https://crates.io/crates/tosho-rbean)
 
