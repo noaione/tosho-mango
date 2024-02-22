@@ -175,7 +175,8 @@ impl Terminal {
                 "{spinner:.blue} {msg} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos}/{len}",
             )
             .unwrap()
-            .progress_chars("#>-"),
+            .progress_chars("#>-")
+            .tick_strings(&["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏", " "]),
         );
         let message = message.unwrap_or("Processing".to_string());
         progress.set_message(message);

@@ -9,6 +9,7 @@ Starting from Rust port of the project, all changes will be put into this file.
 ### Changes
 - `MU`: Refactor API response parsing
 - Internally change chapter dump to support both number (`u64`) and string (`UUID`-esque)
+- Better progress tick on progress bar
 
 ## [0.3.3] 2024-02-17
 ### Changes
