@@ -91,7 +91,7 @@ const PATTERN: [u8; 1] = [174];
 ///     println!("{:?}", user);
 /// }
 /// ```
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct RBClient {
     inner: reqwest::Client,
     config: RBConfig,
