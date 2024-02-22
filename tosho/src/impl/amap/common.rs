@@ -213,7 +213,7 @@ pub(super) async fn common_purchase_select(
             }
         }
         Err(e) => {
-            console.error(&cformat!("Unable to connect to MU!: {}", e));
+            console.error(&cformat!("Unable to connect to AM: {}", e));
 
             (Err(e), None, None)
         }
