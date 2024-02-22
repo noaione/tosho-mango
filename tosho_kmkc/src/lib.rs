@@ -813,7 +813,12 @@ impl KMClient {
             }
             (KMConfig::Web(_), Some(scramble_seed)) => {
                 let image_bytes = res.bytes().await?;
-                match imaging::descramble_image(image_bytes.as_ref(), 4, scramble_seed) {
+                let descrambled = tokio::task::spawn_blocking(move || {
+                    imaging::descramble_image(image_bytes.as_ref(), 4, scramble_seed)
+                })
+                .await?;
+
+                match descrambled {
                     Ok(descram_bytes) => {
                         writer.write_all(&descram_bytes).await?;
                     }
