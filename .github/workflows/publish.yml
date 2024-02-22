@@ -1,4 +1,3 @@
-
 name: Publish to crates.io
 on:
   workflow_dispatch:
@@ -30,29 +29,13 @@ jobs:
         with:
           ref: ${{ inputs.tag }}
 
-      - name: Publish (Dry run)
+      - name: Prepare Python
         run: |
-          cargo publish -p tosho-macros --dry-run
-          cargo publish -p tosho-musq --dry-run
-          cargo publish -p tosho-kmkc --dry-run
-          cargo publish -p tosho-amap --dry-run
-          cargo publish -p tosho-sjv --dry-run
-        env:
-          RELEASE: true
-          CARGO_REGISTRY_TOKEN: ${{ secrets.RUST_CARGO_REGISTRY }}
+          pip3 install requests toml
 
       - name: Publish
         run: |
-          cargo publish -p tosho-macros
-          cargo publish -p tosho-musq
-          cargo publish -p tosho-kmkc
-          # Wait 2 minutes to avoid rate limit
-          sleep 120
-          cargo publish -p tosho-amap
-          cargo publish -p tosho-sjv
-          # Wait 3 minutes to avoid rate limit
-          sleep 180
-          cargo publish -p tosho
+          python3 -u scripts/crates_publish.py
         env:
           RELEASE: true
           CARGO_REGISTRY_TOKEN: ${{ secrets.RUST_CARGO_REGISTRY }}
