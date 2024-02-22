@@ -367,7 +367,7 @@ pub(crate) async fn sjv_download(
                         let image_dir = image_dir.clone();
                         let cnsl = console.clone();
                         let progress = Arc::clone(&progress);
-                        let chapter_id = chapter.id.clone();
+                        let chapter_id = chapter.id;
                         tokio::spawn(async move {
                             let download_url = wrap_client
                                 .get_manga_url(chapter_id, false, Some(page))
