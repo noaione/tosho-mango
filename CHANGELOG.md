@@ -8,6 +8,7 @@ Starting from Rust port of the project, all changes will be put into this file.
 
 ### Changes
 - `MU`: Refactor API response parsing
+- `SJ`: Wrap descrambling with `tokio::task::spawn_blocking`
 - Internally change chapter dump to support both number (`u64`) and string (`UUID`-esque)
 - Better progress tick on progress bar
 

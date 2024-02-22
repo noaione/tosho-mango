@@ -447,10 +447,18 @@ impl SJClient {
         match &self.config.platform {
             SJPlatform::Web => {
                 let image_bytes = res.bytes().await?;
-                match crate::imaging::descramble_image(&image_bytes) {
-                    Ok(descrambled) => writer.write_all(&descrambled).await?,
+                let descrambled = tokio::task::spawn_blocking(move || {
+                    crate::imaging::descramble_image(&image_bytes)
+                })
+                .await?;
+
+                match descrambled {
+                    Ok(descrambled) => {
+                        writer.write_all(&descrambled).await?;
+                    }
                     Err(e) => anyhow::bail!("Failed to descramble image: {}", e),
                 }
+
                 Ok(())
             }
             _ => {
