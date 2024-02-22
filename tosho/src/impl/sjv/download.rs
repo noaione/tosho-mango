@@ -1,4 +1,5 @@
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 use color_print::cformat;
 use tosho_sjv::{
@@ -342,41 +343,66 @@ pub(crate) async fn sjv_download(
                 std::fs::create_dir_all(&image_dir).unwrap();
 
                 let total_image_count = chapter.pages as u64;
-                for page in 0..chapter.pages {
-                    let download_url = client
-                        .get_manga_url(chapter.id, false, Some(page))
-                        .await
-                        .unwrap();
 
-                    let image_fn = format!("p{:03}.{}", page, image_ext);
-                    let img_dl_path = image_dir.join(&image_fn);
+                let progress = Arc::new(indicatif::ProgressBar::new(total_image_count));
+                progress.enable_steady_tick(std::time::Duration::from_millis(120));
+                progress.set_style(
+                    indicatif::ProgressStyle::with_template(
+                        "{spinner:.blue} {msg} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos}/{len}",
+                    )
+                    .unwrap()
+                    .progress_chars("#>-")
+                    .tick_strings(&["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏", " "]),
+                );
+                progress.set_message("Downloading");
 
-                    let writer = tokio::fs::File::create(&img_dl_path)
-                        .await
-                        .expect("Failed to create image file!");
-
-                    if console.is_debug() {
-                        console.log(&cformat!(
-                            "   Downloading image <s>{}</> to <s>{}</>...",
-                            download_url,
-                            image_fn
-                        ));
-                    } else {
-                        console.progress(total_image_count, 1, Some("Downloading".to_string()));
-                    }
-
-                    match client.stream_download(&download_url, writer).await {
-                        Ok(_) => {}
-                        Err(err) => {
-                            console.error(&format!("    Failed to download image: {}", err));
-                            // silent delete the file
-                            tokio::fs::remove_file(&img_dl_path)
+                let tasks: Vec<_> = (0..chapter.pages)
+                    .map(|page| {
+                        // wrap function in async block
+                        let wrap_client = client.clone();
+                        let image_dir = image_dir.clone();
+                        let cnsl = console.clone();
+                        let progress = Arc::clone(&progress);
+                        let chapter_id = chapter.id.clone();
+                        tokio::spawn(async move {
+                            let download_url = wrap_client
+                                .get_manga_url(chapter_id, false, Some(page))
                                 .await
-                                .unwrap_or_default();
-                        }
-                    }
-                }
-                console.stop_progress(Some("Downloaded".to_string()));
+                                .unwrap();
+
+                            let image_fn = format!("p{:03}.{}", page, image_ext);
+                            let img_dl_path = image_dir.join(&image_fn);
+
+                            let writer = tokio::fs::File::create(&img_dl_path)
+                                .await
+                                .expect("Failed to create image file!");
+
+                            if cnsl.is_debug() {
+                                cnsl.log(&cformat!(
+                                    "   Downloading image <s>{}</> to <s>{}</>...",
+                                    download_url,
+                                    image_fn
+                                ));
+                            }
+
+                            match wrap_client.stream_download(&download_url, writer).await {
+                                Ok(_) => {}
+                                Err(err) => {
+                                    cnsl.error(&format!("    Failed to download image: {}", err));
+                                    // silent delete the file
+                                    tokio::fs::remove_file(&img_dl_path)
+                                        .await
+                                        .unwrap_or_default();
+                                }
+                            }
+
+                            progress.inc(1);
+                        })
+                    })
+                    .collect();
+
+                futures::future::join_all(tasks).await;
+                progress.finish_with_message("Downloaded");
             }
 
             0
