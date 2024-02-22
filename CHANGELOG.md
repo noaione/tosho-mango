@@ -3,6 +3,10 @@
 Starting from Rust port of the project, all changes will be put into this file.
 
 ## Unreleased (git master)
+
+Nothing yet!
+
+## [0.4.0] (2024-02-22)
 ### New Features
 - Added **`小豆 (Red Bean)`** as a new source
 - Introduce threaded/parallel image download (not chapter) for the following source:
