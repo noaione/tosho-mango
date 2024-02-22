@@ -93,7 +93,6 @@ const PATTERN: [u8; 1] = [174];
 /// ```
 #[derive(Debug)]
 pub struct RBClient {
-    #[allow(dead_code)]
     inner: reqwest::Client,
     config: RBConfig,
     constants: &'static crate::constants::Constants,

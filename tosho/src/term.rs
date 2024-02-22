@@ -74,12 +74,11 @@ impl Terminal {
         }
     }
 
-    #[allow(dead_code)]
-    pub fn trace(&self, msg: &str) {
-        if self.debug >= 2 {
-            println!("{}", cformat!("[<blue,strong>TRACE</blue,strong>] {}", msg))
-        }
-    }
+    // pub fn trace(&self, msg: &str) {
+    //     if self.debug >= 2 {
+    //         println!("{}", cformat!("[<blue,strong>TRACE</blue,strong>] {}", msg))
+    //     }
+    // }
 
     /// Do a confirmation prompt
     pub fn confirm(&self, prompt: Option<&str>) -> bool {

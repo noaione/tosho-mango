@@ -57,7 +57,6 @@ pub(super) fn unix_timestamp_to_string(timestamp: i64) -> Option<String> {
 }
 
 /// Search the big cache JSON for specific title
-#[allow(dead_code)]
 pub(crate) fn search_manga_by_text<'a>(
     contents: &'a [MangaDetail],
     target: &str,
