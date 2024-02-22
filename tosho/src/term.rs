@@ -19,6 +19,7 @@ impl std::fmt::Display for ConsoleChoice {
     }
 }
 
+#[derive(Clone)]
 pub struct Terminal {
     debug: u8,
     #[cfg(windows)]

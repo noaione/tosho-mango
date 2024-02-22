@@ -1,4 +1,7 @@
-use std::path::{Path, PathBuf};
+use std::{
+    path::{Path, PathBuf},
+    sync::Arc,
+};
 
 use clap::ValueEnum;
 use color_print::cformat;
@@ -325,45 +328,74 @@ pub(crate) async fn rbean_download(
 
         let total_img_count = view_req.data.pages.len() as u64;
 
-        for (idx, page) in view_req.data.pages.iter().enumerate() {
-            let image_fn = format!("p{:03}.{}", idx, image_ext);
-            let img_dl_path = image_dir.join(image_fn.clone());
+        let progress = Arc::new(indicatif::ProgressBar::new(total_img_count));
+        progress.enable_steady_tick(std::time::Duration::from_millis(120));
+        progress.set_style(
+            indicatif::ProgressStyle::with_template(
+                "{spinner:.blue} {msg} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos}/{len}",
+            )
+            .unwrap()
+            .progress_chars("#>-")
+            .tick_strings(&["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏", " "]),
+        );
+        progress.set_message("Downloading");
 
-            let mut img_source = match dl_config.format {
-                CLIDownloadFormat::Jpeg => page.image.jpg.clone(),
-                CLIDownloadFormat::Webp => page.image.webp.clone(),
-            };
+        let pages_data = view_req.data.pages.clone();
+        let tasks: Vec<_> = pages_data
+            .iter()
+            .enumerate()
+            .map(|(idx, page)| {
+                // wrap function in async block
+                let page = page.clone();
+                let wrap_client = client.clone();
+                let image_dir = image_dir.clone();
+                let cnsl = console.clone();
+                let progress = Arc::clone(&progress);
+                tokio::spawn(async move {
+                    let image_fn = format!("p{:03}.{}", idx, image_ext);
+                    let img_dl_path = image_dir.join(image_fn.clone());
 
-            img_source.sort();
-            img_source.reverse();
+                    let mut img_source = match dl_config.format {
+                        CLIDownloadFormat::Jpeg => page.image.jpg.clone(),
+                        CLIDownloadFormat::Webp => page.image.webp.clone(),
+                    };
 
-            let download_url = img_source.first().unwrap();
+                    img_source.sort();
+                    img_source.reverse();
 
-            let writer = tokio::fs::File::create(&img_dl_path)
-                .await
-                .expect("Failed to create image file!");
+                    let download_url = img_source.first().unwrap();
 
-            if console.is_debug() {
-                console.log(&cformat!(
-                    "   Downloading image <s>{}</> to <s>{}</>...",
-                    download_url.url,
-                    image_fn
-                ));
-            } else {
-                console.progress(total_img_count, 1, Some("Downloading".to_string()));
-            }
-
-            match client.stream_download(&download_url.url, writer).await {
-                Ok(_) => {}
-                Err(err) => {
-                    console.error(&format!("    Failed to download image: {}", err));
-                    // silent delete the file
-                    tokio::fs::remove_file(&img_dl_path)
+                    let writer = tokio::fs::File::create(&img_dl_path)
                         .await
-                        .unwrap_or_default();
-                }
-            }
-        }
+                        .expect("Failed to create image file!");
+
+                    if cnsl.is_debug() {
+                        cnsl.log(&cformat!(
+                            "   Downloading image <s>{}</> to <s>{}</>...",
+                            download_url.url,
+                            image_fn
+                        ));
+                    }
+
+                    match wrap_client.stream_download(&download_url.url, writer).await {
+                        Ok(_) => {}
+                        Err(err) => {
+                            cnsl.error(&format!("    Failed to download image: {}", err));
+                            // silent delete the file
+                            tokio::fs::remove_file(&img_dl_path)
+                                .await
+                                .unwrap_or_default();
+                        }
+                    }
+
+                    progress.inc(1);
+                })
+            })
+            .collect();
+
+        futures::future::join_all(tasks).await;
+        progress.finish_with_message("Downloaded");
+
         console.stop_progress(Some("Downloaded".to_string()));
     }
 
