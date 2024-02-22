@@ -395,8 +395,6 @@ pub(crate) async fn rbean_download(
 
         futures::future::join_all(tasks).await;
         progress.finish_with_message("Downloaded");
-
-        console.stop_progress(Some("Downloaded".to_string()));
     }
 
     0
