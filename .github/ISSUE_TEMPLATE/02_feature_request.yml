@@ -31,7 +31,7 @@ body:
           required: true
         - label: I have written a short but informative title.
           required: true
-        - label: I have updated the app to version **[0.3.3](https://github.com/noaione/tosho-mango/releases)**.
+        - label: I have updated the app to version **[0.4.0](https://github.com/noaione/tosho-mango/releases)**.
           required: true
         - label: This is not a source request rather request for a new feature in the Core app.
           required: true
