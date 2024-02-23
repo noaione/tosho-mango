@@ -238,7 +238,6 @@ impl RBClient {
             match json_de {
                 Ok(json_de) => Ok(json_de),
                 Err(error) => {
-                    std::fs::write("error.json", &response).unwrap();
                     let row_line = error.line() - 1;
                     let split_lines = &response.split('\n').collect::<Vec<&str>>();
                     let position = error.column();

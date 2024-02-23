@@ -6,6 +6,10 @@ Starting from Rust port of the project, all changes will be put into this file.
 
 Nothing yet!
 
+## [0.4.1] (2024-02-23)
+### Changes
+- `RB`: Remove saving JSON response on error.
+
 ## [0.4.0] (2024-02-22)
 ### New Features
 - Added **`小豆 (Red Bean)`** as a new source
