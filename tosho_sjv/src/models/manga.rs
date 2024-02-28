@@ -69,12 +69,20 @@ pub struct MangaChapterDetail {
     pub free: bool,
     /// Is this chapter featured
     pub featured: bool,
+    /// Start page of the chapter
+    #[serde(rename = "contents_start_page")]
+    pub start_page: u32,
 }
 
 impl MangaChapterDetail {
     /// Check if chapter can be read or downloaded
     pub fn is_available(&self) -> bool {
-        self.expiry_at.is_none()
+        if let Some(expiry_at) = self.expiry_at {
+            let now = chrono::Utc::now().timestamp();
+            now < expiry_at
+        } else {
+            true
+        }
     }
 
     /// Create pretty title for the chapter

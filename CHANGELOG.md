@@ -10,6 +10,7 @@ Nothing yet!
 ### Changes
 - `SJ/M`: Download the last page properly (previously it was missing)
 - `SJ/M`: Fix failed deser on notices
+- `SJ/M`: Show latest available chapter properly
 
 ## [0.4.1] (2024-02-23)
 ### Changes
