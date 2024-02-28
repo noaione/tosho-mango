@@ -64,6 +64,12 @@ For a list of available commands, use the `--help` argument.
 
 [MIT License](LICENSE)
 
+## Disclaimer
+
+This project is designed as an experiment and to create a local copy for personal use.These tools will not circumvent any paywall, and you will need to purchase and own each chapter on each platform with your own account to be able to make your own local copy.
+
+We're not responsible if your account got deactivated.
+
 ## Acknowledgements
 
 - `neckothy`, provided some help and info for KMKC.

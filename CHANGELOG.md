@@ -12,6 +12,12 @@ Nothing yet!
 - `SJ/M`: Fix failed deser on notices
 - `SJ/M`: Show latest available chapter properly
 
+### Build
+- Pin source crate dependency on `tosho`
+
+### Docs
+- Add disclaimer
+
 ## [0.4.1] (2024-02-23)
 ### Changes
 - `RB`: Remove saving JSON response on error.
