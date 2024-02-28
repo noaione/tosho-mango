@@ -348,7 +348,7 @@ pub(crate) async fn sjv_download(
 
                 let total_image_count = chapter.pages as u64;
 
-                let progress = Arc::new(indicatif::ProgressBar::new(total_image_count));
+                let progress = Arc::new(indicatif::ProgressBar::new(total_image_count + 1));
                 progress.enable_steady_tick(std::time::Duration::from_millis(120));
                 progress.set_style(
                     indicatif::ProgressStyle::with_template(
@@ -360,7 +360,9 @@ pub(crate) async fn sjv_download(
                 );
                 progress.set_message("Downloading");
 
-                let tasks: Vec<_> = (0..chapter.pages)
+                let max_page = chapter.pages + 1;
+
+                let tasks: Vec<_> = (0..max_page)
                     .map(|page| {
                         // wrap function in async block
                         let wrap_client = client.clone();
@@ -368,6 +370,7 @@ pub(crate) async fn sjv_download(
                         let cnsl = console.clone();
                         let progress = Arc::clone(&progress);
                         let chapter_id = chapter.id;
+                        let max_page = max_page;
                         tokio::spawn(async move {
                             let download_url = wrap_client
                                 .get_manga_url(chapter_id, false, Some(page))
@@ -392,7 +395,14 @@ pub(crate) async fn sjv_download(
                             match wrap_client.stream_download(&download_url, writer).await {
                                 Ok(_) => {}
                                 Err(err) => {
-                                    cnsl.error(&format!("    Failed to download image: {}", err));
+                                    // If page is not the last page, then we should error out
+                                    // Since sometimes the last page is not available?
+                                    if page < max_page {
+                                        cnsl.error(&format!(
+                                            "    Failed to download image: {}",
+                                            err
+                                        ));
+                                    }
                                     // silent delete the file
                                     tokio::fs::remove_file(&img_dl_path)
                                         .await
