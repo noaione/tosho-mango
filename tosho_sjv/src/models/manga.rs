@@ -170,8 +170,12 @@ pub struct ChapterMessage {
     /// Starting chapter offset
     pub offset: f64,
     /// When the message will be shown
-    #[serde(with = "super::datetime")]
-    pub show_from: DateTime<FixedOffset>,
+    #[serde(
+        default,
+        deserialize_with = "super::datetime::deserialize_opt",
+        serialize_with = "super::datetime::serialize_opt"
+    )]
+    pub show_from: Option<DateTime<FixedOffset>>,
 }
 
 /// A wrapper for [`MangaChapterDetail`]

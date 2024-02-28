@@ -3,8 +3,13 @@
 Starting from Rust port of the project, all changes will be put into this file.
 
 ## Unreleased (git master)
+
+Nothing yet!
+
+## [0.4.2] (2024-02-28)
 ### Changes
 - `SJ/M`: Download the last page properly (previously it was missing)
+- `SJ/M`: Fix failed deser on notices
 
 ## [0.4.1] (2024-02-23)
 ### Changes
