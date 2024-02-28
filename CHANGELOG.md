@@ -3,6 +3,9 @@
 Starting from Rust port of the project, all changes will be put into this file.
 
 ## Unreleased (git master)
+### New Features
+- Check for update on startup (this is done for the next 24 hours after each check)
+
 ### Build
 - Change `diacritics` to `secular` because of OSS license issue.
 - Bump several CLI dependencies.

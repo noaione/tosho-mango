@@ -63,6 +63,7 @@ use r#impl::Implementations;
 use r#impl::{kmkc::download::KMDownloadCliConfig, musq::download::MUDownloadCliConfig};
 use r#impl::{kmkc::KMKCCommands, musq::MUSQCommands};
 use tosho_musq::WeeklyCode;
+use updater::check_for_update;
 
 mod cli;
 pub(crate) mod config;
@@ -96,6 +97,10 @@ async fn main() {
         },
         None => None,
     };
+
+    check_for_update(&t).await.unwrap_or_else(|e| {
+        t.warn(&format!("Failed to check for update: {}", e));
+    });
 
     match _cli.command {
         ToshoCommands::Musq {
