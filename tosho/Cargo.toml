@@ -35,10 +35,10 @@ secular = "1.0.1"
 futures = "0.3.30"
 
 # CLI deps
-clap = { version = "4.4.18", features = ["derive"] }
-anstream = "0.6.11"
+clap = { version = "4.5.1", features = ["derive"] }
+anstream = "0.6.13"
 color-print = "0.3.5"
-inquire = "0.6.2"
+inquire = "0.7.0"
 indicatif = "0.17.7"
 directories = "5.0.1"
 uuid = { version = "1.7.0", features = ["v4", "fast-rng"] }

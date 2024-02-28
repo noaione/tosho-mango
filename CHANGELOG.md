@@ -5,6 +5,7 @@ Starting from Rust port of the project, all changes will be put into this file.
 ## Unreleased (git master)
 ### Build
 - Change `diacritics` to `secular` because of OSS license issue.
+- Bump several CLI dependencies.
 
 ## [0.4.2] (2024-02-28)
 ### Changes
