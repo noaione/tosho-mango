@@ -488,12 +488,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "diacritics"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fec6444e5b31ce44f10cd5e51dee3923970ec090b39f7a806fbe57ef4c89c7e2"
-
-[[package]]
 name = "digest"
 version = "0.10.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1812,6 +1806,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
 
 [[package]]
+name = "secular"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c3dc3eccdf599b53eba8a34a1190bd47394948258d1c43dca9cceb2426e25bb5"
+
+[[package]]
 name = "security-framework"
 version = "2.9.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2278,7 +2278,6 @@ dependencies = [
  "chrono",
  "clap",
  "color-print",
- "diacritics",
  "directories",
  "futures",
  "glob",
@@ -2290,6 +2289,7 @@ dependencies = [
  "prost",
  "regex",
  "reqwest",
+ "secular",
  "self_update",
  "serde",
  "serde_json",

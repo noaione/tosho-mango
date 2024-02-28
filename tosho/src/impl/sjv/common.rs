@@ -61,8 +61,10 @@ pub(crate) fn search_manga_by_text<'a>(
     contents: &'a [MangaDetail],
     target: &str,
 ) -> Vec<&'a MangaDetail> {
+    // remove diacritics and lower case
+    // we're not normalizing the string, surely it would work fine :clueless:
+    let clean_target = secular::lower_lay_string(target);
     // split by spaces
-    let clean_target = diacritics::remove_diacritics(target);
     let target: Vec<&str> = clean_target.split_ascii_whitespace().collect();
 
     let ac = AhoCorasick::builder()
@@ -70,13 +72,13 @@ pub(crate) fn search_manga_by_text<'a>(
         .build(target)
         .unwrap();
 
-    let mut matches = vec![];
-    for content in contents {
-        let cleaned_title = diacritics::remove_diacritics(&content.title);
-        if ac.find(&cleaned_title).is_some() {
-            matches.push(content);
-        }
-    }
+    let matches: Vec<&MangaDetail> = contents
+        .iter()
+        .filter(|&content| {
+            let cleaned_title = secular::lower_lay_string(&content.title);
+            ac.find(&cleaned_title).is_some()
+        })
+        .collect();
 
     matches
 }

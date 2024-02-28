@@ -31,7 +31,7 @@ lazy_static.workspace = true
 chrono.workspace = true
 reqwest.workspace = true
 aho-corasick = "1.1.2"
-diacritics = "0.2.0"
+secular = "1.0.1"
 futures = "0.3.30"
 
 # CLI deps
