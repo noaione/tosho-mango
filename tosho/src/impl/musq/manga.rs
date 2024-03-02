@@ -21,7 +21,11 @@ pub(crate) async fn musq_search(
             }
 
             // Cut to first 25 results
-            let cutoff_results = results.titles[..25].to_vec();
+            let cutoff_results = if results.titles.len() > 25 {
+                results.titles[..25].to_vec()
+            } else {
+                results.titles
+            };
 
             console.info(&cformat!(
                 "Search results (<magenta,bold>{}</> results):",

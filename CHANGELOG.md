@@ -6,6 +6,9 @@ Starting from Rust port of the project, all changes will be put into this file.
 ### New Features
 - Check for update on startup (this is done for the next 24 hours after each check)
 
+### Changes
+- `MU`: Fix panic when search results is less than 25
+
 ### Build
 - Change `diacritics` to `secular` because of OSS license issue.
 - Bump several CLI dependencies.
