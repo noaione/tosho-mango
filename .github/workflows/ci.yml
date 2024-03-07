@@ -37,12 +37,12 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+        uses: actions/checkout@b32f140b0c872d58512e0a66172253c302617b90
         with:
           lfs: true
 
       - name: Setup rust cache
-        uses: Swatinem/rust-cache@378c8285a4eaf12899d11bea686a763e906956af
+        uses: Swatinem/rust-cache@640a22190e7a783d4c409684cea558f081f92012
         with:
           prefix-key: "${{ runner.os }}-tosho-rust"
 
@@ -70,14 +70,14 @@ jobs:
     runs-on: ${{ matrix.os[0] }}
     steps:
       - name: Checkout repo
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+        uses: actions/checkout@b32f140b0c872d58512e0a66172253c302617b90
 
       - name: Rust Target
         run: |
           rustup target add ${{ matrix.os[1] }}
 
       - name: Setup rust cache
-        uses: Swatinem/rust-cache@378c8285a4eaf12899d11bea686a763e906956af
+        uses: Swatinem/rust-cache@640a22190e7a783d4c409684cea558f081f92012
         with:
           prefix-key: "${{ runner.os }}-${{ matrix.os[1] }}-tosho-build-rust"
 
@@ -100,7 +100,7 @@ jobs:
 
       - name: Upload artifact
         if: startsWith(github.ref, 'refs/tags/v') != true
-        uses: actions/upload-artifact@26f96dfa697d77e81fd5907df203aa23a56210a8
+        uses: actions/upload-artifact@ef09cdac3e2d3e60d8ccadda691f4f1cec5035cb
         with:
           name: tosho-${{ matrix.os[1] }}
           path: |
@@ -134,7 +134,7 @@ jobs:
           cd ../../..
 
       - name: Upload artifact
-        uses: actions/upload-artifact@26f96dfa697d77e81fd5907df203aa23a56210a8
+        uses: actions/upload-artifact@ef09cdac3e2d3e60d8ccadda691f4f1cec5035cb
         if: startsWith(github.ref, 'refs/tags/v')
         with:
           name: tosho-packages-${{ matrix.os[1] }}
@@ -151,10 +151,10 @@ jobs:
       discussions: write
     steps:
       - name: Checkout repo
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+        uses: actions/checkout@b32f140b0c872d58512e0a66172253c302617b90
 
       - name: Download artifacts
-        uses: actions/download-artifact@bb3fa7fd35ab8113a980912eb9f59b846d14e3ff
+        uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427
         with:
           path: tosho-packages
           pattern: tosho-packages-*
@@ -171,7 +171,7 @@ jobs:
           VERSION: ${{ github.ref }}
 
       - name: Release
-        uses: softprops/action-gh-release@c9b46fe7aad9f02afd89b12450b780f52dacfb2d
+        uses: softprops/action-gh-release@975c1b265e11dd76618af1c374e7981f9a6ff44a
         with:
           files: |
             tosho-packages/*
@@ -182,7 +182,7 @@ jobs:
           name: ${{ steps.prepare-change.outputs.version_subject }}
 
       - name: Create discussions
-        uses: nvdaes/build-discussion@eb17541dc7e507af05ae77f26983930f7e5fa323
+        uses: nvdaes/build-discussion@016eda27862486e315a0b110b72add08bd11a916
         with:
           title: Release ${{ github.ref_name }}
           body: |
