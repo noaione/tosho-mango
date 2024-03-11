@@ -28,13 +28,13 @@ This is just a fun side project, and as a disclaimer, I'm not condoning anything
 
 ## Installation
 
-```
-cargo install tosho
+```bash
+cargo install --locked tosho
 ```
 
 Or, with [`cargo-binstall`](https://github.com/cargo-bins/cargo-binstall):
-```
-cargo binstall tosho
+```bash
+cargo binstall --locked tosho
 ```
 
 Or, if you want to build manually:

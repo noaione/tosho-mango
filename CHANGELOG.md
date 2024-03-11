@@ -13,6 +13,9 @@ Starting from Rust port of the project, all changes will be put into this file.
 - Change `diacritics` to `secular` because of OSS license issue.
 - Bump dependencies on all crates (except `macros`)
 
+### Docs
+- Suggest using `--locked` when installing
+
 ## [0.4.2] (2024-02-28)
 ### Changes
 - `SJ/M`: Download the last page properly (previously it was missing)

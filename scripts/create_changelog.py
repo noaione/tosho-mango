@@ -14,7 +14,7 @@ If you encounter any problems, please report them on the [issues](https://github
 Since [v0.3.1](https://github.com/noaione/tosho-mango/releases/tag/v0.3.1), you can update `tosho` using the following command:
 
 ```bash
-$ tosho update
+tosho update
 ```
 
 Which will automatically download the latest version of `tosho` and replace the old one.

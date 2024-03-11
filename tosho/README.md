@@ -18,13 +18,13 @@ You can install by cloning the repository then building manually...
 Or...
 
 ```bash
-$ cargo install tosho
+cargo install --locked tosho
 ```
 
 Or, if you have [cargo-binstall](https://github.com/cargo-bins/cargo-binstall)...
 
 ```bash
-$ cargo binstall tosho
+cargo binstall --locked tosho
 ```
 
 ## Usage
