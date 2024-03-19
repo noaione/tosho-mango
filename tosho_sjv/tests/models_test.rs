@@ -1,4 +1,4 @@
-use std::{fs::File, io::Read};
+use std::{fs::File, io::Read, path::PathBuf, str::FromStr};
 
 use base64::{engine::general_purpose, Engine as _};
 use tosho_sjv::models::{
@@ -6,13 +6,38 @@ use tosho_sjv::models::{
 };
 
 fn common_reader(file_name: &str) -> Result<String, std::io::Error> {
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap();
+    let manifest_dir = PathBuf::from_str(env!("CARGO_MANIFEST_DIR")).unwrap();
+    let root_dir = manifest_dir.parent().unwrap();
 
-    let mut img_file =
-        File::open(format!("{}/tests/{}.tmfxture", manifest_dir, file_name)).unwrap();
+    let assets_dir = root_dir.join("tosho_assets");
+
+    if !assets_dir.exists() {
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::NotFound,
+            "File not found, skipping test",
+        ));
+    }
+
+    if !assets_dir.is_dir() {
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::NotFound,
+            "File not found, skipping test",
+        ));
+    }
+
+    let file_path = assets_dir.join("sjv").join(file_name);
+
+    if !file_path.exists() {
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::NotFound,
+            "File not found, skipping test",
+        ));
+    }
+
+    let mut data_file = File::open(file_path).unwrap();
 
     // Check if file exists, if not skip the test (lfs not fetched or something)
-    if img_file.metadata().is_err() {
+    if data_file.metadata().is_err() {
         return Err(std::io::Error::new(
             std::io::ErrorKind::NotFound,
             "File not found, skipping test",
@@ -20,7 +45,9 @@ fn common_reader(file_name: &str) -> Result<String, std::io::Error> {
     }
 
     let mut buf = vec![];
-    img_file.read_to_end(&mut buf).expect("Failed to read file");
+    data_file
+        .read_to_end(&mut buf)
+        .expect("Failed to read file");
 
     let buf_str = String::from_utf8(buf).unwrap();
 
@@ -47,7 +74,7 @@ fn decode_b64(b64encoded: &str) -> String {
 
 #[test]
 fn test_store_cached_models() {
-    let json_file = common_reader("store_cached");
+    let json_file = common_reader("store_cached.tmfxture");
 
     match json_file {
         Err(err) => {
@@ -117,7 +144,7 @@ fn test_store_cached_models() {
 
 #[test]
 fn test_store_cached_alt_models_loaded() {
-    let json_file = common_reader("store_cached_alt");
+    let json_file = common_reader("store_cached_alt.tmfxture");
 
     match json_file {
         Err(err) => {
@@ -153,7 +180,7 @@ fn test_store_cached_alt_models_loaded() {
 
 #[test]
 fn test_manga_detail() {
-    let json_file = common_reader("manga_detail");
+    let json_file = common_reader("manga_detail.tmfxture");
 
     match json_file {
         Err(err) => {

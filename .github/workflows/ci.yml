@@ -39,7 +39,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@b32f140b0c872d58512e0a66172253c302617b90
         with:
-          lfs: true
+          submodules: 'true'
 
       - name: Setup rust cache
         uses: Swatinem/rust-cache@640a22190e7a783d4c409684cea558f081f92012

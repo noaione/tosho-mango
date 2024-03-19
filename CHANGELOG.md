@@ -8,13 +8,18 @@ Starting from Rust port of the project, all changes will be put into this file.
 
 ### Changes
 - `MU`: Fix panic when search results is less than 25
+- `AM`: Better error messages
 
 ### Build
 - Change `diacritics` to `secular` because of OSS license issue.
 - Bump dependencies on all crates (except `macros`)
+- Use only `png`, `jpeg`, and `rayon` features for `image-rs`
 
 ### Docs
 - Suggest using `--locked` when installing
+
+### Tests
+- Move LFS data to another repo and rewrite tests to support the new path/format
 
 ## [0.4.2] (2024-02-28)
 ### Changes

@@ -1,0 +1,3 @@
+[submodule "tosho_assets"]
+	path = tosho_assets
+	url = https://github.com/noaione/tosho-assets.git

@@ -1,4 +1,4 @@
-use std::{fs::File, io::Read};
+use std::{fs::File, io::Read, path::PathBuf, str::FromStr};
 
 use prost::Message;
 use tosho_musq::proto::{
@@ -7,13 +7,37 @@ use tosho_musq::proto::{
 };
 
 fn common_reader(file_name: &str) -> Result<String, std::io::Error> {
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap();
+    let manifest_dir = PathBuf::from_str(env!("CARGO_MANIFEST_DIR")).unwrap();
+    let root_dir = manifest_dir.parent().unwrap();
 
-    let mut img_file =
-        File::open(format!("{}/tests/{}.tmfxture", manifest_dir, file_name)).unwrap();
+    let assets_dir = root_dir.join("tosho_assets");
 
+    if !assets_dir.exists() {
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::NotFound,
+            "File not found, skipping test",
+        ));
+    }
+
+    if !assets_dir.is_dir() {
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::NotFound,
+            "File not found, skipping test",
+        ));
+    }
+
+    let file_path = assets_dir.join("musq").join(file_name);
+
+    if !file_path.exists() {
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::NotFound,
+            "File not found, skipping test",
+        ));
+    }
+
+    let mut data_file = File::open(file_path).unwrap();
     // Check if file exists, if not skip the test (lfs not fetched or something)
-    if img_file.metadata().is_err() {
+    if data_file.metadata().is_err() {
         return Err(std::io::Error::new(
             std::io::ErrorKind::NotFound,
             "File not found, skipping test",
@@ -21,7 +45,9 @@ fn common_reader(file_name: &str) -> Result<String, std::io::Error> {
     }
 
     let mut buf = vec![];
-    img_file.read_to_end(&mut buf).expect("Failed to read file");
+    data_file
+        .read_to_end(&mut buf)
+        .expect("Failed to read file");
 
     let buf_str = String::from_utf8(buf).unwrap();
 
@@ -48,7 +74,7 @@ fn hex_to_bytes(hex: &str) -> Vec<u8> {
 
 #[test]
 fn test_proto_chapter_view() {
-    let proto_data = common_reader("chapterview");
+    let proto_data = common_reader("chapterview.tmfxture");
 
     match proto_data {
         Err(err) => {
@@ -85,7 +111,7 @@ fn test_proto_chapter_view() {
 
 #[test]
 fn test_proto_chapter_viewv2() {
-    let proto_data = common_reader("chapterview_v2");
+    let proto_data = common_reader("chapterview_v2.tmfxture");
 
     match proto_data {
         Err(err) => {
@@ -123,7 +149,7 @@ fn test_proto_chapter_viewv2() {
 
 #[test]
 fn test_proto_coinhistory() {
-    let proto_data = common_reader("coinhistory");
+    let proto_data = common_reader("coinhistory.tmfxture");
 
     match proto_data {
         Err(err) => {
@@ -146,7 +172,7 @@ fn test_proto_coinhistory() {
 
 #[test]
 fn test_proto_homev2() {
-    let proto_data = common_reader("homev2");
+    let proto_data = common_reader("homev2.tmfxture");
 
     match proto_data {
         Err(err) => {
@@ -175,7 +201,7 @@ fn test_proto_homev2() {
 
 #[test]
 fn test_proto_mangadetail() {
-    let proto_data = common_reader("mangadetail");
+    let proto_data = common_reader("mangadetail.tmfxture");
 
     match proto_data {
         Err(err) => {
@@ -221,7 +247,7 @@ fn test_proto_mangadetail() {
 
 #[test]
 fn test_proto_mangadetailv2() {
-    let proto_data = common_reader("mangadetail_v2");
+    let proto_data = common_reader("mangadetail_v2.tmfxture");
 
     match proto_data {
         Err(err) => {
@@ -281,7 +307,7 @@ fn test_proto_mypage() {
 
 #[test]
 fn test_proto_pointshopview() {
-    let proto_data = common_reader("pointshop");
+    let proto_data = common_reader("pointshop.tmfxture");
 
     match proto_data {
         Err(err) => {
@@ -316,7 +342,7 @@ fn test_proto_pointshopview() {
 
 #[test]
 fn test_common_reader() {
-    let proto_data = common_reader("chapterview");
+    let proto_data = common_reader("chapterview.tmfxture");
 
     match proto_data {
         Err(err) => {

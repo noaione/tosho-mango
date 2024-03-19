@@ -15,14 +15,36 @@ pub struct ResultHeader {
     pub message: Option<String>,
 }
 
+/// The body which contains error message.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ErrorBody {
+    #[serde(rename = "error_code")]
+    pub code: i32,
+    #[serde(rename = "error_message_list")]
+    pub messages: Vec<String>,
+}
+
 /// Wrapper for [`ResultHeader`]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StatusResult {
     /// The result of the request.
     pub header: ResultHeader,
+    #[serde(default)]
+    pub body: Option<serde_json::Value>,
 }
 
 impl StatusResult {
+    /// Try to unwrap the body into [`ErrorBody`] and return the error message.
+    fn unwrap_body_error(&self) -> String {
+        // try to unwrap the body into ErrorBody
+        if let Some(body) = &self.body {
+            if let Ok(error_body) = serde_json::from_value::<ErrorBody>(body.clone()) {
+                return error_body.messages.join(", ");
+            }
+        }
+        "Unknown error occured".to_string()
+    }
+
     /// Raise/return an error if the response code is not 0.
     ///
     /// # Examples
@@ -33,7 +55,8 @@ impl StatusResult {
     ///     header: ResultHeader {
     ///         result: true,
     ///         message: None,
-    ///     }
+    ///     },
+    ///     body: None,
     /// };
     ///
     /// assert!(response.raise_for_status().is_ok());
@@ -42,19 +65,20 @@ impl StatusResult {
     ///     header: ResultHeader {
     ///         result: false,
     ///         message: Some("An error occurred".to_string()),
-    ///     }
+    ///     },
+    ///     body: None,
     /// };
     ///
     /// assert!(response.raise_for_status().is_err());
     /// ```
     pub fn raise_for_status(&self) -> Result<(), AMAPIError> {
-        let message = self
-            .header
-            .message
-            .clone()
-            .unwrap_or_else(|| "Unknown error occured".to_string());
-
         if !self.header.result {
+            let message = self
+                .header
+                .message
+                .clone()
+                .unwrap_or_else(|| self.unwrap_body_error());
+
             Err(AMAPIError { message })
         } else {
             Ok(())
@@ -116,6 +140,28 @@ mod tests {
         assert_eq!(data.result.header.result, true);
         assert_eq!(data.result.header.message, None);
         assert_eq!(data.result.body, None);
+    }
+
+    #[test]
+    fn test_common_reader_fail_raise() {
+        let data: StatusResult = serde_json::from_str(
+            r#"{
+                "header": {
+                    "result": false,
+                    "message": null
+                },
+                "body": {
+                    "error_code": 1,
+                    "error_message_list": ["Unable to authenticate"]
+                }
+            }"#,
+        )
+        .unwrap();
+
+        let raise_error = data.raise_for_status();
+
+        assert!(raise_error.is_err());
+        assert_eq!(raise_error.unwrap_err().message, "Unable to authenticate");
     }
 
     #[test]

@@ -201,7 +201,7 @@ pub fn descramble_image(img_bytes: &[u8]) -> anyhow::Result<Vec<u8>> {
         descrambled_img.as_bytes(),
         descrambled_img.width(),
         descrambled_img.height(),
-        descrambled_img.color(),
+        descrambled_img.color().into(),
     )?;
 
     buf.set_position(0);

@@ -144,7 +144,7 @@ pub fn descramble_image(
                 canvas.as_bytes(),
                 canvas.width(),
                 canvas.height(),
-                canvas.color(),
+                canvas.color().into(),
             )?;
 
             buf.set_position(0);

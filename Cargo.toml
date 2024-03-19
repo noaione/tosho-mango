@@ -20,7 +20,7 @@ homepage = "https://github.com/noaione/tosho-mango"
 
 [workspace.dependencies]
 tokio = { version = "1.36.0", features = ["full"] }
-reqwest = { version = "0.11.24", features = ["socks"] }
+reqwest = { version = "0.11.25", features = ["socks"] }
 serde = { version = "1.0.197", features = ["derive"] }
 serde_json = "1.0.114"
 prost = "0.12.3"
@@ -32,7 +32,7 @@ futures-util = "0.3"
 reqwest_cookie_store = "0.6.0"
 sha2 = "0.10.8"
 time = "0.3.34"
-image = "0.24.9"
+image = { version = "0.25.0", default-features = false, features = ["jpeg", "png", "rayon"] }
 rand = "0.8.5"
 
 # CI-PROFILE-MARK
