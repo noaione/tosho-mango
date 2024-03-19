@@ -1,5 +1,7 @@
 # tosho-amap
 
+![crates.io version](https://img.shields.io/crates/v/tosho-amap)
+
 A minimal asynchronous client for the AM API by AP.
 
 The following crate is used by the [`tosho`](tosho) app.

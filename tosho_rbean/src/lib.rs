@@ -1,5 +1,7 @@
 //! # tosho-rbean
 //!
+//! ![crates.io version](https://img.shields.io/crates/v/tosho-rbean)
+//!
 //! A minimal asynchronous client for 小豆 (Red Bean) API.
 //!
 //! The following crate is used by the [`tosho`] app.

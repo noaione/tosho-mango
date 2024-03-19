@@ -1,5 +1,7 @@
 //! # tosho
 //!
+//! ![crates.io version](https://img.shields.io/crates/v/tosho) ![CI](https://github.com/noaione/tosho-mango/actions/workflows/ci.yml/badge.svg)
+//!
 //! [`tosho-mango`](https://github.com/noaione/tosho-mango) (or `tosho`) is a downloader but can also
 //! be considered an almost full-blown replacement for the app/web version, with the exception of
 //! currency purchase, as a simple CLI application.

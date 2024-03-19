@@ -1,5 +1,7 @@
 //! # tosho-musq
 //!
+//! ![crates.io version](https://img.shields.io/crates/v/tosho-musq)
+//!
 //! An asynchronous client for the MU! API by SQ.
 //!
 //! The following crate is used by the [`tosho`] app.

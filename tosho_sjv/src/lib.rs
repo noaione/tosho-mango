@@ -1,5 +1,7 @@
 //! # tosho-sjv
 //!
+//! ![crates.io version](https://img.shields.io/crates/v/tosho-sjv)
+//!
 //! A minimal asynchronous client for the SJ API by V.
 //!
 //! The following crate is used by the [`tosho`] app.

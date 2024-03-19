@@ -1,5 +1,7 @@
 # tosho-kmkc
 
+![crates.io version](https://img.shields.io/crates/v/tosho-kmkc)
+
 A minimal asynchronous client for the KM API by KC.
 
 The following crate is used by the [`tosho`](tosho) app.

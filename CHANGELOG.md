@@ -17,6 +17,7 @@ Starting from Rust port of the project, all changes will be put into this file.
 
 ### Docs
 - Suggest using `--locked` when installing
+- Add crates.io version shield badge on each crates
 
 ### Tests
 - Move LFS data to another repo and rewrite tests to support the new path/format
