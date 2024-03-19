@@ -1,3 +1,4 @@
+import argparse
 import json
 import subprocess as sp
 import time
@@ -8,6 +9,14 @@ import requests
 import toml
 
 ROOT_DIR = Path(__file__).absolute().parent.parent
+
+parser = argparse.ArgumentParser(description="Publish all crates in the workspace")
+parser.add_argument(
+    "--dry-run",
+    action="store_true",
+    help="Only print the crates that will be published",
+)
+args = parser.parse_args()
 
 
 def get_crate_index_path(crate_name: str) -> str:
@@ -77,10 +86,11 @@ if "tosho-macros" in PUBLISH_CRATE:
 print("Publishing:", PUBLISH_CRATE)
 
 # Every 2 crates, we sleep for 3 minutes
-for i, crate in enumerate(PUBLISH_CRATE):
-    print(f"Publishing {crate} ({i + 1}/{len(PUBLISH_CRATE)})")
-    if i % 2 == 0 and i != 0:
-        print(" Waiting 3 minutes...")
-        time.sleep(180)
+if not args.dry_run:
+    for i, crate in enumerate(PUBLISH_CRATE):
+        print(f"Publishing {crate} ({i + 1}/{len(PUBLISH_CRATE)})")
+        if i % 2 == 0 and i != 0:
+            print(" Waiting 3 minutes...")
+            time.sleep(180)
 
-    sp.run(f"cargo publish -p {crate}", shell=True)
+        sp.run(f"cargo publish -p {crate}", shell=True)
