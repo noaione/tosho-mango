@@ -14,11 +14,11 @@ readme = "./README.md"
 
 [dependencies]
 # Sources deps
-tosho-musq = { path = "../tosho_musq", version = "=0.3.3" }
-tosho-kmkc = { path = "../tosho_kmkc", version = "=0.3.3" }
-tosho-amap = { path = "../tosho_amap", version = "=0.3.2" }
-tosho-sjv = { path = "../tosho_sjv", version = "=0.3.4" }
-tosho-rbean = { path = "../tosho_rbean", version = "=0.1.2" }
+tosho-musq = { path = "../tosho_musq", version = "=0.3.4" }
+tosho-kmkc = { path = "../tosho_kmkc", version = "=0.3.4" }
+tosho-amap = { path = "../tosho_amap", version = "=0.3.3" }
+tosho-sjv = { path = "../tosho_sjv", version = "=0.3.5" }
+tosho-rbean = { path = "../tosho_rbean", version = "=0.1.3" }
 tosho-macros = { path = "../tosho_macros", version = "0.3" }
 
 # External deps
@@ -35,13 +35,13 @@ secular = "1.0.1"
 futures = "0.3.30"
 
 # CLI deps
-clap = { version = "4.5.2", features = ["derive"] }
+clap = { version = "4.5.3", features = ["derive"] }
 anstream = "0.6.13"
 color-print = "0.3.5"
-inquire = "0.7.0"
+inquire = "0.7.2"
 indicatif = "0.17.8"
 directories = "5.0.1"
-uuid = { version = "1.7.0", features = ["v4", "fast-rng"] }
+uuid = { version = "1.8.0", features = ["v4", "fast-rng"] }
 glob = "0.3.1"
 supports-hyperlinks = "3.0.0"
 num-format = "0.4.4"
