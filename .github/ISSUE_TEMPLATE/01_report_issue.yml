@@ -59,7 +59,7 @@ body:
       description: |
         You can find your `tosho` version with `tosho -V` in a terminal.
       placeholder: |
-        Example: "0.4.2"
+        Example: "0.4.3"
     validations:
       required: true
 
@@ -106,7 +106,7 @@ body:
           required: true
         - label: I have written a short but informative title.
           required: true
-        - label: I have updated the app to version **[0.4.2](https://github.com/noaione/tosho-mango/releases)**.
+        - label: I have updated the app to version **[0.4.3](https://github.com/noaione/tosho-mango/releases)**.
           required: true
         - label: I will fill out all of the requested information in this form.
           required: true
