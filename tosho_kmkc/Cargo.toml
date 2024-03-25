@@ -18,7 +18,7 @@ exclude = [
 
 [dependencies]
 tokio.workspace = true
-reqwest = { workspace = true, features = ["cookies", "stream"] }
+reqwest = { workspace = true, features = ["cookies"] }
 futures-util.workspace = true
 serde.workspace = true
 serde_json.workspace = true

@@ -3,8 +3,11 @@
 Starting from Rust port of the project, all changes will be put into this file.
 
 ## Unreleased (git master)
-
-Nothing yet!
+### Build
+- Bump `reqwest` to 0.12
+- Use `rustls` instead of `native-tls` for `reqwest`
+- Set `stream` feature as default on `reqwest`
+- Bump other dependencies
 
 ## [0.4.3] (2024-03-20)
 ### New Features

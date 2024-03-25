@@ -24,7 +24,7 @@ lazy_static.workspace = true
 anyhow.workspace = true
 base64.workspace = true
 chrono.workspace = true
-reqwest = { workspace = true, features = ["stream"] }
+reqwest.workspace = true
 futures-util.workspace = true
 
 tosho-macros = { path = "../tosho_macros", version = "0.3" }
