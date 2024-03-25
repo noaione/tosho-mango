@@ -4,6 +4,7 @@ Starting from Rust port of the project, all changes will be put into this file.
 
 ## Unreleased (git master)
 ### New Features
+- Add **`MPlus`** as a new source
 - `MU`: Support downloading with subscriptions
 
 ### Changes

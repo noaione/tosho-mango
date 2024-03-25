@@ -2412,6 +2412,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "tosho-mplus"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "base64 0.22.0",
+ "chrono",
+ "futures-util",
+ "lazy_static",
+ "prost",
+ "reqwest",
+ "serde",
+ "tokio",
+ "tosho-macros",
+]
+
+[[package]]
 name = "tosho-musq"
 version = "0.3.4"
 dependencies = [
