@@ -17,6 +17,13 @@
         "**/.qt_for_python": true,
         "**/.pytest_cache": true,
         "**/.mypy_cache": true,
-        "**/.ruff_cache": true
+        "**/.ruff_cache": true,
+        "**/target/release/deps": true,
+        "**/target/release/incremental": true,
+        "**/target/release/.fingerprint": true,
+        "**/target/debug/deps": true,
+        "**/target/debug/incremental": true,
+        "**/target/debug/.fingerprint": true,
+        "**/target/doc": true,
     },
 }
