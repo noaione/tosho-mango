@@ -150,6 +150,8 @@ impl AMClient {
         let cookie_store = std::sync::Arc::new(cookie_store);
 
         let client = reqwest::Client::builder()
+            .http2_adaptive_window(true)
+            .use_rustls_tls()
             .default_headers(headers)
             .cookie_provider(std::sync::Arc::clone(&cookie_store));
 
@@ -495,10 +497,11 @@ impl AMClient {
         );
 
         let session = reqwest::Client::builder()
+            .http2_adaptive_window(true)
+            .use_rustls_tls()
             .cookie_provider(std::sync::Arc::clone(&cookie_store))
             .default_headers(headers)
-            .build()
-            .unwrap();
+            .build()?;
 
         let secret_token = generate_random_token();
         let temp_config = AMConfig {

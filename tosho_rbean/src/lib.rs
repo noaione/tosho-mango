@@ -147,7 +147,10 @@ impl RBClient {
         );
         headers.insert("x-user-token", config.token.parse().unwrap());
 
-        let client = reqwest::Client::builder().default_headers(headers);
+        let client = reqwest::Client::builder()
+            .http2_adaptive_window(true)
+            .use_rustls_tls()
+            .default_headers(headers);
 
         let client = match proxy {
             Some(proxy) => client.proxy(proxy).build().unwrap(),
@@ -186,7 +189,10 @@ impl RBClient {
             "refreshToken": self.config.refresh_token,
         });
 
-        let client = reqwest::Client::new();
+        let client = reqwest::Client::builder()
+            .http2_adaptive_window(true)
+            .use_rustls_tls()
+            .build()?;
         let request = client
             .post("https://securetoken.googleapis.com/v1/token")
             .header(reqwest::header::USER_AGENT, self.constants.image_ua)
@@ -478,9 +484,10 @@ impl RBClient {
         }
 
         let client = reqwest::Client::builder()
+            .http2_adaptive_window(true)
+            .use_rustls_tls()
             .default_headers(headers)
-            .build()
-            .unwrap();
+            .build()?;
 
         let key_param = &[("key", TOKEN_AUTH.to_string())];
 

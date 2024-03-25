@@ -161,7 +161,10 @@ impl SJClient {
             reqwest::header::HeaderValue::from_str(&x_header).unwrap(),
         );
 
-        let client = reqwest::Client::builder().default_headers(headers);
+        let client = reqwest::Client::builder()
+            .http2_adaptive_window(true)
+            .use_rustls_tls()
+            .default_headers(headers);
 
         let client = match proxy {
             Some(proxy) => client.proxy(proxy).build().unwrap(),
@@ -529,6 +532,8 @@ impl SJClient {
         );
 
         let client = reqwest::Client::builder()
+            .http2_adaptive_window(true)
+            .use_rustls_tls()
             .default_headers(headers)
             .build()?;
 

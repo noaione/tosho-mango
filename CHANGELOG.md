@@ -3,6 +3,9 @@
 Starting from Rust port of the project, all changes will be put into this file.
 
 ## Unreleased (git master)
+### Changes
+- All source: Force use `rustls` and use `http2` adaptive window for reqwest client.
+
 ### Build
 - Bump `reqwest` to 0.12
 - Use `rustls` instead of `native-tls` for `reqwest`
