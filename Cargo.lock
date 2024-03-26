@@ -2547,7 +2547,7 @@ dependencies = [
  "futures-util",
  "lazy_static",
  "prost",
- "reqwest",
+ "reqwest 0.12.1",
  "serde",
  "tokio",
  "tosho-macros",

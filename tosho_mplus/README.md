@@ -2,7 +2,7 @@
 
 ![crates.io version](https://img.shields.io/crates/v/tosho-mplus)
 
-An asynchronous client for the MP API by S.
+An asynchronous client for the M+ API by S.
 
 The following crate is used by the [`tosho`](tosho) app.
 
