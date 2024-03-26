@@ -98,7 +98,7 @@ lazy_static! {
 ///
 /// # Examples
 /// ```
-/// use tosho_musq::constants::get_constants;
+/// use tosho_mplus::constants::get_constants;
 ///
 /// let _ = get_constants(1); // Android
 /// ```
