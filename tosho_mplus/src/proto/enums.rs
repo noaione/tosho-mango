@@ -57,7 +57,7 @@ impl Language {
     ///
     /// let pt_br = Language::BrazilianPortuguese;
     ///
-    /// assert_eq!(ssunday.pretty_name(), "Brazilian Portuguese");
+    /// assert_eq!(pt_br.pretty_name(), "Brazilian Portuguese");
     /// ```
     pub fn pretty_name(&self) -> String {
         let name = self.to_name();
