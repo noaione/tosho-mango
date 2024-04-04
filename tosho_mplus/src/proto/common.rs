@@ -1,3 +1,7 @@
+//! A module containing some common models.
+//!
+//! If something is missing, please [open an issue](https://github.com/noaione/tosho-mango/issues/new/choose) or a [pull request](https://github.com/noaione/tosho-mango/compare).
+
 #![allow(clippy::derive_partial_eq_without_eq)]
 
 use super::enums::{ErrorAction, Language};

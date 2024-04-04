@@ -7,7 +7,7 @@ license.workspace = true
 repository.workspace = true
 homepage.workspace = true
 keywords = ["api", "library"]
-description = "An asynchronous client of MP API by S."
+description = "An asynchronous client of M+ API by S."
 readme = "./README.md"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

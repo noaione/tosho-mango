@@ -4,9 +4,11 @@
 
 #![allow(clippy::derive_partial_eq_without_eq)]
 
+pub mod accounts;
 pub mod common;
 pub mod enums;
 
+pub use accounts::*;
 pub use common::*;
 pub use enums::*;
 
@@ -15,8 +17,10 @@ pub use enums::*;
 /// Depending on the request type, not all field will be available.
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct SuccessResponse {
-    #[prost(uint64, tag = "1")]
-    pub stub: u64,
+    #[prost(bool, optional, tag = "1")]
+    pub featured: ::core::option::Option<bool>,
+    #[prost(message, optional, tag = "2")]
+    pub registration: ::core::option::Option<RegistrationData>,
 }
 
 /// A success or error response enum
