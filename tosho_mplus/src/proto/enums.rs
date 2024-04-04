@@ -100,3 +100,20 @@ impl Language {
         merge_back
     }
 }
+
+/// The title update status
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+pub enum TitleUpdateStatus {
+    /// An error has occurred.
+    Unrecognized = -1,
+    /// No update available.
+    None = 0,
+    /// New chapter available.
+    New = 1,
+    /// Updated chapter available.
+    Updated = 2,
+    /// Re-edition/Re-release chapter available.
+    ReEdition = 3,
+    /// Update for creator manga
+    Creator = 4,
+}

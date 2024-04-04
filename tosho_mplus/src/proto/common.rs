@@ -58,3 +58,20 @@ pub struct ErrorResponse {
     #[prost(message, repeated, tag = "5")]
     pub other_popups: ::prost::alloc::vec::Vec<PopupMessage>,
 }
+
+/// The banner data.
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct Banner {
+    /// The banner image.
+    #[prost(string, tag = "1")]
+    pub image: ::prost::alloc::string::String,
+    /// The associated ID.
+    #[prost(uint64, optional, tag = "3")]
+    pub id: Option<u64>,
+    /// The banner width.
+    #[prost(uint32, optional, tag = "4")]
+    pub width: Option<u32>,
+    /// The banner height.
+    #[prost(uint32, optional, tag = "5")]
+    pub height: Option<u32>,
+}

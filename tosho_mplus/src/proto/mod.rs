@@ -7,10 +7,14 @@
 pub mod accounts;
 pub mod common;
 pub mod enums;
+pub mod home_view;
+pub mod titles;
 
 pub use accounts::*;
 pub use common::*;
 pub use enums::*;
+pub use home_view::*;
+pub use titles::*;
 
 /// Indicate a success response
 ///
@@ -21,6 +25,8 @@ pub struct SuccessResponse {
     pub featured: ::core::option::Option<bool>,
     #[prost(message, optional, tag = "2")]
     pub registration: ::core::option::Option<RegistrationData>,
+    #[prost(message, optional, tag = "3")]
+    pub home_view: ::core::option::Option<HomeView>,
 }
 
 /// A success or error response enum
