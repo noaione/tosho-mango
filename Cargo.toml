@@ -35,4 +35,7 @@ time = "0.3.34"
 image = { version = "0.25.0", default-features = false, features = ["jpeg", "png", "rayon"] }
 rand = "0.8.5"
 
+[patch.crates-io]
+self_update = { git = "https://github.com/jaemk/self_update.git", rev = "e35752929cf6b2aa322b786ab6154e6fe68f9260" }
+
 # CI-PROFILE-MARK
