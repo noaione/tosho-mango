@@ -277,6 +277,10 @@ impl MUClient {
 
                 self.build_coin(chapter.price, 0, Some(0), Some(chapter.price))
             }
+            ConsumptionType::Free
+            | ConsumptionType::Rental
+            | ConsumptionType::Purchased
+            | ConsumptionType::Subscription => self.build_coin(chapter.price, 0, None, None),
             _ => {
                 panic!("Unknown consumption type: {:?}", chapter.consumption());
             }

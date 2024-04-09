@@ -65,6 +65,14 @@ pub enum ConsumptionType {
     EventOrPaid = 1,
     /// Only paid coins can be used to read this chapter
     Paid = 2,
+    /// This chapter is free to read
+    Free = 3,
+    /// This chapter is currently on rental and can be read (Not used anymore since version 2.0.0)
+    Rental = 4,
+    /// This chapter is purchased and can be read anytime
+    Purchased = 5,
+    /// This chapter is on subscriptions and can be read if user has subscriptions
+    Subscription = 6,
 }
 
 /// Subscription status of the user.
