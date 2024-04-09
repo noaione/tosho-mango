@@ -303,8 +303,8 @@ impl MUClient {
 
     // --> PointEndpoints.kt
 
-    /// Get your current user point.
-    pub async fn get_user_point(&self) -> anyhow::Result<UserPoint> {
+    /// Get the point shop information.
+    pub async fn get_point_shop(&self) -> anyhow::Result<PointShopView> {
         let res = self
             .inner
             .get(self.build_url("/point/shop"))
@@ -312,9 +312,12 @@ impl MUClient {
             .send()
             .await?;
 
-        parse_response::<PointShopView>(res)
-            .await
-            .map(|x| x.user_point.unwrap())
+        parse_response(res).await
+    }
+
+    /// Get your current user point.
+    pub async fn get_user_point(&self) -> anyhow::Result<UserPoint> {
+        self.get_point_shop().await.map(|x| x.user_point.unwrap())
     }
 
     /// Get your point acquisition history.

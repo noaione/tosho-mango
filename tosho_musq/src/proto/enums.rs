@@ -83,3 +83,42 @@ pub enum SubscriptionKind {
     /// Subscribed half-yearly.
     HalfYearly = 4,
 }
+
+/// The current subscription status of the user.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+pub enum SubscriptionStatus {
+    /// An error has occurred.
+    Unrecognized = -1,
+    /// The user is not subscribed.
+    Unsubscribed = 0,
+    /// The user is subscribed.
+    Subscribed = 1,
+}
+
+/// The subscription badge information of a manga.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+pub enum SubscriptionBadge {
+    /// An error has occurred.
+    Unrecognized = -1,
+    /// No subscription badge marking for this manga.
+    None = 0,
+    /// Has a subscription badge marking for this manga.
+    Available = 1,
+    /// Has a subscription badge marking for this manga, and the user is subscribed.
+    Subscribed = 2,
+}
+
+impl SubscriptionBadge {
+    /// Check if manga has a subscription badge.
+    ///
+    /// ```rust
+    /// use tosho_musq::proto::SubscriptionBadge;
+    ///
+    /// let badge = SubscriptionBadge::Available;
+    /// assert!(badge.has_badge());
+    /// ```
+    pub fn has_badge(&self) -> bool {
+        // Either Available or Subscribed
+        *self == SubscriptionBadge::Available || *self == SubscriptionBadge::Subscribed
+    }
+}
