@@ -364,7 +364,7 @@ impl MUClient {
         let manga = parse_response::<MangaDetailV2>(res).await?;
 
         if manga.status() != Status::Success {
-            anyhow::bail!("Failed to get manga detail: {:?}", manga.status())
+            anyhow::bail!("Failed to get manga detail: {:?}", manga)
         }
 
         Ok(manga)
@@ -467,7 +467,7 @@ impl MUClient {
 
         let viewer: ChapterViewerV2 = parse_response(res).await?;
         if viewer.status() != Status::Success {
-            anyhow::bail!("Failed to get chapter viewer: {:?}", viewer.status())
+            anyhow::bail!("Failed to get chapter viewer: {:?}", viewer)
         }
 
         Ok(viewer)
