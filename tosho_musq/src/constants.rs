@@ -27,18 +27,11 @@ pub struct Constants {
 lazy_static! {
     /// The constants used for Android devices.
     pub static ref ANDROID_CONSTANTS: Constants = {
-        let android_app = String::from_utf8(
-            general_purpose::STANDARD
-                .decode("Y29tLnNxdWFyZV9lbml4LmFuZHJvaWRfZ29vZ2xlcGxheS5tYW5nYXVwX2dsb2JhbA==")
-                .expect("Failed to decode base64 ANDROID_APP"),
-        )
-        .expect("Invalid base64 string");
-
-        let android_app_ver = "45"; // 2.0.0
+        let android_app_ver = "61"; // 2.2.0
 
         Constants {
             image_ua: "Dalvik/2.1.0 (Linux; U; Android 12; SM-G935F Build/SQ3A.220705.004)".to_string(),
-            api_ua: format!("{}/{} (Linux; U; Android 12; en_US; SM-G935F; Build/SQ3A.220705.004; Cronet/114.0.5735.33)", android_app, android_app_ver),
+            api_ua: "okhttp/4.12.0".to_string(),
             os_ver: "32", // Android SDK 12
             app_ver: android_app_ver.to_string(),
         }
@@ -64,7 +57,7 @@ lazy_static! {
         )
         .expect("Invalid base64 string (IOS_APP_POST)");
 
-        let ios_app_ver = "2.0.1";
+        let ios_app_ver = "2.2.0";
         let ios_app_build = "202307211728";
 
         Constants {

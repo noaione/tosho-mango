@@ -1,7 +1,7 @@
 use clap::ValueEnum;
 use color_print::cformat;
 use num_format::{Locale, ToFormattedString};
-use tosho_musq::MUClient;
+use tosho_musq::{proto::SubscriptionStatus, MUClient};
 
 use crate::{
     cli::ExitCode,
@@ -184,14 +184,15 @@ pub async fn musq_account_balance(
         acc_info.id
     ));
 
-    let user_bal = client.get_user_point().await;
-    match user_bal {
-        Ok(user_bal) => {
+    let user_shop = client.get_point_shop().await;
+    match user_shop {
+        Ok(user_shop) => {
             console.info("Your current point balance:");
-            let total_bal = user_bal.sum().to_formatted_string(&Locale::en);
-            let paid_point = user_bal.paid.to_formatted_string(&Locale::en);
-            let xp_point = user_bal.event.to_formatted_string(&Locale::en);
-            let free_point = user_bal.free.to_formatted_string(&Locale::en);
+            let user_point = user_shop.user_point.clone().unwrap_or_default();
+            let total_bal = user_point.sum().to_formatted_string(&Locale::en);
+            let paid_point = user_point.paid.to_formatted_string(&Locale::en);
+            let xp_point = user_point.event.to_formatted_string(&Locale::en);
+            let free_point = user_point.free.to_formatted_string(&Locale::en);
             console.info(&cformat!(
                 "  - <bold>Total:</> <cyan!,bold><reverse>{}</>c</cyan!,bold>",
                 total_bal
@@ -208,6 +209,12 @@ pub async fn musq_account_balance(
                 "  - <bold>Free point:</> <green,bold><reverse>{}</>c</green,bold>",
                 free_point
             ));
+            let subs_status = if user_shop.subscription_status() == SubscriptionStatus::Subscribed {
+                "<green,bold>Subscribed</>"
+            } else {
+                "<red,bold>Unsubscribed</>"
+            };
+            console.info(&cformat!("  - <bold>Subscription:</> {}", subs_status));
             0
         }
         Err(e) => {

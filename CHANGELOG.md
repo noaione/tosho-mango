@@ -3,6 +3,9 @@
 Starting from Rust port of the project, all changes will be put into this file.
 
 ## Unreleased (git master)
+### New Features
+- `MU`: Support downloading with subscriptions
+
 ### Changes
 - All source: Force use `rustls` and use `http2` adaptive window for reqwest client.
 - `MU`: Update proto information.
