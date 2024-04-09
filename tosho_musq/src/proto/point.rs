@@ -4,7 +4,7 @@
 
 #![allow(clippy::derive_partial_eq_without_eq)]
 
-use super::SubscriptionStatus;
+use super::SubscriptionKind;
 
 /// The user point information.
 ///
@@ -51,8 +51,8 @@ pub struct Subscription {
     /// The yearly subscription ID.
     #[prost(string, tag = "2")]
     pub yearly_id: ::prost::alloc::string::String,
-    /// The subscription status.
-    #[prost(enumeration = "SubscriptionStatus", tag = "3")]
+    /// The subscription kind of this subscription.
+    #[prost(enumeration = "SubscriptionKind", tag = "3")]
     pub status: i32,
     /// The unix timestamp of the end of the subscription.
     #[prost(int64, tag = "4")]
@@ -60,12 +60,24 @@ pub struct Subscription {
     /// The event point that we will get from the subscription.
     #[prost(uint64, tag = "5")]
     pub event_point: u64,
+    /// The subscription name.
+    #[prost(string, tag = "6")]
+    pub name: ::prost::alloc::string::String,
     /// The seasonally (tri-annual) subscription ID.
-    #[prost(string, optional, tag = "6")]
+    #[prost(string, optional, tag = "7")]
     pub seasonally_id: ::core::option::Option<::prost::alloc::string::String>,
     /// The half yearly subscription ID.
-    #[prost(string, optional, tag = "7")]
+    #[prost(string, optional, tag = "8")]
     pub half_yearly_id: ::core::option::Option<::prost::alloc::string::String>,
+    /// The subscription banner URL.
+    #[prost(string, optional, tag = "9")]
+    pub banner: ::core::option::Option<::prost::alloc::string::String>,
+    /// The subscription series URL scheme.
+    #[prost(string, optional, tag = "10")]
+    pub series_url_scheme: ::core::option::Option<::prost::alloc::string::String>,
+    /// The monthly subscription descriptions.
+    #[prost(string, repeated, tag = "11")]
+    pub monthly_descriptions: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
 }
 
 /// The billing or the coin purchase information.
