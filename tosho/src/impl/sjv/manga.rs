@@ -5,16 +5,13 @@ use tosho_sjv::{
     SJClient,
 };
 
+use super::common::{do_print_search_information, get_cached_store_data, search_manga_by_text};
+use crate::r#impl::common::unix_timestamp_to_string;
 use crate::{
     cli::ExitCode,
     linkify,
-    r#impl::{
-        parser::NumberOrString,
-        sjv::common::{sort_chapters, unix_timestamp_to_string},
-    },
+    r#impl::{parser::NumberOrString, sjv::common::sort_chapters},
 };
-
-use super::common::{do_print_search_information, get_cached_store_data, search_manga_by_text};
 
 pub(crate) async fn sjv_search(
     query: &str,

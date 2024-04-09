@@ -6,10 +6,8 @@ use crate::{
     config::{get_all_config, save_config, try_remove_config},
 };
 
-use super::{
-    common::unix_timestamp_to_string,
-    config::{Config, DeviceType, SJDeviceMode},
-};
+use super::config::{Config, DeviceType, SJDeviceMode};
+use crate::r#impl::common::unix_timestamp_to_string;
 
 pub async fn sjv_account_login(
     email: String,

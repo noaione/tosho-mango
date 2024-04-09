@@ -3,10 +3,8 @@ use tosho_amap::{constants::BASE_HOST, models::ComicTagInfo, AMClient};
 
 use crate::{cli::ExitCode, linkify};
 
-use super::{
-    common::{do_print_search_information, unix_timestamp_to_string},
-    config::Config,
-};
+use super::{common::do_print_search_information, config::Config};
+use crate::r#impl::common::unix_timestamp_to_string;
 
 pub(crate) async fn amap_search(
     query: &str,
@@ -119,12 +117,14 @@ pub(crate) async fn amap_title_info(
                     };
                     console.info(&cformat!("     <s>{}</> pages", episode.info.page_count));
                     console.info(&cformat!("     Free daily? <s>{}</>", free_daily));
-                    if let Some(update_at) = unix_timestamp_to_string(episode.info.update_date) {
+                    if let Some(update_at) =
+                        unix_timestamp_to_string(episode.info.update_date as i64)
+                    {
                         console.info(&cformat!("     Added at: <s>{}</>", update_at));
                     }
                     console.info(&cformat!("     Price: <s>{}T</>", episode.info.price));
                     if let Some(expiry_time) = episode.info.expiry_time {
-                        if let Some(expiry_time) = unix_timestamp_to_string(expiry_time) {
+                        if let Some(expiry_time) = unix_timestamp_to_string(expiry_time as i64) {
                             console.info(&cformat!("      Expires at: <s>{}</>", expiry_time));
                         }
                     }
@@ -148,7 +148,7 @@ pub(crate) async fn amap_title_info(
                 };
                 console.info(&cformat!("  <s>Free Daily</>: {}", is_free_daily));
                 console.info(&cformat!("    - <s>Term:</> {}", free_daily.term));
-                if let Some(next_reload) = unix_timestamp_to_string(free_daily.next) {
+                if let Some(next_reload) = unix_timestamp_to_string(free_daily.next as i64) {
                     console.info(&cformat!("    - <s>Next Reload:</> {}", next_reload));
                 }
             }

@@ -1,4 +1,3 @@
-use chrono::TimeZone;
 use color_print::cformat;
 use num_format::{Locale, ToFormattedString};
 use tosho_amap::{
@@ -7,13 +6,13 @@ use tosho_amap::{
     AMClient, SESSION_COOKIE_NAME,
 };
 
+use super::config::Config;
+use crate::r#impl::common::unix_timestamp_to_string;
 use crate::{
     config::save_config,
     linkify,
     term::{get_console, ConsoleChoice},
 };
-
-use super::config::Config;
 
 impl From<super::config::Config> for tosho_amap::AMConfig {
     fn from(config: super::config::Config) -> Self {
@@ -47,7 +46,7 @@ pub(super) fn do_print_search_information(
         let mut add_url_pre = 1;
         let mut last_upd: Option<String> = None;
         if let Some(last_update) = result.update_date {
-            if let Some(last_update) = unix_timestamp_to_string(last_update) {
+            if let Some(last_update) = unix_timestamp_to_string(last_update as i64) {
                 last_upd = Some(cformat!("Last update: <s>{}</>", last_update));
                 add_url_pre += 1;
             }
@@ -65,22 +64,6 @@ pub(super) fn do_print_search_information(
             term.info(&format!("{}{}", pre_space_lupd, last_upd));
         }
         term.info(&format!("{}{}", pre_space_url, manga_url));
-    }
-}
-
-pub(super) fn unix_timestamp_to_string(timestamp: u64) -> Option<String> {
-    let dt = chrono::Utc
-        .timestamp_opt(timestamp.try_into().unwrap(), 0)
-        .single();
-
-    match dt {
-        Some(dt) => {
-            let local = dt.with_timezone(&chrono::Local);
-
-            // Format YYYY-MM-DD
-            Some(local.format("%Y-%m-%d").to_string())
-        }
-        None => None,
     }
 }
 
