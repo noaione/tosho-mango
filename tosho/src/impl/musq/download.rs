@@ -287,6 +287,7 @@ pub(crate) async fn musq_download(
                 .dump(&title_dump_path)
                 .expect("Failed to dump title info");
 
+            let mut stored_blocks: Vec<tosho_musq::proto::PageBlock> = vec![];
             for chapter in download_chapters {
                 console.info(&cformat!(
                     "  Downloading chapter <m,s>{}</> ({})...",
@@ -294,43 +295,64 @@ pub(crate) async fn musq_download(
                     chapter.id
                 ));
 
-                let ch_images = client
-                    .get_chapter_images(chapter.id, dl_config.quality.clone().into(), None)
-                    .await;
-                if let Err(err) = ch_images {
-                    console.error(&format!("Failed to download chapter: {}", err));
-                    console.error(&cformat!(
-                        "   Skipping chapter <m,s>{}</> (<s>{}</>)",
-                        chapter.title,
-                        chapter.id
-                    ));
-                    continue;
-                }
+                let image_blocks = match stored_blocks.iter().find(|&b| b.id == chapter.id) {
+                    Some(img_blocks) => img_blocks.images.clone(),
+                    None => {
+                        let ch_viewer = client
+                            .get_chapter_images(chapter.id, dl_config.quality.clone().into(), None)
+                            .await;
+                        if let Err(err) = ch_viewer {
+                            console.error(&format!("Failed to download chapter: {}", err));
+                            console.error(&cformat!(
+                                "   Skipping chapter <m,s>{}</> (<s>{}</>)",
+                                chapter.title,
+                                chapter.id
+                            ));
+                            continue;
+                        }
 
-                let ch_images = ch_images.unwrap();
-                if ch_images.blocks.is_empty() {
-                    console.warn(&cformat!(
-                        "   Unable to download chapter <m,s>{}</> (<s>{}</>) since image block is empty, skipping",
-                        chapter.title,
-                        chapter.id
-                    ));
-                    continue;
-                }
+                        let ch_images = ch_viewer.unwrap();
+                        if ch_images.blocks.is_empty() {
+                            console.warn(&cformat!(
+                            "   Unable to download chapter <m,s>{}</> (<s>{}</>) since image block is empty, skipping",
+                            chapter.title,
+                            chapter.id
+                        ));
+                            continue;
+                        }
 
-                if ch_images.blocks.len() > 1 {
-                    console.warn(&cformat!(
-                        "   Chapter <m,s>{}</> (<s>{}</>) has {} blocks, report to developer!",
-                        chapter.title,
-                        chapter.id,
-                        ch_images.blocks.len()
-                    ));
-                    continue;
-                }
+                        // push to stored blocks
+                        ch_images.blocks.iter().for_each(|block| {
+                            stored_blocks.push(block.clone());
+                        });
 
-                let image_blocks = ch_images.blocks[0].clone().images;
+                        let img_blocks = ch_images.blocks.iter().find(|&b| b.id == chapter.id);
+
+                        match img_blocks {
+                            Some(img_blocks) => img_blocks.images.clone(),
+                            None => {
+                                console.warn(&cformat!(
+                                    "   Unable to download chapter <m,s>{}</> (<s>{}</>) since we can't find this chapter blocks, skipping",
+                                    chapter.title,
+                                    chapter.id
+                                ));
+                                continue;
+                            }
+                        }
+                    }
+                };
+
+                let image_blocks: Vec<&tosho_musq::proto::ChapterPage> = image_blocks
+                    .iter()
+                    .filter(|&x| {
+                        // only allow url with /page/ or /page_high/ in it
+                        x.url.contains("/page/") || x.url.contains("/page_high/")
+                    })
+                    .collect();
+
                 if image_blocks.is_empty() {
                     console.warn(&cformat!(
-                        "   Unable to download chapter <m,s>{}</> (<s>{}</>) since image block is empty, skipping",
+                        "   Chapter <m,s>{}</> (<s>{}</>) has no images, skipping",
                         chapter.title,
                         chapter.id
                     ));
