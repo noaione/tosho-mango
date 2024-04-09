@@ -78,8 +78,6 @@ pub enum ConsumptionType {
 /// Subscription status of the user.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 pub enum SubscriptionKind {
-    /// An error has occurred.
-    Unrecognized = -1,
     /// Not subscribed.
     None = 0,
     /// Subscribed monthly.
@@ -90,30 +88,60 @@ pub enum SubscriptionKind {
     Seasonally = 3,
     /// Subscribed half-yearly.
     HalfYearly = 4,
+    /// An error has occurred.
+    Unrecognized = -1,
+}
+
+impl SubscriptionKind {
+    /// Check if the user is subscribed.
+    ///
+    /// ```rust
+    /// use tosho_musq::proto::SubscriptionKind;
+    ///
+    /// let kind = SubscriptionKind::Monthly;
+    /// assert!(kind.is_subscribed());
+    /// ```
+    pub fn is_subscribed(&self) -> bool {
+        // Any subscription kind except None
+        *self != SubscriptionKind::None
+    }
+
+    /// Get the proper name of the subscription kind.
+    /// This will return the name of the subscription kind in English.
+    pub fn as_name(&self) -> String {
+        match self {
+            SubscriptionKind::None => "None".to_string(),
+            SubscriptionKind::Monthly => "Monthly".to_string(),
+            SubscriptionKind::Yearly => "Yearly".to_string(),
+            SubscriptionKind::Seasonally => "Seasonally".to_string(),
+            SubscriptionKind::HalfYearly => "Half-Yearly".to_string(),
+            SubscriptionKind::Unrecognized => "Unrecognized".to_string(),
+        }
+    }
 }
 
 /// The current subscription status of the user.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 pub enum SubscriptionStatus {
-    /// An error has occurred.
-    Unrecognized = -1,
     /// The user is not subscribed.
     Unsubscribed = 0,
     /// The user is subscribed.
     Subscribed = 1,
+    /// An error has occurred.
+    Unrecognized = -1,
 }
 
 /// The subscription badge information of a manga.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 pub enum SubscriptionBadge {
-    /// An error has occurred.
-    Unrecognized = -1,
     /// No subscription badge marking for this manga.
     None = 0,
     /// Has a subscription badge marking for this manga.
     Available = 1,
     /// Has a subscription badge marking for this manga, and the user is subscribed.
     Subscribed = 2,
+    /// An error has occurred.
+    Unrecognized = -1,
 }
 
 impl SubscriptionBadge {

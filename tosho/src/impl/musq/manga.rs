@@ -151,14 +151,13 @@ pub(crate) async fn musq_title_info(
                         match chapter.consumption() {
                             ConsumptionType::Subscription => {
                                 base_txt =
-                                    cformat!("{} <y,strong,rev>[SUBS]</y,strong,rev>", base_txt);
+                                    cformat!("{} <y,strong>[<rev>SUBS</rev>]</y,strong>", base_txt);
                             }
                             ConsumptionType::Free => {
                                 base_txt = cformat!("{} <b,strong>[FREE]</b,strong>", base_txt);
                             }
                             _ => {}
                         }
-                        base_txt = cformat!("{} <g,strong>[FREE]</g,strong>", base_txt);
                     } else {
                         base_txt = cformat!("{} [<y,strong>{}</>c]", base_txt, chapter.price);
                     }

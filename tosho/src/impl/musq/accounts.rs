@@ -1,11 +1,12 @@
 use clap::ValueEnum;
 use color_print::cformat;
 use num_format::{Locale, ToFormattedString};
-use tosho_musq::{proto::SubscriptionStatus, MUClient};
+use tosho_musq::MUClient;
 
 use crate::{
     cli::ExitCode,
     config::{get_all_config, save_config, try_remove_config},
+    r#impl::common::unix_timestamp_to_string,
 };
 
 use super::config::{Config, DeviceType};
@@ -209,10 +210,19 @@ pub async fn musq_account_balance(
                 "  - <bold>Free point:</> <green,bold><reverse>{}</>c</green,bold>",
                 free_point
             ));
-            let subs_status = if user_shop.subscription_status() == SubscriptionStatus::Subscribed {
-                "<green,bold>Subscribed</>"
+            let subs_status = if !user_shop.subscriptions.is_empty() {
+                let first_subs = user_shop.subscriptions.first().unwrap();
+                let status = first_subs.status().as_name();
+                match unix_timestamp_to_string(first_subs.end) {
+                    Some(ends_at) => cformat!(
+                        "<bold><blue>{}</blue> Subscription</bold> (Ends at: <s>{}</>)",
+                        status,
+                        ends_at
+                    ),
+                    None => cformat!("<bold><blue>{}</blue> Subscription</bold>", status),
+                }
             } else {
-                "<red,bold>Unsubscribed</>"
+                cformat!("<red,bold>Unsubscribed</>")
             };
             console.info(&cformat!("  - <bold>Subscription:</> {}", subs_status));
             0
