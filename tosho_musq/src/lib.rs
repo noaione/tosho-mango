@@ -148,6 +148,8 @@ impl MUClient {
 
         let client = reqwest::Client::builder()
             .http2_adaptive_window(true)
+            // Force use HTTP/1.1 since API has problem with HTTP/2
+            .http1_only()
             .use_rustls_tls()
             .default_headers(headers);
 
@@ -277,6 +279,10 @@ impl MUClient {
 
                 self.build_coin(chapter.price, 0, Some(0), Some(chapter.price))
             }
+            ConsumptionType::Free
+            | ConsumptionType::Rental
+            | ConsumptionType::Purchased
+            | ConsumptionType::Subscription => self.build_coin(chapter.price, 0, None, None),
             _ => {
                 panic!("Unknown consumption type: {:?}", chapter.consumption());
             }
@@ -303,8 +309,8 @@ impl MUClient {
 
     // --> PointEndpoints.kt
 
-    /// Get your current user point.
-    pub async fn get_user_point(&self) -> anyhow::Result<UserPoint> {
+    /// Get the point shop information.
+    pub async fn get_point_shop(&self) -> anyhow::Result<PointShopView> {
         let res = self
             .inner
             .get(self.build_url("/point/shop"))
@@ -312,9 +318,12 @@ impl MUClient {
             .send()
             .await?;
 
-        parse_response::<PointShopView>(res)
-            .await
-            .map(|x| x.user_point.unwrap())
+        parse_response(res).await
+    }
+
+    /// Get your current user point.
+    pub async fn get_user_point(&self) -> anyhow::Result<UserPoint> {
+        self.get_point_shop().await.map(|x| x.user_point.unwrap())
     }
 
     /// Get your point acquisition history.
@@ -355,7 +364,7 @@ impl MUClient {
         let manga = parse_response::<MangaDetailV2>(res).await?;
 
         if manga.status() != Status::Success {
-            anyhow::bail!("Failed to get manga detail: {:?}", manga.status())
+            anyhow::bail!("Failed to get manga detail: {:?}", manga)
         }
 
         Ok(manga)
@@ -458,7 +467,7 @@ impl MUClient {
 
         let viewer: ChapterViewerV2 = parse_response(res).await?;
         if viewer.status() != Status::Success {
-            anyhow::bail!("Failed to get chapter viewer: {:?}", viewer.status())
+            anyhow::bail!("Failed to get chapter viewer: {:?}", viewer)
         }
 
         Ok(viewer)

@@ -4,7 +4,7 @@
 
 #![allow(clippy::derive_partial_eq_without_eq)]
 
-use super::SubscriptionKind;
+use super::{SubscriptionKind, SubscriptionStatus};
 
 /// The user point information.
 ///
@@ -141,6 +141,12 @@ pub struct PointShopView {
     /// The default selected billing index(?).
     #[prost(uint64, tag = "6")]
     pub default_select: u64,
+    /// The user subscription status.
+    #[prost(enumeration = "SubscriptionStatus", tag = "7")]
+    pub subscription_status: i32,
+    /// The subscription terms and billing information.
+    #[prost(string, optional, tag = "8")]
+    pub subscription_terms: ::core::option::Option<::prost::alloc::string::String>,
 }
 
 /// The node of each point purchase history.

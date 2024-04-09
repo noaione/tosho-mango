@@ -2,7 +2,9 @@
 //!
 //! If something is missing, please [open an issue](https://github.com/noaione/tosho-mango/issues/new/choose) or a [pull request](https://github.com/noaione/tosho-mango/compare).
 
-use super::{BadgeManga, LabelBadgeManga, Status, UserPoint};
+use super::{
+    BadgeManga, LabelBadgeManga, Status, SubscriptionBadge, SubscriptionStatus, UserPoint,
+};
 
 /// The tag or genre information.
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -182,6 +184,9 @@ pub struct MangaDetailV2 {
     /// The hidden chapters range.
     #[prost(message, optional, tag = "18")]
     pub hidden_chapters: ::core::option::Option<ChaptersRange>,
+    /// The subscription status of the user.
+    #[prost(enumeration = "SubscriptionStatus", tag = "19")]
+    pub subscription_status: i32,
 }
 
 /// A simplified manga information used in the search result.
@@ -217,6 +222,9 @@ pub struct MangaResultNode {
     /// The label badge information.
     #[prost(enumeration = "LabelBadgeManga", tag = "10")]
     pub label_badge: i32,
+    /// The subscription badge information.
+    #[prost(enumeration = "SubscriptionBadge", tag = "11")]
+    pub subscription_badge: i32,
 }
 
 /// The manga search result responses.

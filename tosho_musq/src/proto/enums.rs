@@ -5,32 +5,30 @@
 /// The status of each request
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 pub enum Status {
-    /// An error has occurred.
-    Unrecognized = -1,
     /// The request was successful.
     Success = 0,
     /// The content was not found.
     ContentNotFound = 1,
+    /// An error has occurred.
+    Unrecognized = -1,
 }
 
 /// The attached badge of the chapter.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 pub enum Badge {
-    /// An error has occurred.
-    Unrecognized = -1,
     /// No badge marking for this chapter.
     None = 0,
     /// The chapter is marked as a new chapter.
     Update = 1,
     /// The chapter is marked as an advance/early chapter.
     Advance = 2,
+    /// An error has occurred.
+    Unrecognized = -1,
 }
 
 /// The attached badge of the manga.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 pub enum BadgeManga {
-    /// An error has occurred.
-    Unrecognized = -1,
     /// No badge marking for this manga.
     None = 0,
     /// The manga is marked as a new manga.
@@ -41,30 +39,40 @@ pub enum BadgeManga {
     UpdateWeek = 3,
     /// The manga is marked with unread chapters.
     Unread = 4,
+    /// An error has occurred.
+    Unrecognized = -1,
 }
 
 /// The attached label badge of the manga
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 pub enum LabelBadgeManga {
-    /// An error has occurred.
-    Unrecognized = -1,
     /// No label badge marking for this manga.
     None = 0,
     /// MU! Original manga.
     Original = 1,
+    /// An error has occurred.
+    Unrecognized = -1,
 }
 
 /// The type of coin used to read the chapter.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 pub enum ConsumptionType {
-    /// An error has occurred.
-    Unrecognized = -1,
     /// Any coint type can be used to read this chapter
     Any = 0,
     /// Only event or paid coins can be used to read this chapter
     EventOrPaid = 1,
     /// Only paid coins can be used to read this chapter
     Paid = 2,
+    /// This chapter is free to read
+    Free = 3,
+    /// This chapter is currently on rental and can be read (Not used anymore since version 2.0.0)
+    Rental = 4,
+    /// This chapter is purchased and can be read anytime
+    Purchased = 5,
+    /// This chapter is on subscriptions and can be read if user has subscriptions
+    Subscription = 6,
+    /// An error has occurred.
+    Unrecognized = -1,
 }
 
 /// Subscription status of the user.
@@ -82,4 +90,43 @@ pub enum SubscriptionKind {
     Seasonally = 3,
     /// Subscribed half-yearly.
     HalfYearly = 4,
+}
+
+/// The current subscription status of the user.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+pub enum SubscriptionStatus {
+    /// An error has occurred.
+    Unrecognized = -1,
+    /// The user is not subscribed.
+    Unsubscribed = 0,
+    /// The user is subscribed.
+    Subscribed = 1,
+}
+
+/// The subscription badge information of a manga.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+pub enum SubscriptionBadge {
+    /// An error has occurred.
+    Unrecognized = -1,
+    /// No subscription badge marking for this manga.
+    None = 0,
+    /// Has a subscription badge marking for this manga.
+    Available = 1,
+    /// Has a subscription badge marking for this manga, and the user is subscribed.
+    Subscribed = 2,
+}
+
+impl SubscriptionBadge {
+    /// Check if manga has a subscription badge.
+    ///
+    /// ```rust
+    /// use tosho_musq::proto::SubscriptionBadge;
+    ///
+    /// let badge = SubscriptionBadge::Available;
+    /// assert!(badge.has_badge());
+    /// ```
+    pub fn has_badge(&self) -> bool {
+        // Either Available or Subscribed
+        *self == SubscriptionBadge::Available || *self == SubscriptionBadge::Subscribed
+    }
 }

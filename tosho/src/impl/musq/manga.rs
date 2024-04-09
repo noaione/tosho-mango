@@ -1,5 +1,9 @@
 use color_print::cformat;
-use tosho_musq::{constants::BASE_HOST, proto::Tag, MUClient, WeeklyCode};
+use tosho_musq::{
+    constants::BASE_HOST,
+    proto::{ConsumptionType, Tag},
+    MUClient, WeeklyCode,
+};
 
 use crate::{cli::ExitCode, linkify};
 
@@ -141,13 +145,22 @@ pub(crate) async fn musq_title_info(
             ));
 
             if show_chapters {
-                let hidden = result.hidden_chapters.clone();
                 for chapter in result.chapters.clone() {
                     let mut base_txt = cformat!("    <s>{}</> ({})", chapter.title, chapter.id);
-                    if let Some(ref hidden) = hidden {
-                        if chapter.id >= hidden.start && chapter.id <= hidden.end {
-                            base_txt = cformat!("{} <r>(Hidden)</>", base_txt);
+                    if chapter.is_free() {
+                        match chapter.consumption() {
+                            ConsumptionType::Subscription => {
+                                base_txt =
+                                    cformat!("{} <y,strong,rev>[SUBS]</y,strong,rev>", base_txt);
+                            }
+                            ConsumptionType::Free => {
+                                base_txt = cformat!("{} <b,strong>[FREE]</b,strong>", base_txt);
+                            }
+                            _ => {}
                         }
+                        base_txt = cformat!("{} <g,strong>[FREE]</g,strong>", base_txt);
+                    } else {
+                        base_txt = cformat!("{} [<y,strong>{}</>c]", base_txt, chapter.price);
                     }
                     console.info(&base_txt);
 
