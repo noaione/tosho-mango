@@ -6,6 +6,7 @@ Starting from Rust port of the project, all changes will be put into this file.
 ### Changes
 - All source: Force use `rustls` and use `http2` adaptive window for reqwest client.
 - `MU`: Update proto, move `Unrecognized` enums to the top of the list as default.
+- `MU`: Only use `HTTP/1.1` since `HTTP/2` broke the API request
 
 ### Build
 - Bump `reqwest` to 0.12

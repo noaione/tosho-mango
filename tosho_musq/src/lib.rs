@@ -148,6 +148,8 @@ impl MUClient {
 
         let client = reqwest::Client::builder()
             .http2_adaptive_window(true)
+            // Force use HTTP/1.1 since API has problem with HTTP/2
+            .http1_only()
             .use_rustls_tls()
             .default_headers(headers);
 
