@@ -2,11 +2,13 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use color_print::cformat;
+use tosho_kmkc::models::ImagePageNode;
 use tosho_kmkc::{
     models::{EpisodeNode, EpisodeViewerResponse, TicketInfoType, TitleNode},
     KMClient,
 };
 
+use crate::term::Terminal;
 use crate::{
     cli::ExitCode,
     r#impl::models::{ChapterDetailDump, MangaDetailDump},
@@ -91,6 +93,51 @@ fn get_output_directory(
     }
 
     pathing
+}
+
+struct KMKCDownloadNode {
+    client: KMClient,
+    image: ImagePageNode,
+    idx: usize,
+    extension: String,
+    seed: Option<u32>,
+}
+
+async fn kmkc_actual_downloader(
+    node: KMKCDownloadNode,
+    image_dir: PathBuf,
+    console: Terminal,
+    progress: Arc<indicatif::ProgressBar>,
+) -> anyhow::Result<()> {
+    let image_fn = format!("p{:03}.{}", node.idx, node.extension);
+    let img_dl_path = image_dir.join(&image_fn);
+
+    let writer = tokio::fs::File::create(&img_dl_path).await?;
+
+    if console.is_debug() {
+        console.log(&cformat!(
+            "   Downloading image <s>{}</> to <s>{}</>...",
+            node.image.file_name(),
+            image_fn
+        ));
+    }
+
+    match node
+        .client
+        .stream_download(&node.image.url, node.seed, writer)
+        .await
+    {
+        Ok(_) => {}
+        Err(err) => {
+            console.error(&format!("    Failed to download image: {}", err));
+            // silent delete the file
+            tokio::fs::remove_file(&img_dl_path).await?;
+        }
+    }
+
+    progress.inc(1);
+
+    Ok(())
 }
 
 pub(crate) async fn kmkc_download(
@@ -373,59 +420,67 @@ pub(crate) async fn kmkc_download(
                 );
                 progress.set_message("Downloading");
 
-                let tasks: Vec<_> = image_blocks
-                    .iter()
-                    .enumerate()
-                    .map(|(idx, image)| {
-                        // wrap function in async block
-                        let wrap_client = client.clone();
-                        let image_dir = image_dir.clone();
-                        let cnsl = console.clone();
-                        let image = image.clone();
-                        let progress = Arc::clone(&progress);
-
-                        tokio::spawn(async move {
-                            let image_fn = format!("p{:03}.{}", idx, force_extensions);
-                            let img_dl_path = image_dir.join(&image_fn);
-
-                            let writer = tokio::fs::File::create(&img_dl_path)
-                                .await
-                                .expect("Failed to create image file!");
-
-                            if cnsl.is_debug() {
-                                cnsl.log(&cformat!(
-                                    "   Downloading image <s>{}</> to <s>{}</>...",
-                                    image.file_name(),
-                                    image_fn
-                                ));
-                            }
-
-                            match wrap_client
-                                .stream_download(&image.url, scramble_seed, writer)
-                                .await
-                            {
-                                Ok(_) => {}
-                                Err(err) => {
-                                    cnsl.error(&format!("    Failed to download image: {}", err));
-                                    // silent delete the file
-                                    tokio::fs::remove_file(&img_dl_path)
-                                        .await
-                                        .unwrap_or_default();
-                                }
-                            }
-
-                            progress.inc(1);
-                        })
-                    })
-                    .collect();
-
                 if dl_config.parallel {
+                    let tasks: Vec<_> = image_blocks
+                        .iter()
+                        .enumerate()
+                        .map(|(idx, image)| {
+                            // wrap function in async block
+                            let wrap_client = client.clone();
+                            let image_dir = image_dir.clone();
+                            let cnsl = console.clone();
+                            let image = image.clone();
+                            let progress = Arc::clone(&progress);
+
+                            tokio::spawn(async move {
+                                match kmkc_actual_downloader(
+                                    KMKCDownloadNode {
+                                        client: wrap_client,
+                                        image,
+                                        idx,
+                                        extension: force_extensions.to_string(),
+                                        seed: scramble_seed,
+                                    },
+                                    image_dir,
+                                    cnsl.clone(),
+                                    progress,
+                                )
+                                .await
+                                {
+                                    Ok(_) => {}
+                                    Err(e) => {
+                                        cnsl.error(&format!("    Failed to download image: {}", e));
+                                    }
+                                }
+                            })
+                        })
+                        .collect();
+
                     futures::future::join_all(tasks).await;
                 } else {
-                    for task in tasks {
-                        task.await.unwrap();
+                    for (idx, image) in image_blocks.iter().enumerate() {
+                        match kmkc_actual_downloader(
+                            KMKCDownloadNode {
+                                client: client.clone(),
+                                image: image.clone(),
+                                idx,
+                                extension: force_extensions.to_string(),
+                                seed: scramble_seed,
+                            },
+                            image_dir.clone(),
+                            console.clone(),
+                            Arc::clone(&progress),
+                        )
+                        .await
+                        {
+                            Ok(_) => {}
+                            Err(e) => {
+                                console.error(&format!("    Failed to download image: {}", e));
+                            }
+                        }
                     }
                 }
+
                 progress.finish_with_message("Downloaded");
             }
 

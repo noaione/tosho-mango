@@ -7,7 +7,7 @@ use clap::ValueEnum;
 use color_print::cformat;
 use tosho_macros::EnumName;
 use tosho_rbean::{
-    models::{Chapter, Manga, UserAccount},
+    models::{Chapter, ChapterPage, Manga, UserAccount},
     RBClient,
 };
 
@@ -17,7 +17,7 @@ use crate::{
         clean_filename,
         models::{ChapterDetailDump, MangaDetailDump},
     },
-    term::ConsoleChoice,
+    term::{ConsoleChoice, Terminal},
 };
 
 use super::{common::save_session_config, config::Config};
@@ -190,6 +190,57 @@ fn do_chapter_select(
     }
 }
 
+struct DownloadNode {
+    client: RBClient,
+    page: ChapterPage,
+    idx: usize,
+    extension: String,
+}
+
+async fn rbean_actual_downloader(
+    node: DownloadNode,
+    image_dir: PathBuf,
+    dl_config: RBDownloadConfigCli,
+    console: Terminal,
+    progress: Arc<indicatif::ProgressBar>,
+) -> anyhow::Result<()> {
+    let image_fn = format!("p{:03}.{}", node.idx, node.extension);
+    let img_dl_path = image_dir.join(image_fn.clone());
+
+    let mut img_source = match dl_config.format {
+        CLIDownloadFormat::Jpeg => node.page.image.jpg.clone(),
+        CLIDownloadFormat::Webp => node.page.image.webp.clone(),
+    };
+
+    img_source.sort();
+    img_source.reverse();
+
+    let download_url = img_source.first().unwrap();
+
+    let writer = tokio::fs::File::create(&img_dl_path).await?;
+
+    if console.is_debug() {
+        console.log(&cformat!(
+            "   Downloading image <s>{}</> to <s>{}</>...",
+            download_url.url,
+            image_fn
+        ));
+    }
+
+    match node.client.stream_download(&download_url.url, writer).await {
+        Ok(_) => {}
+        Err(err) => {
+            console.error(&format!("    Failed to download image: {}", err));
+            // silent delete the file
+            tokio::fs::remove_file(&img_dl_path).await?;
+        }
+    }
+
+    progress.inc(1);
+
+    Ok(())
+}
+
 pub(crate) async fn rbean_download(
     uuid: &str,
     dl_config: RBDownloadConfigCli,
@@ -344,63 +395,67 @@ pub(crate) async fn rbean_download(
         progress.set_message("Downloading");
 
         let pages_data = view_req.data.pages.clone();
-        let tasks: Vec<_> = pages_data
-            .iter()
-            .enumerate()
-            .map(|(idx, page)| {
-                // wrap function in async block
-                let page = page.clone();
-                let wrap_client = client.clone();
-                let image_dir = image_dir.clone();
-                let cnsl = console.clone();
-                let progress = Arc::clone(&progress);
-                tokio::spawn(async move {
-                    let image_fn = format!("p{:03}.{}", idx, image_ext);
-                    let img_dl_path = image_dir.join(image_fn.clone());
-
-                    let mut img_source = match dl_config.format {
-                        CLIDownloadFormat::Jpeg => page.image.jpg.clone(),
-                        CLIDownloadFormat::Webp => page.image.webp.clone(),
-                    };
-
-                    img_source.sort();
-                    img_source.reverse();
-
-                    let download_url = img_source.first().unwrap();
-
-                    let writer = tokio::fs::File::create(&img_dl_path)
-                        .await
-                        .expect("Failed to create image file!");
-
-                    if cnsl.is_debug() {
-                        cnsl.log(&cformat!(
-                            "   Downloading image <s>{}</> to <s>{}</>...",
-                            download_url.url,
-                            image_fn
-                        ));
-                    }
-
-                    match wrap_client.stream_download(&download_url.url, writer).await {
-                        Ok(_) => {}
-                        Err(err) => {
-                            cnsl.error(&format!("    Failed to download image: {}", err));
-                            // silent delete the file
-                            tokio::fs::remove_file(&img_dl_path)
-                                .await
-                                .unwrap_or_default();
-                        }
-                    }
-
-                    progress.inc(1);
-                })
-            })
-            .collect();
 
         if dl_config.parallel {
+            let tasks: Vec<_> = pages_data
+                .iter()
+                .enumerate()
+                .map(|(idx, page)| {
+                    // wrap function in async block
+                    let page = page.clone();
+                    let wrap_client = client.clone();
+                    let image_dir = image_dir.clone();
+                    let cnsl = console.clone();
+                    let dl_config = dl_config.clone();
+                    let progress = Arc::clone(&progress);
+                    tokio::spawn(async move {
+                        match rbean_actual_downloader(
+                            DownloadNode {
+                                client: wrap_client,
+                                page,
+                                idx,
+                                extension: image_ext.to_string(),
+                            },
+                            image_dir,
+                            dl_config,
+                            cnsl.clone(),
+                            progress,
+                        )
+                        .await
+                        {
+                            Ok(_) => {}
+                            Err(e) => {
+                                cnsl.error(&format!("Failed to download image: {}", e));
+                            }
+                        }
+                    })
+                })
+                .collect();
+
             futures::future::join_all(tasks).await;
         } else {
-            for task in tasks {
-                task.await.unwrap();
+            for (idx, page) in pages_data.iter().enumerate() {
+                let node = DownloadNode {
+                    client: client.clone(),
+                    page: page.clone(),
+                    idx,
+                    extension: image_ext.to_string(),
+                };
+
+                match rbean_actual_downloader(
+                    node,
+                    image_dir.clone(),
+                    dl_config.clone(),
+                    console.clone(),
+                    Arc::clone(&progress),
+                )
+                .await
+                {
+                    Ok(_) => {}
+                    Err(e) => {
+                        console.error(&format!("Failed to download image: {}", e));
+                    }
+                }
             }
         }
         progress.finish_with_message("Downloaded");

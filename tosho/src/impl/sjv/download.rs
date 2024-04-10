@@ -169,6 +169,51 @@ fn do_chapter_select(
     }
 }
 
+struct DownloadNode {
+    client: SJClient,
+    id: u32,
+    page: u32,
+    extension: String,
+}
+
+async fn sjv_actual_downloader(
+    node: DownloadNode,
+    image_dir: PathBuf,
+    console: crate::term::Terminal,
+    progress: Arc<indicatif::ProgressBar>,
+) -> anyhow::Result<()> {
+    let download_url = node
+        .client
+        .get_manga_url(node.id, false, Some(node.page))
+        .await?;
+
+    let image_fn = format!("p{:03}.{}", node.page, node.extension);
+    let img_dl_path = image_dir.join(&image_fn);
+
+    let writer = tokio::fs::File::create(&img_dl_path).await?;
+
+    if console.is_debug() {
+        console.log(&cformat!(
+            "   Downloading image <s>{}</> to <s>{}</>...",
+            download_url,
+            image_fn
+        ));
+    }
+
+    match node.client.stream_download(&download_url, writer).await {
+        Ok(_) => {}
+        Err(err) => {
+            console.error(&format!("    Failed to download image: {}", err));
+            // silent delete the file
+            tokio::fs::remove_file(&img_dl_path).await?;
+        }
+    }
+
+    progress.inc(1);
+
+    Ok(())
+}
+
 pub(crate) async fn sjv_download(
     title_or_slug: NumberOrString,
     dl_config: SJDownloadCliConfig,
@@ -364,56 +409,62 @@ pub(crate) async fn sjv_download(
                 );
                 progress.set_message("Downloading");
 
-                let tasks: Vec<_> = (0..total_image_count)
-                    .map(|page| {
-                        // wrap function in async block
-                        let wrap_client = client.clone();
-                        let image_dir = image_dir.clone();
-                        let cnsl = console.clone();
-                        let progress = Arc::clone(&progress);
-                        let chapter_id = chapter.id;
-                        tokio::spawn(async move {
-                            let download_url = wrap_client
-                                .get_manga_url(chapter_id, false, Some(page))
-                                .await
-                                .unwrap();
-
-                            let image_fn = format!("p{:03}.{}", page, image_ext);
-                            let img_dl_path = image_dir.join(&image_fn);
-
-                            let writer = tokio::fs::File::create(&img_dl_path)
-                                .await
-                                .expect("Failed to create image file!");
-
-                            if cnsl.is_debug() {
-                                cnsl.log(&cformat!(
-                                    "   Downloading image <s>{}</> to <s>{}</>...",
-                                    download_url,
-                                    image_fn
-                                ));
-                            }
-
-                            match wrap_client.stream_download(&download_url, writer).await {
-                                Ok(_) => {}
-                                Err(err) => {
-                                    cnsl.error(&format!("    Failed to download image: {}", err));
-                                    // silent delete the file
-                                    tokio::fs::remove_file(&img_dl_path)
-                                        .await
-                                        .unwrap_or_default();
-                                }
-                            }
-
-                            progress.inc(1);
-                        })
-                    })
-                    .collect();
-
                 if dl_config.parallel {
+                    let tasks: Vec<_> = (0..total_image_count)
+                        .map(|page| {
+                            // wrap function in async block
+                            let wrap_client = client.clone();
+                            let image_dir = image_dir.clone();
+                            let cnsl = console.clone();
+                            let progress = Arc::clone(&progress);
+                            let chapter_id = chapter.id;
+                            tokio::spawn(async move {
+                                match sjv_actual_downloader(
+                                    DownloadNode {
+                                        client: wrap_client,
+                                        id: chapter_id,
+                                        page,
+                                        extension: image_ext.to_string(),
+                                    },
+                                    image_dir,
+                                    cnsl.clone(),
+                                    progress,
+                                )
+                                .await
+                                {
+                                    Ok(_) => {}
+                                    Err(e) => {
+                                        cnsl.error(&format!(
+                                            "    Failed to download chapter: {}",
+                                            e
+                                        ));
+                                    }
+                                }
+                            })
+                        })
+                        .collect();
+
                     futures::future::join_all(tasks).await;
                 } else {
-                    for task in tasks {
-                        task.await.unwrap();
+                    for page in 0..total_image_count {
+                        match sjv_actual_downloader(
+                            DownloadNode {
+                                client: client.clone(),
+                                id: chapter.id,
+                                page,
+                                extension: image_ext.to_string(),
+                            },
+                            image_dir.clone(),
+                            console.clone(),
+                            Arc::clone(&progress),
+                        )
+                        .await
+                        {
+                            Ok(_) => {}
+                            Err(e) => {
+                                console.error(&format!("    Failed to download chapter: {}", e));
+                            }
+                        }
                     }
                 }
                 progress.finish_with_message("Downloaded");
