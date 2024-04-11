@@ -41,6 +41,10 @@ jobs:
         with:
           submodules: 'true'
 
+      - name: Rustup stable
+        run: |
+          rustup update stable
+
       - name: Setup rust cache
         uses: Swatinem/rust-cache@640a22190e7a783d4c409684cea558f081f92012
         with:
@@ -74,6 +78,7 @@ jobs:
 
       - name: Rust Target
         run: |
+          rustup update stable
           rustup target add ${{ matrix.os[1] }}
 
       - name: Setup rust cache
@@ -82,9 +87,15 @@ jobs:
           prefix-key: "${{ runner.os }}-${{ matrix.os[1] }}-tosho-build-rust"
 
       - name: Prepare build
-        run: |
+        if: matrix.os[0] != 'windows-latest'
+        run: |noaione@protonmail.ch
           sed -i'' -e 's/# CI-PROFILE-MARK/[profile.release]\nopt-level = "z"\nlto = true\ncodegen-units = 1\npanic = "abort"\nstrip = "debuginfo"/g' Cargo.toml
         shell: bash
+
+      - name: Prepare build (Win32)
+        if: matrix.os[0] == 'windows-latest'
+        run: |
+          sed -i'' -e 's/# CI-PROFILE-MARK/[profile.release]\nopt-level = "z"\nlto = true\ncodegen-units = 1\npanic = "abort"/g' Cargo.toml
 
       - name: Build (Nightly)
         if: startsWith(github.ref, 'refs/tags/v') != true
