@@ -88,7 +88,7 @@ jobs:
 
       - name: Prepare build
         if: matrix.os[0] != 'windows-latest'
-        run: |noaione@protonmail.ch
+        run: |
           sed -i'' -e 's/# CI-PROFILE-MARK/[profile.release]\nopt-level = "z"\nlto = true\ncodegen-units = 1\npanic = "abort"\nstrip = "debuginfo"/g' Cargo.toml
         shell: bash
 
