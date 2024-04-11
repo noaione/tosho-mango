@@ -1,6 +1,6 @@
 use color_print::cformat;
-use tosho_amap::constants::BASE_HOST;
 use tosho_rbean::{
+    constants::BASE_HOST,
     models::{Carousel, MangaNode},
     RBClient,
 };
