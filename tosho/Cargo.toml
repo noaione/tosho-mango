@@ -35,7 +35,7 @@ secular = "1.0.1"
 futures = "0.3.30"
 
 # CLI deps
-clap = { version = "4.5.3", features = ["derive"] }
+clap = { version = "4.5.4", features = ["derive"] }
 anstream = "0.6.13"
 color-print = "0.3.5"
 inquire = "0.7.4"
@@ -50,7 +50,6 @@ mime_guess = "2.0.4"
 
 self_update = { version = "0.39.0", features = ["archive-tar", "archive-zip", "compression-flate2", "compression-zip-deflate"] }
 
-[target.'cfg(windows)'.dependencies]
 # Windows deps
 windows-sys = { version = "0.52.0", features = ["Win32_Foundation", "Win32_System_Console"] }
 
