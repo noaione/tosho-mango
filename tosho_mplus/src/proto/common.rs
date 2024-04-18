@@ -117,7 +117,7 @@ pub struct PublisherNews {
     #[prost(string, tag = "5")]
     pub content: ::prost::alloc::string::String,
     /// Time of publication in UNIX timestamp
-    #[prost(sfixed64, tag = "6")]
+    #[prost(sint64, tag = "6")]
     pub published_at: i64,
 }
 

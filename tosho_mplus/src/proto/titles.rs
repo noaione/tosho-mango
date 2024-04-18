@@ -52,7 +52,7 @@ pub struct TitleDetail {
     #[prost(string, tag = "4")]
     pub background_image: ::prost::alloc::string::String,
     /// Next update UNIX timestamp
-    #[prost(sfixed64, optional, tag = "5")]
+    #[prost(sint64, optional, tag = "5")]
     pub next_update: ::core::option::Option<i64>,
     /// Update frequency in seconds
     #[prost(uint64, optional, tag = "6")]

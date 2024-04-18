@@ -19,7 +19,7 @@ pub struct UserTickets {
     #[prost(uint64, tag = "1")]
     pub ticket: u64,
     /// Next ticket refresh in UNIX timestamp
-    #[prost(sfixed64, tag = "2")]
+    #[prost(sint64, tag = "2")]
     pub next_refresh: i64,
 }
 
@@ -27,12 +27,12 @@ pub struct UserTickets {
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct UserSubscription {
     /// Subscription plan type
-    /// 
+    ///
     /// TODO: Move into enum when all plans are known
     #[prost(string, tag = "1")]
     pub plan: ::prost::alloc::string::String,
     /// Next payment in UNIX timestamp
-    #[prost(sfixed64, tag = "2")]
+    #[prost(sint64, tag = "2")]
     pub next_payment: i64,
     /// Is the current subscription a trial?
     #[prost(bool, tag = "3")]

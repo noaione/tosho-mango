@@ -21,10 +21,10 @@ pub struct Chapter {
     #[prost(string, tag = "5")]
     pub thumbnail: ::prost::alloc::string::String,
     /// Chapter published/start UNIX timestamp
-    #[prost(sfixed64, tag = "6")]
+    #[prost(sint64, tag = "6")]
     pub published_at: i64,
     /// Chapter end viewing period UNIX timestamp
-    #[prost(sfixed64, optional, tag = "7")]
+    #[prost(sint64, optional, tag = "7")]
     pub end_at: ::core::option::Option<i64>,
     /// Is the chapter already viewed?
     #[prost(bool, tag = "8")]
@@ -33,7 +33,7 @@ pub struct Chapter {
     #[prost(bool, tag = "9")]
     pub vertical_only: bool,
     /// Chapter end viewing by ticket timestamp
-    #[prost(sfixed64, optional, tag = "10")]
+    #[prost(sint64, optional, tag = "10")]
     pub ticket_end_at: ::core::option::Option<i64>,
     /// Is the chapter can be read for free?
     #[prost(bool, tag = "11")]
