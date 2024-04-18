@@ -5,12 +5,14 @@
 #![allow(clippy::derive_partial_eq_without_eq)]
 
 pub mod accounts;
+pub mod chapters;
 pub mod common;
 pub mod enums;
 pub mod home_view;
 pub mod titles;
 
 pub use accounts::*;
+pub use chapters::*;
 pub use common::*;
 pub use enums::*;
 pub use home_view::*;
@@ -35,6 +37,8 @@ pub struct SuccessResponse {
     pub title_ranking: ::core::option::Option<TitleListOnly>,
     #[prost(message, optional, tag = "7")]
     pub subscribed_titles: ::core::option::Option<TitleListOnly>,
+    #[prost(message, optional, tag = "8")]
+    pub title_detail: ::core::option::Option<TitleDetail>,
 }
 
 /// A success or error response enum

@@ -11,3 +11,33 @@ pub struct RegistrationData {
     #[prost(string, tag = "1")]
     pub secret: ::prost::alloc::string::String,
 }
+
+/// User account ticket information
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct UserTickets {
+    /// Current ticket amount
+    #[prost(uint64, tag = "1")]
+    pub ticket: u64,
+    /// Next ticket refresh in UNIX timestamp
+    #[prost(sfixed64, tag = "2")]
+    pub next_refresh: i64,
+}
+
+/// User account subscription information
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct UserSubscription {
+    /// Subscription plan type
+    /// 
+    /// TODO: Move into enum when all plans are known
+    #[prost(string, tag = "1")]
+    pub plan: ::prost::alloc::string::String,
+    /// Next payment in UNIX timestamp
+    #[prost(sfixed64, tag = "2")]
+    pub next_payment: i64,
+    /// Is the current subscription a trial?
+    #[prost(bool, tag = "3")]
+    pub trial: bool,
+    /// Is the subscription is currently on the process being downgraded?
+    #[prost(bool, tag = "4")]
+    pub downgrading: bool,
+}

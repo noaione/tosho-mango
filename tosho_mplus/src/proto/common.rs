@@ -75,3 +75,59 @@ pub struct Banner {
     #[prost(uint32, optional, tag = "5")]
     pub height: Option<u32>,
 }
+
+/// A tag information
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct Tag {
+    /// Tag ID
+    #[prost(uint64, tag = "1")]
+    pub id: u64,
+    /// Tag slug
+    #[prost(string, tag = "2")]
+    pub slug: ::prost::alloc::string::String,
+}
+
+/// A label information
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct Label {
+    /// Label ID
+    #[prost(uint64, tag = "1")]
+    pub id: u64,
+    /// Label description
+    #[prost(string, tag = "2")]
+    pub description: ::prost::alloc::string::String,
+}
+
+/// A publisher news information
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct PublisherNews {
+    /// Publisher news ID
+    #[prost(uint64, tag = "1")]
+    pub news_id: u64,
+    /// Publisher ID
+    #[prost(uint64, tag = "2")]
+    pub publisher_id: u64,
+    /// Publisher name
+    #[prost(string, tag = "3")]
+    pub name: ::prost::alloc::string::String,
+    /// Publisher news title
+    #[prost(string, tag = "4")]
+    pub title: ::prost::alloc::string::String,
+    /// Publisher news content
+    #[prost(string, tag = "5")]
+    pub content: ::prost::alloc::string::String,
+    /// Time of publication in UNIX timestamp
+    #[prost(sfixed64, tag = "6")]
+    pub published_at: i64,
+}
+
+/// A publisher information
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct PublisherItem {
+    /// The publisher banner info
+    #[prost(message, optional, tag = "1")]
+    pub banner: ::core::option::Option<Banner>,
+    /// The publisher news
+    #[prost(message, optional, tag = "2")]
+    pub news: ::core::option::Option<PublisherNews>,
+}
