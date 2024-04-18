@@ -20,6 +20,7 @@ on:
       - 'LICENSE'
       - '.gitignore'
       - '.vscode/**'
+  merge_group:
 
 env:
   CARGO_TERM_COLOR: always
