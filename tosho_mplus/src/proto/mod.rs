@@ -27,15 +27,19 @@ pub struct SuccessResponse {
     pub registration: ::core::option::Option<RegistrationData>,
     #[prost(message, optional, tag = "3")]
     pub home_view: ::core::option::Option<HomeView>,
+    #[prost(message, optional, tag = "4")]
+    pub featured_titles: ::core::option::Option<FeaturedTitles>,
+    #[prost(message, optional, tag = "5")]
+    pub all_titles: ::core::option::Option<TitleListOnly>,
+    #[prost(message, optional, tag = "6")]
+    pub title_ranking: ::core::option::Option<TitleListOnly>,
+    #[prost(message, optional, tag = "7")]
+    pub subscribed_titles: ::core::option::Option<TitleListOnly>,
 }
 
 /// A success or error response enum
 ///
-/// This is used like `oneOf` in Protobuf so only one of them
-/// will be available.
-///
-/// TODO:
-/// - Remove [`Box`] when all message type are implemented in [`SuccessResponse`]
+/// This is used like `oneOf` in Protobuf so only one of them will be available.
 #[derive(Clone, PartialEq, ::prost::Oneof)]
 pub enum SuccessOrError {
     #[prost(message, tag = "1")]

@@ -2,7 +2,7 @@
 //!
 //! If something is missing, please [open an issue](https://github.com/noaione/tosho-mango/issues/new/choose) or a [pull request](https://github.com/noaione/tosho-mango/compare).
 
-use super::{Language, TitleUpdateStatus};
+use super::{Banner, Language, TitleUpdateStatus};
 
 /// A single title information
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -31,6 +31,25 @@ pub struct Title {
     /// The title status
     #[prost(enumeration = "TitleUpdateStatus", tag = "8")]
     pub status: i32,
+}
+
+/// A list of titles contained into a group
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct TitleList {
+    /// The group name
+    #[prost(string, tag = "1")]
+    pub name: ::prost::alloc::string::String,
+    /// The list of titles
+    #[prost(message, repeated, tag = "2")]
+    pub titles: ::prost::alloc::vec::Vec<Title>,
+}
+
+/// A list of titles with no grouping information
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct TitleListOnly {
+    /// The list of titles
+    #[prost(message, repeated, tag = "1")]
+    pub titles: ::prost::alloc::vec::Vec<Title>,
 }
 
 /// An updated title information
@@ -68,4 +87,32 @@ pub struct UpdatedTitleGroup {
     /// The list of updated titles
     #[prost(message, repeated, tag = "2")]
     pub titles: ::prost::alloc::vec::Vec<UpdatedTitle>,
+}
+
+/// The detailed contents of the featured titles
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct FeaturedTitleContents {
+    /// The featured banner contents
+    #[prost(message, optional, tag = "1")]
+    pub banner: ::core::option::Option<Banner>,
+    /// A list of featured titles
+    #[prost(message, optional, tag = "2")]
+    pub titles: ::core::option::Option<TitleList>,
+}
+
+/// A list of featured titles
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct FeaturedTitles {
+    /// The main featured title
+    #[prost(message, optional, tag = "1")]
+    pub main: ::core::option::Option<Banner>,
+    /// The first sub featured title
+    #[prost(message, optional, tag = "2")]
+    pub sub1: ::core::option::Option<Banner>,
+    /// The second sub featured title
+    #[prost(message, optional, tag = "3")]
+    pub sub2: ::core::option::Option<Banner>,
+    /// The featured title contents
+    #[prost(message, repeated, tag = "4")]
+    pub contents: ::prost::alloc::vec::Vec<FeaturedTitleContents>,
 }
