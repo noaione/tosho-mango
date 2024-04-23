@@ -6,6 +6,7 @@
 
 pub mod accounts;
 pub mod chapters;
+pub mod comments;
 pub mod common;
 pub mod enums;
 pub mod home_view;
@@ -13,6 +14,7 @@ pub mod titles;
 
 pub use accounts::*;
 pub use chapters::*;
+pub use comments::*;
 pub use common::*;
 pub use enums::*;
 pub use home_view::*;
@@ -39,6 +41,10 @@ pub struct SuccessResponse {
     pub subscribed_titles: ::core::option::Option<TitleListOnly>,
     #[prost(message, optional, tag = "8")]
     pub title_detail: ::core::option::Option<TitleDetail>,
+    #[prost(message, optional, tag = "9")]
+    pub comment_list: ::core::option::Option<CommentList>,
+    #[prost(message, optional, tag = "10")]
+    pub chapter_viewer: ::core::option::Option<ChapterViewer>,
 }
 
 /// A success or error response enum

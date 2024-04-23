@@ -65,3 +65,145 @@ pub struct ChapterGroup {
     #[prost(message, repeated, tag = "4")]
     pub last_chapters: ::prost::alloc::vec::Vec<Chapter>,
 }
+
+/// A page of a chapter
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct ChapterPage {
+    /// The page url
+    #[prost(string, tag = "1")]
+    pub url: ::prost::alloc::string::String,
+    /// The image width
+    #[prost(uint64, tag = "2")]
+    pub width: u64,
+    /// The image height
+    #[prost(uint64, tag = "3")]
+    pub height: u64,
+    /// The image type/kind
+    #[prost(enumeration = "super::PageType", tag = "4")]
+    pub kind: i32,
+    /// The image encryption key
+    #[prost(string, optional, tag = "5")]
+    pub key: ::core::option::Option<::prost::alloc::string::String>,
+}
+
+/// A chapter page of a banners
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct ChapterPageBanner {
+    /// Banner title
+    #[prost(string, optional, tag = "1")]
+    pub title: ::core::option::Option<::prost::alloc::string::String>,
+    /// Banner list
+    #[prost(message, repeated, tag = "2")]
+    pub banners: ::prost::alloc::vec::Vec<super::common::Banner>,
+}
+
+/// A chapter last page response
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct ChapterPageLastPage {
+    /// Current chapter
+    #[prost(message, optional, tag = "1")]
+    pub chapter: ::core::option::Option<Chapter>,
+    /// Next chapter
+    #[prost(message, optional, tag = "2")]
+    pub next_chapter: ::core::option::Option<Chapter>,
+    /// Top comments of this chapter
+    #[prost(message, repeated, tag = "3")]
+    pub top_comments: ::prost::alloc::vec::Vec<super::comments::Comment>,
+    /// Is the user subscribed
+    #[prost(bool, tag = "4")]
+    pub subscribed: bool,
+    /// The next chapter timestamp
+    #[prost(sint64, optional, tag = "5")]
+    pub next_chapter_at: ::core::option::Option<i64>,
+    /// The chapter type
+    #[prost(enumeration = "super::ChapterType", tag = "6")]
+    pub chapter_type: i32,
+    /// Movie reward of the chapter
+    // #[prost(message, optional, tag = "8")]
+    // pub movie_reward: ::core::option::Option<super::common::PopupMessage>,
+    /// Banner list
+    #[prost(message, optional, tag = "9")]
+    pub banner: ::core::option::Option<super::common::Banner>,
+    /// Title ticket list
+    #[prost(message, repeated, tag = "10")]
+    pub title_tickets: ::prost::alloc::vec::Vec<super::titles::Title>,
+    /// Publisher banner
+    #[prost(message, optional, tag = "11")]
+    pub publisher_banner: ::core::option::Option<super::common::Banner>,
+    /// User tickets
+    #[prost(message, optional, tag = "12")]
+    pub user_tickets: ::core::option::Option<super::accounts::UserTickets>,
+    /// Is next chapter can be read by ticket?
+    #[prost(bool, tag = "13")]
+    pub next_chapter_ticket: bool,
+    /// Is next chapter can be read for free one time only?
+    #[prost(bool, tag = "14")]
+    pub next_chapter_free: bool,
+    /// Is next chapter can be read only with subscription?
+    #[prost(bool, tag = "16")]
+    pub next_chapter_subscription: bool,
+}
+
+/// A chapter page response
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct ChapterPageResponse {
+    /// A response to a chapter page (a.k.a the manga page)
+    #[prost(message, optional, tag = "1")]
+    pub page: ::core::option::Option<ChapterPage>,
+    /// A response to a banner page
+    #[prost(message, optional, tag = "2")]
+    pub banner: ::core::option::Option<ChapterPageBanner>,
+    /// A response to a last page
+    #[prost(message, optional, tag = "3")]
+    pub last_page: ::core::option::Option<ChapterPageLastPage>,
+    /// A response to an insert banner
+    #[prost(message, optional, tag = "5")]
+    pub insert_banner: ::core::option::Option<ChapterPageBanner>,
+}
+
+/// A chapter viewer response
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct ChapterViewer {
+    /// Chapter pages
+    #[prost(message, repeated, tag = "1")]
+    pub pages: ::prost::alloc::vec::Vec<ChapterPageResponse>,
+    /// Chapter ID
+    #[prost(uint64, tag = "2")]
+    pub chapter_id: u64,
+    /// All available chapters
+    #[prost(message, repeated, tag = "3")]
+    pub chapters: ::prost::alloc::vec::Vec<Chapter>,
+    // SNS: 4
+    /// Manga title
+    #[prost(string, tag = "5")]
+    pub title: ::prost::alloc::string::String,
+    /// Chapter title
+    #[prost(string, tag = "6")]
+    pub chapter_title: ::prost::alloc::string::String,
+    /// Number of comments
+    #[prost(uint64, tag = "7")]
+    pub comment_count: u64,
+    /// Is vertical only?
+    #[prost(bool, tag = "8")]
+    pub vertical_only: bool,
+    /// Title ID
+    #[prost(uint64, tag = "9")]
+    pub title_id: u64,
+    /// Is the first page on the right side (first page is odd number)
+    #[prost(bool, tag = "10")]
+    pub first_page_right: bool,
+    /// Region code of the title
+    #[prost(string, tag = "11")]
+    pub region_code: ::prost::alloc::string::String,
+    /// Is horizontal only?
+    #[prost(bool, tag = "12")]
+    pub horizontal_only: bool,
+    /// User subscription info
+    #[prost(message, optional, tag = "13")]
+    pub user_subscription: ::core::option::Option<super::accounts::UserSubscription>,
+    /// User plan type
+    ///
+    /// TODO: Use enum later
+    #[prost(string, tag = "14")]
+    pub plan_type: ::prost::alloc::string::String,
+}

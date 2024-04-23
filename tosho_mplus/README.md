@@ -1,4 +1,4 @@
-# tosho-musq
+# tosho-mplus
 
 ![crates.io version](https://img.shields.io/crates/v/tosho-mplus)
 

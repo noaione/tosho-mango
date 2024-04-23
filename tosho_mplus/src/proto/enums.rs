@@ -7,8 +7,6 @@ use tosho_macros::EnumName;
 /// The error action or error code of the request.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 pub enum ErrorAction {
-    /// An error has occurred.
-    Unrecognized = -1,
     /// Some default or other unknown error.
     Default = 0,
     /// The request is unauthorized.
@@ -17,6 +15,8 @@ pub enum ErrorAction {
     Maintenance = 2,
     /// The request is blocked by GeoIP.
     GeoIPBlocked = 3,
+    /// An error has occurred.
+    Unrecognized = -1,
 }
 
 /// Enum for the available language in the source.
@@ -24,8 +24,6 @@ pub enum ErrorAction {
     Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, EnumName, ::prost::Enumeration,
 )]
 pub enum Language {
-    /// Unknown language.
-    Unrecognized = -1,
     /// English language.
     English = 0,
     /// Spanish language.
@@ -46,6 +44,8 @@ pub enum Language {
     Italian = 8,
     /// Vietnamese language.
     Vietnamese = 9,
+    /// Unknown language.
+    Unrecognized = -1,
 }
 
 impl Language {
@@ -104,8 +104,6 @@ impl Language {
 /// The title update status
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 pub enum TitleUpdateStatus {
-    /// An error has occurred.
-    Unrecognized = -1,
     /// No update available.
     None = 0,
     /// New chapter available.
@@ -116,4 +114,34 @@ pub enum TitleUpdateStatus {
     ReEdition = 3,
     /// Update for creator manga
     Creator = 4,
+    /// An error has occurred.
+    Unrecognized = -1,
+}
+
+/// The page type
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+pub enum PageType {
+    /// Single page
+    Single = 0,
+    /// Left-side of the page (on double page)
+    Left = 1,
+    /// Right-side of the page (on double page)
+    Right = 2,
+    /// A merged spread page
+    Double = 3,
+    /// An error has occurred.
+    Unrecognized = -1,
+}
+
+/// The chapter type
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+pub enum ChapterType {
+    /// Latest chapter
+    Latest = 0,
+    /// Current chapter in a sequence (not latest)
+    Sequence = 1,
+    /// No sequence, just a chapter
+    NoSequence = 2,
+    /// An error has occurred.
+    Unrecognized = -1,
 }
