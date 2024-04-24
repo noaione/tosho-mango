@@ -22,6 +22,8 @@ pub struct Constants {
     pub(crate) os_ver: &'static str,
     /// The app version string used for API requests.
     pub(crate) app_ver: &'static str,
+    /// The OS name string used for API requests.
+    pub(crate) os_name: &'static str,
 }
 
 lazy_static! {
@@ -32,6 +34,7 @@ lazy_static! {
             api_ua: "okhttp/4.9.0".to_string(),
             os_ver: "34", // Android SDK 14
             app_ver: "124",
+            os_name: "android",
         }
     };
 
