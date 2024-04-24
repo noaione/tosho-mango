@@ -18,11 +18,12 @@ pub use crate::helper::ImageQuality;
 /// # Example
 /// ```no_run
 /// use tosho_mplus::MPClient;
+/// use tosho_mplus::proto::Language;
 /// use tosho_mplus::constants::get_constants;
 ///
 /// #[tokio::main]
 /// async fn main() {
-///     let client = MPClient::new("1234", get_constants(1));
+///     let client = MPClient::new("1234", Language::English, get_constants(1));
 /// }
 /// ```
 #[derive(Debug)]
@@ -38,9 +39,10 @@ impl MPClient {
     ///
     /// # Parameters
     /// * `secret` - The secret key to use for the client.
+    /// * `language` - The language to use for the client.
     /// * `constants` - The constants to use for the client.
-    pub fn new(secret: &str, constants: &'static Constants, language: Language) -> Self {
-        Self::make_client(secret, constants, language, None)
+    pub fn new(secret: &str, language: Language, constants: &'static Constants) -> Self {
+        Self::make_client(secret, language, constants, None)
     }
 
     /// Attach a proxy to the client.
@@ -50,13 +52,13 @@ impl MPClient {
     /// # Arguments
     /// * `proxy` - The proxy to attach to the client
     pub fn with_proxy(&self, proxy: reqwest::Proxy) -> Self {
-        Self::make_client(&self.secret, self.constants, self.language, Some(proxy))
+        Self::make_client(&self.secret, self.language, self.constants, Some(proxy))
     }
 
     fn make_client(
         secret: &str,
-        constants: &'static Constants,
         language: Language,
+        constants: &'static Constants,
         proxy: Option<reqwest::Proxy>,
     ) -> Self {
         let mut headers = reqwest::header::HeaderMap::new();
