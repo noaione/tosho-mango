@@ -8,7 +8,7 @@ use std::{collections::HashMap, io::Cursor};
 
 use constants::{Constants, API_HOST};
 use prost::Message;
-use proto::SuccessOrError;
+use proto::{Language, SuccessOrError};
 
 use crate::constants::BASE_API;
 pub use crate::helper::ImageQuality;
@@ -29,6 +29,7 @@ pub use crate::helper::ImageQuality;
 pub struct MPClient {
     inner: reqwest::Client,
     secret: String,
+    language: Language,
     constants: &'static Constants,
 }
 
@@ -38,13 +39,24 @@ impl MPClient {
     /// # Parameters
     /// * `secret` - The secret key to use for the client.
     /// * `constants` - The constants to use for the client.
-    pub fn new(secret: &str, constants: &'static Constants) -> Self {
-        Self::make_client(secret, constants, None)
+    pub fn new(secret: &str, constants: &'static Constants, language: Language) -> Self {
+        Self::make_client(secret, constants, language, None)
+    }
+
+    /// Attach a proxy to the client.
+    ///
+    /// This will clone the client and return a new client with the proxy attached.
+    ///
+    /// # Arguments
+    /// * `proxy` - The proxy to attach to the client
+    pub fn with_proxy(&self, proxy: reqwest::Proxy) -> Self {
+        Self::make_client(&self.secret, self.constants, self.language, Some(proxy))
     }
 
     fn make_client(
         secret: &str,
         constants: &'static Constants,
+        language: Language,
         proxy: Option<reqwest::Proxy>,
     ) -> Self {
         let mut headers = reqwest::header::HeaderMap::new();
@@ -70,16 +82,27 @@ impl MPClient {
         Self {
             inner: client,
             secret: secret.to_string(),
+            language,
             constants,
         }
     }
 
     /// Modify the HashMap to add the required parameters.
-    fn build_params(&self, params: &mut HashMap<String, String>) {
+    fn build_params(&self, params: &mut HashMap<String, String>, with_lang: bool) {
         params.insert("os".to_string(), self.constants.os_name.to_string());
         params.insert("os_ver".to_string(), self.constants.os_ver.to_string());
         params.insert("app_ver".to_string(), self.constants.app_ver.to_string());
         params.insert("secret".to_string(), self.secret.clone());
+        if with_lang {
+            params.insert(
+                "clang".to_string(),
+                self.language.as_language_code().to_owned(),
+            );
+            params.insert(
+                "lang".to_string(),
+                self.language.as_language_code().to_owned(),
+            );
+        }
     }
 
     fn build_url(&self, path: &str) -> String {
@@ -90,10 +113,10 @@ impl MPClient {
         format!("{}/{}", *BASE_API, path)
     }
 
-    fn empty_params(&self) -> HashMap<String, String> {
+    fn empty_params(&self, with_lang: bool) -> HashMap<String, String> {
         let mut params: HashMap<String, String> = HashMap::new();
 
-        self.build_params(&mut params);
+        self.build_params(&mut params, with_lang);
 
         params
     }

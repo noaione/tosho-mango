@@ -41,6 +41,8 @@ pub enum Language {
     /// German language.
     German = 7,
     /// Italian language.
+    ///
+    /// This language is currently unused.
     Italian = 8,
     /// Vietnamese language.
     Vietnamese = 9,
@@ -98,6 +100,56 @@ impl Language {
             merge_back = merge_back.replace('_', " ");
         }
         merge_back
+    }
+
+    /// Get the language code for the language.
+    ///
+    /// # Examples
+    /// ```
+    /// use tosho_mplus::proto::Language;
+    ///
+    /// let english = Language::English;
+    /// assert_eq!(english.as_language_code(), "eng");
+    /// ```
+    pub fn as_language_code(&self) -> &'static str {
+        match self {
+            Language::English => "eng",
+            Language::Spanish => "spa",
+            Language::French => "fra",
+            Language::Indonesian => "ind",
+            Language::BrazilianPortuguese => "ptb",
+            Language::Russian => "rus",
+            Language::Thai => "tha",
+            Language::German => "deu",
+            Language::Italian => "ita",
+            Language::Vietnamese => "vie",
+            Language::Unrecognized => "unknown",
+        }
+    }
+
+    /// Get the country code for the language.
+    ///
+    /// # Examples
+    /// ```
+    /// use tosho_mplus::proto::Language;
+    ///
+    /// let english = Language::English;
+    /// assert_eq!(english.as_country_code(), "en");
+    /// ```
+    pub fn as_country_code(&self) -> &'static str {
+        match self {
+            Language::English => "en",
+            Language::Spanish => "es",
+            Language::French => "fr",
+            Language::Indonesian => "in",
+            Language::BrazilianPortuguese => "pt",
+            Language::Russian => "ru",
+            Language::Thai => "th",
+            Language::German => "de",
+            Language::Italian => "it",
+            Language::Vietnamese => "vi",
+            Language::Unrecognized => "unknown",
+        }
     }
 }
 
