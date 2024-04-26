@@ -39,6 +39,21 @@ pub struct PopupMessage {
     pub language: i32,
 }
 
+impl PopupMessage {
+    /// Format the popup message into a string.
+    pub fn as_string(&self) -> String {
+        let mut message = String::new();
+        if let Some(subject) = &self.subject {
+            message.push_str(subject);
+            message.push_str(": ");
+        }
+        if let Some(body) = &self.body {
+            message.push_str(body);
+        }
+        message
+    }
+}
+
 /// An error response.
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct ErrorResponse {
@@ -57,6 +72,58 @@ pub struct ErrorResponse {
     /// Array of other popup messages
     #[prost(message, repeated, tag = "5")]
     pub other_popups: ::prost::alloc::vec::Vec<PopupMessage>,
+}
+
+impl ErrorResponse {
+    /// Format the error response into a string.
+    pub fn as_string(&self) -> String {
+        let popup_message = self.english_popup.as_ref().map(|popup| popup.as_string());
+        match self.action() {
+            ErrorAction::Default => {
+                let mut message = String::new();
+                message.push_str("An error occurred");
+                if let Some(popup_message) = popup_message {
+                    message.push_str(&format!(": {}", popup_message));
+                }
+                if let Some(debug_message) = &self.debug_message {
+                    message.push_str(&format!("\nDebug: {}", debug_message));
+                }
+                message
+            }
+            ErrorAction::Unauthorized => {
+                let mut message = String::new();
+                message.push_str("You are not authorized to access this resource");
+                if let Some(debug_message) = &self.debug_message {
+                    message.push_str(&format!("\nDebug: {}", debug_message));
+                }
+                message
+            }
+            ErrorAction::Maintenance => {
+                let mut message = String::new();
+                message.push_str("Server is under maintenance");
+                if let Some(debug_message) = &self.debug_message {
+                    message.push_str(&format!("\nDebug: {}", debug_message));
+                }
+                message
+            }
+            ErrorAction::GeoIPBlocked => {
+                let mut message = String::new();
+                message.push_str("Your request is blocked by GeoIP");
+                if let Some(debug_message) = &self.debug_message {
+                    message.push_str(&format!("\nDebug: {}", debug_message));
+                }
+                message
+            }
+            ErrorAction::Unrecognized => {
+                let mut message = String::new();
+                message.push_str("An unknown error occurred");
+                if let Some(debug_message) = &self.debug_message {
+                    message.push_str(&format!("\nDebug: {}", debug_message));
+                }
+                message
+            }
+        }
+    }
 }
 
 /// The banner data.

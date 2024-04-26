@@ -8,7 +8,7 @@ use std::{collections::HashMap, io::Cursor};
 
 use constants::{Constants, API_HOST};
 use prost::Message;
-use proto::{Language, SuccessOrError};
+use proto::{ErrorResponse, Language, SuccessOrError};
 
 use crate::constants::BASE_API;
 pub use crate::helper::ImageQuality;
@@ -124,17 +124,22 @@ impl MPClient {
     }
 }
 
-async fn parse_response(
-    res: reqwest::Response,
-) -> anyhow::Result<Box<crate::proto::SuccessResponse>> {
+/// A common return type for all API calls.
+///
+/// It either returns the specifid success response or an error.
+pub enum APIResponse<T: ::prost::Message + Clone> {
+    Error(Box<ErrorResponse>),
+    Success(Box<T>),
+}
+
+async fn parse_response(res: reqwest::Response) -> anyhow::Result<SuccessOrError> {
     let bytes_data = res.bytes().await?;
     let cursor = bytes_data.as_ref();
 
     let decoded_response = crate::proto::Response::decode(&mut Cursor::new(cursor))?;
     // oneof response on .response
     match decoded_response.response {
-        Some(SuccessOrError::Error(e)) => anyhow::bail!("Error response: {:?}", e),
-        Some(SuccessOrError::Success(s)) => Ok(s),
+        Some(response) => Ok(response),
         None => anyhow::bail!("No response found"),
     }
 }
