@@ -45,6 +45,12 @@ pub struct SuccessResponse {
     pub comment_list: ::core::option::Option<CommentList>,
     #[prost(message, optional, tag = "10")]
     pub chapter_viewer: ::core::option::Option<ChapterViewer>,
+    #[prost(message, optional, tag = "11")]
+    pub web_home_view: ::core::option::Option<WebHomeView>,
+    #[prost(message, optional, tag = "12")]
+    pub user_settings: ::core::option::Option<UserSettings>,
+    #[prost(message, optional, tag = "13")]
+    pub user_profile_settings: ::core::option::Option<UserProfileSettings>,
 }
 
 /// A success or error response enum

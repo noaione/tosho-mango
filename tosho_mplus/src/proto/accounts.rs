@@ -4,6 +4,8 @@
 
 #![allow(clippy::derive_partial_eq_without_eq)]
 
+use super::CommentIcon;
+
 /// Registration data response
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct RegistrationData {
@@ -40,4 +42,38 @@ pub struct UserSubscription {
     /// Is the subscription is currently on the process being downgraded?
     #[prost(bool, tag = "4")]
     pub downgrading: bool,
+}
+
+/// User settings response
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct UserSettings {
+    /// User icon info
+    #[prost(message, optional, tag = "1")]
+    pub icon: ::core::option::Option<CommentIcon>,
+    /// User display name
+    #[prost(string, tag = "2")]
+    pub user_name: ::prost::alloc::string::String,
+    /// User wants notification for news and events
+    #[prost(bool, tag = "3")]
+    pub news_notification: bool,
+    /// User wants notification for chapter updates
+    #[prost(bool, tag = "4")]
+    pub chapter_notification: bool,
+    /// English title count
+    #[prost(uint64, tag = "5")]
+    pub english_title_count: u64,
+}
+
+/// User profile settings response
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct UserProfileSettings {
+    /// A list of available icons
+    #[prost(message, repeated, tag = "1")]
+    pub icons: ::prost::alloc::vec::Vec<CommentIcon>,
+    /// User display name
+    #[prost(string, tag = "2")]
+    pub user_name: ::prost::alloc::string::String,
+    /// User icon info
+    #[prost(message, optional, tag = "3")]
+    pub icon: ::core::option::Option<CommentIcon>,
 }

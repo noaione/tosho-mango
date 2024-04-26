@@ -36,6 +36,17 @@ pub struct Comment {
     pub timestamp: i64,
 }
 
+/// A comment icon data
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct CommentIcon {
+    /// The comment icon ID
+    #[prost(uint64, tag = "1")]
+    pub id: u64,
+    /// The comment icon URL
+    #[prost(string, tag = "2")]
+    pub url: ::prost::alloc::string::String,
+}
+
 /// A comment list response
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct CommentList {
