@@ -70,6 +70,46 @@ pub struct PublisherNewsList {
     pub news: ::prost::alloc::vec::Vec<super::common::PublisherNews>,
 }
 
+/// A single questionnaire
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct Questionnaire {
+    /// The question
+    #[prost(string, tag = "1")]
+    pub question: ::prost::alloc::string::String,
+    /// The selection of answers
+    #[prost(string, repeated, tag = "2")]
+    pub answers: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+    /// Total number of choices
+    #[prost(uint64, tag = "3")]
+    pub total_choices: u64,
+    /// Hide free form answer
+    #[prost(bool, tag = "4")]
+    pub hide_free_form: bool,
+    /// Free form answer
+    #[prost(string, optional, tag = "5")]
+    pub free_form: ::core::option::Option<::prost::alloc::string::String>,
+    /// Can skip the question or not
+    #[prost(bool, tag = "6")]
+    pub can_skip: bool,
+}
+
+/// A questionnaire response
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct QuestionnaireResponse {
+    /// Is this questionnaire answered already?
+    #[prost(bool, tag = "1")]
+    pub answered: bool,
+    /// The subject of the questionnaire
+    #[prost(string, tag = "2")]
+    pub subject: ::prost::alloc::string::String,
+    /// The list of questions
+    #[prost(message, repeated, tag = "3")]
+    pub questions: ::prost::alloc::vec::Vec<Questionnaire>,
+    /// The language of the questionnaire
+    #[prost(enumeration = "super::Language", tag = "4")]
+    pub language: i32,
+}
+
 /// The response for initial view of the app
 ///
 /// The following is `v1` implementation of the initial view response.

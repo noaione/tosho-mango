@@ -221,6 +221,14 @@ pub struct UpdatedTitleGroup {
     pub titles: ::prost::alloc::vec::Vec<UpdatedTitle>,
 }
 
+/// A list of grouped updated titles
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct UpdatedTitleList {
+    /// The list of updated titles
+    #[prost(message, repeated, tag = "1")]
+    pub updates: ::prost::alloc::vec::Vec<UpdatedTitleGroup>,
+}
+
 /// The detailed contents of the featured titles
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct FeaturedTitleContents {
@@ -247,4 +255,45 @@ pub struct FeaturedTitles {
     /// The featured title contents
     #[prost(message, repeated, tag = "4")]
     pub contents: ::prost::alloc::vec::Vec<FeaturedTitleContents>,
+}
+
+/// A single title update information
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct TitleUpdated {
+    /// The title itself
+    #[prost(message, tag = "1")]
+    pub title: ::core::option::Option<Title>,
+    /// The update timestamp
+    #[prost(string, tag = "2")]
+    pub updated_at: ::prost::alloc::string::String,
+}
+
+/// A list of title updates
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct TitleUpdates {
+    /// The list of title updates
+    #[prost(message, repeated, tag = "1")]
+    pub updates: ::prost::alloc::vec::Vec<TitleUpdated>,
+}
+
+/// An information about a title with tickets available
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct TitleTicket {
+    /// The title itself
+    #[prost(message, tag = "1")]
+    pub title: ::core::option::Option<Title>,
+    /// First chapter that can be read with ticket
+    #[prost(uint64, tag = "2")]
+    pub first_chapter: u64,
+    /// Last chapter that can be read with ticket
+    #[prost(uint64, tag = "3")]
+    pub last_chapter: u64,
+}
+
+/// A list of titles with tickets available
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct TitleTicketList {
+    /// The list of titles with tickets
+    #[prost(message, repeated, tag = "1")]
+    pub titles: ::prost::alloc::vec::Vec<TitleTicket>,
 }

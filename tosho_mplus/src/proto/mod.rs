@@ -63,6 +63,14 @@ pub struct SuccessResponse {
     pub feedback_view: ::core::option::Option<FeedbackList>,
     #[prost(message, optional, tag = "18")]
     pub publisher_news_list: ::core::option::Option<PublisherNewsList>,
+    #[prost(message, optional, tag = "19")]
+    pub questionnaire: ::core::option::Option<QuestionnaireResponse>,
+    #[prost(message, optional, tag = "20")]
+    pub title_updates: ::core::option::Option<TitleUpdates>,
+    #[prost(message, optional, tag = "22")]
+    pub updated_titles: ::core::option::Option<UpdatedTitleList>,
+    #[prost(message, optional, tag = "23")]
+    pub title_tickets: ::core::option::Option<TitleTicketList>,
     #[prost(message, optional, tag = "28")]
     pub initial_view_v2: ::core::option::Option<InitialViewV2>,
 }
