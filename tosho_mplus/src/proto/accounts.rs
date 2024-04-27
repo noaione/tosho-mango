@@ -77,3 +77,11 @@ pub struct UserProfileSettings {
     #[prost(message, optional, tag = "3")]
     pub icon: ::core::option::Option<CommentIcon>,
 }
+
+/// User profile update result response
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct UserUpdateProfileResult {
+    /// Result of the profile update
+    #[prost(enumeration = "super::UpdateProfileResult", tag = "1")]
+    pub result: i32,
+}

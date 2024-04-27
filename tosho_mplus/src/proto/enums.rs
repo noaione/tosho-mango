@@ -197,3 +197,27 @@ pub enum ChapterType {
     /// An error has occurred.
     Unrecognized = -1,
 }
+
+/// Enums for update profile result
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+pub enum UpdateProfileResult {
+    /// Profile updated successfully
+    Success = 0,
+    /// Another profile with the same name already exists
+    Duplicate = 1,
+    /// The name contains disallowed words
+    BadName = 2,
+    /// An error has occurred.
+    Unrecognized = -1,
+}
+
+/// Feedback type
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+pub enum FeedbackType {
+    /// Feedback is a question (original poster)
+    Question = 0,
+    /// Feedback is a answer to a question
+    Answer = 1,
+    /// An error has occurred.
+    Unrecognized = -1,
+}

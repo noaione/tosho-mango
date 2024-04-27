@@ -10,6 +10,7 @@ pub mod comments;
 pub mod common;
 pub mod enums;
 pub mod home_view;
+pub mod others;
 pub mod titles;
 
 pub use accounts::*;
@@ -18,6 +19,7 @@ pub use comments::*;
 pub use common::*;
 pub use enums::*;
 pub use home_view::*;
+pub use others::*;
 pub use titles::*;
 
 /// Indicate a success response
@@ -51,6 +53,18 @@ pub struct SuccessResponse {
     pub user_settings: ::core::option::Option<UserSettings>,
     #[prost(message, optional, tag = "13")]
     pub user_profile_settings: ::core::option::Option<UserProfileSettings>,
+    #[prost(message, optional, tag = "14")]
+    pub update_profile_result: ::core::option::Option<UserUpdateProfileResult>,
+    #[prost(message, optional, tag = "15")]
+    pub service_announcements: ::core::option::Option<ServiceAnnouncements>,
+    #[prost(message, optional, tag = "16")]
+    pub initial_view: ::core::option::Option<InitialView>,
+    #[prost(message, optional, tag = "17")]
+    pub feedback_view: ::core::option::Option<FeedbackList>,
+    #[prost(message, optional, tag = "18")]
+    pub publisher_news_list: ::core::option::Option<PublisherNewsList>,
+    #[prost(message, optional, tag = "28")]
+    pub initial_view_v2: ::core::option::Option<InitialViewV2>,
 }
 
 /// A success or error response enum

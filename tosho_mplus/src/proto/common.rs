@@ -198,3 +198,14 @@ pub struct PublisherItem {
     #[prost(message, optional, tag = "2")]
     pub news: ::core::option::Option<PublisherNews>,
 }
+
+/// Available languages in the source.
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct AvailableLanguages {
+    /// The language
+    #[prost(enumeration = "Language", tag = "1")]
+    pub language: i32,
+    /// Total count of titles available in the language
+    #[prost(uint64, tag = "2")]
+    pub titles_count: u64,
+}
