@@ -248,3 +248,54 @@ impl Languages {
         }
     }
 }
+
+/// A subscription offer for Android device
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct SubscriptionOfferAndroid {
+    /// The offer tag
+    #[prost(string, tag = "1")]
+    pub tag: ::prost::alloc::string::String,
+}
+
+/// A subscription offer for Apple device
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct SubscriptionOfferApple {
+    /// The offer type
+    #[prost(enumeration = "super::PlanOfferType", tag = "1")]
+    pub kind: i32,
+    /// The signature info
+    #[prost(string, tag = "2")]
+    pub signature: ::prost::alloc::string::String,
+    /// The apple key info
+    #[prost(string, tag = "3")]
+    pub key: ::prost::alloc::string::String,
+    /// The nonce info
+    #[prost(string, tag = "4")]
+    pub nonce: ::prost::alloc::string::String,
+    /// The timestamp info
+    #[prost(string, tag = "5")]
+    pub timestamp: ::prost::alloc::string::String,
+    /// The identifier info
+    #[prost(string, tag = "6")]
+    pub identifier: ::prost::alloc::string::String,
+}
+
+/// A plan information
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct Plan {
+    /// The plan name/ID
+    #[prost(string, tag = "1")]
+    pub name: ::prost::alloc::string::String,
+    /// The plan description
+    #[prost(string, tag = "2")]
+    pub description: ::prost::alloc::string::String,
+    /// The plan product ID
+    #[prost(string, tag = "3")]
+    pub product_id: ::prost::alloc::string::String,
+    /// The subscription offer for apple devices
+    #[prost(message, optional, tag = "4")]
+    pub apple_offer: ::core::option::Option<SubscriptionOfferApple>,
+    /// The subscription offer for android devices
+    #[prost(message, repeated, tag = "5")]
+    pub android_offer: ::prost::alloc::vec::Vec<SubscriptionOfferAndroid>,
+}

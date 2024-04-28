@@ -321,6 +321,10 @@ pub struct UpdatedTitleGroupV2 {
 }
 
 /// The detailed contents of the featured titles
+///
+/// This is `v1` implementation of the featured title contents.
+///
+/// See also: [`FeaturedTitleContentsV2`]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct FeaturedTitleContents {
     /// The featured banner contents
@@ -332,6 +336,10 @@ pub struct FeaturedTitleContents {
 }
 
 /// A list of featured titles
+///
+/// This is `v1` implementation of the featured titles.
+///
+/// See also: [`FeaturedTitlesV2`]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct FeaturedTitles {
     /// The main featured title
@@ -346,6 +354,39 @@ pub struct FeaturedTitles {
     /// The featured title contents
     #[prost(message, repeated, tag = "4")]
     pub contents: ::prost::alloc::vec::Vec<FeaturedTitleContents>,
+}
+
+/// The detailed contents of the featured titles
+///
+/// This is `v2` implementation of the featured title contents.
+///
+/// See also: [`FeaturedTitleContents`]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct FeaturedTitleContentsV2 {
+    /// The featured banner contents
+    #[prost(message, optional, tag = "1")]
+    pub banner: ::core::option::Option<Banner>,
+    /// A list of featured titles
+    #[prost(message, optional, tag = "2")]
+    pub titles: ::core::option::Option<TitleList>,
+    /// The ranked titles
+    #[prost(message, repeated, tag = "3")]
+    pub ranked_titles: ::prost::alloc::vec::Vec<TitleRankingGroup>,
+}
+
+/// A list of featured titles
+///
+/// This is `v2` implementation of the featured titles.
+///
+/// See also: [`FeaturedTitles`]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct FeaturedTitlesV2 {
+    /// The list of top search banners
+    #[prost(message, repeated, tag = "1")]
+    pub banners: ::prost::alloc::vec::Vec<Banner>,
+    /// The featured title contents
+    #[prost(message, repeated, tag = "4")]
+    pub contents: ::prost::alloc::vec::Vec<FeaturedTitleContentsV2>,
 }
 
 /// A subscribed or favorited title information
@@ -479,4 +520,90 @@ pub struct HighlightedTitle {
     /// Is horizontal only?
     #[prost(bool, tag = "7")]
     pub horizontal_only: bool,
+}
+
+/// A free title to be read
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct FreeTitle {
+    /// The title itself
+    #[prost(message, tag = "1")]
+    pub title: ::core::option::Option<Title>,
+    /// The updated timestamp of the title
+    #[prost(string, tag = "2")]
+    pub updated_at: ::prost::alloc::string::String,
+}
+
+/// A list of free titles
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct FreeTitles {
+    /// The list of free titles
+    #[prost(message, repeated, tag = "1")]
+    pub titles: ::prost::alloc::vec::Vec<FreeTitle>,
+}
+
+/// A label applied to a list of titles
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct LabelledTitle {
+    /// The label title
+    #[prost(string, tag = "1")]
+    pub label: ::prost::alloc::string::String,
+    /// The list of titles
+    #[prost(message, repeated, tag = "2")]
+    pub titles: ::prost::alloc::vec::Vec<Title>,
+}
+
+/// A list of titles with labels
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct LabelledTitles {
+    /// The label itself
+    #[prost(message, tag = "1")]
+    pub label: ::core::option::Option<Label>,
+    /// The list of labelled titles
+    #[prost(message, repeated, tag = "2")]
+    pub labels: ::prost::alloc::vec::Vec<LabelledTitle>,
+}
+
+/// A title in ranking list
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct TitleRankingGroup {
+    /// Original title ID
+    #[prost(uint64, tag = "1")]
+    pub original_title: u64,
+    /// The ranking score/position
+    #[prost(uint64, tag = "2")]
+    pub ranking: u64,
+    /// The titles
+    #[prost(message, repeated, tag = "3")]
+    pub titles: ::prost::alloc::vec::Vec<Title>,
+}
+
+/// Title ranking list response
+///
+/// This is `v2` implementation of the title ranking list.
+///
+/// See also: [`TitleListOnly`]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct TitleRankingList {
+    /// The list of banners
+    #[prost(message, repeated, tag = "1")]
+    pub banners: ::prost::alloc::vec::Vec<Banner>,
+    /// The updated timestamp of this ranking
+    #[prost(sint64, tag = "2")]
+    pub updated_at: i64,
+    /// The list of titles
+    #[prost(message, repeated, tag = "3")]
+    pub titles: ::prost::alloc::vec::Vec<TitleRankingGroup>,
+}
+
+/// A list of titles in subscriptions plan
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct SubscriptionTitles {
+    /// The plan type
+    ///
+    /// TODO: Find out what this is
+    #[prost(string, tag = "1")]
+    pub plan: ::prost::alloc::string::String,
+    /// The list of titles
+    #[prost(message, repeated, tag = "2")]
+    pub titles: ::prost::alloc::vec::Vec<Title>,
 }

@@ -116,3 +116,14 @@ pub struct UserUpdateProfileResult {
     #[prost(enumeration = "super::UpdateProfileResult", tag = "1")]
     pub result: i32,
 }
+
+/// Push token response
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct PushTokenResponse {
+    /// The received token
+    #[prost(string, tag = "1")]
+    pub token: ::prost::alloc::string::String,
+    /// The token timestamp
+    #[prost(sint64, optional, tag = "2")]
+    pub timestamp: ::core::option::Option<i64>,
+}

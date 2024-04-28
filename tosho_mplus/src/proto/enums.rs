@@ -221,3 +221,16 @@ pub enum FeedbackType {
     /// An error has occurred.
     Unrecognized = -1,
 }
+
+/// Plan offer type
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+pub enum PlanOfferType {
+    /// No offer
+    Free = 0,
+    /// Introductory offer to the plan
+    Introductory = 1,
+    /// Promotional offer to the plan
+    Promotional = 2,
+    /// An error has occurred.
+    Unrecognized = -1,
+}

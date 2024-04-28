@@ -89,6 +89,26 @@ pub struct SuccessResponse {
     pub initial_view_v2: ::core::option::Option<InitialViewV2>,
     #[prost(message, optional, tag = "29")]
     pub languages: ::core::option::Option<Languages>,
+    #[prost(message, optional, tag = "30")]
+    pub web_home_view_v2: ::core::option::Option<WebHomeViewV2>,
+    #[prost(message, optional, tag = "31")]
+    pub web_home_view_v3: ::core::option::Option<WebHomeViewV3>,
+    #[prost(message, optional, tag = "32")]
+    pub push_token: ::core::option::Option<PushTokenResponse>,
+    #[prost(message, optional, tag = "33")]
+    pub free_titles: ::core::option::Option<FreeTitles>,
+    #[prost(message, optional, tag = "34")]
+    pub labelled_titles: ::core::option::Option<LabelledTitles>,
+    #[prost(message, optional, tag = "35")]
+    pub search_results: ::core::option::Option<SearchResults>,
+    #[prost(message, optional, tag = "36")]
+    pub subscriptions: ::core::option::Option<SubscriptionResponse>,
+    #[prost(message, optional, tag = "37")]
+    pub title_ranking_v2: ::core::option::Option<TitleRankingList>,
+    #[prost(message, optional, tag = "38")]
+    pub web_home_view_v4: ::core::option::Option<WebHomeViewV4>,
+    #[prost(message, optional, tag = "39")]
+    pub featured_titles_v2: ::core::option::Option<FeaturedTitlesV2>,
 }
 
 /// A success or error response enum

@@ -142,3 +142,54 @@ pub struct InitialViewV2 {
     #[prost(message, repeated, tag = "2")]
     pub languages: ::prost::alloc::vec::Vec<AvailableLanguages>,
 }
+
+/// The search contents
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct SearchContents {
+    /// The banner for search
+    #[prost(message, optional, tag = "1")]
+    pub banner: ::core::option::Option<super::common::Banner>,
+    /// The list titles that match the search
+    #[prost(message, repeated, tag = "2")]
+    pub titles: ::prost::alloc::vec::Vec<super::titles::TitleList>,
+    /// The ranked titles
+    #[prost(message, repeated, tag = "3")]
+    pub rankings: ::prost::alloc::vec::Vec<super::titles::TitleRankingGroup>,
+    /// All the labels for this content
+    #[prost(message, repeated, tag = "4")]
+    pub labels: ::prost::alloc::vec::Vec<super::common::Label>,
+}
+
+/// The response for search result
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct SearchResults {
+    /// The top search banners
+    #[prost(message, repeated, tag = "1")]
+    pub top_banners: ::prost::alloc::vec::Vec<super::common::Banner>,
+    /// The list of tags that can be used on the search
+    #[prost(message, repeated, tag = "2")]
+    pub tags: ::prost::alloc::vec::Vec<super::common::Tag>,
+    /// The list of titles that match the search
+    #[prost(message, repeated, tag = "3")]
+    pub titles: ::prost::alloc::vec::Vec<super::titles::TitleListV2>,
+    /// The list of search results contents
+    #[prost(message, repeated, tag = "5")]
+    pub contents: ::prost::alloc::vec::Vec<SearchContents>,
+}
+
+/// The subscriptions list response
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct SubscriptionResponse {
+    /// The user subscription
+    #[prost(message, optional, tag = "1")]
+    pub subscription: ::core::option::Option<super::accounts::UserSubscription>,
+    /// The available plans
+    #[prost(message, repeated, tag = "2")]
+    pub plans: ::prost::alloc::vec::Vec<super::common::Plan>,
+    /// The available titles for each plans
+    #[prost(message, repeated, tag = "3")]
+    pub titles: ::prost::alloc::vec::Vec<super::titles::SubscriptionTitles>,
+    /// User has already used the free trial
+    #[prost(bool, tag = "4")]
+    pub free_trial_used: bool,
+}
