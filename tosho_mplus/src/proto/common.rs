@@ -209,3 +209,42 @@ pub struct AvailableLanguages {
     #[prost(uint64, tag = "2")]
     pub titles_count: u64,
 }
+
+/// A information about the current languages
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct Languages {
+    /// The current UI language
+    #[prost(enumeration = "Language", tag = "1")]
+    pub language: i32,
+    /// The content language
+    #[prost(enumeration = "Language", optional, tag = "2")]
+    pub content_language: ::core::option::Option<i32>,
+    /// The secondary content language
+    ///
+    /// This will take priority over the first content language.
+    #[prost(enumeration = "Language", optional, tag = "3")]
+    pub content_language_secondary: ::core::option::Option<i32>,
+    /// The tertiary content language
+    ///
+    /// This will take priority over the first and second content language.
+    #[prost(enumeration = "Language", optional, tag = "4")]
+    pub content_language_tertiary: ::core::option::Option<i32>,
+    /// The available languages
+    #[prost(message, repeated, tag = "5")]
+    pub availables: ::prost::alloc::vec::Vec<AvailableLanguages>,
+}
+
+impl Languages {
+    /// Get the current active content language.
+    pub fn content_languages(&self) -> Language {
+        if let Some(_) = self.content_language_tertiary {
+            self.content_language_tertiary()
+        } else if let Some(_) = self.content_language_secondary {
+            self.content_language_secondary()
+        } else if let Some(_) = self.content_language {
+            self.content_language()
+        } else {
+            Language::English
+        }
+    }
+}

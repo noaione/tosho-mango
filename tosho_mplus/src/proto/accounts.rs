@@ -4,7 +4,7 @@
 
 #![allow(clippy::derive_partial_eq_without_eq)]
 
-use super::CommentIcon;
+use super::{AvailableLanguages, CommentIcon};
 
 /// Registration data response
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -45,6 +45,10 @@ pub struct UserSubscription {
 }
 
 /// User settings response
+///
+/// This is a `v1` implementation of the user settings response.
+///
+/// See also: [`UserSettingsV2`]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct UserSettings {
     /// User icon info
@@ -62,6 +66,33 @@ pub struct UserSettings {
     /// English title count
     #[prost(uint64, tag = "5")]
     pub english_title_count: u64,
+}
+
+/// User settings response
+///
+/// This is a `v2` implementation of the user settings response.
+///
+/// See also: [`UserSettings`]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct UserSettingsV2 {
+    /// User icon info
+    #[prost(message, optional, tag = "1")]
+    pub icon: ::core::option::Option<CommentIcon>,
+    /// User display name
+    #[prost(string, tag = "2")]
+    pub user_name: ::prost::alloc::string::String,
+    /// User wants notification for news and events
+    #[prost(bool, tag = "3")]
+    pub news_notification: bool,
+    /// User wants notification for chapter updates
+    #[prost(bool, tag = "4")]
+    pub chapter_notification: bool,
+    /// Available languages with title count
+    #[prost(message, repeated, tag = "5")]
+    pub languages: ::prost::alloc::vec::Vec<AvailableLanguages>,
+    /// User subscription information
+    #[prost(message, optional, tag = "6")]
+    pub subscription: ::core::option::Option<UserSubscription>,
 }
 
 /// User profile settings response

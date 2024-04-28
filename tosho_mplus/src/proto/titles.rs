@@ -166,6 +166,10 @@ pub struct TitleLabels {
 }
 
 /// A list of titles contained into a group
+///
+/// This is a `v1` implementation of the title list.
+///
+/// See also: [`TiteListV2`]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct TitleList {
     /// The group name
@@ -176,12 +180,52 @@ pub struct TitleList {
     pub titles: ::prost::alloc::vec::Vec<Title>,
 }
 
+/// A list of titles contained into a group
+///
+/// This is a `v2` implementation of the title list.
+///
+/// See also: [`TitleList`]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct TitleListV2 {
+    /// The group name
+    #[prost(string, tag = "1")]
+    pub name: ::prost::alloc::string::String,
+    /// The list of titles
+    #[prost(message, repeated, tag = "2")]
+    pub titles: ::prost::alloc::vec::Vec<Title>,
+    /// The group tags
+    #[prost(message, repeated, tag = "3")]
+    pub tags: ::prost::alloc::vec::Vec<Tag>,
+    /// The group label
+    #[prost(message, optional, tag = "4")]
+    pub label: ::core::option::Option<Label>,
+    /// The next chapter start timestamp
+    #[prost(sint64, optional, tag = "5")]
+    pub next_start_at: ::core::option::Option<i64>,
+}
+
 /// A list of titles with no grouping information
+///
+/// This is a `v1` implementation of the title list.
+///
+/// See also: [`TitleListOnlyV2`]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct TitleListOnly {
     /// The list of titles
     #[prost(message, repeated, tag = "1")]
     pub titles: ::prost::alloc::vec::Vec<Title>,
+}
+
+/// A list of titles with no grouping information
+///
+/// This is a `v2` implementation of the title list.
+///
+/// See also: [`TitleListOnly`]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct TitleListOnlyV2 {
+    /// The list of titles
+    #[prost(message, repeated, tag = "1")]
+    pub titles: ::prost::alloc::vec::Vec<TitleListV2>,
 }
 
 /// An updated title information
@@ -336,6 +380,10 @@ pub struct UpcomingChapterTitle {
 }
 
 /// A single title update information
+///
+/// This is a `v1` implementation of the title update information.
+///
+/// See also: [`TitleUpdatedV2`]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct TitleUpdated {
     /// The title itself
@@ -346,12 +394,43 @@ pub struct TitleUpdated {
     pub updated_at: ::prost::alloc::string::String,
 }
 
+/// A single title update information
+///
+/// This is a `v2` implementation of the title update information.
+///
+/// See also: [`TitleUpdated`]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct TitleUpdatedV2 {
+    /// The titles
+    #[prost(message, repeated, tag = "1")]
+    pub titles: ::prost::alloc::vec::Vec<TitleListV2>,
+    /// The update timestamp
+    #[prost(string, tag = "2")]
+    pub updated_at: ::prost::alloc::string::String,
+}
+
 /// A list of title updates
+///
+/// This is a `v1` implementation of the title updates.
+///
+/// See also: [`TitleUpdatesV2`]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct TitleUpdates {
     /// The list of title updates
     #[prost(message, repeated, tag = "1")]
     pub updates: ::prost::alloc::vec::Vec<TitleUpdated>,
+}
+
+/// A list of title updates
+///
+/// This is a `v2` implementation of the title updates.
+///
+/// See also: [`TitleUpdates`]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct TitleUpdatesV2 {
+    /// The list of title updates
+    #[prost(message, repeated, tag = "1")]
+    pub updates: ::prost::alloc::vec::Vec<TitleUpdatedV2>,
 }
 
 /// An information about a title with tickets available

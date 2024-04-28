@@ -75,8 +75,16 @@ pub struct SuccessResponse {
     pub title_tickets: ::core::option::Option<TitleTicketList>,
     #[prost(message, optional, tag = "24")]
     pub home_view_v3: ::core::option::Option<HomeViewV3>,
+    #[prost(message, optional, tag = "25")]
+    pub all_titles_v2: ::core::option::Option<TitleListOnlyV2>,
+    #[prost(message, optional, tag = "26")]
+    pub user_settings_v2: ::core::option::Option<UserSettingsV2>,
+    #[prost(message, optional, tag = "27")]
+    pub title_updates_v2: ::core::option::Option<TitleUpdatesV2>,
     #[prost(message, optional, tag = "28")]
     pub initial_view_v2: ::core::option::Option<InitialViewV2>,
+    #[prost(message, optional, tag = "29")]
+    pub languages: ::core::option::Option<Languages>,
 }
 
 /// A success or error response enum
