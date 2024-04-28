@@ -1,6 +1,10 @@
 //! A module containing all the models/proto mapping used in the library.
 //!
-//! If something is missing, please [open an issue](https://github.com/noaione/tosho-mango/issues/new/choose) or a [pull request](https://github.com/noaione/tosho-mango/compare).
+//! The following module contains almost all the proto models used in the original app.
+//! Including all the outdated/unused/deprecated models for preservation purpose.
+//!
+//! This module is manually created, if something is missing or broken, please [open an issue](https://github.com/noaione/tosho-mango/issues/new/choose)
+//! or a [pull request](https://github.com/noaione/tosho-mango/compare).
 
 #![allow(clippy::derive_partial_eq_without_eq)]
 
