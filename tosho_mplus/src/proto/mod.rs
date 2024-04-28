@@ -67,10 +67,14 @@ pub struct SuccessResponse {
     pub questionnaire: ::core::option::Option<QuestionnaireResponse>,
     #[prost(message, optional, tag = "20")]
     pub title_updates: ::core::option::Option<TitleUpdates>,
+    #[prost(message, optional, tag = "21")]
+    pub home_view_v2: ::core::option::Option<HomeViewV2>,
     #[prost(message, optional, tag = "22")]
     pub updated_titles: ::core::option::Option<UpdatedTitleList>,
     #[prost(message, optional, tag = "23")]
     pub title_tickets: ::core::option::Option<TitleTicketList>,
+    #[prost(message, optional, tag = "24")]
+    pub home_view_v3: ::core::option::Option<HomeViewV3>,
     #[prost(message, optional, tag = "28")]
     pub initial_view_v2: ::core::option::Option<InitialViewV2>,
 }

@@ -211,6 +211,10 @@ pub struct UpdatedTitle {
 }
 
 /// A list of updated titles grouped by something
+///
+/// The following is `v1` implementation of the updated title group.
+///
+/// See also: [`UpdatedTitleGroupV2`]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct UpdatedTitleGroup {
     /// The group name
@@ -227,6 +231,49 @@ pub struct UpdatedTitleList {
     /// The list of updated titles
     #[prost(message, repeated, tag = "1")]
     pub updates: ::prost::alloc::vec::Vec<UpdatedTitleGroup>,
+}
+
+/// An original implementation for updated title group
+///
+/// See also: [`UpdatedTitleGroupV2`]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct UpdatedTitleGroupOriginal {
+    /// The title group name
+    #[prost(string, tag = "1")]
+    pub name: ::prost::alloc::string::String,
+    /// The chapter number of it
+    #[prost(string, tag = "2")]
+    pub chapter_number: ::prost::alloc::string::String,
+    /// The list of updated titles
+    #[prost(message, repeated, tag = "3")]
+    pub titles: ::prost::alloc::vec::Vec<UpdatedTitle>,
+    /// View count of the title
+    #[prost(uint64, tag = "4")]
+    pub view_count: u64,
+    /// Title update status
+    #[prost(enumeration = "TitleUpdateStatus", tag = "5")]
+    pub status: i32,
+    /// Chapter start timestamp
+    #[prost(sint64, tag = "6")]
+    pub start_at: i64,
+}
+
+/// A list of updated titles grouped by something
+///
+/// The following is `v2` implementation of the updated title group.
+///
+/// See also: [`UpdatedTitleGroup`]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct UpdatedTitleGroupV2 {
+    /// The group name
+    #[prost(string, tag = "1")]
+    pub name: ::prost::alloc::string::String,
+    /// The titles in the group
+    #[prost(message, repeated, tag = "2")]
+    pub titles: ::prost::alloc::vec::Vec<UpdatedTitleGroupOriginal>,
+    /// The group name days
+    #[prost(uint64, tag = "3")]
+    pub days: u64,
 }
 
 /// The detailed contents of the featured titles
@@ -255,6 +302,37 @@ pub struct FeaturedTitles {
     /// The featured title contents
     #[prost(message, repeated, tag = "4")]
     pub contents: ::prost::alloc::vec::Vec<FeaturedTitleContents>,
+}
+
+/// A subscribed or favorited title information
+///
+/// This also used as a history of recently read titles.
+/// If the title is not subscribed, you *can* assume it's a history.
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct SubscribedTitle {
+    /// The title itself
+    #[prost(message, tag = "1")]
+    pub title: ::core::option::Option<Title>,
+    /// Is there any latest chapter available?
+    #[prost(bool, tag = "2")]
+    pub latest: bool,
+    /// Is this title subscribed?
+    #[prost(bool, tag = "3")]
+    pub subscribed: bool,
+}
+
+/// An upcoming chapter of a title
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct UpcomingChapterTitle {
+    /// The title itself
+    #[prost(message, tag = "1")]
+    pub title: ::core::option::Option<Title>,
+    /// The next chapter name
+    #[prost(string, tag = "2")]
+    pub chapter_name: ::prost::alloc::string::String,
+    /// The next chapter release timestamp
+    #[prost(sint64, tag = "3")]
+    pub release_at: i64,
 }
 
 /// A single title update information
@@ -296,4 +374,30 @@ pub struct TitleTicketList {
     /// The list of titles with tickets
     #[prost(message, repeated, tag = "1")]
     pub titles: ::prost::alloc::vec::Vec<TitleTicket>,
+}
+
+/// A title highlighted in the home view
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct HighlightedTitle {
+    /// The title itself
+    #[prost(message, tag = "1")]
+    pub title: ::core::option::Option<Title>,
+    /// The associated chapter ID
+    #[prost(uint64, tag = "2")]
+    pub chapter_id: u64,
+    /// The list of page URL
+    #[prost(string, repeated, tag = "3")]
+    pub pages: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+    /// The page height
+    #[prost(uint64, tag = "4")]
+    pub height: u64,
+    /// The page width
+    #[prost(uint64, tag = "5")]
+    pub width: u64,
+    /// Is vertical only?
+    #[prost(bool, tag = "6")]
+    pub vertical_only: bool,
+    /// Is horizontal only?
+    #[prost(bool, tag = "7")]
+    pub horizontal_only: bool,
 }
