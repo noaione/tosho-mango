@@ -237,11 +237,11 @@ pub struct Languages {
 impl Languages {
     /// Get the current active content language.
     pub fn content_languages(&self) -> Language {
-        if let Some(_) = self.content_language_tertiary {
+        if self.content_language_tertiary.is_some() {
             self.content_language_tertiary()
-        } else if let Some(_) = self.content_language_secondary {
+        } else if self.content_language_secondary.is_some() {
             self.content_language_secondary()
-        } else if let Some(_) = self.content_language {
+        } else if self.content_language.is_some() {
             self.content_language()
         } else {
             Language::English
