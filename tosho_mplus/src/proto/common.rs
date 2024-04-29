@@ -4,6 +4,10 @@
 
 #![allow(clippy::derive_partial_eq_without_eq)]
 
+use std::str::FromStr;
+
+use crate::helper::SubscriptionPlan;
+
 use super::enums::{ErrorAction, Language};
 
 /// A popup button action
@@ -298,4 +302,17 @@ pub struct Plan {
     /// The subscription offer for android devices
     #[prost(message, repeated, tag = "5")]
     pub android_offer: ::prost::alloc::vec::Vec<SubscriptionOfferAndroid>,
+}
+
+impl Plan {
+    /// Get the actual subscriptions plan type
+    ///
+    /// This will return the actual [`SubscriptionPlan`] type
+    /// and fallback to [`SubscriptionPlan::Basic`] if the plan is not recognized.
+    pub fn name(&self) -> SubscriptionPlan {
+        match SubscriptionPlan::from_str(&self.name) {
+            Ok(plan) => plan,
+            Err(_) => SubscriptionPlan::Basic,
+        }
+    }
 }

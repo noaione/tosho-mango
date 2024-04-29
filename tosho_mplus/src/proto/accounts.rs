@@ -4,6 +4,10 @@
 
 #![allow(clippy::derive_partial_eq_without_eq)]
 
+use std::str::FromStr;
+
+use crate::helper::SubscriptionPlan;
+
 use super::{AvailableLanguages, CommentIcon};
 
 /// Registration data response
@@ -29,8 +33,6 @@ pub struct UserTickets {
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct UserSubscription {
     /// Subscription plan type
-    ///
-    /// TODO: Move into enum when all plans are known
     #[prost(string, tag = "1")]
     pub plan: ::prost::alloc::string::String,
     /// Next payment in UNIX timestamp
@@ -42,6 +44,19 @@ pub struct UserSubscription {
     /// Is the subscription is currently on the process being downgraded?
     #[prost(bool, tag = "4")]
     pub downgrading: bool,
+}
+
+impl UserSubscription {
+    /// Get the actual subscriptions plan type
+    ///
+    /// This will return the actual [`SubscriptionPlan`] type
+    /// and fallback to [`SubscriptionPlan::Basic`] if the plan is not recognized.
+    pub fn plan(&self) -> SubscriptionPlan {
+        match SubscriptionPlan::from_str(&self.plan) {
+            Ok(plan) => plan,
+            Err(_) => SubscriptionPlan::Basic,
+        }
+    }
 }
 
 /// User settings response

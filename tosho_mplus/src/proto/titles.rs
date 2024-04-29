@@ -2,6 +2,10 @@
 //!
 //! If something is missing, please [open an issue](https://github.com/noaione/tosho-mango/issues/new/choose) or a [pull request](https://github.com/noaione/tosho-mango/compare).
 
+use std::str::FromStr;
+
+use crate::helper::SubscriptionPlan;
+
 use super::{
     Banner, Chapter, ChapterGroup, Label, Language, PublisherItem, Tag, TitleUpdateStatus,
     UserSubscription, UserTickets,
@@ -163,6 +167,19 @@ pub struct TitleLabels {
     /// Plan type of the title
     #[prost(string, tag = "3")]
     pub plan_type: ::prost::alloc::string::String,
+}
+
+impl TitleLabels {
+    /// Get the actual subscriptions plan type
+    ///
+    /// This will return the actual [`SubscriptionPlan`] type
+    /// and fallback to [`SubscriptionPlan::Basic`] if the plan is not recognized.
+    pub fn plan_type(&self) -> SubscriptionPlan {
+        match SubscriptionPlan::from_str(&self.plan_type) {
+            Ok(plan) => plan,
+            Err(_) => SubscriptionPlan::Basic,
+        }
+    }
 }
 
 /// A list of titles contained into a group
@@ -599,11 +616,22 @@ pub struct TitleRankingList {
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct SubscriptionTitles {
     /// The plan type
-    ///
-    /// TODO: Find out what this is
     #[prost(string, tag = "1")]
     pub plan: ::prost::alloc::string::String,
     /// The list of titles
     #[prost(message, repeated, tag = "2")]
     pub titles: ::prost::alloc::vec::Vec<Title>,
+}
+
+impl SubscriptionTitles {
+    /// Get the actual subscriptions plan type
+    ///
+    /// This will return the actual [`SubscriptionPlan`] type
+    /// and fallback to [`SubscriptionPlan::Basic`] if the plan is not recognized.
+    pub fn plan(&self) -> SubscriptionPlan {
+        match SubscriptionPlan::from_str(&self.plan) {
+            Ok(plan) => plan,
+            Err(_) => SubscriptionPlan::Basic,
+        }
+    }
 }

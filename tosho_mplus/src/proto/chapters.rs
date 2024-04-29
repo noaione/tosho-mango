@@ -2,6 +2,10 @@
 //!
 //! If something is missing, please [open an issue](https://github.com/noaione/tosho-mango/issues/new/choose) or a [pull request](https://github.com/noaione/tosho-mango/compare).
 
+use std::str::FromStr;
+
+use crate::helper::SubscriptionPlan;
+
 /// A single chapter information
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Chapter {
@@ -202,8 +206,19 @@ pub struct ChapterViewer {
     #[prost(message, optional, tag = "13")]
     pub user_subscription: ::core::option::Option<super::accounts::UserSubscription>,
     /// User plan type
-    ///
-    /// TODO: Use enum later
     #[prost(string, tag = "14")]
     pub plan_type: ::prost::alloc::string::String,
+}
+
+impl ChapterViewer {
+    /// Get the actual subscriptions plan type
+    ///
+    /// This will return the actual [`SubscriptionPlan`] type
+    /// and fallback to [`SubscriptionPlan::Basic`] if the plan is not recognized.
+    pub fn plan_type(&self) -> SubscriptionPlan {
+        match SubscriptionPlan::from_str(&self.plan_type) {
+            Ok(plan) => plan,
+            Err(_) => SubscriptionPlan::Basic,
+        }
+    }
 }
