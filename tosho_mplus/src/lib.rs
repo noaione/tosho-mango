@@ -24,6 +24,7 @@ pub use crate::helper::ImageQuality;
 /// #[tokio::main]
 /// async fn main() {
 ///     let client = MPClient::new("1234", Language::English, get_constants(1));
+///     let home_view = client.get_home_page().await.unwrap();
 /// }
 /// ```
 ///
