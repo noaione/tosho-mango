@@ -26,6 +26,11 @@ pub use crate::helper::ImageQuality;
 ///     let client = MPClient::new("1234", Language::English, get_constants(1));
 /// }
 /// ```
+///
+/// # Boxed
+///
+/// All responses are [`Box`]-ed since it has widely varying sizes.
+/// ```
 #[derive(Debug)]
 pub struct MPClient {
     inner: reqwest::Client,
@@ -121,6 +126,72 @@ impl MPClient {
         self.build_params(&mut params, with_lang);
 
         params
+    }
+
+    /// Get the initial view of the app.
+    pub async fn get_initial(&self) -> anyhow::Result<APIResponse<proto::InitialViewV2>> {
+        let request = self
+            .inner
+            .get(&self.build_url("init_v2"))
+            .query(&self.empty_params(false))
+            .send()
+            .await?;
+
+        let response = parse_response(request).await?;
+
+        match response {
+            SuccessOrError::Success(data) => match data.initial_view_v2 {
+                Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
+                None => anyhow::bail!("No initial view found"),
+            },
+            SuccessOrError::Error(error) => Ok(APIResponse::Error(error)),
+        }
+    }
+
+    /// Get the main home view of the app.
+    pub async fn get_home_page(&self) -> anyhow::Result<APIResponse<proto::HomeViewV3>> {
+        let mut query_params = self.empty_params(true);
+        query_params.insert("viewer_mode".to_string(), "horizontal".to_string());
+
+        let request = self
+            .inner
+            .get(&self.build_url("home_v4"))
+            .query(&query_params)
+            .send()
+            .await?;
+
+        let response = parse_response(request).await?;
+
+        match response {
+            SuccessOrError::Success(data) => match data.home_view_v3 {
+                Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
+                None => anyhow::bail!("No home view found"),
+            },
+            SuccessOrError::Error(error) => Ok(APIResponse::Error(error)),
+        }
+    }
+
+    /// Get the user settings.
+    pub async fn get_user_settings(&self) -> anyhow::Result<APIResponse<proto::UserSettingsV2>> {
+        let mut query_params = self.empty_params(true);
+        query_params.insert("viewer_mode".to_string(), "horizontal".to_string());
+
+        let request = self
+            .inner
+            .get(&self.build_url("settings_v2"))
+            .query(&query_params)
+            .send()
+            .await?;
+
+        let response = parse_response(request).await?;
+
+        match response {
+            SuccessOrError::Success(data) => match data.user_settings_v2 {
+                Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
+                None => anyhow::bail!("No user settings found"),
+            },
+            SuccessOrError::Error(error) => Ok(APIResponse::Error(error)),
+        }
     }
 }
 
