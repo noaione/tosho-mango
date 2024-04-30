@@ -105,6 +105,17 @@ pub struct ChapterGroup {
     pub last_chapters: ::prost::alloc::vec::Vec<Chapter>,
 }
 
+impl ChapterGroup {
+    /// Group the chapters into a single list
+    pub fn flatten(&self) -> Vec<Chapter> {
+        let mut chapters = Vec::new();
+        chapters.extend_from_slice(&self.first_chapters);
+        chapters.extend_from_slice(&self.mid_chapters);
+        chapters.extend_from_slice(&self.last_chapters);
+        chapters
+    }
+}
+
 /// A page of a chapter
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct ChapterPage {
