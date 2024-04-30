@@ -52,7 +52,13 @@ impl ToString for ImageQuality {
 
 /// The subscriptions plan tier.
 #[derive(
-    Debug, Clone, Copy, PartialEq, tosho_macros::SerializeEnum, tosho_macros::DeserializeEnum,
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    PartialOrd,
+    tosho_macros::SerializeEnum,
+    tosho_macros::DeserializeEnum,
 )]
 pub enum SubscriptionPlan {
     /// Basic or user has no subscription
@@ -127,5 +133,19 @@ impl ToString for RankingType {
             RankingType::Trending => "trending".to_string(),
             RankingType::Completed => "completed".to_string(),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_plan_type_ord() {
+        use super::SubscriptionPlan;
+
+        assert!(SubscriptionPlan::Basic < SubscriptionPlan::Standard);
+        assert!(SubscriptionPlan::Standard < SubscriptionPlan::Deluxe);
+        assert!(SubscriptionPlan::Basic < SubscriptionPlan::Deluxe);
+        assert!(SubscriptionPlan::Deluxe >= SubscriptionPlan::Standard);
+        assert!(SubscriptionPlan::Standard >= SubscriptionPlan::Standard);
     }
 }

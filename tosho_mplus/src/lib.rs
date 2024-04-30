@@ -7,6 +7,7 @@ pub mod proto;
 use std::{collections::HashMap, io::Cursor};
 
 use constants::{Constants, API_HOST};
+use helper::RankingType;
 use prost::Message;
 use proto::{ErrorResponse, Language, SuccessOrError};
 
@@ -234,6 +235,220 @@ impl MPClient {
             SuccessOrError::Success(data) => match data.subscriptions {
                 Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
                 None => anyhow::bail!("No subscription response found"),
+            },
+            SuccessOrError::Error(error) => Ok(APIResponse::Error(error)),
+        }
+    }
+
+    /// Get all the available titles.
+    pub async fn get_all_titles(&self) -> anyhow::Result<APIResponse<proto::TitleListOnlyV2>> {
+        let request = self
+            .inner
+            .get(&self.build_url("title_list/all_v2"))
+            .query(&self.empty_params(false))
+            .send()
+            .await?;
+
+        let response = parse_response(request).await?;
+
+        match response {
+            SuccessOrError::Success(data) => match data.all_titles_v2 {
+                Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
+                None => anyhow::bail!("No title list found"),
+            },
+            SuccessOrError::Error(error) => Ok(APIResponse::Error(error)),
+        }
+    }
+
+    /// Get title ranking list.
+    ///
+    /// # Arguments
+    /// * `kind` - The type of ranking to get.
+    pub async fn get_title_ranking(
+        &self,
+        kind: Option<RankingType>,
+    ) -> anyhow::Result<APIResponse<proto::TitleRankingList>> {
+        let kind = kind.unwrap_or(RankingType::Hottest);
+        let mut query_params = self.empty_params(true);
+        query_params.insert("type".to_string(), kind.to_string());
+
+        let request = self
+            .inner
+            .get(&self.build_url("title_list/rankingV2"))
+            .query(&query_params)
+            .send()
+            .await?;
+
+        let response = parse_response(request).await?;
+
+        match response {
+            SuccessOrError::Success(data) => match data.title_ranking_v2 {
+                Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
+                None => anyhow::bail!("No title ranking found"),
+            },
+            SuccessOrError::Error(error) => Ok(APIResponse::Error(error)),
+        }
+    }
+
+    /// Get all free titles
+    pub async fn get_free_titles(&self) -> anyhow::Result<APIResponse<proto::FreeTitles>> {
+        let request = self
+            .inner
+            .get(&self.build_url("title_list/free_titles"))
+            .query(&self.empty_params(false))
+            .send()
+            .await?;
+
+        let response = parse_response(request).await?;
+
+        match response {
+            SuccessOrError::Success(data) => match data.free_titles {
+                Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
+                None => anyhow::bail!("No free titles found"),
+            },
+            SuccessOrError::Error(error) => Ok(APIResponse::Error(error)),
+        }
+    }
+
+    /// Get the bookmarked titles
+    pub async fn get_bookmarked_titles(&self) -> anyhow::Result<APIResponse<proto::TitleListOnly>> {
+        let request = self
+            .inner
+            .get(&self.build_url("title_list/bookmark"))
+            .query(&self.empty_params(false))
+            .send()
+            .await?;
+
+        let response = parse_response(request).await?;
+
+        match response {
+            SuccessOrError::Success(data) => match data.subscribed_titles {
+                Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
+                None => anyhow::bail!("No bookmarked titles found"),
+            },
+            SuccessOrError::Error(error) => Ok(APIResponse::Error(error)),
+        }
+    }
+
+    /// Get list of titles for specific language
+    ///
+    /// Internally, this use the "search" API which does not take any
+    /// query information for some unknown reason.
+    pub async fn get_titles_for_language(
+        &self,
+        language: Language,
+    ) -> anyhow::Result<APIResponse<proto::SearchResults>> {
+        let mut query_params = self.empty_params(true);
+        query_params.insert("lang".to_string(), language.as_language_code().to_owned());
+        query_params.insert("clang".to_string(), language.as_language_code().to_owned());
+
+        let request = self
+            .inner
+            .get(&self.build_url("title_list/search"))
+            .query(&query_params)
+            .send()
+            .await?;
+
+        let response = parse_response(request).await?;
+
+        match response {
+            SuccessOrError::Success(data) => match data.search_results {
+                Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
+                None => anyhow::bail!("No titles found"),
+            },
+            SuccessOrError::Error(error) => Ok(APIResponse::Error(error)),
+        }
+    }
+
+    /// Get detailed information about a title.
+    ///
+    /// # Arguments
+    /// * `title_id` - The ID of the title to get information about.
+    pub async fn get_title_details(
+        &self,
+        title_id: u64,
+    ) -> anyhow::Result<APIResponse<proto::TitleDetail>> {
+        let mut query_params = self.empty_params(true);
+        query_params.insert("title_id".to_string(), title_id.to_string());
+
+        let request = self
+            .inner
+            .get(&self.build_url("title_detailV3"))
+            .query(&query_params)
+            .send()
+            .await?;
+
+        let response = parse_response(request).await?;
+
+        match response {
+            SuccessOrError::Success(data) => match data.title_detail {
+                Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
+                None => anyhow::bail!("No title details found"),
+            },
+            SuccessOrError::Error(error) => Ok(APIResponse::Error(error)),
+        }
+    }
+
+    /// Get chapter viewer information.
+    ///
+    /// # Arguments
+    /// * `chapter` - The chapter to get information about.
+    /// * `title` - The title of the chapter.
+    /// * `quality` - The quality of the image to get.
+    /// * `split` - Whether to split the image spread or not.
+    pub async fn get_chapter_viewer(
+        &self,
+        chapter: &proto::Chapter,
+        title: &proto::TitleDetail,
+        quality: ImageQuality,
+        split: bool,
+    ) -> anyhow::Result<APIResponse<proto::ChapterViewer>> {
+        let mut query_params = self.empty_params(true);
+        query_params.insert("chapter_id".to_string(), chapter.chapter_id.to_string());
+        query_params.insert(
+            "split".to_string(),
+            if split { "yes" } else { "no" }.to_string(),
+        );
+        query_params.insert("img_quality".to_string(), quality.to_string());
+        query_params.insert("viewer_mode".to_string(), chapter.default_view_mode());
+        // Determine the way to read the chapter
+        if chapter.is_free() {
+            query_params.insert("free_reading".to_string(), "yes".to_string());
+            query_params.insert("subscription_reading".to_string(), "no".to_string());
+            query_params.insert("ticket_reading".to_string(), "no".to_string());
+        } else if chapter.is_ticketed() {
+            query_params.insert("ticket_reading".to_string(), "yes".to_string());
+            query_params.insert("free_reading".to_string(), "no".to_string());
+            query_params.insert("subscription_reading".to_string(), "no".to_string());
+        } else {
+            let user_sub = title.user_subscription.clone().unwrap_or_default();
+            let title_labels = title.title_labels.clone().unwrap_or_default();
+            if user_sub.plan() >= title_labels.plan_type() {
+                query_params.insert("subscription_reading".to_string(), "yes".to_string());
+                query_params.insert("ticket_reading".to_string(), "no".to_string());
+                query_params.insert("free_reading".to_string(), "no".to_string());
+            } else {
+                anyhow::bail!(
+                    "Chapter is not free and user does not have minimum subscription: {:?} < {:?}",
+                    user_sub.plan(),
+                    title_labels.plan_type()
+                );
+            }
+        }
+
+        let request = self
+            .inner
+            .get(&self.build_url("manga_viewer"))
+            .query(&query_params)
+            .send()
+            .await?;
+
+        let response = parse_response(request).await?;
+
+        match response {
+            SuccessOrError::Success(data) => match data.chapter_viewer {
+                Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
+                None => anyhow::bail!("No chapter viewer found"),
             },
             SuccessOrError::Error(error) => Ok(APIResponse::Error(error)),
         }
