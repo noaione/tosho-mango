@@ -53,6 +53,41 @@ pub struct Chapter {
     pub comment_count: u64,
 }
 
+impl Chapter {
+    /// Can this chapter be read for free?
+    pub fn is_free(&self) -> bool {
+        if self.free {
+            return true;
+        }
+
+        if let Some(end_at) = self.end_at {
+            let current_time = chrono::Utc::now().timestamp();
+            current_time < end_at
+        } else {
+            false
+        }
+    }
+
+    /// Can this chapter be read with ticket?
+    pub fn is_ticketed(&self) -> bool {
+        if let Some(ticket_end_at) = self.ticket_end_at {
+            let current_time = chrono::Utc::now().timestamp();
+            current_time < ticket_end_at
+        } else {
+            false
+        }
+    }
+
+    /// Get the default viewing mode
+    pub fn default_view_mode(&self) -> String {
+        if self.vertical_only {
+            "vertical".to_string()
+        } else {
+            "horizontal".to_string()
+        }
+    }
+}
+
 /// A group of chapters
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct ChapterGroup {

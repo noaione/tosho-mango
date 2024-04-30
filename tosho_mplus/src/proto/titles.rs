@@ -131,7 +131,7 @@ pub struct TitleDetail {
     #[prost(message, repeated, tag = "31")]
     pub tags: ::prost::alloc::vec::Vec<Tag>,
     /// Specific label applied to the title
-    #[prost(message, optional, tag = "32")]
+    #[prost(message, tag = "32")]
     pub title_labels: ::core::option::Option<TitleLabels>,
     /// User subscription information
     #[prost(message, optional, tag = "33")]
