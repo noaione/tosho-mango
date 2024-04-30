@@ -7,6 +7,58 @@ use std::{
 
 use crate::r#impl::Implementations;
 
+macro_rules! config_reader {
+    (
+        $read_func:ident,
+        $get_func:ident,
+        $config:ty,
+        $prefix:expr
+    ) => {
+        fn $read_func(user_conf: PathBuf) -> Option<$config> {
+            if !user_conf.exists() {
+                None
+            } else {
+                let mut file = std::fs::File::open(user_conf).unwrap();
+                let mut buffer = Vec::new();
+                file.read_to_end(&mut buffer).unwrap();
+                drop(file);
+                let conf = <$config>::decode(&mut Cursor::new(buffer)).unwrap();
+                Some(conf)
+            }
+        }
+
+        fn $get_func(id: &str, user_path: PathBuf) -> Option<$config> {
+            let mut user_conf = user_path;
+            user_conf.push(format!("{}.{}.tmconf", $prefix, id));
+
+            $read_func(user_conf)
+        }
+    };
+}
+
+macro_rules! save_config_impl {
+    ($prefix:expr, $user_path:expr, $config:expr) => {{
+        let mut user_conf = $user_path.clone();
+        user_conf.push(format!("{}.{}.tmconf", $prefix, $config.id));
+
+        let mut file = std::fs::File::create(user_conf).unwrap();
+        let mut buffer = Vec::new();
+        $config.encode(&mut buffer).unwrap();
+        file.write_all(&buffer).unwrap();
+        drop(file);
+    }};
+}
+
+macro_rules! impl_from_config {
+    ($config:ty, $variant:ident) => {
+        impl From<$config> for ConfigImpl {
+            fn from(config: $config) -> Self {
+                ConfigImpl::$variant(config)
+            }
+        }
+    };
+}
+
 /// The many type of config files.
 #[derive(Clone)]
 pub enum ConfigImpl {
@@ -15,12 +67,6 @@ pub enum ConfigImpl {
     Amap(crate::r#impl::amap::config::Config),
     Sjv(crate::r#impl::sjv::config::Config),
     Rbean(crate::r#impl::rbean::config::Config),
-}
-
-impl From<crate::r#impl::kmkc::config::Config> for ConfigImpl {
-    fn from(config: crate::r#impl::kmkc::config::Config) -> Self {
-        ConfigImpl::Kmkc(config)
-    }
 }
 
 // Adapt web/mobile
@@ -36,29 +82,11 @@ impl From<crate::r#impl::kmkc::config::ConfigMobile> for ConfigImpl {
     }
 }
 
-impl From<crate::r#impl::musq::config::Config> for ConfigImpl {
-    fn from(config: crate::r#impl::musq::config::Config) -> Self {
-        ConfigImpl::Musq(config)
-    }
-}
-
-impl From<crate::r#impl::amap::config::Config> for ConfigImpl {
-    fn from(config: crate::r#impl::amap::config::Config) -> Self {
-        ConfigImpl::Amap(config)
-    }
-}
-
-impl From<crate::r#impl::sjv::config::Config> for ConfigImpl {
-    fn from(config: crate::r#impl::sjv::config::Config) -> Self {
-        ConfigImpl::Sjv(config)
-    }
-}
-
-impl From<crate::r#impl::rbean::config::Config> for ConfigImpl {
-    fn from(config: crate::r#impl::rbean::config::Config) -> Self {
-        ConfigImpl::Rbean(config)
-    }
-}
+impl_from_config!(crate::r#impl::kmkc::config::Config, Kmkc);
+impl_from_config!(crate::r#impl::musq::config::Config, Musq);
+impl_from_config!(crate::r#impl::amap::config::Config, Amap);
+impl_from_config!(crate::r#impl::sjv::config::Config, Sjv);
+impl_from_config!(crate::r#impl::rbean::config::Config, Rbean);
 
 pub(crate) fn get_user_path() -> std::path::PathBuf {
     #[cfg(windows)]
@@ -117,101 +145,33 @@ fn get_config_kmkc(id: &str, user_path: PathBuf) -> Option<crate::r#impl::kmkc::
     read_kmkc_config(user_conf)
 }
 
-fn read_musq_config(user_conf: PathBuf) -> Option<crate::r#impl::musq::config::Config> {
-    if !user_conf.exists() {
-        None
-    } else {
-        let mut file = std::fs::File::open(user_conf).unwrap();
-        let mut buffer = Vec::new();
-        file.read_to_end(&mut buffer).unwrap();
-        drop(file);
-        let conf = crate::r#impl::musq::config::Config::decode(&mut Cursor::new(buffer)).unwrap();
-        Some(conf)
-    }
-}
+config_reader!(
+    read_musq_config,
+    get_config_musq,
+    crate::r#impl::musq::config::Config,
+    crate::r#impl::musq::config::PREFIX
+);
 
-fn get_config_musq(id: &str, user_path: PathBuf) -> Option<crate::r#impl::musq::config::Config> {
-    let mut user_conf = user_path;
-    user_conf.push(format!(
-        "{}.{}.tmconf",
-        crate::r#impl::musq::config::PREFIX,
-        id
-    ));
+config_reader!(
+    read_amap_config,
+    get_config_amap,
+    crate::r#impl::amap::config::Config,
+    crate::r#impl::amap::config::PREFIX
+);
 
-    read_musq_config(user_conf)
-}
+config_reader!(
+    read_sjv_config,
+    get_config_sjv,
+    crate::r#impl::sjv::config::Config,
+    crate::r#impl::sjv::config::PREFIX
+);
 
-fn read_amap_config(user_conf: PathBuf) -> Option<crate::r#impl::amap::config::Config> {
-    if !user_conf.exists() {
-        None
-    } else {
-        let mut file = std::fs::File::open(user_conf).unwrap();
-        let mut buffer = Vec::new();
-        file.read_to_end(&mut buffer).unwrap();
-        drop(file);
-        let conf = crate::r#impl::amap::config::Config::decode(&mut Cursor::new(buffer)).unwrap();
-        Some(conf)
-    }
-}
-
-fn get_config_amap(id: &str, user_path: PathBuf) -> Option<crate::r#impl::amap::config::Config> {
-    let mut user_conf = user_path;
-    user_conf.push(format!(
-        "{}.{}.tmconf",
-        crate::r#impl::amap::config::PREFIX,
-        id
-    ));
-
-    read_amap_config(user_conf)
-}
-
-fn read_sjv_config(user_conf: PathBuf) -> Option<crate::r#impl::sjv::config::Config> {
-    if !user_conf.exists() {
-        None
-    } else {
-        let mut file = std::fs::File::open(user_conf).unwrap();
-        let mut buffer = Vec::new();
-        file.read_to_end(&mut buffer).unwrap();
-        drop(file);
-        let conf = crate::r#impl::sjv::config::Config::decode(&mut Cursor::new(buffer)).unwrap();
-        Some(conf)
-    }
-}
-
-fn get_config_sjv(id: &str, user_path: PathBuf) -> Option<crate::r#impl::sjv::config::Config> {
-    let mut user_conf = user_path;
-    user_conf.push(format!(
-        "{}.{}.tmconf",
-        crate::r#impl::sjv::config::PREFIX,
-        id
-    ));
-
-    read_sjv_config(user_conf)
-}
-
-fn read_rbean_config(user_conf: PathBuf) -> Option<crate::r#impl::rbean::config::Config> {
-    if !user_conf.exists() {
-        None
-    } else {
-        let mut file = std::fs::File::open(user_conf).unwrap();
-        let mut buffer = Vec::new();
-        file.read_to_end(&mut buffer).unwrap();
-        drop(file);
-        let conf = crate::r#impl::rbean::config::Config::decode(&mut Cursor::new(buffer)).unwrap();
-        Some(conf)
-    }
-}
-
-fn get_config_rbean(id: &str, user_path: PathBuf) -> Option<crate::r#impl::rbean::config::Config> {
-    let mut user_conf = user_path;
-    user_conf.push(format!(
-        "{}.{}.tmconf",
-        crate::r#impl::rbean::config::PREFIX,
-        id
-    ));
-
-    read_rbean_config(user_conf)
-}
+config_reader!(
+    read_rbean_config,
+    get_config_rbean,
+    crate::r#impl::rbean::config::Config,
+    crate::r#impl::rbean::config::PREFIX
+);
 
 pub fn get_config(
     id: &str,
@@ -338,60 +298,16 @@ pub fn save_config(config: ConfigImpl, user_path: Option<PathBuf>) {
             drop(file);
         }
         ConfigImpl::Musq(config) => {
-            let mut user_conf = user_path.clone();
-            user_conf.push(format!(
-                "{}.{}.tmconf",
-                crate::r#impl::musq::config::PREFIX,
-                config.id
-            ));
-
-            let mut file = std::fs::File::create(user_conf).unwrap();
-            let mut buffer = Vec::new();
-            config.encode(&mut buffer).unwrap();
-            file.write_all(&buffer).unwrap();
-            drop(file);
+            save_config_impl!(crate::r#impl::musq::config::PREFIX, user_path, config)
         }
         ConfigImpl::Amap(config) => {
-            let mut user_conf = user_path.clone();
-            user_conf.push(format!(
-                "{}.{}.tmconf",
-                crate::r#impl::amap::config::PREFIX,
-                config.id
-            ));
-
-            let mut file = std::fs::File::create(user_conf).unwrap();
-            let mut buffer = Vec::new();
-            config.encode(&mut buffer).unwrap();
-            file.write_all(&buffer).unwrap();
-            drop(file);
+            save_config_impl!(crate::r#impl::amap::config::PREFIX, user_path, config)
         }
         ConfigImpl::Sjv(config) => {
-            let mut user_conf = user_path.clone();
-            user_conf.push(format!(
-                "{}.{}.tmconf",
-                crate::r#impl::sjv::config::PREFIX,
-                config.id
-            ));
-
-            let mut file = std::fs::File::create(user_conf).unwrap();
-            let mut buffer = Vec::new();
-            config.encode(&mut buffer).unwrap();
-            file.write_all(&buffer).unwrap();
-            drop(file);
+            save_config_impl!(crate::r#impl::sjv::config::PREFIX, user_path, config)
         }
         ConfigImpl::Rbean(config) => {
-            let mut user_conf = user_path.clone();
-            user_conf.push(format!(
-                "{}.{}.tmconf",
-                crate::r#impl::rbean::config::PREFIX,
-                config.id
-            ));
-
-            let mut file = std::fs::File::create(user_conf).unwrap();
-            let mut buffer = Vec::new();
-            config.encode(&mut buffer).unwrap();
-            file.write_all(&buffer).unwrap();
-            drop(file);
+            save_config_impl!(crate::r#impl::rbean::config::PREFIX, user_path, config)
         }
     }
 }
