@@ -234,3 +234,43 @@ pub enum PlanOfferType {
     /// An error has occurred.
     Unrecognized = -1,
 }
+
+/// Title release schedule
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+pub enum TitleReleaseSchedule {
+    /// No schedule
+    None = 0,
+    /// Daily/everyday schedule
+    Daily = 1,
+    /// Weekly schedule
+    Weekly = 2,
+    /// Bi-weekly schedule
+    BiWeekly = 3,
+    /// Monthly schedule
+    Monthly = 4,
+    /// Bi-monthly schedule
+    BiMonthly = 5,
+    /// Tri-monthly schedule
+    TriMonthly = 6,
+    /// Other schedule
+    Other = 7,
+    /// Series is completed
+    Completed = 8,
+    /// An error has occurred.
+    Unrecognized = -1,
+}
+
+/// Title rating
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+pub enum TitleRating {
+    /// All ages rating
+    AllAges = 0,
+    /// Teen rating
+    Teen = 1,
+    /// Teen+ rating
+    TeenPlus = 2,
+    /// Mature rating
+    Mature = 3,
+    /// An error has occurred.
+    Unrecognized = -1,
+}

@@ -87,8 +87,8 @@ pub struct TitleDetail {
     #[prost(bool, tag = "15")]
     pub subscribed: bool,
     /// The title rating
-    #[prost(uint64, tag = "16")]
-    pub rating: u64,
+    #[prost(enumeration = "super::TitleRating", tag = "16")]
+    pub rating: i32,
     /// Is the chapters in descending order?
     #[prost(bool, tag = "17")]
     pub descending: bool,
@@ -159,8 +159,8 @@ pub struct TitleLanguages {
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct TitleLabels {
     /// Release schedule of the title
-    #[prost(uint64, tag = "1")]
-    pub release_schedule: u64,
+    #[prost(enumeration = "super::TitleReleaseSchedule", tag = "1")]
+    pub release_schedule: i32,
     /// Is the title simulpublished with the original release?
     #[prost(bool, tag = "2")]
     pub simulpublish: bool,
