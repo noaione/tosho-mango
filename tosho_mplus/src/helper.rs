@@ -89,3 +89,43 @@ impl ToString for SubscriptionPlan {
         }
     }
 }
+
+/// The title ranking type.
+#[derive(
+    Debug, Clone, Copy, PartialEq, tosho_macros::SerializeEnum, tosho_macros::DeserializeEnum,
+)]
+pub enum RankingType {
+    /// The current hottest title ranking
+    Hottest,
+    /// The currently trending title ranking
+    Trending,
+    /// Completed title ranking
+    Completed,
+}
+
+tosho_macros::enum_error!(RankingTypeFromStrError);
+
+impl FromStr for RankingType {
+    type Err = RankingTypeFromStrError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_ascii_lowercase().as_str() {
+            "hottest" | "hot" => Ok(RankingType::Hottest),
+            "trending" => Ok(RankingType::Trending),
+            "completed" | "complete" => Ok(RankingType::Completed),
+            _ => Err(RankingTypeFromStrError {
+                original: s.to_string(),
+            }),
+        }
+    }
+}
+
+impl ToString for RankingType {
+    fn to_string(&self) -> String {
+        match self {
+            RankingType::Hottest => "hottest".to_string(),
+            RankingType::Trending => "trending".to_string(),
+            RankingType::Completed => "completed".to_string(),
+        }
+    }
+}

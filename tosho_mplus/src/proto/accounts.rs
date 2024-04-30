@@ -117,8 +117,8 @@ pub struct UserProfileSettings {
     #[prost(message, repeated, tag = "1")]
     pub icons: ::prost::alloc::vec::Vec<CommentIcon>,
     /// User display name
-    #[prost(string, tag = "2")]
-    pub user_name: ::prost::alloc::string::String,
+    #[prost(string, optional, tag = "2")]
+    pub user_name: ::core::option::Option<::prost::alloc::string::String>,
     /// User icon info
     #[prost(message, optional, tag = "3")]
     pub icon: ::core::option::Option<CommentIcon>,

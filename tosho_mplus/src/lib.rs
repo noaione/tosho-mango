@@ -172,6 +172,28 @@ impl MPClient {
         }
     }
 
+    /// Get the user profile
+    pub async fn get_user_profile(
+        &self,
+    ) -> anyhow::Result<APIResponse<proto::UserProfileSettings>> {
+        let request = self
+            .inner
+            .get(&self.build_url("profile"))
+            .query(&self.empty_params(false))
+            .send()
+            .await?;
+
+        let response = parse_response(request).await?;
+
+        match response {
+            SuccessOrError::Success(data) => match data.user_profile_settings {
+                Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
+                None => anyhow::bail!("No user profile found"),
+            },
+            SuccessOrError::Error(error) => Ok(APIResponse::Error(error)),
+        }
+    }
+
     /// Get the user settings.
     pub async fn get_user_settings(&self) -> anyhow::Result<APIResponse<proto::UserSettingsV2>> {
         let mut query_params = self.empty_params(true);
@@ -190,6 +212,28 @@ impl MPClient {
             SuccessOrError::Success(data) => match data.user_settings_v2 {
                 Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
                 None => anyhow::bail!("No user settings found"),
+            },
+            SuccessOrError::Error(error) => Ok(APIResponse::Error(error)),
+        }
+    }
+
+    /// Get the subscriptions list and details.
+    pub async fn get_subscriptions(
+        &self,
+    ) -> anyhow::Result<APIResponse<proto::SubscriptionResponse>> {
+        let request = self
+            .inner
+            .get(&self.build_url("subscription"))
+            .query(&self.empty_params(false))
+            .send()
+            .await?;
+
+        let response = parse_response(request).await?;
+
+        match response {
+            SuccessOrError::Success(data) => match data.subscriptions {
+                Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
+                None => anyhow::bail!("No subscription response found"),
             },
             SuccessOrError::Error(error) => Ok(APIResponse::Error(error)),
         }
