@@ -10,12 +10,12 @@ Starting from Rust port of the project, all changes will be put into this file.
 - All source: Force use `rustls` and use `http2` adaptive window for reqwest client.
 - `MU`: Update proto information.
 - `MU`: Only use `HTTP/1.1` since `HTTP/2` broke the API request
-- `MU`: Rework downloader, image blocks are now stored to save request
+- `MU`: Rework downloader, image blocks are now stored to make less request to the API
 - `RB`: Fix wrong base host used in homepage view
 - Refactor some duplicate code
 
 ### Build
-- Bump `reqwest` to 0.12
+- Bump `reqwest` to 0.12 (use hyper v1)
 - Use `rustls` instead of `native-tls` for `reqwest`
 - Set `stream` feature as default on `reqwest`
 - Compile with latest Rust stable in CI
