@@ -58,6 +58,19 @@ pub(crate) fn select_single_account(
                 name: c.id.clone(),
                 value: format!("{} [{} - {}]", c.id, c.email, c.platform().to_name()),
             },
+            crate::config::ConfigImpl::Mplus(c) => ConsoleChoice {
+                name: c.id.clone(),
+                value: if c.username.is_some() {
+                    format!(
+                        "{} [{} - {}]",
+                        c.id,
+                        c.username.as_ref().unwrap(),
+                        c.r#type().to_name()
+                    )
+                } else {
+                    format!("{} [{}]", c.id, c.r#type().to_name())
+                },
+            },
         })
         .collect();
 
@@ -85,6 +98,7 @@ pub(crate) fn select_single_account(
                     crate::config::ConfigImpl::Musq(c) => c.id == selected.name,
                     crate::config::ConfigImpl::Sjv(c) => c.id == selected.name,
                     crate::config::ConfigImpl::Rbean(c) => c.id == selected.name,
+                    crate::config::ConfigImpl::Mplus(c) => c.id == selected.name,
                 })
                 .unwrap();
 
@@ -118,4 +132,13 @@ pub(crate) fn make_sjv_client(config: &super::sjv::config::Config) -> tosho_sjv:
 
 pub(crate) fn make_rbean_client(config: &super::rbean::config::Config) -> tosho_rbean::RBClient {
     tosho_rbean::RBClient::new(config.clone().into())
+}
+
+pub(crate) fn make_mplus_client(
+    config: &super::mplus::config::Config,
+    language: tosho_mplus::proto::Language,
+) -> tosho_mplus::MPClient {
+    let constants = tosho_mplus::constants::get_constants(config.r#type() as u8);
+
+    tosho_mplus::MPClient::new(&config.session, language, constants)
 }

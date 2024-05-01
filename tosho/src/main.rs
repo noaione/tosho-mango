@@ -55,6 +55,7 @@ use cli::ToshoCommands;
 use r#impl::amap::download::AMDownloadCliConfig;
 use r#impl::amap::AMAPCommands;
 use r#impl::client::select_single_account;
+use r#impl::mplus::MPlusCommands;
 use r#impl::parser::WeeklyCodeCli;
 use r#impl::rbean::download::RBDownloadConfigCli;
 use r#impl::rbean::RBeanCommands;
@@ -805,6 +806,58 @@ async fn main() {
                     )
                     .await
                 }
+            };
+
+            std::process::exit(exit_code as i32);
+        }
+        ToshoCommands::Mplus {
+            account_id,
+            language,
+            subcommand,
+        } => {
+            let early_exit = match subcommand.clone() {
+                MPlusCommands::Auth { session_id, r#type } => {
+                    Some(r#impl::mplus::accounts::mplus_auth_session(session_id, r#type, &t).await)
+                }
+                MPlusCommands::Accounts => Some(r#impl::mplus::accounts::mplus_accounts(&t)),
+                _ => None,
+            };
+
+            // early exit
+            if let Some(early_exit) = early_exit {
+                std::process::exit(early_exit as i32);
+            }
+
+            let config = select_single_account(account_id.as_deref(), Implementations::Mplus, &t);
+            let config = match config {
+                Some(config) => match config {
+                    config::ConfigImpl::Mplus(c) => c,
+                    _ => unreachable!(),
+                },
+                None => {
+                    t.warn("Aborted!");
+                    std::process::exit(1);
+                }
+            };
+
+            let client =
+                r#impl::client::make_mplus_client(&config, language.unwrap_or_default().into());
+            let client = if let Some(proxy) = parsed_proxy {
+                client.with_proxy(proxy)
+            } else {
+                client
+            };
+
+            let exit_code = match subcommand {
+                MPlusCommands::Auth {
+                    session_id: _,
+                    r#type: _,
+                } => 0,
+                MPlusCommands::Account => {
+                    r#impl::mplus::accounts::mplus_account_info(&client, &config, &t).await
+                }
+                MPlusCommands::Accounts => 0,
+                MPlusCommands::Revoke => r#impl::mplus::accounts::mplus_account_revoke(&config, &t),
             };
 
             std::process::exit(exit_code as i32);

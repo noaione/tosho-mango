@@ -59,6 +59,7 @@ impl ToString for ImageQuality {
     PartialOrd,
     tosho_macros::SerializeEnum,
     tosho_macros::DeserializeEnum,
+    tosho_macros::EnumName,
 )]
 pub enum SubscriptionPlan {
     /// Basic or user has no subscription
