@@ -4,7 +4,7 @@ pub mod constants;
 pub mod helper;
 pub mod proto;
 
-use std::{collections::HashMap, io::Cursor};
+use std::io::Cursor;
 
 use constants::{Constants, API_HOST};
 use helper::RankingType;
@@ -80,6 +80,7 @@ impl MPClient {
 
         let client = reqwest::Client::builder()
             .http2_adaptive_window(true)
+            .http1_only()
             .use_rustls_tls()
             .default_headers(headers);
 
@@ -97,21 +98,21 @@ impl MPClient {
     }
 
     /// Modify the HashMap to add the required parameters.
-    fn build_params(&self, params: &mut HashMap<String, String>, with_lang: bool) {
-        params.insert("os".to_string(), self.constants.os_name.to_string());
-        params.insert("os_ver".to_string(), self.constants.os_ver.to_string());
-        params.insert("app_ver".to_string(), self.constants.app_ver.to_string());
-        params.insert("secret".to_string(), self.secret.clone());
+    fn build_params(&self, params: &mut Vec<(String, String)>, with_lang: bool) {
         if with_lang {
-            params.insert(
-                "clang".to_string(),
-                self.language.as_language_code().to_owned(),
-            );
-            params.insert(
+            params.push((
                 "lang".to_string(),
                 self.language.as_language_code().to_owned(),
-            );
+            ));
+            params.push((
+                "lang".to_string(),
+                self.language.as_language_code().to_owned(),
+            ));
         }
+        params.push(("os".to_string(), self.constants.os_name.to_string()));
+        params.push(("os_ver".to_string(), self.constants.os_ver.to_string()));
+        params.push(("app_ver".to_string(), self.constants.app_ver.to_string()));
+        params.push(("secret".to_string(), self.secret.clone()));
     }
 
     fn build_url(&self, path: &str) -> String {
@@ -122,8 +123,8 @@ impl MPClient {
         format!("{}/{}", *BASE_API, path)
     }
 
-    fn empty_params(&self, with_lang: bool) -> HashMap<String, String> {
-        let mut params: HashMap<String, String> = HashMap::new();
+    fn empty_params(&self, with_lang: bool) -> Vec<(String, String)> {
+        let mut params: Vec<(String, String)> = vec![];
 
         self.build_params(&mut params, with_lang);
 
@@ -153,7 +154,7 @@ impl MPClient {
     /// Get the main home view of the app.
     pub async fn get_home_page(&self) -> anyhow::Result<APIResponse<proto::HomeViewV3>> {
         let mut query_params = self.empty_params(true);
-        query_params.insert("viewer_mode".to_string(), "horizontal".to_string());
+        query_params.insert(0, ("viewer_mode".to_string(), "horizontal".to_string()));
 
         let request = self
             .inner
@@ -177,10 +178,11 @@ impl MPClient {
     pub async fn get_user_profile(
         &self,
     ) -> anyhow::Result<APIResponse<proto::UserProfileSettings>> {
+        let query = self.empty_params(false);
         let request = self
             .inner
             .get(&self.build_url("profile"))
-            .query(&self.empty_params(false))
+            .query(&query)
             .send()
             .await?;
 
@@ -198,7 +200,7 @@ impl MPClient {
     /// Get the user settings.
     pub async fn get_user_settings(&self) -> anyhow::Result<APIResponse<proto::UserSettingsV2>> {
         let mut query_params = self.empty_params(true);
-        query_params.insert("viewer_mode".to_string(), "horizontal".to_string());
+        query_params.insert(0, ("viewer_mode".to_string(), "horizontal".to_string()));
 
         let request = self
             .inner
@@ -270,7 +272,7 @@ impl MPClient {
     ) -> anyhow::Result<APIResponse<proto::TitleRankingList>> {
         let kind = kind.unwrap_or(RankingType::Hottest);
         let mut query_params = self.empty_params(true);
-        query_params.insert("type".to_string(), kind.to_string());
+        query_params.insert(0, ("type".to_string(), kind.to_string()));
 
         let request = self
             .inner
@@ -338,9 +340,10 @@ impl MPClient {
         &self,
         language: Language,
     ) -> anyhow::Result<APIResponse<proto::SearchResults>> {
-        let mut query_params = self.empty_params(true);
-        query_params.insert("lang".to_string(), language.as_language_code().to_owned());
-        query_params.insert("clang".to_string(), language.as_language_code().to_owned());
+        let mut query_params = vec![];
+        query_params.push(("lang".to_string(), language.as_language_code().to_owned()));
+        query_params.push(("clang".to_string(), language.as_language_code().to_owned()));
+        self.build_params(&mut query_params, false);
 
         let request = self
             .inner
@@ -369,7 +372,7 @@ impl MPClient {
         title_id: u64,
     ) -> anyhow::Result<APIResponse<proto::TitleDetail>> {
         let mut query_params = self.empty_params(true);
-        query_params.insert("title_id".to_string(), title_id.to_string());
+        query_params.insert(0, ("title_id".to_string(), title_id.to_string()));
 
         let request = self
             .inner
@@ -403,30 +406,30 @@ impl MPClient {
         quality: ImageQuality,
         split: bool,
     ) -> anyhow::Result<APIResponse<proto::ChapterViewer>> {
-        let mut query_params = self.empty_params(true);
-        query_params.insert("chapter_id".to_string(), chapter.chapter_id.to_string());
-        query_params.insert(
+        let mut query_params = vec![];
+        query_params.push(("chapter_id".to_string(), chapter.chapter_id.to_string()));
+        query_params.push((
             "split".to_string(),
             if split { "yes" } else { "no" }.to_string(),
-        );
-        query_params.insert("img_quality".to_string(), quality.to_string());
-        query_params.insert("viewer_mode".to_string(), chapter.default_view_mode());
+        ));
+        query_params.push(("img_quality".to_string(), quality.to_string()));
+        query_params.push(("viewer_mode".to_string(), chapter.default_view_mode()));
         // Determine the way to read the chapter
         if chapter.is_free() {
-            query_params.insert("free_reading".to_string(), "yes".to_string());
-            query_params.insert("subscription_reading".to_string(), "no".to_string());
-            query_params.insert("ticket_reading".to_string(), "no".to_string());
+            query_params.push(("free_reading".to_string(), "yes".to_string()));
+            query_params.push(("subscription_reading".to_string(), "no".to_string()));
+            query_params.push(("ticket_reading".to_string(), "no".to_string()));
         } else if chapter.is_ticketed() {
-            query_params.insert("ticket_reading".to_string(), "yes".to_string());
-            query_params.insert("free_reading".to_string(), "no".to_string());
-            query_params.insert("subscription_reading".to_string(), "no".to_string());
+            query_params.push(("ticket_reading".to_string(), "yes".to_string()));
+            query_params.push(("free_reading".to_string(), "no".to_string()));
+            query_params.push(("subscription_reading".to_string(), "no".to_string()));
         } else {
             let user_sub = title.user_subscription.clone().unwrap_or_default();
             let title_labels = title.title_labels.clone().unwrap_or_default();
             if user_sub.plan() >= title_labels.plan_type() {
-                query_params.insert("subscription_reading".to_string(), "yes".to_string());
-                query_params.insert("ticket_reading".to_string(), "no".to_string());
-                query_params.insert("free_reading".to_string(), "no".to_string());
+                query_params.push(("subscription_reading".to_string(), "yes".to_string()));
+                query_params.push(("ticket_reading".to_string(), "no".to_string()));
+                query_params.push(("free_reading".to_string(), "no".to_string()));
             } else {
                 anyhow::bail!(
                     "Chapter is not free and user does not have minimum subscription: {:?} < {:?}",
@@ -435,6 +438,7 @@ impl MPClient {
                 );
             }
         }
+        self.build_params(&mut query_params, false);
 
         let request = self
             .inner
@@ -464,10 +468,21 @@ pub enum APIResponse<T: ::prost::Message + Clone> {
 }
 
 async fn parse_response(res: reqwest::Response) -> anyhow::Result<SuccessOrError> {
+    if !res.status().is_success() {
+        anyhow::bail!("Error response: {:?}", res.status());
+    }
+
     let bytes_data = res.bytes().await?;
     let cursor = bytes_data.as_ref();
 
-    let decoded_response = crate::proto::Response::decode(&mut Cursor::new(cursor))?;
+    let decoded_response = crate::proto::Response::decode(&mut Cursor::new(cursor));
+
+    if let Err(e) = decoded_response {
+        anyhow::bail!("Error decoding response: {:?}", e);
+    }
+
+    let decoded_response = decoded_response.unwrap();
+
     // oneof response on .response
     match decoded_response.response {
         Some(response) => Ok(response),
