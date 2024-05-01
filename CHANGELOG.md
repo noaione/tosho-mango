@@ -11,6 +11,7 @@ Starting from Rust port of the project, all changes will be put into this file.
 - `MU`: Update proto information.
 - `MU`: Only use `HTTP/1.1` since `HTTP/2` broke the API request
 - `MU`: Rework downloader, image blocks are now stored to make less request to the API
+- `MU`: Fix account revoke not working
 - `RB`: Fix wrong base host used in homepage view
 - Refactor some duplicate code
 

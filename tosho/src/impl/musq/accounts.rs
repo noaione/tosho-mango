@@ -247,7 +247,7 @@ pub(crate) fn musq_account_revoke(account: &Config, console: &crate::term::Termi
 
     match try_remove_config(
         account.id.as_str(),
-        crate::r#impl::Implementations::Kmkc,
+        crate::r#impl::Implementations::Musq,
         None,
     ) {
         Ok(_) => {
