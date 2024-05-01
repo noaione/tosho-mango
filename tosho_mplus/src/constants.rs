@@ -42,7 +42,7 @@ lazy_static! {
     pub static ref BASE_API: String = {
         String::from_utf8(
             general_purpose::STANDARD
-                .decode("aHR0cHM6Ly9qdW1wZy1hcGkudG9reW8tY2RuLmNvbS9hcGkNCg==")
+                .decode("aHR0cHM6Ly9qdW1wZy1hcGkudG9reW8tY2RuLmNvbS9hcGk=")
                 .expect("Failed to decode base64 BASE_API")
         )
         .expect("Invalid base64 string (BASE_API)")
@@ -51,7 +51,7 @@ lazy_static! {
     pub static ref BASE_IMG: String = {
         String::from_utf8(
             general_purpose::STANDARD
-                .decode("aHR0cHM6Ly9tYW5nYXBsdXMuc2h1ZWlzaGEuY28uanANCg==")
+                .decode("aHR0cHM6Ly9tYW5nYXBsdXMuc2h1ZWlzaGEuY28uanA=")
                 .expect("Failed to decode base64 BASE_IMG")
         )
         .expect("Invalid base64 string (BASE_IMG)")
@@ -66,7 +66,7 @@ lazy_static! {
     pub static ref BASE_HOST: String = {
         String::from_utf8(
             general_purpose::STANDARD
-                .decode("anVtcGctYXBpLnRva3lvLWNkbi5jb20NCg==")
+                .decode("bWFuZ2FwbHVzLnNodWVpc2hhLmNvLmpw")
                 .expect("Failed to decode base64 BASE_HOST")
         )
         .expect("Invalid base64 string (BASE_HOST)")
@@ -75,7 +75,7 @@ lazy_static! {
     pub(crate) static ref API_HOST: String = {
         String::from_utf8(
             general_purpose::STANDARD
-                .decode("Z2xvYmFsLWFwaS5tYW5nYS11cC5jb20=")
+                .decode("anVtcGctYXBpLnRva3lvLWNkbi5jb20=")
                 .expect("Failed to decode base64 API_HOST")
         )
         .expect("Invalid base64 string (API_HOST)")
@@ -84,7 +84,7 @@ lazy_static! {
     pub(crate) static ref IMAGE_HOST: String = {
         String::from_utf8(
             general_purpose::STANDARD
-                .decode("bWFuZ2FwbHVzLnNodWVpc2hhLmNvLmpwDQo=")
+                .decode("bWFuZ2FwbHVzLnNodWVpc2hhLmNvLmpw")
                 .expect("Failed to decode base64 IMAGE_HOST")
         )
         .expect("Invalid base64 string (IMAGE_HOST)")
