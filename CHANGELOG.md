@@ -14,6 +14,7 @@ Starting from Rust port of the project, all changes will be put into this file.
 - `MU`: Fix account revoke not working
 - `RB`: Fix wrong base host used in homepage view
 - `AM`: Add title information when purchasing/downloading
+- `SJ/M`: Early fetch chapters information
 - Refactor some duplicate code
 
 ### Build

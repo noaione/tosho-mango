@@ -91,6 +91,28 @@ pub(crate) async fn sjv_title_info(
 
             let result = title.unwrap();
 
+            let mut chapters_lists = vec![];
+            if show_chapters && result.total_chapters > 0 {
+                console.info(&cformat!(
+                    "Fetching chapters for <magenta,bold>{}</>...",
+                    result.title
+                ));
+                let chapters_info = client.get_chapters(result.id).await;
+
+                match chapters_info {
+                    Err(_) => {
+                        console.warn(&cformat!(
+                            "   <red,s>Error</>: Unable to get chapters information"
+                        ));
+                        println!();
+                    }
+                    Ok(mut chapters_info) => {
+                        sort_chapters(&mut chapters_info, true);
+                        chapters_lists = chapters_info.clone();
+                    }
+                }
+            }
+
             let manga_url = format!(
                 "https://{}/{}",
                 tosho_sjv::constants::BASE_HOST.as_str(),
@@ -137,58 +159,46 @@ pub(crate) async fn sjv_title_info(
                 ));
             }
 
-            if show_chapters && result.total_chapters > 0 {
-                let chapters_info = client.get_chapters(result.id).await;
-                match chapters_info {
-                    Err(_) => {
-                        console.warn(&cformat!(
-                            "   <red,s>Error</>: Unable to get chapters information"
-                        ));
-                        println!();
-                    }
-                    Ok(mut chapters_info) => {
-                        sort_chapters(&mut chapters_info, true);
-                        for chapter in chapters_info {
-                            let episode_url = match chapter.subscription_type {
-                                Some(tosho_sjv::models::SubscriptionType::SJ) => {
-                                    format!(
-                                        "https://{}/{}/{}/chapter/{}?action=read",
-                                        *tosho_sjv::constants::BASE_HOST,
-                                        *EXPAND_SJ_NAME,
-                                        result.slug,
-                                        chapter.id
-                                    )
-                                }
-                                Some(tosho_sjv::models::SubscriptionType::VM) => {
-                                    format!(
-                                        "https://{}/{}/{}/chapter/{}?action=read",
-                                        *tosho_sjv::constants::BASE_HOST,
-                                        *EXPAND_VM_NAME,
-                                        result.slug,
-                                        chapter.id
-                                    )
-                                }
-                                None => linked.clone(),
-                            };
-
-                            // Skip for now
-                            if chapter.chapter.is_none() {
-                                continue;
-                            }
-
-                            let ep_linked = linkify!(&episode_url, &chapter.pretty_title());
-
-                            console.info(&cformat!("    <s>{}</> ({})", ep_linked, chapter.id));
-                            console.info(&cformat!("     {}", episode_url));
-
-                            let created_at = chapter.created_at.format("%b %d, %Y").to_string();
-                            console.info(&cformat!("     <s>Published</>: {}", created_at));
-                            if let Some(expiry_at) = chapter.expiry_at {
-                                let expiry_at = unix_timestamp_to_string(expiry_at)
-                                    .unwrap_or("N/A".to_string());
-                                console.info(&cformat!("      <s>Expires</>: {}", expiry_at));
-                            }
+            if !chapters_lists.is_empty() {
+                for chapter in chapters_lists {
+                    let episode_url = match chapter.subscription_type {
+                        Some(tosho_sjv::models::SubscriptionType::SJ) => {
+                            format!(
+                                "https://{}/{}/{}/chapter/{}?action=read",
+                                *tosho_sjv::constants::BASE_HOST,
+                                *EXPAND_SJ_NAME,
+                                result.slug,
+                                chapter.id
+                            )
                         }
+                        Some(tosho_sjv::models::SubscriptionType::VM) => {
+                            format!(
+                                "https://{}/{}/{}/chapter/{}?action=read",
+                                *tosho_sjv::constants::BASE_HOST,
+                                *EXPAND_VM_NAME,
+                                result.slug,
+                                chapter.id
+                            )
+                        }
+                        None => linked.clone(),
+                    };
+
+                    // Skip for now
+                    if chapter.chapter.is_none() {
+                        continue;
+                    }
+
+                    let ep_linked = linkify!(&episode_url, &chapter.pretty_title());
+
+                    console.info(&cformat!("    <s>{}</> ({})", ep_linked, chapter.id));
+                    console.info(&cformat!("     {}", episode_url));
+
+                    let created_at = chapter.created_at.format("%b %d, %Y").to_string();
+                    console.info(&cformat!("     <s>Published</>: {}", created_at));
+                    if let Some(expiry_at) = chapter.expiry_at {
+                        let expiry_at =
+                            unix_timestamp_to_string(expiry_at).unwrap_or("N/A".to_string());
+                        console.info(&cformat!("      <s>Expires</>: {}", expiry_at));
                     }
                 }
             }
