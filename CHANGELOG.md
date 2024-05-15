@@ -13,6 +13,7 @@ Starting from Rust port of the project, all changes will be put into this file.
 - `MU`: Rework downloader, image blocks are now stored to make less request to the API
 - `MU`: Fix account revoke not working
 - `RB`: Fix wrong base host used in homepage view
+- `AM`: Add title information when purchasing/downloading
 - Refactor some duplicate code
 
 ### Build

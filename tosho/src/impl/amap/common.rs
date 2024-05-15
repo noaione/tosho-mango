@@ -114,6 +114,14 @@ pub(super) async fn common_purchase_select(
                 total_point
             ));
 
+            console.info("Title information:");
+            console.info(&cformat!("  - <s>ID</>: {}", title_id));
+            console.info(&cformat!("  - <s>Title</>: {}", result.info.title));
+            console.info(&cformat!(
+                "  - <s>Chapters</>: {}",
+                result.info.episodes.len()
+            ));
+
             if no_input {
                 return (
                     Ok(result.info.episodes.clone()),
