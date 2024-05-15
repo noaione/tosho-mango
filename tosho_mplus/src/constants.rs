@@ -33,7 +33,7 @@ lazy_static! {
             image_ua: "Dalvik/2.1.0 (Linux; U; Android 14; SM-A156E Build/UP1A.231005.007)".to_string(),
             api_ua: "okhttp/4.9.0".to_string(),
             os_ver: "34", // Android SDK 14
-            app_ver: "124",
+            app_ver: "133",
             os_name: "android",
         }
     };
