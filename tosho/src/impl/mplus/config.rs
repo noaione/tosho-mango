@@ -36,7 +36,6 @@ pub struct Config {
 
 impl Config {
     /// Creates a new config from a session and device type.
-    #[allow(dead_code)]
     pub fn from_session(session: &str, r#type: DeviceType) -> Self {
         let id = uuid::Uuid::new_v4().to_string();
 
@@ -49,7 +48,6 @@ impl Config {
     }
 
     /// Create new config with ID
-    #[allow(dead_code)]
     pub fn with_id(&self, id: &str) -> Self {
         Self {
             id: id.to_string(),
@@ -60,7 +58,6 @@ impl Config {
     }
 
     /// Create new config with username
-    #[allow(dead_code)]
     pub fn with_username(&self, username: &str) -> Self {
         Self {
             id: self.id.clone(),

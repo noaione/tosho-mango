@@ -877,6 +877,9 @@ async fn main() {
                     r#impl::tools::merger::tools_split_merge(&input_folder, config, &mut t_mut)
                         .await
                 }
+                ToolsCommands::ClearCache => {
+                    r#impl::tools::cache::tools_clear_cache(&mut t_mut).await
+                }
                 ToolsCommands::Merge {
                     input_folder,
                     ignore_manual_merge,

@@ -6,6 +6,7 @@ Starting from Rust port of the project, all changes will be put into this file.
 ### New Features
 - Add **`MPlus`** as a new source
 - `MU`: Support downloading with subscriptions
+- Add command to clear cache for all sources: `tosho tools clear-cache`
 
 ### Changes
 - All source: Force use `rustls` and use `http2` adaptive window for reqwest client.

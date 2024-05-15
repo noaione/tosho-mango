@@ -2,6 +2,7 @@ use std::path::PathBuf;
 
 use clap::Subcommand;
 
+pub(crate) mod cache;
 pub(crate) mod merger;
 
 #[derive(Subcommand)]
@@ -17,6 +18,8 @@ pub(crate) enum ToolsCommands {
         #[arg(short, long)]
         skip_last: bool,
     },
+    /// Clear saved cache for some sources
+    ClearCache,
     /// Merge multiple folders of split chapters into one folder
     ///
     /// The chapter merging would depends on _info.json file generated automatically.
