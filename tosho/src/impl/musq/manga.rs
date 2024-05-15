@@ -172,7 +172,6 @@ pub(crate) async fn musq_title_info(
                             chapter.published_at.unwrap()
                         ));
                     }
-                    console.info(&cformat!("      <s>Price</>: {}c", chapter.price));
                 }
                 println!();
             }
