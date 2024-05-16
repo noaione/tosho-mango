@@ -102,11 +102,11 @@ impl FromStr for SubscriptionType {
     }
 }
 
-impl ToString for SubscriptionType {
-    fn to_string(&self) -> String {
+impl std::fmt::Display for SubscriptionType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            SubscriptionType::SJ => "sj".to_string(),
-            SubscriptionType::VM => "vm".to_string(),
+            SubscriptionType::SJ => write!(f, "sj"),
+            SubscriptionType::VM => write!(f, "vm"),
         }
     }
 }
@@ -164,13 +164,13 @@ impl FromStr for MangaRating {
     }
 }
 
-impl ToString for MangaRating {
-    fn to_string(&self) -> String {
+impl std::fmt::Display for MangaRating {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            MangaRating::AllAges => "a".to_string(),
-            MangaRating::Teen => "t".to_string(),
-            MangaRating::TeenPlus => "tp".to_string(),
-            MangaRating::Mature => "m".to_string(),
+            MangaRating::AllAges => write!(f, "a"),
+            MangaRating::Teen => write!(f, "t"),
+            MangaRating::TeenPlus => write!(f, "tp"),
+            MangaRating::Mature => write!(f, "m"),
         }
     }
 }

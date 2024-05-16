@@ -205,7 +205,7 @@ impl RBClient {
             .json::<crate::models::accounts::google::SecureTokenResponse>()
             .await?;
 
-        self.token = response.access_token.clone();
+        self.token.clone_from(&response.access_token);
         self.config.token = response.access_token;
         let expiry_in = response.expires_in.parse::<i64>().unwrap();
         // Set the expiry time to 3 seconds before the actual expiry time
@@ -371,10 +371,7 @@ impl RBClient {
 
         let query_param = format!(
             "sort={}&offset={}&count={}&tags=&search_string={}&publisher_slug=",
-            sort.to_string(),
-            offset,
-            count,
-            query
+            sort, offset, count, query
         );
 
         self.request(

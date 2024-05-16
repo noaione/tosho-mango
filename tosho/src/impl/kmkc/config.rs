@@ -220,7 +220,7 @@ impl ConfigWeb {
         let mut config = self.clone();
 
         config.username = account.name.clone().unwrap_or("Unknown".to_string());
-        config.email = account.email.clone();
+        config.email.clone_from(&account.email);
         config.account_id = account.id;
         config.device_id = account.user_id;
 
@@ -251,7 +251,7 @@ impl ConfigMobile {
         let mut config = self.clone();
 
         config.username = account.name.clone().unwrap_or("Unknown".to_string());
-        config.email = account.email.clone();
+        config.email.clone_from(&account.email);
         config.account_id = account.id;
         config.device_id = account.user_id;
 

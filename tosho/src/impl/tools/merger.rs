@@ -290,7 +290,7 @@ pub fn manual_chapters_collector(
                 } else {
                     Some(ConsoleChoice {
                         name: ch.id.to_string(),
-                        value: format!("{} ({})", ch.main_name, ch.id.to_string()),
+                        value: format!("{} ({})", ch.main_name, ch.id),
                     })
                 }
             })
@@ -557,7 +557,7 @@ pub(crate) async fn tools_split_merge(
             if !source_dir.exists() {
                 console.warn(&format!(
                     "   Source directory for chapter {} does not exist, skipping...",
-                    chapter.id.to_string()
+                    chapter.id
                 ));
                 continue;
             }

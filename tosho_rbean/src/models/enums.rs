@@ -11,13 +11,13 @@ pub enum SortOption {
     Popular,
 }
 
-impl ToString for SortOption {
+impl std::fmt::Display for SortOption {
     /// Convert the enum to a string used by the API.
-    fn to_string(&self) -> String {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            SortOption::Alphabetical => "alphabetical".to_string(),
-            SortOption::Recent => "recent_series".to_string(),
-            SortOption::Popular => "popular".to_string(),
+            SortOption::Alphabetical => write!(f, "alphabetical"),
+            SortOption::Recent => write!(f, "recent_series"),
+            SortOption::Popular => write!(f, "popular"),
         }
     }
 }

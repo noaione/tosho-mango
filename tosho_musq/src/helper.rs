@@ -74,16 +74,16 @@ impl FromStr for WeeklyCode {
     }
 }
 
-impl ToString for WeeklyCode {
-    fn to_string(&self) -> String {
+impl std::fmt::Display for WeeklyCode {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            WeeklyCode::Monday => "mon".to_string(),
-            WeeklyCode::Tuesday => "tue".to_string(),
-            WeeklyCode::Wednesday => "wed".to_string(),
-            WeeklyCode::Thursday => "thu".to_string(),
-            WeeklyCode::Friday => "fri".to_string(),
-            WeeklyCode::Saturday => "sat".to_string(),
-            WeeklyCode::Sunday => "sun".to_string(),
+            WeeklyCode::Monday => write!(f, "mon"),
+            WeeklyCode::Tuesday => write!(f, "tue"),
+            WeeklyCode::Wednesday => write!(f, "wed"),
+            WeeklyCode::Thursday => write!(f, "thu"),
+            WeeklyCode::Friday => write!(f, "fri"),
+            WeeklyCode::Saturday => write!(f, "sat"),
+            WeeklyCode::Sunday => write!(f, "sun"),
         }
     }
 }
@@ -170,11 +170,11 @@ impl FromStr for ImageQuality {
     }
 }
 
-impl ToString for ImageQuality {
-    fn to_string(&self) -> String {
+impl std::fmt::Display for ImageQuality {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ImageQuality::Normal => "middle".to_string(),
-            ImageQuality::High => "high".to_string(),
+            ImageQuality::Normal => write!(f, "middle"),
+            ImageQuality::High => write!(f, "high"),
         }
     }
 }

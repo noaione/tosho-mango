@@ -108,7 +108,7 @@ pub(crate) async fn sjv_title_info(
                     }
                     Ok(mut chapters_info) => {
                         sort_chapters(&mut chapters_info, true);
-                        chapters_lists = chapters_info.clone();
+                        chapters_lists.clone_from(&chapters_info);
                     }
                 }
             }

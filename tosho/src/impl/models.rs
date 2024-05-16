@@ -42,11 +42,11 @@ impl FromStr for IdDump {
     }
 }
 
-impl ToString for IdDump {
-    fn to_string(&self) -> String {
+impl std::fmt::Display for IdDump {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Number(n) => n.to_string(),
-            Self::Uuid(s) => s.clone(),
+            Self::Number(n) => write!(f, "{}", n),
+            Self::Uuid(s) => write!(f, "{}", s),
         }
     }
 }

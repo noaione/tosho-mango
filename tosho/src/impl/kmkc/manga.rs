@@ -152,9 +152,7 @@ pub(crate) async fn kmkc_title_info(
                         console.error(&cformat!("Unable to connect to KM: {}", e));
                         return 1;
                     }
-                    Ok(genre_resp) => {
-                        genre_results = genre_resp.genres.clone();
-                    }
+                    Ok(genre_resp) => genre_results.clone_from(&genre_resp.genres),
                 }
             }
 
