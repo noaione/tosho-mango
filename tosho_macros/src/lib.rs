@@ -8,7 +8,7 @@
 
 use proc_macro::TokenStream;
 
-/// Derives [`serde::Serialize`](https://docs.rs/serde/latest/serde/trait.Serialize.html) for an enum using [`ToString`]
+/// Derives [`serde::Serialize`](https://docs.rs/serde/latest/serde/trait.Serialize.html) for an enum using [`std::fmt::Display`]
 ///
 /// # Example
 /// ```
@@ -21,11 +21,11 @@ use proc_macro::TokenStream;
 ///     Read,
 /// }
 ///
-/// impl ToString for TestEnum {
-///     fn to_string(&self) -> String {
+/// impl std::fmt::Display for TestEnum {
+///     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 ///         match self {
-///             TestEnum::Create => "create".to_string(),
-///             TestEnum::Read => "read".to_string(),
+///             TestEnum::Create => write!(f, "create"),
+///             TestEnum::Read => write!(f, "read"),
 ///         }
 ///     }
 /// }

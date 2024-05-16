@@ -24,6 +24,9 @@ Starting from Rust port of the project, all changes will be put into this file.
 - Compile with latest Rust stable in CI
 - Bump other dependencies
 
+### Docs
+- Update `SerializeEnum` rustdoc
+
 ## [0.4.3] (2024-03-20)
 ### New Features
 - Check for update on startup (this is done for the next 24 hours after each check)
