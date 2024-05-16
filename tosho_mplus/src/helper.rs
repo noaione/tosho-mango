@@ -40,12 +40,12 @@ impl FromStr for ImageQuality {
     }
 }
 
-impl ToString for ImageQuality {
-    fn to_string(&self) -> String {
+impl std::fmt::Display for ImageQuality {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ImageQuality::Low => "low".to_string(),
-            ImageQuality::Normal => "high".to_string(),
-            ImageQuality::High => "super_high".to_string(),
+            ImageQuality::Low => write!(f, "low"),
+            ImageQuality::Normal => write!(f, "high"),
+            ImageQuality::High => write!(f, "super_high"),
         }
     }
 }
@@ -87,12 +87,12 @@ impl FromStr for SubscriptionPlan {
     }
 }
 
-impl ToString for SubscriptionPlan {
-    fn to_string(&self) -> String {
+impl std::fmt::Display for SubscriptionPlan {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            SubscriptionPlan::Basic => "basic".to_string(),
-            SubscriptionPlan::Standard => "standard".to_string(),
-            SubscriptionPlan::Deluxe => "deluxe".to_string(),
+            SubscriptionPlan::Basic => write!(f, "basic"),
+            SubscriptionPlan::Standard => write!(f, "standard"),
+            SubscriptionPlan::Deluxe => write!(f, "deluxe"),
         }
     }
 }
@@ -127,12 +127,12 @@ impl FromStr for RankingType {
     }
 }
 
-impl ToString for RankingType {
-    fn to_string(&self) -> String {
+impl std::fmt::Display for RankingType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            RankingType::Hottest => "hottest".to_string(),
-            RankingType::Trending => "trending".to_string(),
-            RankingType::Completed => "completed".to_string(),
+            RankingType::Hottest => write!(f, "hottest"),
+            RankingType::Trending => write!(f, "trending"),
+            RankingType::Completed => write!(f, "completed"),
         }
     }
 }

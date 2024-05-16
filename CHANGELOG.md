@@ -18,6 +18,7 @@ Starting from Rust port of the project, all changes will be put into this file.
 - `AM`: Add title information when purchasing/downloading
 - `SJ/M`: Early fetch chapters information
 - Refactor some duplicate code
+- Changes all `ToString` occurences to `std::fmt::Display`
 
 ### Build
 - Bump `reqwest` to 0.12 (use hyper v1)

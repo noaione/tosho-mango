@@ -2417,7 +2417,7 @@ name = "tosho-mplus"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "base64 0.22.0",
+ "base64 0.22.1",
  "chrono",
  "futures-util",
  "lazy_static",
