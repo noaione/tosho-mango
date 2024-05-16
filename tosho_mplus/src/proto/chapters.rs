@@ -25,11 +25,11 @@ pub struct Chapter {
     #[prost(string, tag = "5")]
     pub thumbnail: ::prost::alloc::string::String,
     /// Chapter published/start UNIX timestamp
-    #[prost(sint64, tag = "6")]
-    pub published_at: i64,
+    #[prost(uint64, tag = "6")]
+    pub published_at: u64,
     /// Chapter end viewing period UNIX timestamp
-    #[prost(sint64, optional, tag = "7")]
-    pub end_at: ::core::option::Option<i64>,
+    #[prost(uint64, optional, tag = "7")]
+    pub end_at: ::core::option::Option<u64>,
     /// Is the chapter already viewed?
     #[prost(bool, tag = "8")]
     pub viewed: bool,
@@ -37,8 +37,8 @@ pub struct Chapter {
     #[prost(bool, tag = "9")]
     pub vertical_only: bool,
     /// Chapter end viewing by ticket timestamp
-    #[prost(sint64, optional, tag = "10")]
-    pub ticket_end_at: ::core::option::Option<i64>,
+    #[prost(uint64, optional, tag = "10")]
+    pub ticket_end_at: ::core::option::Option<u64>,
     /// Is the chapter can be read for free?
     #[prost(bool, tag = "11")]
     pub free: bool,
@@ -62,7 +62,7 @@ impl Chapter {
 
         if let Some(end_at) = self.end_at {
             let current_time = chrono::Utc::now().timestamp();
-            current_time < end_at
+            current_time < end_at.try_into().unwrap()
         } else {
             false
         }
@@ -72,7 +72,7 @@ impl Chapter {
     pub fn is_ticketed(&self) -> bool {
         if let Some(ticket_end_at) = self.ticket_end_at {
             let current_time = chrono::Utc::now().timestamp();
-            current_time < ticket_end_at
+            current_time < ticket_end_at.try_into().unwrap()
         } else {
             false
         }
@@ -175,8 +175,8 @@ pub struct ChapterPageLastPage {
     #[prost(bool, tag = "4")]
     pub subscribed: bool,
     /// The next chapter timestamp
-    #[prost(sint64, optional, tag = "5")]
-    pub next_chapter_at: ::core::option::Option<i64>,
+    #[prost(uint64, optional, tag = "5")]
+    pub next_chapter_at: ::core::option::Option<u64>,
     /// The chapter type
     #[prost(enumeration = "super::ChapterType", tag = "6")]
     pub chapter_type: i32,

@@ -32,8 +32,8 @@ pub struct Comment {
     #[prost(string, tag = "10")]
     pub content: ::prost::alloc::string::String,
     /// The UNIX timestamp of the comment creation
-    #[prost(sint64, tag = "11")]
-    pub timestamp: i64,
+    #[prost(uint64, tag = "11")]
+    pub timestamp: u64,
 }
 
 /// A comment icon data

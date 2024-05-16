@@ -56,8 +56,8 @@ pub struct TitleDetail {
     #[prost(string, tag = "4")]
     pub background_image: ::prost::alloc::string::String,
     /// Next update UNIX timestamp
-    #[prost(sint64, optional, tag = "5")]
-    pub next_update: ::core::option::Option<i64>,
+    #[prost(uint64, optional, tag = "5")]
+    pub next_update: ::core::option::Option<u64>,
     /// Update frequency in seconds
     #[prost(uint64, optional, tag = "6")]
     pub update_frequency: ::core::option::Option<u64>,
@@ -227,8 +227,8 @@ pub struct TitleListV2 {
     #[prost(message, optional, tag = "4")]
     pub label: ::core::option::Option<Label>,
     /// The next chapter start timestamp
-    #[prost(sint64, optional, tag = "5")]
-    pub next_start_at: ::core::option::Option<i64>,
+    #[prost(uint64, optional, tag = "5")]
+    pub next_start_at: ::core::option::Option<u64>,
 }
 
 /// A list of titles with no grouping information
@@ -325,8 +325,8 @@ pub struct UpdatedTitleGroupOriginal {
     #[prost(enumeration = "TitleUpdateStatus", tag = "5")]
     pub status: i32,
     /// Chapter start timestamp
-    #[prost(sint64, tag = "6")]
-    pub start_at: i64,
+    #[prost(uint64, tag = "6")]
+    pub start_at: u64,
 }
 
 /// A list of updated titles grouped by something
@@ -443,8 +443,8 @@ pub struct UpcomingChapterTitle {
     #[prost(string, tag = "2")]
     pub chapter_name: ::prost::alloc::string::String,
     /// The next chapter release timestamp
-    #[prost(sint64, tag = "3")]
-    pub release_at: i64,
+    #[prost(uint64, tag = "3")]
+    pub release_at: u64,
 }
 
 /// A single title update information
@@ -615,8 +615,8 @@ pub struct TitleRankingList {
     #[prost(message, repeated, tag = "1")]
     pub banners: ::prost::alloc::vec::Vec<Banner>,
     /// The updated timestamp of this ranking
-    #[prost(sint64, tag = "2")]
-    pub updated_at: i64,
+    #[prost(uint64, tag = "2")]
+    pub updated_at: u64,
     /// The list of titles
     #[prost(message, repeated, tag = "3")]
     pub titles: ::prost::alloc::vec::Vec<TitleRankingGroup>,
