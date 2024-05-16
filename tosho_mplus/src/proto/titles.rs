@@ -19,7 +19,7 @@ pub struct Title {
     pub id: u64,
     /// The title name
     #[prost(string, tag = "2")]
-    pub name: ::prost::alloc::string::String,
+    pub title: ::prost::alloc::string::String,
     /// The title author
     #[prost(string, tag = "3")]
     pub author: ::prost::alloc::string::String,
