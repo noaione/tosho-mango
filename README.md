@@ -28,6 +28,18 @@ This is just a fun side project, and as a disclaimer, I'm not condoning anything
 
 ## Installation
 
+`tosho` comes with a pre-compiled binary that you can choose:
+- The **Stable** release in the **[Releases](https://github.com/noaione/tosho-mango/releases)** tab.
+- The **Nightly** release from any latest successful commits: [Master CI](https://github.com/noaione/tosho-mango/actions/workflows/ci.yml?query=branch%3Amaster) / [nightly.link](https://nightly.link/noaione/tosho-mango/workflows/ci/master?preview).
+
+Or, if you have Rust you can do the following:
+
+**Requirements:**
+- Rust 1.72+
+- 64-bit devices (ARM64/aarch64 support might be experimental)
+- Modern enough terminal (VT support)
+
+Installing with `cargo`:
 ```bash
 cargo install --locked tosho
 ```
@@ -37,21 +49,10 @@ Or, with [`cargo-binstall`](https://github.com/cargo-bins/cargo-binstall):
 cargo binstall --locked tosho
 ```
 
-Or, if you want to build manually:
-
-**Requirements:**
-- Rust 1.72+
-- 64-bit devices (ARM64/aarch64 support might be experimental)
-- Modern enough terminal (VT support)
-
-You can get the binary by either compiling everything yourself by following these steps:
+Or, you can clone and build manually:
 1. Clone the repository.
 2. Run `cargo build --release --all`.
 3. Execute `target/release/tosho` (or `target/release/tosho.exe` on Windows).
-
-Alternatively, you can obtain the precompiled binary from:
-- The **Stable** release in the **[Releases](https://github.com/noaione/tosho-mango/releases)** tab.
-- The **Nightly** release from any latest successful commits: [Master CI](https://github.com/noaione/tosho-mango/actions/workflows/ci.yml?query=branch%3Amaster).
 
 ## Usage
 
@@ -66,7 +67,7 @@ For a list of available commands, use the `--help` argument.
 
 ## Disclaimer
 
-This project is designed as an experiment and to create a local copy for personal use.These tools will not circumvent any paywall, and you will need to purchase and own each chapter on each platform with your own account to be able to make your own local copy.
+This project is designed as an experiment and to create a local copy for personal use. These tools will not circumvent any paywall, and you will need to purchase and own each chapter on each platform with your own account to be able to make your own local copy.
 
 We're not responsible if your account got deactivated.
 
