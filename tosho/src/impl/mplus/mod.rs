@@ -19,6 +19,17 @@ pub(crate) enum MPlusCommands {
     Account,
     /// See all the accounts you have authenticated with
     Accounts,
+    /// Get a title information
+    Info {
+        /// Title ID to use
+        title_id: u64,
+        /// Show each chapter detailed information
+        #[arg(short = 'c', long = "chapters")]
+        show_chapters: bool,
+        /// Show related titles
+        #[arg(short = 'r', long = "related")]
+        show_related: bool,
+    },
     /// Revoke or delete an account
     Revoke,
     /// Search for a title

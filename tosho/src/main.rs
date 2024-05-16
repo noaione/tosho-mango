@@ -857,6 +857,20 @@ async fn main() {
                     r#impl::mplus::accounts::mplus_account_info(&client, &config, &t).await
                 }
                 MPlusCommands::Accounts => 0,
+                MPlusCommands::Info {
+                    title_id,
+                    show_chapters,
+                    show_related,
+                } => {
+                    r#impl::mplus::manga::mplus_title_info(
+                        title_id,
+                        show_chapters,
+                        show_related,
+                        &client,
+                        &t,
+                    )
+                    .await
+                }
                 MPlusCommands::Revoke => r#impl::mplus::accounts::mplus_account_revoke(&config, &t),
                 MPlusCommands::Search { query } => {
                     r#impl::mplus::manga::mplus_search(query.as_str(), &client, &t).await
