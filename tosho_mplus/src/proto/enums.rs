@@ -62,44 +62,7 @@ impl Language {
     /// assert_eq!(pt_br.pretty_name(), "Brazilian Portuguese");
     /// ```
     pub fn pretty_name(&self) -> String {
-        let name = self.to_name();
-        let split_at_upper: Vec<_> = name.match_indices(char::is_uppercase).collect();
-        let mut splitted_name: Vec<&str> = vec![];
-        split_at_upper
-            .iter()
-            .enumerate()
-            .for_each(|(i, (start, _))| {
-                if i == 0 {
-                    let data = &name[..*start];
-                    if !data.is_empty() {
-                        splitted_name.push(data);
-                    }
-                }
-                let next_start = split_at_upper.get(i + 1);
-                match next_start {
-                    Some((end, _)) => splitted_name.push(&name[*start..*end]),
-                    None => splitted_name.push(&name[*start..]),
-                }
-            });
-
-        let mut merge_back = splitted_name.join(" ");
-        let some_words = &["The", "A", "An"];
-        some_words.iter().for_each(|&word| {
-            merge_back =
-                merge_back.replace(&format!(" {}", word), &format!(" {}", word.to_lowercase()));
-        });
-
-        if splitted_name.len() > 1 {
-            match splitted_name[0] {
-                "e" => merge_back = merge_back.replacen("e ", "e-", 1),
-                "D" => merge_back = merge_back.replacen("D ", "Digital ", 1),
-                _ => (),
-            }
-        }
-        if merge_back.contains('_') {
-            merge_back = merge_back.replace('_', " ");
-        }
-        merge_back
+        pretty_name_fmt(self.to_name(), " ")
     }
 
     /// Get the language code for the language.
@@ -236,7 +199,9 @@ pub enum PlanOfferType {
 }
 
 /// Title release schedule
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, EnumName, ::prost::Enumeration,
+)]
 pub enum TitleReleaseSchedule {
     /// No schedule
     None = 0,
@@ -260,6 +225,22 @@ pub enum TitleReleaseSchedule {
     Unrecognized = -1,
 }
 
+impl TitleReleaseSchedule {
+    /// Get the pretty name of the release schedule.
+    ///
+    /// # Examples
+    /// ```
+    /// use tosho_mplus::proto::TitleReleaseSchedule;
+    ///
+    /// let biweekly = TitleReleaseSchedule::BiWeekly;
+    ///
+    /// assert_eq!(biweekly.pretty_name(), "Bi-Weekly");
+    /// ```
+    pub fn pretty_name(&self) -> String {
+        pretty_name_fmt(self.to_name(), "-")
+    }
+}
+
 /// Title rating
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 pub enum TitleRating {
@@ -273,4 +254,44 @@ pub enum TitleRating {
     Mature = 3,
     /// An error has occurred.
     Unrecognized = -1,
+}
+
+fn pretty_name_fmt(name: &str, sep: &str) -> String {
+    let split_at_upper: Vec<_> = name.match_indices(char::is_uppercase).collect();
+    let mut splitted_name: Vec<&str> = vec![];
+    split_at_upper
+        .iter()
+        .enumerate()
+        .for_each(|(i, (start, _))| {
+            if i == 0 {
+                let data = &name[..*start];
+                if !data.is_empty() {
+                    splitted_name.push(data);
+                }
+            }
+            let next_start = split_at_upper.get(i + 1);
+            match next_start {
+                Some((end, _)) => splitted_name.push(&name[*start..*end]),
+                None => splitted_name.push(&name[*start..]),
+            }
+        });
+
+    let mut merge_back = splitted_name.join(sep);
+    let some_words = &["The", "A", "An"];
+    some_words.iter().for_each(|&word| {
+        merge_back =
+            merge_back.replace(&format!(" {}", word), &format!(" {}", word.to_lowercase()));
+    });
+
+    if splitted_name.len() > 1 {
+        match splitted_name[0] {
+            "e" => merge_back = merge_back.replacen("e ", "e-", 1),
+            "D" => merge_back = merge_back.replacen("D ", "Digital ", 1),
+            _ => (),
+        }
+    }
+    if merge_back.contains('_') {
+        merge_back = merge_back.replace('_', " ");
+    }
+    merge_back
 }

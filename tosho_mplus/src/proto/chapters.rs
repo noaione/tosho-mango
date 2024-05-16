@@ -86,6 +86,18 @@ impl Chapter {
             "horizontal".to_string()
         }
     }
+
+    /// Format the chapter title and subtitle into a single string.
+    ///
+    /// If the subtitle is [`None`], the title will be returned as is.
+    pub fn as_chapter_title(&self) -> String {
+        let base_title = self.title.clone();
+        if let Some(subtitle) = self.subtitle.clone() {
+            format!("{} — {}", base_title, subtitle)
+        } else {
+            base_title
+        }
+    }
 }
 
 /// A group of chapters

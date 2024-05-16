@@ -144,6 +144,16 @@ pub struct TitleDetail {
     pub first_time_free: bool,
 }
 
+impl TitleDetail {
+    /// Flatten the chapters group more into a single [`Vec`] list
+    pub fn flat_chapters_group(&self) -> Vec<Chapter> {
+        self.chapter_groups
+            .iter()
+            .flat_map(|group| group.flatten())
+            .collect()
+    }
+}
+
 /// An information about a title with available languages
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct TitleLanguages {
