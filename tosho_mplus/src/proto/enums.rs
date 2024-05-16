@@ -158,7 +158,7 @@ impl Language {
 pub enum TitleUpdateStatus {
     /// No update available.
     None = 0,
-    /// New chapter available.
+    /// New title.
     New = 1,
     /// Updated chapter available.
     Updated = 2,

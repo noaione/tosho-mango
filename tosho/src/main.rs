@@ -858,6 +858,9 @@ async fn main() {
                 }
                 MPlusCommands::Accounts => 0,
                 MPlusCommands::Revoke => r#impl::mplus::accounts::mplus_account_revoke(&config, &t),
+                MPlusCommands::Search { query } => {
+                    r#impl::mplus::manga::mplus_search(query.as_str(), &client, &t).await
+                }
             };
 
             std::process::exit(exit_code as i32);

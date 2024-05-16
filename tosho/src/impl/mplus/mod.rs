@@ -1,7 +1,9 @@
 use clap::{Subcommand, ValueEnum};
 
 pub(crate) mod accounts;
+pub(super) mod common;
 pub(crate) mod config;
+pub(crate) mod manga;
 
 #[derive(Subcommand, Clone)]
 pub(crate) enum MPlusCommands {
@@ -19,6 +21,11 @@ pub(crate) enum MPlusCommands {
     Accounts,
     /// Revoke or delete an account
     Revoke,
+    /// Search for a title
+    Search {
+        /// Query to search for
+        query: String,
+    },
 }
 
 #[derive(Clone, Default)]
