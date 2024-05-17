@@ -385,7 +385,27 @@ impl MPClient {
 
         match response {
             SuccessOrError::Success(data) => match data.title_detail {
-                Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
+                Some(inner_data) => {
+                    let mut cloned_data = inner_data.clone();
+                    cloned_data.chapter_groups.iter_mut().for_each(|group| {
+                        group
+                            .first_chapters
+                            .iter_mut()
+                            .for_each(|ch| ch.set_position(proto::ChapterPosition::First));
+
+                        group
+                            .last_chapters
+                            .iter_mut()
+                            .for_each(|ch| ch.set_position(proto::ChapterPosition::Last));
+
+                        group
+                            .mid_chapters
+                            .iter_mut()
+                            .for_each(|ch| ch.set_position(proto::ChapterPosition::Middle));
+                    });
+
+                    Ok(APIResponse::Success(Box::new(cloned_data)))
+                }
                 None => anyhow::bail!("No title details found"),
             },
             SuccessOrError::Error(error) => Ok(APIResponse::Error(error)),

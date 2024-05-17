@@ -6,6 +6,8 @@ use std::str::FromStr;
 
 use crate::helper::SubscriptionPlan;
 
+use super::ChapterPosition;
+
 /// A single chapter information
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Chapter {
@@ -51,6 +53,11 @@ pub struct Chapter {
     /// Chapter comment count
     #[prost(uint64, tag = "14")]
     pub comment_count: u64,
+    /// Chapter position in the group
+    ///
+    /// This is assigned client side.
+    #[prost(enumeration = "super::ChapterPosition", tag = "999")]
+    pub position: i32,
 }
 
 impl Chapter {
@@ -60,9 +67,17 @@ impl Chapter {
             return true;
         }
 
-        if let Some(end_at) = self.end_at {
-            let current_time = chrono::Utc::now().timestamp();
-            current_time < end_at
+        if self.position() == ChapterPosition::First {
+            return true;
+        }
+
+        if self.position() != ChapterPosition::Middle {
+            if let Some(end_at) = self.end_at {
+                let current_time = chrono::Utc::now().timestamp();
+                current_time < end_at
+            } else {
+                false
+            }
         } else {
             false
         }
@@ -106,13 +121,13 @@ pub struct ChapterGroup {
     /// The chapter numbers range
     #[prost(string, tag = "1")]
     pub chapters: ::prost::alloc::string::String,
-    /// The first chapters list
+    /// The first chapters list, all of them should be free to read
     #[prost(message, repeated, tag = "2")]
     pub first_chapters: ::prost::alloc::vec::Vec<Chapter>,
-    /// The mid chapters list
+    /// The mid chapters list, this chapter is locked behind subscriptions or tickets
     #[prost(message, repeated, tag = "3")]
     pub mid_chapters: ::prost::alloc::vec::Vec<Chapter>,
-    /// The last chapters list
+    /// The last chapters list, all of them should be free to read
     #[prost(message, repeated, tag = "4")]
     pub last_chapters: ::prost::alloc::vec::Vec<Chapter>,
 }

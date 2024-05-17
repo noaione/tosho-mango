@@ -295,3 +295,19 @@ fn pretty_name_fmt(name: &str, sep: &str) -> String {
     }
     merge_back
 }
+
+/// Chapter position in the series chapters list group
+///
+/// This is a custom enum that does not exist originally in the API.
+/// Made to make it easier to understand the position of the chapter in the series.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+pub enum ChapterPosition {
+    /// Chapter located in the middle of the chapter list (usually need subs or tickets)
+    Middle = 0,
+    /// Chapter located in first chapter list (usually free)
+    First = 1,
+    /// Chapter located in last chapter list (usually free)
+    Last = 2,
+    /// An error has occurred.
+    Unrecognized = -1,
+}
