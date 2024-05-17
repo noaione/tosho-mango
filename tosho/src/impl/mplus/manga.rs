@@ -177,9 +177,7 @@ pub(crate) async fn mplus_title_info(
                         console.info(&cformat!("     <s>{}</>", subtitle));
                     }
 
-                    if let Some(pub_at_fmt) =
-                        unix_timestamp_to_string(chapter.published_at.try_into().unwrap())
-                    {
+                    if let Some(pub_at_fmt) = unix_timestamp_to_string(chapter.published_at) {
                         console.info(&cformat!("      <s>Published</>: {}", pub_at_fmt));
                     }
                 }
@@ -188,7 +186,7 @@ pub(crate) async fn mplus_title_info(
             }
 
             if let Some(next_upd) = title_info.next_update {
-                if let Some(next_upd_fmt) = unix_timestamp_to_string(next_upd.try_into().unwrap()) {
+                if let Some(next_upd_fmt) = unix_timestamp_to_string(next_upd) {
                     console.info(&cformat!("  <s>Next Update</>: {}", next_upd_fmt));
                 }
             }

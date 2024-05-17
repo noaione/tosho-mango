@@ -25,8 +25,8 @@ pub struct UserTickets {
     #[prost(uint64, tag = "1")]
     pub ticket: u64,
     /// Next ticket refresh in UNIX timestamp
-    #[prost(uint64, tag = "2")]
-    pub next_refresh: u64,
+    #[prost(int64, tag = "2")]
+    pub next_refresh: i64,
 }
 
 /// User account subscription information
@@ -139,6 +139,6 @@ pub struct PushTokenResponse {
     #[prost(string, tag = "1")]
     pub token: ::prost::alloc::string::String,
     /// The token timestamp
-    #[prost(uint64, optional, tag = "2")]
-    pub timestamp: ::core::option::Option<u64>,
+    #[prost(int64, optional, tag = "2")]
+    pub timestamp: ::core::option::Option<i64>,
 }

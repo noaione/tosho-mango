@@ -16,8 +16,8 @@ pub struct ServiceAnnouncement {
     #[prost(string, tag = "2")]
     pub body: ::prost::alloc::string::String,
     /// The announcement timestamp
-    #[prost(uint64, tag = "3")]
-    pub timestamp: u64,
+    #[prost(int64, tag = "3")]
+    pub timestamp: i64,
     /// The annnouncement ID
     #[prost(uint64, tag = "4")]
     pub id: u64,
@@ -35,8 +35,8 @@ pub struct ServiceAnnouncements {
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Feedback {
     /// The feedback creation timestamp
-    #[prost(uint64, tag = "1")]
-    pub timestamp: u64,
+    #[prost(int64, tag = "1")]
+    pub timestamp: i64,
     /// The feedback content
     #[prost(string, tag = "2")]
     pub title: ::prost::alloc::string::String,
