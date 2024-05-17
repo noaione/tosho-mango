@@ -487,6 +487,20 @@ pub enum APIResponse<T: ::prost::Message + Clone> {
     Success(Box<T>),
 }
 
+// impl unwrap for APIResponse
+impl<T: ::prost::Message + Clone> APIResponse<T> {
+    /// Unwrap the response.
+    ///
+    /// # Panics
+    /// Panics if the response is an error.
+    pub fn unwrap(self) -> T {
+        match self {
+            APIResponse::Success(data) => *data,
+            APIResponse::Error(error) => panic!("Error response: {:?}", *error),
+        }
+    }
+}
+
 async fn parse_response(res: reqwest::Response) -> anyhow::Result<SuccessOrError> {
     if !res.status().is_success() {
         anyhow::bail!("Error response: {:?}", res.status());
