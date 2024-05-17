@@ -62,12 +62,12 @@ For a list of available commands, use the `--help` argument.
 ## Supported Platform
 
 We support the following platform:
-- [MU! by SQ](https://github.com/noaione/tosho-mango/tree/master/tosho-musq) (Android, Apple)
-- [KM by KC](https://github.com/noaione/tosho-mango/tree/master/tosho-kmkc) (Android, Apple, Web)
+- [MU! by SQ](https://github.com/noaione/tosho-mango/tree/master/tosho_musq) (Android, Apple)
+- [KM by KC](https://github.com/noaione/tosho-mango/tree/master/tosho_kmkc) (Android, Apple, Web)
 - [AM by AP](https://github.com/noaione/tosho-mango/tree/master/tosho_amap) (Android)
-- [SJ/M by V](https://github.com/noaione/tosho-mango/tree/master/tosho-sjv) (Android, Apple, Web)
-- [小豆 (Red Bean) by KRKR](https://github.com/noaione/tosho-mango/tree/master/tosho-rbean) (Android)
-- [M+ by S](https://github.com/noaione/tosho-mango/tree/master/tosho-mplus) (Android)
+- [SJ/M by V](https://github.com/noaione/tosho-mango/tree/master/tosho_sjv) (Android, Apple, Web)
+- [小豆 (Red Bean) by KRKR](https://github.com/noaione/tosho-mango/tree/master/tosho_rbean) (Android)
+- [M+ by S](https://github.com/noaione/tosho-mango/tree/master/tosho_mplus) (Android)
 
 ## License
 
