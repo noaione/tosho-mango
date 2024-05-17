@@ -158,6 +158,8 @@ pub(crate) async fn mplus_title_info(
                 .map(|x| x.chapter_id)
                 .collect();
 
+            let user_plan = title_info.user_subscription.unwrap_or_default().plan();
+
             if show_chapters && !all_chapters.is_empty() {
                 for chapter in all_chapters {
                     let ch_url = format!("https://{}/viewer/{}", *BASE_HOST, chapter.chapter_id);
@@ -168,8 +170,10 @@ pub(crate) async fn mplus_title_info(
                             cformat!("{} <y,strong>[Ticket]</y,strong>", base_txt)
                         } else if chapter.is_free() {
                             cformat!("{} <g,strong>[FREE]</g,strong>", base_txt)
+                        } else if user_plan >= title_labels.plan_type() {
+                            cformat!("{} [<c!,strong>Subscription</>]", base_txt)
                         } else {
-                            cformat!("{} [<c!,strong>Locked</>]", base_txt)
+                            cformat!("{} [<r!,strong>Locked</>]", base_txt)
                         };
 
                     console.info(&base_txt);
@@ -191,7 +195,6 @@ pub(crate) async fn mplus_title_info(
                 }
             }
 
-            let user_plan = title_info.user_subscription.unwrap_or_default().plan();
             console.info(&cformat!("  <s>Your Plan</>: {}", user_plan.to_name()));
 
             if show_related && !title_info.recommended_titles.is_empty() {
