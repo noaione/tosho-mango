@@ -9,7 +9,10 @@ use tosho_amap::{
 
 use crate::{
     cli::ExitCode,
-    r#impl::models::{ChapterDetailDump, MangaDetailDump},
+    r#impl::{
+        common::check_downloaded_image_count,
+        models::{ChapterDetailDump, MangaDetailDump},
+    },
 };
 
 use super::{common::common_purchase_select, config::Config};
@@ -34,30 +37,6 @@ pub(crate) struct AMDownloadCliConfig {
     // Ticket related
     pub(crate) no_premium: bool,
     pub(crate) no_purchased: bool,
-}
-
-fn check_downloaded_image_count(image_dir: &PathBuf) -> Option<usize> {
-    // check if dir exist
-    if !image_dir.exists() {
-        return None;
-    }
-
-    // check if dir is dir
-    if !image_dir.is_dir() {
-        return None;
-    }
-
-    // check how many .jpg files in the dir
-    let mut count = 0;
-    for entry in std::fs::read_dir(image_dir).unwrap() {
-        let entry = entry.unwrap();
-        let path = entry.path();
-        if path.is_file() && path.extension().unwrap() == "jpg" {
-            count += 1;
-        }
-    }
-
-    Some(count)
 }
 
 fn create_chapters_info(manga_detail: ComicInfo) -> MangaDetailDump {
@@ -291,7 +270,7 @@ pub(crate) async fn amap_download(
                 let ch_pages = ch_view.info.pages;
                 let ch_dir =
                     get_output_directory(&output_dir, title_id, Some(chapter.info.id), false);
-                if let Some(count) = check_downloaded_image_count(&ch_dir) {
+                if let Some(count) = check_downloaded_image_count(&ch_dir, "jpg") {
                     if count >= ch_pages.len() {
                         console.warn(&cformat!(
                             "   Chapter <m,s>{}</> (<s>{}</>) has been downloaded, skipping",

@@ -10,7 +10,10 @@ use tosho_musq::{
 
 use crate::{
     cli::ExitCode,
-    r#impl::models::{ChapterDetailDump, MangaDetailDump},
+    r#impl::{
+        common::check_downloaded_image_count,
+        models::{ChapterDetailDump, MangaDetailDump},
+    },
 };
 
 use super::common::common_purchase_select;
@@ -78,30 +81,6 @@ pub(crate) struct MUDownloadCliConfig {
 
     pub(crate) no_paid_point: bool,
     pub(crate) no_xp_point: bool,
-}
-
-fn check_downloaded_image_count(image_dir: &PathBuf) -> Option<usize> {
-    // check if dir exist
-    if !image_dir.exists() {
-        return None;
-    }
-
-    // check if dir is dir
-    if !image_dir.is_dir() {
-        return None;
-    }
-
-    // check how many .avif files in the dir
-    let mut count = 0;
-    for entry in std::fs::read_dir(image_dir).unwrap() {
-        let entry = entry.unwrap();
-        let path = entry.path();
-        if path.is_file() && path.extension().unwrap() == "avif" {
-            count += 1;
-        }
-    }
-
-    Some(count)
 }
 
 fn create_chapters_info(manga_detail: MangaDetailV2) -> MangaDetailDump {
@@ -360,7 +339,7 @@ pub(crate) async fn musq_download(
                 }
 
                 let ch_dir = get_output_directory(&output_dir, title_id, Some(chapter.id), false);
-                if let Some(count) = check_downloaded_image_count(&ch_dir) {
+                if let Some(count) = check_downloaded_image_count(&ch_dir, "avif") {
                     if count >= image_blocks.len() {
                         console.warn(&cformat!(
                             "   Chapter <m,s>{}</> (<s>{}</>) has been downloaded, skipping",

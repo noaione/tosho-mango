@@ -4,7 +4,9 @@ Starting from Rust port of the project, all changes will be put into this file.
 
 ## Unreleased (git master)
 ### New Features
+- Add **`MPlus`** as a new source
 - `MU`: Support downloading with subscriptions
+- Add command to clear cache for all sources: `tosho tools clear-cache`
 
 ### Changes
 - All source: Force use `rustls` and use `http2` adaptive window for reqwest client.
@@ -16,6 +18,7 @@ Starting from Rust port of the project, all changes will be put into this file.
 - `AM`: Add title information when purchasing/downloading
 - `SJ/M`: Early fetch chapters information
 - Refactor some duplicate code
+- Changes all `ToString` occurences to `std::fmt::Display`
 
 ### Build
 - Bump `reqwest` to 0.12 (use hyper v1)

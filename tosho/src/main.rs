@@ -12,6 +12,7 @@
 //! - [AM by AP](https://crates.io/crates/tosho-amap)
 //! - [SJ/M by V](https://crates.io/crates/tosho-sjv)
 //! - [小豆 (Red Bean) by KRKR](https://crates.io/crates/tosho-rbean)
+//! - [M+ by S](https://crates.io/crates/tosho-mplus)
 //!
 //! ## Installation
 //!
@@ -28,6 +29,10 @@
 //! ```bash
 //! cargo binstall --locked tosho
 //! ```
+//!
+//! We also provide a pre-built binary in two flavours:
+//! - **Stable** release in the **[GitHub Releases](https://github.com/noaione/tosho-mango/releases)** tab.
+//! - **Nightly** release from any latest successful commits: [Master CI](https://github.com/noaione/tosho-mango/actions/workflows/ci.yml?query=branch%3Amaster) / [nightly.link](https://nightly.link/noaione/tosho-mango/workflows/ci/master?preview).
 //!
 //! ## Usage
 //!
@@ -55,6 +60,8 @@ use cli::ToshoCommands;
 use r#impl::amap::download::AMDownloadCliConfig;
 use r#impl::amap::AMAPCommands;
 use r#impl::client::select_single_account;
+use r#impl::mplus::download::MPDownloadCliConfig;
+use r#impl::mplus::MPlusCommands;
 use r#impl::parser::WeeklyCodeCli;
 use r#impl::rbean::download::RBDownloadConfigCli;
 use r#impl::rbean::RBeanCommands;
@@ -809,6 +816,128 @@ async fn main() {
 
             std::process::exit(exit_code as i32);
         }
+        ToshoCommands::Mplus {
+            account_id,
+            language,
+            subcommand,
+        } => {
+            let early_exit = match subcommand.clone() {
+                MPlusCommands::Auth { session_id, r#type } => {
+                    Some(r#impl::mplus::accounts::mplus_auth_session(session_id, r#type, &t).await)
+                }
+                MPlusCommands::Accounts => Some(r#impl::mplus::accounts::mplus_accounts(&t)),
+                _ => None,
+            };
+
+            // early exit
+            if let Some(early_exit) = early_exit {
+                std::process::exit(early_exit as i32);
+            }
+
+            let config = select_single_account(account_id.as_deref(), Implementations::Mplus, &t);
+            let config = match config {
+                Some(config) => match config {
+                    config::ConfigImpl::Mplus(c) => c,
+                    _ => unreachable!(),
+                },
+                None => {
+                    t.warn("Aborted!");
+                    std::process::exit(1);
+                }
+            };
+
+            let client =
+                r#impl::client::make_mplus_client(&config, language.unwrap_or_default().into());
+            let client = if let Some(proxy) = parsed_proxy {
+                client.with_proxy(proxy)
+            } else {
+                client
+            };
+
+            let exit_code = match subcommand {
+                MPlusCommands::Auth {
+                    session_id: _,
+                    r#type: _,
+                } => 0,
+                MPlusCommands::Account => {
+                    r#impl::mplus::accounts::mplus_account_info(&client, &config, &t).await
+                }
+                MPlusCommands::Accounts => 0,
+                MPlusCommands::AutoDownload {
+                    title_id,
+                    start_from,
+                    end_until,
+                    quality,
+                    output,
+                } => {
+                    let mplus_config = MPDownloadCliConfig {
+                        no_input: true,
+                        start_from,
+                        end_at: end_until,
+                        quality,
+                        ..Default::default()
+                    };
+
+                    r#impl::mplus::download::mplus_download(
+                        title_id,
+                        mplus_config,
+                        output.unwrap_or_else(get_default_download_dir),
+                        &client,
+                        &mut t_mut,
+                    )
+                    .await
+                }
+                MPlusCommands::Download {
+                    title_id,
+                    chapters,
+                    show_all,
+                    quality,
+                    output,
+                } => {
+                    let mplus_config = MPDownloadCliConfig {
+                        show_all,
+                        chapter_ids: chapters.unwrap_or_default(),
+                        quality,
+                        ..Default::default()
+                    };
+
+                    r#impl::mplus::download::mplus_download(
+                        title_id,
+                        mplus_config,
+                        output.unwrap_or_else(get_default_download_dir),
+                        &client,
+                        &mut t_mut,
+                    )
+                    .await
+                }
+                MPlusCommands::Favorites => {
+                    r#impl::mplus::favorites::mplus_my_favorites(&client, &config, &t).await
+                }
+                MPlusCommands::Info {
+                    title_id,
+                    show_chapters,
+                    show_related,
+                } => {
+                    r#impl::mplus::manga::mplus_title_info(
+                        title_id,
+                        show_chapters,
+                        show_related,
+                        &client,
+                        &t,
+                    )
+                    .await
+                }
+                MPlusCommands::Rankings { kind } => {
+                    r#impl::mplus::rankings::mplus_home_rankings(kind, &client, &t).await
+                }
+                MPlusCommands::Revoke => r#impl::mplus::accounts::mplus_account_revoke(&config, &t),
+                MPlusCommands::Search { query } => {
+                    r#impl::mplus::manga::mplus_search(query.as_str(), &client, &t).await
+                }
+            };
+
+            std::process::exit(exit_code as i32);
+        }
         ToshoCommands::Tools { subcommand } => {
             let exit_code = match subcommand {
                 ToolsCommands::AutoMerge {
@@ -823,6 +952,9 @@ async fn main() {
 
                     r#impl::tools::merger::tools_split_merge(&input_folder, config, &mut t_mut)
                         .await
+                }
+                ToolsCommands::ClearCache => {
+                    r#impl::tools::cache::tools_clear_cache(&mut t_mut).await
                 }
                 ToolsCommands::Merge {
                     input_folder,

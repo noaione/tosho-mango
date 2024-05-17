@@ -7,6 +7,7 @@ use tosho_sjv::{
     SJClient, SJPlatform,
 };
 
+use crate::r#impl::common::{check_downloaded_image_count, create_progress_bar};
 use crate::{
     cli::ExitCode,
     r#impl::{
@@ -36,30 +37,6 @@ pub(crate) struct SJDownloadCliConfig {
     ///
     /// Used only when `no_input` is `true`.
     pub(crate) end_at: Option<u32>,
-}
-
-fn check_downloaded_image_count(image_dir: &PathBuf, extension: &str) -> Option<usize> {
-    // check if dir exist
-    if !image_dir.exists() {
-        return None;
-    }
-
-    // check if dir is dir
-    if !image_dir.is_dir() {
-        return None;
-    }
-
-    // check how many .avif files in the dir
-    let mut count = 0;
-    for entry in std::fs::read_dir(image_dir).unwrap() {
-        let entry = entry.unwrap();
-        let path = entry.path();
-        if path.is_file() && path.extension().unwrap() == extension {
-            count += 1;
-        }
-    }
-
-    Some(count)
 }
 
 fn create_chapters_info(title: &MangaDetail, chapters: Vec<MangaChapterDetail>) -> MangaDetailDump {
@@ -397,17 +374,7 @@ pub(crate) async fn sjv_download(
                 let start_page = chapter.start_page;
                 let total_image_count = chapter.pages + start_page;
 
-                let progress = Arc::new(indicatif::ProgressBar::new(total_image_count.into()));
-                progress.enable_steady_tick(std::time::Duration::from_millis(120));
-                progress.set_style(
-                    indicatif::ProgressStyle::with_template(
-                        "{spinner:.blue} {msg} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos}/{len}",
-                    )
-                    .unwrap()
-                    .progress_chars("#>-")
-                    .tick_strings(&["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏", " "]),
-                );
-                progress.set_message("Downloading");
+                let progress = create_progress_bar(total_image_count.into());
 
                 if dl_config.parallel {
                     let tasks: Vec<_> = (0..total_image_count)

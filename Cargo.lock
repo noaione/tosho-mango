@@ -2351,6 +2351,7 @@ dependencies = [
  "tosho-amap",
  "tosho-kmkc",
  "tosho-macros",
+ "tosho-mplus",
  "tosho-musq",
  "tosho-rbean",
  "tosho-sjv",
@@ -2409,6 +2410,22 @@ dependencies = [
  "quote",
  "serde",
  "syn",
+]
+
+[[package]]
+name = "tosho-mplus"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "base64 0.22.1",
+ "chrono",
+ "futures-util",
+ "lazy_static",
+ "prost",
+ "reqwest",
+ "serde",
+ "tokio",
+ "tosho-macros",
 ]
 
 [[package]]

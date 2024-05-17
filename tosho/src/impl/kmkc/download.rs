@@ -8,6 +8,7 @@ use tosho_kmkc::{
     KMClient,
 };
 
+use crate::r#impl::common::{check_downloaded_image_count, create_progress_bar};
 use crate::term::Terminal;
 use crate::{
     cli::ExitCode,
@@ -40,30 +41,6 @@ pub(crate) struct KMDownloadCliConfig {
 
     pub(crate) no_ticket: bool,
     pub(crate) no_point: bool,
-}
-
-fn check_downloaded_image_count(image_dir: &PathBuf, extension: &str) -> Option<usize> {
-    // check if dir exist
-    if !image_dir.exists() {
-        return None;
-    }
-
-    // check if dir is dir
-    if !image_dir.is_dir() {
-        return None;
-    }
-
-    // check how many .avif files in the dir
-    let mut count = 0;
-    for entry in std::fs::read_dir(image_dir).unwrap() {
-        let entry = entry.unwrap();
-        let path = entry.path();
-        if path.is_file() && path.extension().unwrap() == extension {
-            count += 1;
-        }
-    }
-
-    Some(count)
 }
 
 fn create_chapters_info(title: &TitleNode, chapters: Vec<EpisodeNode>) -> MangaDetailDump {
@@ -408,17 +385,7 @@ pub(crate) async fn kmkc_download(
 
                 let total_image_count = image_blocks.len() as u64;
 
-                let progress = Arc::new(indicatif::ProgressBar::new(total_image_count));
-                progress.enable_steady_tick(std::time::Duration::from_millis(120));
-                progress.set_style(
-                    indicatif::ProgressStyle::with_template(
-                        "{spinner:.blue} {msg} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos}/{len}",
-                    )
-                    .unwrap()
-                    .progress_chars("#>-")
-                    .tick_strings(&["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏", " "]),
-                );
-                progress.set_message("Downloading");
+                let progress = create_progress_bar(total_image_count);
 
                 if dl_config.parallel {
                     let tasks: Vec<_> = image_blocks

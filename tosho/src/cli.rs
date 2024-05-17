@@ -87,6 +87,20 @@ pub(crate) enum ToshoCommands {
         #[command(subcommand)]
         subcommand: crate::r#impl::rbean::RBeanCommands,
     },
+    /// Download manga from M+
+    #[command(name = "mp")]
+    Mplus {
+        /// Account ID to use
+        #[arg(short = 'a', long = "account", default_value = None)]
+        account_id: Option<String>,
+
+        /// Language to use
+        #[arg(short = 'l', long = "language", value_enum, default_value = "en")]
+        language: Option<crate::r#impl::mplus::MPlusLanguage>,
+
+        #[command(subcommand)]
+        subcommand: crate::r#impl::mplus::MPlusCommands,
+    },
     /// Additional tools to manage your downloaded manga
     Tools {
         #[command(subcommand)]

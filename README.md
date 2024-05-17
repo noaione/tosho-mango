@@ -28,18 +28,16 @@ This is just a fun side project, and as a disclaimer, I'm not condoning anything
 
 ## Installation
 
+**Requirements**:
+- Rust 1.72+ (If manually building or using `cargo`)
+- 64-bit devices (ARM64/aarch64 support might be experimental)
+- Modern enough terminal (VT support)
+
 `tosho` comes with a pre-compiled binary that you can choose:
 - The **Stable** release in the **[Releases](https://github.com/noaione/tosho-mango/releases)** tab.
 - The **Nightly** release from any latest successful commits: [Master CI](https://github.com/noaione/tosho-mango/actions/workflows/ci.yml?query=branch%3Amaster) / [nightly.link](https://nightly.link/noaione/tosho-mango/workflows/ci/master?preview).
 
-Or, if you have Rust you can do the following:
-
-**Requirements:**
-- Rust 1.72+
-- 64-bit devices (ARM64/aarch64 support might be experimental)
-- Modern enough terminal (VT support)
-
-Installing with `cargo`:
+You can also utilize `cargo`:
 ```bash
 cargo install --locked tosho
 ```
@@ -60,6 +58,16 @@ Refer to each source's folder for information on authenticating each source with
 For a list of available commands, use the `--help` argument.
 
 [![asciicast](https://asciinema.org/a/636303.svg)](https://asciinema.org/a/636303)
+
+## Supported Platform
+
+We support the following platform:
+- [MU! by SQ](https://github.com/noaione/tosho-mango/tree/master/tosho_musq) (Android, Apple)
+- [KM by KC](https://github.com/noaione/tosho-mango/tree/master/tosho_kmkc) (Android, Apple, Web)
+- [AM by AP](https://github.com/noaione/tosho-mango/tree/master/tosho_amap) (Android)
+- [SJ/M by V](https://github.com/noaione/tosho-mango/tree/master/tosho_sjv) (Android, Apple, Web)
+- [小豆 (Red Bean) by KRKR](https://github.com/noaione/tosho-mango/tree/master/tosho_rbean) (Android)
+- [M+ by S](https://github.com/noaione/tosho-mango/tree/master/tosho_mplus) (Android)
 
 ## License
 

@@ -3,6 +3,7 @@ pub(crate) mod client;
 pub(super) mod common;
 pub(crate) mod kmkc;
 pub(crate) mod models;
+pub(crate) mod mplus;
 pub(crate) mod musq;
 pub(super) mod parser;
 pub(crate) mod rbean;
@@ -21,6 +22,8 @@ pub enum Implementations {
     Sjv,
     /// 小豆 by KRKR
     Rbean,
+    /// M+ by S
+    Mplus,
 }
 
 const WINDOWS_RESERVED: [&str; 22] = [
