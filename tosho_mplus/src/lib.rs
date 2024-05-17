@@ -4,9 +4,11 @@ pub mod constants;
 pub mod helper;
 pub mod proto;
 
+use futures_util::StreamExt;
 use std::io::Cursor;
+use tokio::io::{self, AsyncWriteExt};
 
-use constants::{Constants, API_HOST};
+use constants::{Constants, API_HOST, IMAGE_HOST};
 use helper::RankingType;
 use prost::Message;
 use proto::{ErrorResponse, Language, SuccessOrError};
@@ -33,7 +35,7 @@ pub use crate::helper::ImageQuality;
 ///
 /// All responses are [`Box`]-ed since it has widely varying sizes.
 /// ```
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct MPClient {
     inner: reqwest::Client,
     secret: String,
@@ -476,6 +478,54 @@ impl MPClient {
             },
             SuccessOrError::Error(error) => Ok(APIResponse::Error(error)),
         }
+    }
+
+    /// Stream download the image from the given URL.
+    ///
+    /// The URL can be obtained from [`get_chapter_images`](#method.get_chapter_images).
+    ///
+    /// # Parameters
+    /// * `url` - The URL to download the image from.
+    /// * `writer` - The writer to write the image to.
+    pub async fn stream_download(
+        &self,
+        url: &str,
+        mut writer: impl io::AsyncWrite + Unpin,
+    ) -> anyhow::Result<()> {
+        let res = self
+            .inner
+            .get(url)
+            .headers({
+                let mut headers = reqwest::header::HeaderMap::new();
+                headers.insert(
+                    "Host",
+                    reqwest::header::HeaderValue::from_str(&IMAGE_HOST).unwrap(),
+                );
+                headers.insert(
+                    "User-Agent",
+                    reqwest::header::HeaderValue::from_str(&self.constants.image_ua).unwrap(),
+                );
+                headers.insert(
+                    "Cache-Control",
+                    reqwest::header::HeaderValue::from_static("no-cache"),
+                );
+                headers
+            })
+            .send()
+            .await?;
+
+        // bail if not success
+        if !res.status().is_success() {
+            anyhow::bail!("Failed to download image: {}", res.status())
+        }
+
+        let mut stream = res.bytes_stream();
+        while let Some(item) = stream.next().await {
+            let item = item.unwrap();
+            writer.write_all(&item).await?;
+        }
+
+        Ok(())
     }
 }
 
