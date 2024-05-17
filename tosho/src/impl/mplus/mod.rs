@@ -3,7 +3,9 @@ use clap::{Subcommand, ValueEnum};
 pub(crate) mod accounts;
 pub(super) mod common;
 pub(crate) mod config;
+pub(crate) mod favorites;
 pub(crate) mod manga;
+pub(crate) mod rankings;
 
 #[derive(Subcommand, Clone)]
 pub(crate) enum MPlusCommands {
@@ -19,6 +21,8 @@ pub(crate) enum MPlusCommands {
     Account,
     /// See all the accounts you have authenticated with
     Accounts,
+    /// Get your account favorites list
+    Favorites,
     /// Get a title information
     Info {
         /// Title ID to use
@@ -29,6 +33,12 @@ pub(crate) enum MPlusCommands {
         /// Show related titles
         #[arg(short = 'r', long = "related")]
         show_related: bool,
+    },
+    /// Get the current title rankings
+    Rankings {
+        /// Specify the ranking you want to see
+        #[arg(short, long, default_value = "hot", value_enum)]
+        kind: crate::r#impl::mplus::rankings::RankingKind,
     },
     /// Revoke or delete an account
     Revoke,

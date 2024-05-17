@@ -857,6 +857,9 @@ async fn main() {
                     r#impl::mplus::accounts::mplus_account_info(&client, &config, &t).await
                 }
                 MPlusCommands::Accounts => 0,
+                MPlusCommands::Favorites => {
+                    r#impl::mplus::favorites::mplus_my_favorites(&client, &config, &t).await
+                }
                 MPlusCommands::Info {
                     title_id,
                     show_chapters,
@@ -870,6 +873,9 @@ async fn main() {
                         &t,
                     )
                     .await
+                }
+                MPlusCommands::Rankings { kind } => {
+                    r#impl::mplus::rankings::mplus_home_rankings(kind, &client, &t).await
                 }
                 MPlusCommands::Revoke => r#impl::mplus::accounts::mplus_account_revoke(&config, &t),
                 MPlusCommands::Search { query } => {
