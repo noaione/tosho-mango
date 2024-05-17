@@ -1,8 +1,13 @@
+use std::path::PathBuf;
+
 use clap::{Subcommand, ValueEnum};
+
+use super::parser::{parse_comma_number, CommaSeparatedNumber};
 
 pub(crate) mod accounts;
 pub(super) mod common;
 pub(crate) mod config;
+pub(crate) mod download;
 pub(crate) mod favorites;
 pub(crate) mod manga;
 pub(crate) mod rankings;
@@ -21,6 +26,41 @@ pub(crate) enum MPlusCommands {
     Account,
     /// See all the accounts you have authenticated with
     Accounts,
+    /// Automatically/batch download a chapter(s) from a title
+    #[command(name = "autodownload")]
+    AutoDownload {
+        /// Title ID to use
+        title_id: u64,
+        /// Specify the starting chapter ID to download
+        #[arg(short = 's', long, default_value = None)]
+        start_from: Option<u64>,
+        /// Specify the end chapter ID to download
+        #[arg(short = 'e', long, default_value = None)]
+        end_until: Option<u64>,
+        /// Specify the image quality to download
+        #[arg(short = 'q', long = "quality", default_value = "high", value_enum)]
+        quality: crate::r#impl::mplus::download::DownloadImageQuality,
+        /// Output directory to use
+        #[arg(short = 'o', long = "output", default_value = None)]
+        output: Option<PathBuf>,
+    },
+    /// Download a chapters from a title
+    Download {
+        /// Title ID to use
+        title_id: u64,
+        /// Specify the chapter ID to purchase (ex: 1,2,3,4,5)
+        #[arg(short = 'c', long = "chapters", default_value = None, value_parser = parse_comma_number)]
+        chapters: Option<CommaSeparatedNumber>,
+        /// Show all the chapters available for the title
+        #[arg(long = "show-all")]
+        show_all: bool,
+        /// Specify the image quality to download
+        #[arg(short = 'q', long = "quality", default_value = "high", value_enum)]
+        quality: crate::r#impl::mplus::download::DownloadImageQuality,
+        /// Output directory to use
+        #[arg(short = 'o', long = "output", default_value = None)]
+        output: Option<PathBuf>,
+    },
     /// Get your account favorites list
     Favorites,
     /// Get a title information

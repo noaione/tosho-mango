@@ -3,6 +3,7 @@ use std::str::FromStr;
 use serde::{Deserialize, Serialize};
 use tosho_amap::models::{ComicEpisodeInfo, ComicEpisodeInfoNode};
 use tosho_kmkc::models::EpisodeNode;
+use tosho_mplus::proto::Chapter as MPChapter;
 use tosho_musq::proto::ChapterV2;
 use tosho_rbean::models::Chapter;
 use tosho_sjv::models::MangaChapterDetail;
@@ -182,6 +183,19 @@ impl From<Chapter> for ChapterDetailDump {
             main_name: value.formatted_title(),
             timestamp: value.published.map(|d| d.timestamp()),
             sub_name: None,
+        }
+    }
+}
+
+impl From<MPChapter> for ChapterDetailDump {
+    /// Convert from [`tosho_mplus::proto::Chapter`] into [`ChapterDetailDump`]
+    /// `_info.json` format.
+    fn from(value: MPChapter) -> Self {
+        Self {
+            id: value.chapter_id.into(),
+            main_name: value.title,
+            timestamp: Some(value.published_at),
+            sub_name: value.subtitle,
         }
     }
 }

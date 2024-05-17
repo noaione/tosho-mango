@@ -55,6 +55,7 @@ use cli::ToshoCommands;
 use r#impl::amap::download::AMDownloadCliConfig;
 use r#impl::amap::AMAPCommands;
 use r#impl::client::select_single_account;
+use r#impl::mplus::download::MPDownloadCliConfig;
 use r#impl::mplus::MPlusCommands;
 use r#impl::parser::WeeklyCodeCli;
 use r#impl::rbean::download::RBDownloadConfigCli;
@@ -857,6 +858,53 @@ async fn main() {
                     r#impl::mplus::accounts::mplus_account_info(&client, &config, &t).await
                 }
                 MPlusCommands::Accounts => 0,
+                MPlusCommands::AutoDownload {
+                    title_id,
+                    start_from,
+                    end_until,
+                    quality,
+                    output,
+                } => {
+                    let mplus_config = MPDownloadCliConfig {
+                        no_input: true,
+                        start_from,
+                        end_at: end_until,
+                        quality,
+                        ..Default::default()
+                    };
+
+                    r#impl::mplus::download::mplus_download(
+                        title_id,
+                        mplus_config,
+                        output.unwrap_or_else(get_default_download_dir),
+                        &client,
+                        &mut t_mut,
+                    )
+                    .await
+                }
+                MPlusCommands::Download {
+                    title_id,
+                    chapters,
+                    show_all,
+                    quality,
+                    output,
+                } => {
+                    let mplus_config = MPDownloadCliConfig {
+                        show_all,
+                        chapter_ids: chapters.unwrap_or_default(),
+                        quality,
+                        ..Default::default()
+                    };
+
+                    r#impl::mplus::download::mplus_download(
+                        title_id,
+                        mplus_config,
+                        output.unwrap_or_else(get_default_download_dir),
+                        &client,
+                        &mut t_mut,
+                    )
+                    .await
+                }
                 MPlusCommands::Favorites => {
                     r#impl::mplus::favorites::mplus_my_favorites(&client, &config, &t).await
                 }
