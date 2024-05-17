@@ -105,7 +105,7 @@ impl MPClient {
                 self.language.as_language_code().to_owned(),
             ));
             params.push((
-                "lang".to_string(),
+                "clang".to_string(),
                 self.language.as_language_code().to_owned(),
             ));
         }

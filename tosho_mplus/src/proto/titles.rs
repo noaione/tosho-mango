@@ -599,7 +599,7 @@ pub struct TitleRankingGroup {
     /// The ranking score/position
     #[prost(uint64, tag = "2")]
     pub ranking: u64,
-    /// The titles
+    /// The titles in each available languages
     #[prost(message, repeated, tag = "3")]
     pub titles: ::prost::alloc::vec::Vec<Title>,
 }
