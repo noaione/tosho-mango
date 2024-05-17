@@ -12,6 +12,7 @@
 //! - [AM by AP](https://crates.io/crates/tosho-amap)
 //! - [SJ/M by V](https://crates.io/crates/tosho-sjv)
 //! - [小豆 (Red Bean) by KRKR](https://crates.io/crates/tosho-rbean)
+//! - [M+ by S](https://crates.io/crates/tosho-mplus)
 //!
 //! ## Installation
 //!
@@ -28,6 +29,10 @@
 //! ```bash
 //! cargo binstall --locked tosho
 //! ```
+//!
+//! We also provide a pre-built binary in two flavours:
+//! - **Stable** release in the **[GitHub Releases](https://github.com/noaione/tosho-mango/releases)** tab.
+//! - **Nightly** release from any latest successful commits: [Master CI](https://github.com/noaione/tosho-mango/actions/workflows/ci.yml?query=branch%3Amaster) / [nightly.link](https://nightly.link/noaione/tosho-mango/workflows/ci/master?preview).
 //!
 //! ## Usage
 //!
