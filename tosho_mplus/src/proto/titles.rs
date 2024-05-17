@@ -596,12 +596,12 @@ pub struct TitleRankingGroup {
     /// Original title ID
     #[prost(uint64, tag = "1")]
     pub original_title: u64,
-    /// The ranking score/position
-    #[prost(uint64, tag = "2")]
-    pub ranking: u64,
     /// The titles in each available languages
-    #[prost(message, repeated, tag = "3")]
+    #[prost(message, repeated, tag = "2")]
     pub titles: ::prost::alloc::vec::Vec<Title>,
+    /// The ranking score/position
+    #[prost(uint64, tag = "3")]
+    pub ranking: u64,
 }
 
 /// Title ranking list response
@@ -615,8 +615,8 @@ pub struct TitleRankingList {
     #[prost(message, repeated, tag = "1")]
     pub banners: ::prost::alloc::vec::Vec<Banner>,
     /// The updated timestamp of this ranking
-    #[prost(uint64, tag = "2")]
-    pub updated_at: u64,
+    #[prost(int64, tag = "2")]
+    pub updated_at: i64,
     /// The list of titles
     #[prost(message, repeated, tag = "3")]
     pub titles: ::prost::alloc::vec::Vec<TitleRankingGroup>,
