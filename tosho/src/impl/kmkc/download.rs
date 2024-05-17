@@ -8,7 +8,7 @@ use tosho_kmkc::{
     KMClient,
 };
 
-use crate::r#impl::common::check_downloaded_image_count;
+use crate::r#impl::common::{check_downloaded_image_count, create_progress_bar};
 use crate::term::Terminal;
 use crate::{
     cli::ExitCode,
@@ -385,17 +385,7 @@ pub(crate) async fn kmkc_download(
 
                 let total_image_count = image_blocks.len() as u64;
 
-                let progress = Arc::new(indicatif::ProgressBar::new(total_image_count));
-                progress.enable_steady_tick(std::time::Duration::from_millis(120));
-                progress.set_style(
-                    indicatif::ProgressStyle::with_template(
-                        "{spinner:.blue} {msg} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos}/{len}",
-                    )
-                    .unwrap()
-                    .progress_chars("#>-")
-                    .tick_strings(&["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏", " "]),
-                );
-                progress.set_message("Downloading");
+                let progress = create_progress_bar(total_image_count);
 
                 if dl_config.parallel {
                     let tasks: Vec<_> = image_blocks

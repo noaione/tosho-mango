@@ -15,7 +15,7 @@ use crate::{
     cli::ExitCode,
     r#impl::{
         clean_filename,
-        common::check_downloaded_image_count,
+        common::{check_downloaded_image_count, create_progress_bar},
         models::{ChapterDetailDump, MangaDetailDump},
     },
     term::{ConsoleChoice, Terminal},
@@ -359,17 +359,7 @@ pub(crate) async fn rbean_download(
 
         let total_img_count = view_req.data.pages.len() as u64;
 
-        let progress = Arc::new(indicatif::ProgressBar::new(total_img_count));
-        progress.enable_steady_tick(std::time::Duration::from_millis(120));
-        progress.set_style(
-            indicatif::ProgressStyle::with_template(
-                "{spinner:.blue} {msg} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos}/{len}",
-            )
-            .unwrap()
-            .progress_chars("#>-")
-            .tick_strings(&["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏", " "]),
-        );
-        progress.set_message("Downloading");
+        let progress = create_progress_bar(total_img_count);
 
         let pages_data = view_req.data.pages.clone();
 

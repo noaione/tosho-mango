@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{path::PathBuf, sync::Arc};
 
 use chrono::TimeZone;
 
@@ -38,4 +38,26 @@ pub(super) fn check_downloaded_image_count(image_dir: &PathBuf, extension: &str)
     }
 
     Some(count)
+}
+
+/// Create an Atomic Reference Counted progress bar
+///
+/// This wrap [`indicatif::ProgressBar`] with [`std::sync::Arc`] to allow it to be shared between threads
+///
+/// # Arguments
+/// * `total` - The total number of items to be processed
+pub(super) fn create_progress_bar(total: u64) -> Arc<indicatif::ProgressBar> {
+    let progress = Arc::new(indicatif::ProgressBar::new(total));
+    progress.enable_steady_tick(std::time::Duration::from_millis(120));
+    progress.set_style(
+        indicatif::ProgressStyle::with_template(
+            "{spinner:.blue} {msg} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos}/{len}",
+        )
+        .unwrap()
+        .progress_chars("#>-")
+        .tick_strings(&["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏", " "]),
+    );
+    progress.set_message("Downloading");
+
+    progress
 }
