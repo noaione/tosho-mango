@@ -163,6 +163,89 @@ pub struct ChapterPage {
     pub key: ::core::option::Option<::prost::alloc::string::String>,
 }
 
+impl ChapterPage {
+    /// The file name of the image.
+    ///
+    /// # Examples
+    /// ```
+    /// use tosho_mplus::proto::ChapterPage;
+    ///
+    /// let page = ChapterPage {
+    ///     url: "https://example.com/path/to/image/9643032.webp?query=param".to_string(),
+    ///     width: 784,
+    ///     height: 1145,
+    ///     kind: 0,
+    ///     key: None,
+    /// };
+    ///
+    /// assert_eq!(page.file_name(), "9643032.webp");
+    /// ```
+    pub fn file_name(&self) -> String {
+        let url = self.url.clone();
+        // split at the last slash
+        let split: Vec<&str> = url.rsplitn(2, '/').collect();
+        // Remove extra URL parameters
+        let file_name: Vec<&str> = split[0].split('?').collect();
+        file_name[0].to_string()
+    }
+
+    /// The file extension of the image.
+    ///
+    /// # Examples
+    /// ```
+    /// use tosho_mplus::proto::ChapterPage;
+    ///
+    /// let page = ChapterPage {
+    ///     url: "https://example.com/path/to/image/9643032.webp?query=param".to_string(),
+    ///     width: 784,
+    ///     height: 1145,
+    ///     kind: 0,
+    ///     key: None,
+    /// };
+    ///
+    /// assert_eq!(page.extension(), "webp");
+    /// ```
+    pub fn extension(&self) -> String {
+        let file_name = self.file_name();
+        // split at the last dot
+        let split: Vec<&str> = file_name.rsplitn(2, '.').collect();
+
+        if split.len() == 2 {
+            split[0].to_string()
+        } else {
+            "".to_string()
+        }
+    }
+
+    /// The file stem of the image.
+    ///
+    /// # Examples
+    /// ```
+    /// use tosho_mplus::proto::ChapterPage;
+    ///
+    /// let page = ChapterPage {
+    ///     url: "https://example.com/path/to/image/9643032.webp?query=param".to_string(),
+    ///     width: 784,
+    ///     height: 1145,
+    ///     kind: 0,
+    ///     key: None,
+    /// };
+    ///
+    /// assert_eq!(page.file_stem(), "9643032");
+    /// ```
+    pub fn file_stem(&self) -> String {
+        let file_name = self.file_name();
+        // split at the last dot
+        let split: Vec<&str> = file_name.rsplitn(2, '.').collect();
+
+        if split.len() == 2 {
+            split[1].to_string()
+        } else {
+            file_name
+        }
+    }
+}
+
 /// A chapter page of a banners
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct ChapterPageBanner {
