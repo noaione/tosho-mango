@@ -53,7 +53,7 @@
 //!
 //! ## License
 //!
-//! This project is licensed with MIT License ([LICENSE](https://github.com/noaione/tosho-mango/blob/master/LICENSE) or http://opensource.org/licenses/MIT)
+//! This project is licensed with MIT License ([LICENSE](https://github.com/noaione/tosho-mango/blob/master/LICENSE) or <http://opensource.org/licenses/MIT>)
 //!
 //! [`tosho`]: https://crates.io/crates/tosho
 
@@ -91,7 +91,6 @@ pub use crate::helper::ImageQuality;
 /// # Boxed
 ///
 /// All responses are [`Box`]-ed since it has widely varying sizes.
-/// ```
 #[derive(Clone, Debug)]
 pub struct MPClient {
     inner: reqwest::Client,
@@ -588,7 +587,7 @@ impl MPClient {
 
 /// A common return type for all API calls.
 ///
-/// It either returns the specifid success response or an error.
+/// It either returns the specified success response or an error.
 pub enum APIResponse<T: ::prost::Message + Clone> {
     Error(Box<ErrorResponse>),
     Success(Box<T>),

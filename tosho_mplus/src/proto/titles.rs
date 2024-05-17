@@ -196,7 +196,7 @@ impl TitleLabels {
 ///
 /// This is a `v1` implementation of the title list.
 ///
-/// See also: [`TiteListV2`]
+/// See also: [`TitleListV2`]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct TitleList {
     /// The group name
