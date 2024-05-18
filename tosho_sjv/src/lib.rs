@@ -72,9 +72,9 @@ use constants::{
 use futures_util::StreamExt;
 use helper::generate_random_token;
 use models::{
-    AccountEntitlementsResponse, AccountLoginResponse, MangaAuthResponse, MangaChapterDetail,
-    MangaDetail, MangaReadMetadataResponse, MangaSeriesResponse, MangaStoreInfo,
-    MangaStoreResponse, MangaUrlResponse, SimpleResponse,
+    AccountEntitlementsResponse, AccountLoginResponse, MangaAuthResponse, MangaDetail,
+    MangaReadMetadataResponse, MangaSeriesResponse, MangaStoreInfo, MangaStoreResponse,
+    MangaUrlResponse, SimpleResponse,
 };
 use std::collections::HashMap;
 use tokio::io::{self, AsyncWriteExt};
@@ -283,7 +283,7 @@ impl SJClient {
     ///
     /// # Arguments
     /// * `id` - The manga ID
-    pub async fn get_chapters(&self, id: u32) -> anyhow::Result<Vec<MangaChapterDetail>> {
+    pub async fn get_chapters(&self, id: u32) -> anyhow::Result<MangaSeriesResponse> {
         let app_id = match self.mode {
             SJMode::VM => VM_APP_ID,
             SJMode::SJ => SJ_APP_ID,
@@ -297,13 +297,7 @@ impl SJClient {
             .request::<MangaSeriesResponse>(reqwest::Method::GET, &endpoint, None, None)
             .await?;
 
-        let mapped_chapters: Vec<MangaChapterDetail> = response
-            .chapters
-            .iter()
-            .map(|data| data.chapter.clone())
-            .collect();
-
-        Ok(mapped_chapters)
+        Ok(response)
     }
 
     /// Check if specific chapter can be viewed by us.
