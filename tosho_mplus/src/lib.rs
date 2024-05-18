@@ -68,7 +68,7 @@ use tokio::io::{self, AsyncWriteExt};
 use constants::{Constants, API_HOST, IMAGE_HOST};
 use helper::RankingType;
 use prost::Message;
-use proto::{ErrorResponse, Language, SuccessOrError};
+use proto::{CommentList, ErrorResponse, Language, SuccessOrError};
 
 use crate::constants::BASE_API;
 pub use crate::helper::ImageQuality;
@@ -394,19 +394,11 @@ impl MPClient {
     ///
     /// Internally, this use the "search" API which does not take any
     /// query information for some unknown reason.
-    pub async fn get_titles_for_language(
-        &self,
-        language: Language,
-    ) -> anyhow::Result<APIResponse<proto::SearchResults>> {
-        let mut query_params = vec![];
-        query_params.push(("lang".to_string(), language.as_language_code().to_owned()));
-        query_params.push(("clang".to_string(), language.as_language_code().to_owned()));
-        self.build_params(&mut query_params, false);
-
+    pub async fn get_search(&self) -> anyhow::Result<APIResponse<proto::SearchResults>> {
         let request = self
             .inner
             .get(&self.build_url("title_list/search"))
-            .query(&query_params)
+            .query(&self.empty_params(true))
             .send()
             .await?;
 
@@ -531,6 +523,32 @@ impl MPClient {
             SuccessOrError::Success(data) => match data.chapter_viewer {
                 Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
                 None => anyhow::bail!("No chapter viewer found"),
+            },
+            SuccessOrError::Error(error) => Ok(APIResponse::Error(error)),
+        }
+    }
+
+    /// Get comments for a chapter
+    ///
+    /// # Parameters
+    /// * `id` - The ID of the chapter to get comments for.
+    pub async fn get_comments(&self, id: u64) -> anyhow::Result<APIResponse<CommentList>> {
+        let mut query_params = self.empty_params(false);
+        query_params.insert(0, ("chapter_id".to_string(), id.to_string()));
+
+        let request = self
+            .inner
+            .get(&self.build_url("comments"))
+            .query(&query_params)
+            .send()
+            .await?;
+
+        let response = parse_response(request).await?;
+
+        match response {
+            SuccessOrError::Success(data) => match data.comment_list {
+                Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
+                None => anyhow::bail!("No comments found"),
             },
             SuccessOrError::Error(error) => Ok(APIResponse::Error(error)),
         }
