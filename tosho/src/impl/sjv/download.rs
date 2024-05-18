@@ -248,12 +248,13 @@ pub(crate) async fn sjv_download(
     let chapters_resp = client.get_chapters(title.id).await;
 
     match chapters_resp {
-        Ok(chapters) => {
-            let chapters: Vec<MangaChapterDetail> = chapters
+        Ok(chapters_resp) => {
+            let chapters: Vec<MangaChapterDetail> = chapters_resp
+                .chapters
                 .iter()
                 .filter_map(|ch| {
-                    if ch.chapter.is_some() {
-                        Some(ch.clone())
+                    if ch.chapter.chapter.is_some() {
+                        Some(ch.chapter.clone())
                     } else {
                         None
                     }

@@ -16,10 +16,11 @@ Starting from Rust port of the project, all changes will be put into this file.
 - `MU`: Fix account revoke not working
 - `RB`: Fix wrong base host used in homepage view
 - `AM`: Add title information when purchasing/downloading
-- `AM`, `RB`: Cleanup chapters information
+- `AM`, `RB`, and `SJ/M`: Cleanup chapters information
 - `SJ/M`: Early fetch chapters information
 - `SJ/M`: Improve search/pattern matching
 - `SJ/M`: Add `show_to` to notices and add simple helper if the notice should be displayed or not
+- `SJ/M`: Return the whole series response for `get_chapters`
 - Refactor some duplicate code
 - Changes all `ToString` occurences to `std::fmt::Display`
 
