@@ -313,10 +313,9 @@ pub(crate) async fn rbean_title_info(
                 console.info(&cformat!("    <s,m>Upcoming</>: {}", ch_title));
             } else {
                 console.info(&banner_title);
-                console.info(&format!("     {}", ch_url));
                 if let Some(publish_at) = chapter.published {
                     let publish_at = publish_at.format("%b %d, %Y").to_string();
-                    console.info(&cformat!("      <s>Published</>: {}", publish_at));
+                    console.info(&cformat!("     <s>Published</>: {}", publish_at));
                 }
             }
         }
