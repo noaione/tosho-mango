@@ -31,9 +31,6 @@ pub(crate) async fn sjv_search(
 
             let filtered = search_manga_by_text(&results.series, query);
 
-            let filtered: Vec<tosho_sjv::models::MangaDetail> =
-                filtered.iter().map(|&x| x.clone()).collect();
-
             if filtered.is_empty() {
                 console.warn("No match found");
                 return 1;

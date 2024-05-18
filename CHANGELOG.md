@@ -18,6 +18,7 @@ Starting from Rust port of the project, all changes will be put into this file.
 - `AM`: Add title information when purchasing/downloading
 - `AM`: Cleanup chapters information
 - `SJ/M`: Early fetch chapters information
+- `SJ/M`: Improve search/pattern matching
 - Refactor some duplicate code
 - Changes all `ToString` occurences to `std::fmt::Display`
 

@@ -42,30 +42,57 @@ pub(super) fn do_print_search_information(
 }
 
 /// Search the big cache JSON for specific title
-pub(crate) fn search_manga_by_text<'a>(
-    contents: &'a [MangaDetail],
-    target: &str,
-) -> Vec<&'a MangaDetail> {
-    // remove diacritics and lower case
-    // we're not normalizing the string, surely it would work fine :clueless:
+pub(super) fn search_manga_by_text(contents: &[MangaDetail], target: &str) -> Vec<MangaDetail> {
+    // Remove diacritics and lower case the target string
     let clean_target = secular::lower_lay_string(target);
-    // split by spaces
+    // Split target by spaces and collect patterns
     let target: Vec<&str> = clean_target.split_ascii_whitespace().collect();
 
+    // Create aho-corasick automaton
     let ac = AhoCorasick::builder()
         .ascii_case_insensitive(true)
+        .match_kind(aho_corasick::MatchKind::LeftmostLongest)
         .build(target)
         .unwrap();
 
-    let matches: Vec<&MangaDetail> = contents
+    // try matching
+    let mut matches: Vec<(Vec<aho_corasick::Match>, &MangaDetail)> = contents
         .iter()
-        .filter(|&content| {
+        .filter_map(|content| {
+            // Remove diacritics and lower case the title
             let cleaned_title = secular::lower_lay_string(&content.title);
-            ac.find(&cleaned_title).is_some()
+            let matches: Vec<aho_corasick::Match> = ac
+                .find_iter(&cleaned_title)
+                .map(|stack| stack.clone())
+                .collect();
+
+            if matches.is_empty() {
+                None
+            } else {
+                Some((matches, content))
+            }
         })
         .collect();
 
-    matches
+    // sort by the most match
+    matches.sort_by(|a, b| {
+        // check ny the longest span match
+        let a_len = a.0.iter().map(|x| x.len()).sum::<usize>();
+        let b_len = b.0.iter().map(|x| x.len()).sum::<usize>();
+        let ab_comp = a_len.cmp(&b_len);
+        if ab_comp == std::cmp::Ordering::Equal {
+            // check by the most match
+            a.0.len().cmp(&b.0.len())
+        } else {
+            ab_comp
+        }
+    });
+
+    // get the actual match, reverse then take 20
+    let actual_match: Vec<MangaDetail> =
+        matches.iter().rev().map(|x| x.1.clone()).take(20).collect();
+
+    actual_match
 }
 
 // 12 hours
