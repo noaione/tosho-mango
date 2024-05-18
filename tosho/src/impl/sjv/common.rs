@@ -61,10 +61,7 @@ pub(super) fn search_manga_by_text(contents: &[MangaDetail], target: &str) -> Ve
         .filter_map(|content| {
             // Remove diacritics and lower case the title
             let cleaned_title = secular::lower_lay_string(&content.title);
-            let matches: Vec<aho_corasick::Match> = ac
-                .find_iter(&cleaned_title)
-                .map(|stack| stack.clone())
-                .collect();
+            let matches: Vec<aho_corasick::Match> = ac.find_iter(&cleaned_title).collect();
 
             if matches.is_empty() {
                 None
