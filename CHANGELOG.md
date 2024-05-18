@@ -19,6 +19,7 @@ Starting from Rust port of the project, all changes will be put into this file.
 - `AM`, `RB`: Cleanup chapters information
 - `SJ/M`: Early fetch chapters information
 - `SJ/M`: Improve search/pattern matching
+- `SJ/M`: Add `show_to` to notices and add simple helper if the notice should be displayed or not
 - Refactor some duplicate code
 - Changes all `ToString` occurences to `std::fmt::Display`
 

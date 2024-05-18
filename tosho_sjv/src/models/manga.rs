@@ -184,6 +184,34 @@ pub struct ChapterMessage {
         serialize_with = "super::datetime::serialize_opt"
     )]
     pub show_from: Option<DateTime<FixedOffset>>,
+    /// When the message will stop being shown
+    #[serde(
+        default,
+        deserialize_with = "super::datetime::deserialize_opt",
+        serialize_with = "super::datetime::serialize_opt"
+    )]
+    pub show_to: Option<DateTime<FixedOffset>>,
+}
+
+impl ChapterMessage {
+    /// Check if the message is currently active
+    pub fn is_active(&self) -> bool {
+        let now = chrono::Utc::now();
+
+        if let Some(show_from) = self.show_from {
+            if now < show_from {
+                return false;
+            }
+        }
+
+        if let Some(show_to) = self.show_to {
+            if now > show_to {
+                return false;
+            }
+        }
+
+        true
+    }
 }
 
 /// A wrapper for [`MangaChapterDetail`]
