@@ -57,41 +57,53 @@ pub(super) fn do_print_search_information(
 
 /// Search the big cache proto for specific title
 pub(super) fn search_manga_by_text(contents: &[Title], target: &str) -> Vec<Title> {
-    // remove diacritics and lower case
-    // we're not normalizing the string, surely it would work fine :clueless:
+    // Remove diacritics and lower case the target string
     let clean_target = secular::lower_lay_string(target);
-    // split by spaces
-    let mut target: Vec<&str> = clean_target.split_ascii_whitespace().collect();
-    // include back the original target
-    target.insert(0, &clean_target);
+    // Split target by spaces and collect patterns
+    let target: Vec<&str> = clean_target.split_ascii_whitespace().collect();
 
+    // Create aho-corasick automaton
     let ac = AhoCorasick::builder()
         .ascii_case_insensitive(true)
         .match_kind(aho_corasick::MatchKind::LeftmostLongest)
         .build(target)
         .unwrap();
 
-    let mut matches: Vec<(aho_corasick::Match, Title)> = contents
+    // try matching
+    let mut matches: Vec<(Vec<aho_corasick::Match>, &Title)> = contents
         .iter()
         .filter_map(|content| {
+            // Remove diacritics and lower case the title
             let cleaned_title = secular::lower_lay_string(&content.title);
-            ac.find(&cleaned_title)
-                .map(|matchstick| (matchstick, content.clone()))
+            let matches: Vec<aho_corasick::Match> = ac
+                .find_iter(&cleaned_title)
+                .map(|stack| stack.clone())
+                .collect();
+
+            if matches.is_empty() {
+                None
+            } else {
+                Some((matches, content))
+            }
         })
         .collect();
 
-    // aho-corasick return the Match Span, sort by the span that has the lowest start
-    // also the longest match
+    // sort by the most match
     matches.sort_by(|a, b| {
-        if a.0.start() == b.0.start() {
-            // compare range
+        // check ny the longest span match
+        let a_len = a.0.iter().map(|x| x.len()).sum::<usize>();
+        let b_len = b.0.iter().map(|x| x.len()).sum::<usize>();
+        let ab_comp = a_len.cmp(&b_len);
+        if ab_comp == std::cmp::Ordering::Equal {
+            // check by the most match
             a.0.len().cmp(&b.0.len())
         } else {
-            a.0.start().cmp(&b.0.start())
+            ab_comp
         }
     });
 
-    let actual_match: Vec<Title> = matches.iter().map(|x| x.1.clone()).collect();
+    // get the actual match, reverse then take 20
+    let actual_match: Vec<Title> = matches.iter().rev().map(|x| x.1.clone()).take(20).collect();
 
     actual_match
 }
