@@ -105,24 +105,29 @@ pub(crate) async fn amap_title_info(
 
             if show_chapters {
                 for episode in results.info.episodes.iter() {
-                    console.info(&cformat!(
-                        "    <s>{}</> ({})",
-                        episode.info.title,
-                        episode.info.id
-                    ));
-                    let free_daily = if episode.info.is_free_daily {
-                        "Yes"
+                    let mut base_info =
+                        cformat!("    <s>{}</> ({})", episode.info.title, episode.info.id);
+                    // add ticket price
+                    if episode.info.price > 0 {
+                        base_info =
+                            cformat!("{} [<r!,strong>{}</>T]", base_info, episode.info.price);
+
+                        if episode.info.is_free_daily {
+                            base_info = cformat!(
+                                "{} <g!,strong>[<rev>Free Daily</rev>]</g!,strong>",
+                                base_info
+                            );
+                        }
                     } else {
-                        "No"
-                    };
-                    console.info(&cformat!("     <s>{}</> pages", episode.info.page_count));
-                    console.info(&cformat!("     Free daily? <s>{}</>", free_daily));
+                        base_info =
+                            cformat!("{} <b!,strong>[<rev>Free</rev>]</b!,strong>", base_info);
+                    }
+                    console.info(&base_info);
                     if let Some(update_at) =
                         unix_timestamp_to_string(episode.info.update_date as i64)
                     {
-                        console.info(&cformat!("     Added at: <s>{}</>", update_at));
+                        console.info(&cformat!("     Published at: <s>{}</>", update_at));
                     }
-                    console.info(&cformat!("     Price: <s>{}T</>", episode.info.price));
                     if let Some(expiry_time) = episode.info.expiry_time {
                         if let Some(expiry_time) = unix_timestamp_to_string(expiry_time as i64) {
                             console.info(&cformat!("      Expires at: <s>{}</>", expiry_time));
