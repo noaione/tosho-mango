@@ -4,7 +4,7 @@ Starting from Rust port of the project, all changes will be put into this file.
 
 ## Unreleased (git master)
 ### New Features
-- Add **`MPlus`** as a new source
+- Add **`M+`** as a new source
 - `MU`: Support downloading with subscriptions
 - Add command to clear cache for all sources: `tosho tools clear-cache`
 
