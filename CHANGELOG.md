@@ -3,6 +3,10 @@
 Starting from Rust port of the project, all changes will be put into this file.
 
 ## Unreleased (git master)
+
+Nothing yet!
+
+## [0.5.0] (2024-05-20)
 ### New Features
 - Add **`M+`** as a new source
 - `MU`: Support downloading with subscriptions
@@ -92,7 +96,7 @@ argument list: `tosho km download 10007 --parallel`
 ### Changes
 - Self update now should support windows zip properly.
 
-## [0.3.2] 2024-02-17
+## [0.3.2] 2024-02-17 (YANKED)
 ### Changes
 - `SJ`: Properly login with requested platform.
 - `SJ`: Make `DATA_VERSION_CODE` optional when sending requests
