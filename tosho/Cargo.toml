@@ -48,6 +48,7 @@ supports-hyperlinks = "3.0.0"
 num-format = "0.4.4"
 regex = "1.10.4"
 mime_guess = "2.0.4"
+paste = "1.0.15"
 
 self_update = { version = "0.40.0", features = ["archive-tar", "archive-zip", "compression-flate2", "compression-zip-deflate"] }
 
