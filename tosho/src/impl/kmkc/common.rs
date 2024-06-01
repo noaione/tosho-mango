@@ -138,8 +138,12 @@ pub(super) async fn common_purchase_select(
     let ticket_entry = ticket_entry.unwrap();
 
     let mut chapters_entry = vec![];
-    console.info(&cformat!("Fetching <m,s>{}</> chapters...", result.title));
-    for episodes in result.episode_ids.clone().chunks(50) {
+    console.info(&cformat!(
+        "Fetching <m,s>{}</> <s>{}</> chapters...",
+        &result.title,
+        result.episode_ids.len()
+    ));
+    for episodes in result.episode_ids.chunks(50) {
         let chapters = client.get_episodes(episodes.to_vec()).await;
 
         if let Err(error) = chapters {

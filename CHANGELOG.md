@@ -4,6 +4,7 @@ Starting from Rust port of the project, all changes will be put into this file.
 
 ## Unreleased (git master)
 ### Changes
+- `KM`: Cleanup chapters information a bit
 - INTERNAL: Use more macros expansion on config implementation.
 
 ### Build

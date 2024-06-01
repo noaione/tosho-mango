@@ -159,7 +159,8 @@ pub(crate) async fn kmkc_title_info(
             let mut chapters_info = vec![];
             if show_chapters {
                 console.info(&cformat!(
-                    "Fetching <magenta,bold>{}</> chapters information...",
+                    "Fetching <magenta,bold>{}</> <bold>{}</bold> chapters information...",
+                    &result.title,
                     result.episode_ids.len()
                 ));
 
