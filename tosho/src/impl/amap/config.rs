@@ -56,6 +56,11 @@ impl From<AMConfig> for Config {
 }
 
 impl Config {
+    /// Get the ID of the config.
+    pub fn get_id(&self) -> &str {
+        &self.id
+    }
+
     /// Apply the old ID to the new config.
     pub fn with_id(self, id: &str) -> Self {
         Self {

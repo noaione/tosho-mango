@@ -35,6 +35,11 @@ pub struct Config {
 }
 
 impl Config {
+    /// Get the ID of the config.
+    pub fn get_id(&self) -> &str {
+        &self.id
+    }
+
     /// Creates a new config from a session and device type.
     pub fn from_session(session: &str, r#type: DeviceType) -> Self {
         let id = uuid::Uuid::new_v4().to_string();

@@ -1,5 +1,6 @@
 #![allow(clippy::derive_partial_eq_without_eq)]
 
+use prost::Message;
 use tosho_kmkc::{KMConfig, KMConfigMobilePlatform};
 use tosho_macros::EnumName;
 
@@ -46,7 +47,7 @@ impl From<MobilePlatform> for KMConfigMobilePlatform {
 }
 
 /// Represents the basic/simple config file for the KM by KC app.
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[derive(Clone, PartialEq, Message)]
 pub struct ConfigBase {
     /// The UUID of the account/config.
     #[prost(string, tag = "1")]
@@ -57,7 +58,7 @@ pub struct ConfigBase {
 }
 
 /// Represents the mobile config file for the KM by KC app.
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[derive(Clone, PartialEq, Message)]
 pub struct ConfigMobile {
     /// The UUID of the account/config.
     #[prost(string, tag = "1")]
@@ -304,6 +305,43 @@ impl Config {
         match self {
             Config::Mobile(c) => c.r#type(),
             Config::Web(c) => c.r#type(),
+        }
+    }
+
+    /// Encode the config to a [`Vec`] buffer.
+    ///
+    /// This is a wrapper around the [`prost::Message::encode`] method.
+    pub fn encode<B>(&self, buf: &mut B) -> Result<(), prost::EncodeError>
+    where
+        B: prost::bytes::BufMut,
+    {
+        match self {
+            Config::Mobile(c) => c.encode(buf),
+            Config::Web(c) => c.encode(buf),
+        }
+    }
+
+    /// Decode the config from a buffer.
+    ///
+    /// This is a wrapper around the [`prost::Message::decode`] method.
+    /// Decodes an instance of the message from a buffer.
+    pub fn decode<B>(mut buf: B) -> Result<Self, prost::DecodeError>
+    where
+        B: std::io::Seek + prost::bytes::Buf,
+    {
+        let conf_temp = ConfigBase::decode(&mut buf)?;
+        // seek back to the start of the buffer
+        buf.seek(std::io::SeekFrom::Start(0)).unwrap();
+
+        match conf_temp.r#type() {
+            DeviceType::Web => {
+                let conf = ConfigWeb::decode(&mut buf)?;
+                Ok(conf.into())
+            }
+            DeviceType::Mobile => {
+                let conf = ConfigMobile::decode(&mut buf)?;
+                Ok(conf.into())
+            }
         }
     }
 }

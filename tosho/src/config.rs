@@ -7,54 +7,146 @@ use std::{
 
 use crate::r#impl::Implementations;
 
+/// Macro expansion to generate functions for reading and getting config files.
 macro_rules! config_reader {
     (
-        $read_func:ident,
-        $get_func:ident,
-        $config:ty,
-        $prefix:expr
+        $($name:literal)*,
+        $($rimpl:ident)*
     ) => {
-        fn $read_func(user_conf: PathBuf) -> Option<$config> {
-            if !user_conf.exists() {
-                None
-            } else {
-                let mut file = std::fs::File::open(user_conf).unwrap();
-                let mut buffer = Vec::new();
-                file.read_to_end(&mut buffer).unwrap();
-                drop(file);
-                let conf = <$config>::decode(&mut Cursor::new(buffer)).unwrap();
-                Some(conf)
+        $(
+            ::paste::paste! {
+                #[doc = "Read a single config file for "]
+                #[doc = $name]
+                #[doc = " source."]
+                fn [<read_ $rimpl _config>](user_conf: PathBuf) -> Option<$crate::r#impl::$rimpl::config::Config> {
+                    if !user_conf.exists() {
+                        None
+                    } else {
+                        let mut file = std::fs::File::open(user_conf).unwrap();
+                        let mut buffer = Vec::new();
+                        file.read_to_end(&mut buffer).unwrap();
+                        drop(file);
+                        <$crate::r#impl::$rimpl::config::Config>::decode(&mut Cursor::new(buffer)).ok()
+                    }
+                }
+
+                #[doc = "Get a single config file for "]
+                #[doc = $name]
+                #[doc = " source."]
+                fn [<get_config_ $rimpl>](
+                    id: &str,
+                    user_path: PathBuf,
+                ) -> Option<$crate::r#impl::$rimpl::config::Config> {
+                    let mut user_conf = user_path;
+                    user_conf.push(format!(
+                        "{}.{}.tmconf",
+                        crate::r#impl::$rimpl::config::PREFIX,
+                        id
+                    ));
+
+                    [<read_ $rimpl _config>](user_conf)
+                }
             }
-        }
+        )*
+    };
+}
 
-        fn $get_func(id: &str, user_path: PathBuf) -> Option<$config> {
-            let mut user_conf = user_path;
-            user_conf.push(format!("{}.{}.tmconf", $prefix, id));
+/// Macro expansion to generate functions for saving config files.
+///
+/// This takes 4 arguments:
+/// 1. The user path to save the config file.
+/// 2. The config to save.
+/// 3. The list of "Config" enum value
+/// 4. The list of implementation name.
+macro_rules! save_config_impl {
+    (
+        $user_path:expr, $config:expr,
+        $($handlebar:ident)*,
+        $($prefix:ident)*
+    ) => {
+        match $config {
+            $(
+                ConfigImpl::$handlebar(config) => {
+                    let mut user_conf = $user_path.clone();
+                    user_conf.push(format!("{}.{}.tmconf", $crate::r#impl::$prefix::config::PREFIX, config.get_id()));
 
-            $read_func(user_conf)
+                    let mut file = std::fs::File::create(user_conf).unwrap();
+                    let mut buffer = Vec::new();
+                    config.encode(&mut buffer).unwrap();
+                    file.write_all(&buffer).unwrap();
+                    drop(file);
+                }
+            )*
         }
     };
 }
 
-macro_rules! save_config_impl {
-    ($prefix:expr, $user_path:expr, $config:expr) => {{
-        let mut user_conf = $user_path.clone();
-        user_conf.push(format!("{}.{}.tmconf", $prefix, $config.id));
-
-        let mut file = std::fs::File::create(user_conf).unwrap();
-        let mut buffer = Vec::new();
-        $config.encode(&mut buffer).unwrap();
-        file.write_all(&buffer).unwrap();
-        drop(file);
-    }};
+/// Macro expansion to convert each config implementation to this file [`ConfigImpl`] enum.
+///
+/// This takes 2 arguments:
+/// 1. The list of "Config" enum value
+/// 2. The list of implementation name (variant).
+macro_rules! config_to_configimpl {
+    (
+        $($config:ident)*,
+        $($variant:ident)*
+    ) => {
+        $(
+            impl From<$crate::r#impl::$config::config::Config> for ConfigImpl {
+                fn from(config: $crate::r#impl::$config::config::Config) -> Self {
+                    ConfigImpl::$variant(config)
+                }
+            }
+        )*
+    };
 }
 
-macro_rules! impl_from_config {
-    ($config:ty, $variant:ident) => {
-        impl From<$config> for ConfigImpl {
-            fn from(config: $config) -> Self {
-                ConfigImpl::$variant(config)
-            }
+macro_rules! config_match_expand {
+    // get_config
+    (
+        $id:expr, $user_path:expr, $base_impl:expr,
+        $($handlebar:ident)*,
+        $($get_conf:ident)*
+    ) => {
+        match $base_impl {
+            $(
+                Implementations::$handlebar => {
+                    let conf = $get_conf($id, $user_path);
+                    conf.map(ConfigImpl::$handlebar)
+                }
+            )*
+        }
+    };
+    // prefix_expansion
+    (
+        $base_impl:expr,
+        $($handlebar:ident)*,
+        $($prefix:ident)*
+    ) => {
+        match $base_impl {
+            $(
+                Implementations::$handlebar => $crate::r#impl::$prefix::config::PREFIX,
+            )*
+        }
+    }
+}
+
+macro_rules! config_match_expand_variant {
+    // get_all_config
+    (
+        $entry:expr, $matched_entries:expr, $base_impl:expr,
+        $($handlebar:ident)*,
+        $($read_conf:ident)*
+    ) => {
+        match $base_impl {
+            $(
+                Implementations::$handlebar => {
+                    let conf = $read_conf($entry);
+                    if let Some(conf) = conf {
+                        $matched_entries.push(ConfigImpl::$handlebar(conf));
+                    }
+                }
+            )*
         }
     };
 }
@@ -83,13 +175,6 @@ impl From<crate::r#impl::kmkc::config::ConfigMobile> for ConfigImpl {
     }
 }
 
-impl_from_config!(crate::r#impl::kmkc::config::Config, Kmkc);
-impl_from_config!(crate::r#impl::musq::config::Config, Musq);
-impl_from_config!(crate::r#impl::amap::config::Config, Amap);
-impl_from_config!(crate::r#impl::sjv::config::Config, Sjv);
-impl_from_config!(crate::r#impl::rbean::config::Config, Rbean);
-impl_from_config!(crate::r#impl::mplus::config::Config, Mplus);
-
 pub(crate) fn get_user_path() -> std::path::PathBuf {
     #[cfg(windows)]
     let user_path = {
@@ -107,79 +192,16 @@ pub(crate) fn get_user_path() -> std::path::PathBuf {
     user_path
 }
 
-//--> Reader <--//
-fn read_kmkc_config(user_conf: PathBuf) -> Option<crate::r#impl::kmkc::config::Config> {
-    if !user_conf.exists() {
-        None
-    } else {
-        let mut file = std::fs::File::open(user_conf).unwrap();
-        let mut buffer = Vec::new();
-        file.read_to_end(&mut buffer).unwrap();
-        drop(file);
-        let conf_temp =
-            crate::r#impl::kmkc::config::ConfigBase::decode(&mut Cursor::new(buffer.clone()))
-                .unwrap();
-
-        match conf_temp.r#type() {
-            crate::r#impl::kmkc::config::DeviceType::Web => {
-                let conf = crate::r#impl::kmkc::config::ConfigWeb::decode(&mut Cursor::new(buffer))
-                    .unwrap();
-                Some(conf.into())
-            }
-            crate::r#impl::kmkc::config::DeviceType::Mobile => {
-                let conf =
-                    crate::r#impl::kmkc::config::ConfigMobile::decode(&mut Cursor::new(buffer))
-                        .unwrap();
-                Some(conf.into())
-            }
-        }
-    }
-}
-
-fn get_config_kmkc(id: &str, user_path: PathBuf) -> Option<crate::r#impl::kmkc::config::Config> {
-    let mut user_conf = user_path;
-    user_conf.push(format!(
-        "{}.{}.tmconf",
-        crate::r#impl::kmkc::config::PREFIX,
-        id
-    ));
-
-    read_kmkc_config(user_conf)
-}
-
-config_reader!(
-    read_musq_config,
-    get_config_musq,
-    crate::r#impl::musq::config::Config,
-    crate::r#impl::musq::config::PREFIX
+// Implement Config -> ConfigImpl
+config_to_configimpl!(
+    kmkc musq amap sjv rbean mplus,
+    Kmkc Musq Amap Sjv Rbean Mplus
 );
 
+// Create config reader functions
 config_reader!(
-    read_amap_config,
-    get_config_amap,
-    crate::r#impl::amap::config::Config,
-    crate::r#impl::amap::config::PREFIX
-);
-
-config_reader!(
-    read_sjv_config,
-    get_config_sjv,
-    crate::r#impl::sjv::config::Config,
-    crate::r#impl::sjv::config::PREFIX
-);
-
-config_reader!(
-    read_rbean_config,
-    get_config_rbean,
-    crate::r#impl::rbean::config::Config,
-    crate::r#impl::rbean::config::PREFIX
-);
-
-config_reader!(
-    read_mplus_config,
-    get_config_mplus,
-    crate::r#impl::mplus::config::Config,
-    crate::r#impl::mplus::config::PREFIX
+    "KM by KC" "MU! by SQ" "AM by AP" "SJ/M by V" "小豆 by KRKR" "M+ by S",
+    kmkc musq amap sjv rbean mplus
 );
 
 pub fn get_config(
@@ -189,32 +211,11 @@ pub fn get_config(
 ) -> Option<ConfigImpl> {
     let user_path = user_path.unwrap_or(get_user_path());
 
-    match r#impl {
-        Implementations::Kmkc => {
-            let conf = get_config_kmkc(id, user_path);
-            conf.map(ConfigImpl::Kmkc)
-        }
-        Implementations::Musq => {
-            let conf = get_config_musq(id, user_path);
-            conf.map(ConfigImpl::Musq)
-        }
-        Implementations::Amap => {
-            let conf = get_config_amap(id, user_path);
-            conf.map(ConfigImpl::Amap)
-        }
-        Implementations::Sjv => {
-            let conf = get_config_sjv(id, user_path);
-            conf.map(ConfigImpl::Sjv)
-        }
-        Implementations::Rbean => {
-            let conf = get_config_rbean(id, user_path);
-            conf.map(ConfigImpl::Rbean)
-        }
-        Implementations::Mplus => {
-            let conf = get_config_mplus(id, user_path);
-            conf.map(ConfigImpl::Mplus)
-        }
-    }
+    config_match_expand!(
+        id, user_path, r#impl,
+        Kmkc Musq Amap Sjv Rbean Mplus,
+        get_config_kmkc get_config_musq get_config_amap get_config_sjv get_config_rbean get_config_mplus
+    )
 }
 
 pub fn get_all_config(r#impl: &Implementations, user_path: Option<PathBuf>) -> Vec<ConfigImpl> {
@@ -226,14 +227,11 @@ pub fn get_all_config(r#impl: &Implementations, user_path: Option<PathBuf>) -> V
 
     // glob .tmconf files
     let mut glob_path = user_path.clone();
-    let prefix = match r#impl {
-        Implementations::Kmkc => crate::r#impl::kmkc::config::PREFIX,
-        Implementations::Musq => crate::r#impl::musq::config::PREFIX,
-        Implementations::Amap => crate::r#impl::amap::config::PREFIX,
-        Implementations::Sjv => crate::r#impl::sjv::config::PREFIX,
-        Implementations::Rbean => crate::r#impl::rbean::config::PREFIX,
-        Implementations::Mplus => crate::r#impl::mplus::config::PREFIX,
-    };
+    let prefix = config_match_expand!(
+        r#impl,
+        Kmkc Musq Amap Sjv Rbean Mplus,
+        kmkc musq amap sjv rbean mplus
+    );
     glob_path.push(format!("{}.*.tmconf", prefix));
 
     let mut matched_entries: Vec<ConfigImpl> = Vec::new();
@@ -241,44 +239,11 @@ pub fn get_all_config(r#impl: &Implementations, user_path: Option<PathBuf>) -> V
         .expect("Failed to read glob pattern")
         .flatten()
     {
-        match r#impl {
-            Implementations::Kmkc => {
-                let conf = read_kmkc_config(entry);
-                if let Some(conf) = conf {
-                    matched_entries.push(ConfigImpl::Kmkc(conf));
-                }
-            }
-            Implementations::Musq => {
-                let conf = read_musq_config(entry);
-                if let Some(conf) = conf {
-                    matched_entries.push(ConfigImpl::Musq(conf));
-                }
-            }
-            Implementations::Amap => {
-                let conf = read_amap_config(entry);
-                if let Some(conf) = conf {
-                    matched_entries.push(ConfigImpl::Amap(conf));
-                }
-            }
-            Implementations::Sjv => {
-                let conf = read_sjv_config(entry);
-                if let Some(conf) = conf {
-                    matched_entries.push(ConfigImpl::Sjv(conf));
-                }
-            }
-            Implementations::Rbean => {
-                let conf = read_rbean_config(entry);
-                if let Some(conf) = conf {
-                    matched_entries.push(ConfigImpl::Rbean(conf));
-                }
-            }
-            Implementations::Mplus => {
-                let conf = read_mplus_config(entry);
-                if let Some(conf) = conf {
-                    matched_entries.push(ConfigImpl::Mplus(conf));
-                }
-            }
-        }
+        config_match_expand_variant!(
+            entry, matched_entries, r#impl,
+            Kmkc Musq Amap Sjv Rbean Mplus,
+            read_kmkc_config read_musq_config read_amap_config read_sjv_config read_rbean_config read_mplus_config
+        )
     }
     matched_entries
 }
@@ -290,49 +255,11 @@ pub fn save_config(config: ConfigImpl, user_path: Option<PathBuf>) {
         std::fs::create_dir_all(user_path.clone()).unwrap();
     }
 
-    match config {
-        ConfigImpl::Kmkc(config) => {
-            let mut user_conf = user_path.clone();
-            let conf_id = match config.clone() {
-                crate::r#impl::kmkc::config::Config::Mobile(config) => config.id,
-                crate::r#impl::kmkc::config::Config::Web(config) => config.id,
-            };
-            user_conf.push(format!(
-                "{}.{}.tmconf",
-                crate::r#impl::kmkc::config::PREFIX,
-                conf_id,
-            ));
-
-            let mut file = std::fs::File::create(user_conf).unwrap();
-            let mut buffer = Vec::new();
-
-            match config {
-                crate::r#impl::kmkc::config::Config::Mobile(config) => {
-                    config.encode(&mut buffer).unwrap();
-                }
-                crate::r#impl::kmkc::config::Config::Web(config) => {
-                    config.encode(&mut buffer).unwrap();
-                }
-            }
-            file.write_all(&buffer).unwrap();
-            drop(file);
-        }
-        ConfigImpl::Musq(config) => {
-            save_config_impl!(crate::r#impl::musq::config::PREFIX, user_path, config)
-        }
-        ConfigImpl::Amap(config) => {
-            save_config_impl!(crate::r#impl::amap::config::PREFIX, user_path, config)
-        }
-        ConfigImpl::Sjv(config) => {
-            save_config_impl!(crate::r#impl::sjv::config::PREFIX, user_path, config)
-        }
-        ConfigImpl::Rbean(config) => {
-            save_config_impl!(crate::r#impl::rbean::config::PREFIX, user_path, config)
-        }
-        ConfigImpl::Mplus(config) => {
-            save_config_impl!(crate::r#impl::mplus::config::PREFIX, user_path, config)
-        }
-    }
+    save_config_impl!(
+        user_path, config,
+        Kmkc Musq Amap Sjv Rbean Mplus,
+        kmkc musq amap sjv rbean mplus
+    )
 }
 
 pub fn try_remove_config(
@@ -343,14 +270,11 @@ pub fn try_remove_config(
     let user_path = user_path.unwrap_or(get_user_path());
 
     let mut user_conf = user_path.clone();
-    let prefix = match r#impl {
-        Implementations::Kmkc => crate::r#impl::kmkc::config::PREFIX,
-        Implementations::Musq => crate::r#impl::musq::config::PREFIX,
-        Implementations::Amap => crate::r#impl::amap::config::PREFIX,
-        Implementations::Sjv => crate::r#impl::sjv::config::PREFIX,
-        Implementations::Rbean => crate::r#impl::rbean::config::PREFIX,
-        Implementations::Mplus => crate::r#impl::mplus::config::PREFIX,
-    };
+    let prefix = config_match_expand!(
+        r#impl,
+        Kmkc Musq Amap Sjv Rbean Mplus,
+        kmkc musq amap sjv rbean mplus
+    );
     user_conf.push(format!("{}.{}.tmconf", prefix, id));
 
     if user_conf.exists() {

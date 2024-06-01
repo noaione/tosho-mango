@@ -3,10 +3,10 @@
 Starting from Rust port of the project, all changes will be put into this file.
 
 ## Unreleased (git master)
+### Changes
+- INTERNAL: Use more macros expansion on config implementation.
 
-Nothing yet!
-
-## [0.5.0] (2024-05-20)
+## [0.5.0] 2024-05-20
 ### New Features
 - Add **`M+`** as a new source
 - `MU`: Support downloading with subscriptions
@@ -38,7 +38,7 @@ Nothing yet!
 ### Docs
 - Update `SerializeEnum` rustdoc
 
-## [0.4.3] (2024-03-20)
+## [0.4.3] 2024-03-20
 ### New Features
 - Check for update on startup (this is done for the next 24 hours after each check)
 
@@ -58,7 +58,7 @@ Nothing yet!
 ### Tests
 - Move LFS data to another repo and rewrite tests to support the new path/format
 
-## [0.4.2] (2024-02-28)
+## [0.4.2] 2024-02-28
 ### Changes
 - `SJ/M`: Download the last page properly (previously it was missing)
 - `SJ/M`: Fix failed deser on notices
@@ -70,11 +70,11 @@ Nothing yet!
 ### Docs
 - Add disclaimer
 
-## [0.4.1] (2024-02-23)
+## [0.4.1] 2024-02-23
 ### Changes
 - `RB`: Remove saving JSON response on error.
 
-## [0.4.0] (2024-02-22)
+## [0.4.0] 2024-02-22
 ### New Features
 - Added **`小豆 (Red Bean)`** as a new source
 - Introduce threaded/parallel image download (not chapter) for the following source:
