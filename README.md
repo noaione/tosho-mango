@@ -15,7 +15,7 @@
   <p>A simple downloader for some official mango.</p>
 </div>
 
-`tosho-mango` (or `tosho`) is a downloader but can also be considered an almost full-blown replacement for the app/web version, with the exception of currency purchase, as a simple CLI application.
+`tosho-mango` (or `tosho`) is a manga downloader and general CLI tools for [official licensor platform](#supported-platform).
 
 All of the implementations started as a personal script that I used before I decided to rewrite it into a proper CLI app with the help of other people to figure out some parts that I had trouble with.
 
@@ -30,7 +30,7 @@ This is just a fun side project, and as a disclaimer, I'm not condoning anything
 
 **Requirements**:
 - Rust 1.72+ (If manually building or using `cargo`)
-- 64-bit devices (ARM64/aarch64 support might be experimental)
+- 64-bit devices (ARM64/aarch64 support is untested)
 - Modern enough terminal (VT support)
 
 `tosho` comes with a pre-compiled binary that you can choose:
@@ -81,7 +81,8 @@ We're not responsible if your account got deactivated.
 
 ## Acknowledgements
 
-- `neckothy`, provided some help and info for KMKC.
+- `neckothy`, provided some help and info for KM.
+- Tachiyomi team, general idea on how to descramble SJ image.
 - myself, created this from scratch
 
 ### Legacy Python Code
