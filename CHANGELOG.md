@@ -6,6 +6,9 @@ Starting from Rust port of the project, all changes will be put into this file.
 ### Changes
 - INTERNAL: Use more macros expansion on config implementation.
 
+### Build
+- Update `tokio`, `serde`, `prost`, and `documented`
+
 ## [0.5.0] 2024-05-20
 ### New Features
 - Add **`M+`** as a new source
