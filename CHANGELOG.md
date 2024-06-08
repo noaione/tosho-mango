@@ -3,6 +3,10 @@
 Starting from Rust port of the project, all changes will be put into this file.
 
 ## Unreleased (git master)
+
+Nothing yet!
+
+## [0.5.1] 2024-06-08
 ### New Features
 - `M+`: Allow overriding app version code.
 
