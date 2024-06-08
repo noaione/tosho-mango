@@ -506,9 +506,9 @@ dependencies = [
 
 [[package]]
 name = "documented"
-version = "0.4.3"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0f6f2d423b842f6ecafe3acc9d8b0616f8119fcda52aa7a7197f55053060d02a"
+checksum = "b8c520a0fcd95c49d0d61792a53b62dc08ae5cd0fa118fc33b3d765538bc2ed6"
 dependencies = [
  "documented-derive",
  "phf",
@@ -517,10 +517,11 @@ dependencies = [
 
 [[package]]
 name = "documented-derive"
-version = "0.4.3"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e03a042c2a4c376273332436b6ee2d78b7662909fa52832590aed408f95e1f30"
+checksum = "9861953a4fb263708416c1cc850cbc9a3a55d8408df34469271622689821bc2d"
 dependencies = [
+ "optfield",
  "quote",
  "syn",
 ]
@@ -1363,6 +1364,17 @@ dependencies = [
  "libc",
  "pkg-config",
  "vcpkg",
+]
+
+[[package]]
+name = "optfield"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fa59f025cde9c698fcb4fcb3533db4621795374065bee908215263488f2d2a1d"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
