@@ -117,6 +117,21 @@ macro_rules! config_match_expand {
             )*
         }
     };
+    // get_all_config
+    (
+        $entry:expr, $base_impl:expr,
+        $($handlebar:ident)*,
+        $($read_conf:ident)*
+    ) => {
+        match $base_impl {
+            $(
+                Implementations::$handlebar => {
+                    let conf = $read_conf($entry);
+                    conf.map(ConfigImpl::$handlebar)
+                }
+            )*
+        }
+    };
     // prefix_expansion
     (
         $base_impl:expr,
@@ -129,26 +144,6 @@ macro_rules! config_match_expand {
             )*
         }
     }
-}
-
-macro_rules! config_match_expand_variant {
-    // get_all_config
-    (
-        $entry:expr, $matched_entries:expr, $base_impl:expr,
-        $($handlebar:ident)*,
-        $($read_conf:ident)*
-    ) => {
-        match $base_impl {
-            $(
-                Implementations::$handlebar => {
-                    let conf = $read_conf($entry);
-                    if let Some(conf) = conf {
-                        $matched_entries.push(ConfigImpl::$handlebar(conf));
-                    }
-                }
-            )*
-        }
-    };
 }
 
 /// The many type of config files.
@@ -234,18 +229,16 @@ pub fn get_all_config(r#impl: &Implementations, user_path: Option<PathBuf>) -> V
     );
     glob_path.push(format!("{}.*.tmconf", prefix));
 
-    let mut matched_entries: Vec<ConfigImpl> = Vec::new();
-    for entry in glob::glob(glob_path.to_str().unwrap())
-        .expect("Failed to read glob pattern")
+    glob::glob(glob_path.to_str().unwrap()).expect("Failed to read glob pattern")
         .flatten()
-    {
-        config_match_expand_variant!(
-            entry, matched_entries, r#impl,
-            Kmkc Musq Amap Sjv Rbean Mplus,
-            read_kmkc_config read_musq_config read_amap_config read_sjv_config read_rbean_config read_mplus_config
-        )
-    }
-    matched_entries
+        .filter_map(|entry| {
+            config_match_expand!(
+                entry, r#impl,
+                Kmkc Musq Amap Sjv Rbean Mplus,
+                read_kmkc_config read_musq_config read_amap_config read_sjv_config read_rbean_config read_mplus_config
+            )
+        })
+        .collect()
 }
 
 pub fn save_config(config: ConfigImpl, user_path: Option<PathBuf>) {
