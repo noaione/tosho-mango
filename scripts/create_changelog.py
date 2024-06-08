@@ -1,7 +1,17 @@
+import argparse
 import os
+import sys
 from pathlib import Path
 
 ROOT_DIR = Path(__file__).parent.parent.absolute()
+
+parser = argparse.ArgumentParser(description="Generate changelog for the release")
+parser.add_argument(
+    "--dry-run",
+    action="store_true",
+    help="Generate the changelog but don't write it to the file",
+)
+args = parser.parse_args()
 
 CHANGELOG_FILE = ROOT_DIR / "CHANGELOG.md"
 INNER_DESC = """The following release notes are automatically generated.
@@ -54,5 +64,8 @@ EXTRACTED_CHANGELOG = EXTRACTED_CHANGELOG.strip()
 if not EXTRACTED_CHANGELOG:
     EXTRACTED_CHANGELOG = f"{INNER_DESC}\n\nNo changelog found for version {VERSION}"
 
+if args.dry_run:
+    print(EXTRACTED_CHANGELOG)
+    sys.exit(0)
 CHANGELOG_GENERATED_FILE = ROOT_DIR / "CHANGELOG-GENERATED.md"
 CHANGELOG_GENERATED_FILE.write_text(EXTRACTED_CHANGELOG)
