@@ -98,6 +98,10 @@ pub(crate) enum ToshoCommands {
         #[arg(short = 'l', long = "language", value_enum, default_value = "en")]
         language: Option<crate::r#impl::mplus::MPlusLanguage>,
 
+        /// Override the app version code used
+        #[arg(short = 'p', long = "app-ver", default_value = None)]
+        app_version: Option<u32>,
+
         #[command(subcommand)]
         subcommand: crate::r#impl::mplus::MPlusCommands,
     },

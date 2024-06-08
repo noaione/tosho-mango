@@ -97,6 +97,7 @@ pub struct MPClient {
     secret: String,
     language: Language,
     constants: &'static Constants,
+    app_ver: Option<u32>,
 }
 
 impl MPClient {
@@ -118,6 +119,18 @@ impl MPClient {
     /// * `proxy` - The proxy to attach to the client
     pub fn with_proxy(&self, proxy: reqwest::Proxy) -> Self {
         Self::make_client(&self.secret, self.language, self.constants, Some(proxy))
+    }
+
+    /// Override the app version for the client.
+    ///
+    /// This will clone the client and return a new client with the app version overridden.
+    ///
+    /// # Arguments
+    /// * `app_ver` - The app version to use for the client.
+    pub fn with_app_version(&self, app_ver: Option<u32>) -> Self {
+        let mut new_client = self.clone();
+        new_client.app_ver = app_ver;
+        new_client
     }
 
     fn make_client(
@@ -152,6 +165,7 @@ impl MPClient {
             secret: secret.to_string(),
             language,
             constants,
+            app_ver: None,
         }
     }
 
@@ -169,7 +183,14 @@ impl MPClient {
         }
         params.push(("os".to_string(), self.constants.os_name.to_string()));
         params.push(("os_ver".to_string(), self.constants.os_ver.to_string()));
-        params.push(("app_ver".to_string(), self.constants.app_ver.to_string()));
+        params.push((
+            "app_ver".to_string(),
+            if let Some(app_ver) = self.app_ver {
+                app_ver.to_string()
+            } else {
+                self.constants.app_ver.to_string()
+            },
+        ));
         params.push(("secret".to_string(), self.secret.clone()));
     }
 

@@ -818,6 +818,7 @@ async fn main() {
             account_id,
             language,
             subcommand,
+            app_version,
         } => {
             let early_exit = match subcommand.clone() {
                 MPlusCommands::Auth { session_id, r#type } => {
@@ -850,7 +851,8 @@ async fn main() {
                 client.with_proxy(proxy)
             } else {
                 client
-            };
+            }
+            .with_app_version(app_version);
 
             let exit_code = match subcommand {
                 MPlusCommands::Auth {

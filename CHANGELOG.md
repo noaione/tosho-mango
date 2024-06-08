@@ -3,6 +3,30 @@
 Starting from Rust port of the project, all changes will be put into this file.
 
 ## Unreleased (git master)
+### New Features
+- `M+`: Allow overriding app version code.
+
+This should help mitigates issue with needing to update to latest version.
+
+You can use in CLI like this:
+```bash
+$ tosho mp -p XXX [...]
+```
+
+Or, in Rust code:
+```rust
+use tosho_mplus::MPClient;
+use tosho_mplus::proto::Language;
+use tosho_mplus::constants::get_constants;
+
+#[tokio::main]
+async fn main() {
+    let client = MPClient::new("1234", Language::English, get_constants(1))
+        .with_app_ver(256);
+    let home_view = client.get_home_page().await.unwrap();
+}
+```
+
 ### Changes
 - `KM`: Cleanup chapters information a bit
 - `M+`: Update app version
