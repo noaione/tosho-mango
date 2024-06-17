@@ -16,7 +16,7 @@ body:
         - 'Source: KMKC (km)'
         - 'Source: MUSQ (mu)'
         - 'Source: SJ/M (sj)'
-        - 'Source: RBEAN (rb)'
+        - 'Source: 小豆 (rb)'
         - 'Source: M+ (mp)'
         - Other (provide at the end)
     validations:
