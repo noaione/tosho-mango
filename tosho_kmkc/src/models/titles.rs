@@ -61,7 +61,7 @@ pub struct TitleNode {
     #[serde(rename = "latest_paid_episode_id")]
     pub latest_episode_ids: Vec<i32>,
     /// The latest free episode ID.
-    pub latest_free_episode_id: i32,
+    pub latest_free_episode_id: Option<i32>,
     /// The list of genre IDs.
     #[serde(rename = "genre_id_list")]
     pub genre_ids: Vec<i32>,
