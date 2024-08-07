@@ -344,7 +344,7 @@ pub fn manual_chapters_collector(
 
 fn is_all_folder_exist(base_dir: PathBuf, chapters: &[ChapterDetailDump]) -> bool {
     for chapter in chapters {
-        let tp = base_dir.join(&chapter.id.to_string());
+        let tp = base_dir.join(chapter.id.to_string());
         if !tp.exists() {
             return false;
         }
@@ -553,7 +553,7 @@ pub(crate) async fn tools_split_merge(
         let mut last_page = get_last_page(target_dir.clone()).await;
         let mut write_to_json = false;
         for chapter in chapters {
-            let source_dir = input_folder.join(&chapter.id.to_string());
+            let source_dir = input_folder.join(chapter.id.to_string());
             if !source_dir.exists() {
                 console.warn(&format!(
                     "   Source directory for chapter {} does not exist, skipping...",

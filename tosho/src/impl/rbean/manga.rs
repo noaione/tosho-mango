@@ -310,7 +310,7 @@ pub(crate) async fn rbean_title_info(
                     }
                 }
             } else if chapter.upcoming {
-                let mut merged_string = format!("{}", ch_title);
+                let mut merged_string = ch_title.to_string();
 
                 if let Some(publish_at) = chapter.published {
                     let publish_at = publish_at.format("%b %d, %Y").to_string();

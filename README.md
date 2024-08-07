@@ -52,6 +52,10 @@ Or, you can clone and build manually:
 2. Run `cargo build --release --all`.
 3. Execute `target/release/tosho` (or `target/release/tosho.exe` on Windows).
 
+**Note**:<br />
+With the exception of building manually, all the builds above is always compiled with the `--release` flag and with the
+latest stable Rust version.
+
 ## Usage
 
 Refer to each source's folder for information on authenticating each source with `tosho`.<br />

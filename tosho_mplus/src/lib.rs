@@ -214,7 +214,7 @@ impl MPClient {
     pub async fn get_initial(&self) -> anyhow::Result<APIResponse<proto::InitialViewV2>> {
         let request = self
             .inner
-            .get(&self.build_url("init_v2"))
+            .get(self.build_url("init_v2"))
             .query(&self.empty_params(false))
             .send()
             .await?;
@@ -237,7 +237,7 @@ impl MPClient {
 
         let request = self
             .inner
-            .get(&self.build_url("home_v4"))
+            .get(self.build_url("home_v4"))
             .query(&query_params)
             .send()
             .await?;
@@ -260,7 +260,7 @@ impl MPClient {
         let query = self.empty_params(false);
         let request = self
             .inner
-            .get(&self.build_url("profile"))
+            .get(self.build_url("profile"))
             .query(&query)
             .send()
             .await?;
@@ -283,7 +283,7 @@ impl MPClient {
 
         let request = self
             .inner
-            .get(&self.build_url("settings_v2"))
+            .get(self.build_url("settings_v2"))
             .query(&query_params)
             .send()
             .await?;
@@ -305,7 +305,7 @@ impl MPClient {
     ) -> anyhow::Result<APIResponse<proto::SubscriptionResponse>> {
         let request = self
             .inner
-            .get(&self.build_url("subscription"))
+            .get(self.build_url("subscription"))
             .query(&self.empty_params(false))
             .send()
             .await?;
@@ -325,7 +325,7 @@ impl MPClient {
     pub async fn get_all_titles(&self) -> anyhow::Result<APIResponse<proto::TitleListOnlyV2>> {
         let request = self
             .inner
-            .get(&self.build_url("title_list/all_v2"))
+            .get(self.build_url("title_list/all_v2"))
             .query(&self.empty_params(false))
             .send()
             .await?;
@@ -355,7 +355,7 @@ impl MPClient {
 
         let request = self
             .inner
-            .get(&self.build_url("title_list/rankingV2"))
+            .get(self.build_url("title_list/rankingV2"))
             .query(&query_params)
             .send()
             .await?;
@@ -375,7 +375,7 @@ impl MPClient {
     pub async fn get_free_titles(&self) -> anyhow::Result<APIResponse<proto::FreeTitles>> {
         let request = self
             .inner
-            .get(&self.build_url("title_list/free_titles"))
+            .get(self.build_url("title_list/free_titles"))
             .query(&self.empty_params(false))
             .send()
             .await?;
@@ -395,7 +395,7 @@ impl MPClient {
     pub async fn get_bookmarked_titles(&self) -> anyhow::Result<APIResponse<proto::TitleListOnly>> {
         let request = self
             .inner
-            .get(&self.build_url("title_list/bookmark"))
+            .get(self.build_url("title_list/bookmark"))
             .query(&self.empty_params(false))
             .send()
             .await?;
@@ -418,7 +418,7 @@ impl MPClient {
     pub async fn get_search(&self) -> anyhow::Result<APIResponse<proto::SearchResults>> {
         let request = self
             .inner
-            .get(&self.build_url("title_list/search"))
+            .get(self.build_url("title_list/search"))
             .query(&self.empty_params(true))
             .send()
             .await?;
@@ -447,7 +447,7 @@ impl MPClient {
 
         let request = self
             .inner
-            .get(&self.build_url("title_detailV3"))
+            .get(self.build_url("title_detailV3"))
             .query(&query_params)
             .send()
             .await?;
@@ -533,7 +533,7 @@ impl MPClient {
 
         let request = self
             .inner
-            .get(&self.build_url("manga_viewer"))
+            .get(self.build_url("manga_viewer"))
             .query(&query_params)
             .send()
             .await?;
@@ -559,7 +559,7 @@ impl MPClient {
 
         let request = self
             .inner
-            .get(&self.build_url("comments"))
+            .get(self.build_url("comments"))
             .query(&query_params)
             .send()
             .await?;
