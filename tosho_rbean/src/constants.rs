@@ -95,6 +95,15 @@ lazy_static! {
         )
         .expect("Invalid base64 string (IMAGE_HOST)")
     };
+    /// The X-DRM-HEADER used for API requests.
+    pub(crate) static ref X_DRM_HEADER: String = {
+        String::from_utf8(
+            general_purpose::STANDARD
+                .decode("WC1BWlVLSS1EUk0=")
+                .expect("Failed to decode base64 X_DRM_HEADER")
+        )
+        .expect("Invalid base64 string (X_DRM_HEADER)")
+    };
 }
 
 /// Returns the constants for the given device type.

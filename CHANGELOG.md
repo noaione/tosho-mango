@@ -5,6 +5,7 @@ Starting from Rust port of the project, all changes will be put into this file.
 ## Unreleased (git master)
 ### Changes
 - `KM`: Fix failed deserialization on `TitleNode` on some titles
+- `RB`: Try to support hidden higher resolution images
 
 ## [0.5.1] 2024-06-08
 ### New Features

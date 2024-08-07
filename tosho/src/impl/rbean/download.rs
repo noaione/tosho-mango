@@ -178,6 +178,7 @@ async fn rbean_actual_downloader(
     node: DownloadNode,
     image_dir: PathBuf,
     dl_config: RBDownloadConfigCli,
+    do_hires: bool,
     console: Terminal,
     progress: Arc<indicatif::ProgressBar>,
 ) -> anyhow::Result<()> {
@@ -192,19 +193,24 @@ async fn rbean_actual_downloader(
     img_source.sort();
     img_source.reverse();
 
-    let download_url = img_source.first().unwrap();
+    let download_meta = img_source.first().unwrap();
+    let download_url = if do_hires {
+        RBClient::modify_url_for_highres(&download_meta.url)?
+    } else {
+        download_meta.url.clone()
+    };
 
     let writer = tokio::fs::File::create(&img_dl_path).await?;
 
     if console.is_debug() {
         console.log(&cformat!(
             "   Downloading image <s>{}</> to <s>{}</>...",
-            download_url.url,
+            &download_url,
             image_fn
         ));
     }
 
-    match node.client.stream_download(&download_url.url, writer).await {
+    match node.client.stream_download(&download_url, writer).await {
         Ok(_) => {}
         Err(err) => {
             console.error(&format!("    Failed to download image: {}", err));
@@ -363,6 +369,28 @@ pub(crate) async fn rbean_download(
 
         let pages_data = view_req.data.pages.clone();
 
+        // Test if 2000x3000 is available
+        let first_page = pages_data.first().unwrap();
+        let img_source = match dl_config.format {
+            CLIDownloadFormat::Jpeg => first_page.image.jpg.clone(),
+            CLIDownloadFormat::Webp => first_page.image.webp.clone(),
+        };
+        let first_image = img_source.first().unwrap();
+        console.info(&cformat!(
+            "  Testing higher resolution images for <m,s>{}</>...",
+            chapter.formatted_title()
+        ));
+        let test_hires = client
+            .test_high_res(&first_image.url)
+            .await
+            .unwrap_or(false);
+
+        if test_hires {
+            console.info(
+                "   Higher resolution (x3000) images are available for this chapter, using them",
+            );
+        }
+
         if dl_config.parallel {
             let tasks: Vec<_> = pages_data
                 .iter()
@@ -385,6 +413,7 @@ pub(crate) async fn rbean_download(
                             },
                             image_dir,
                             dl_config,
+                            test_hires,
                             cnsl.clone(),
                             progress,
                         )
@@ -413,6 +442,7 @@ pub(crate) async fn rbean_download(
                     node,
                     image_dir.clone(),
                     dl_config.clone(),
+                    test_hires,
                     console.clone(),
                     Arc::clone(&progress),
                 )

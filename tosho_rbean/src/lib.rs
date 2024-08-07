@@ -62,6 +62,7 @@
 //!
 //! [`tosho`]: https://crates.io/crates/tosho
 
+use futures_util::StreamExt;
 use std::collections::HashMap;
 use tokio::io::{self, AsyncWriteExt};
 
@@ -400,6 +401,37 @@ impl RBClient {
         .await
     }
 
+    /// Modify the URL to get the high resolution image URL.
+    ///
+    /// # Arguments
+    /// * `url` - The URL to modify.
+    pub fn modify_url_for_highres(url: &str) -> anyhow::Result<String> {
+        let mut parsed_url = url.parse::<reqwest::Url>()?;
+
+        // Formatted: https://{hostname}/{uuid}/{img_res}.[jpg/webp]
+        let path = parsed_url.path();
+        let mut path_split = path.split('/').collect::<Vec<&str>>();
+        let last_part = match path_split.pop() {
+            Some(last_part) => last_part,
+            None => anyhow::bail!("Invalid URL path: {}", path),
+        };
+
+        let filename = last_part.split_once('.');
+        let (_, extension) = match filename {
+            Some((filename, extension)) => (filename, extension),
+            None => anyhow::bail!(
+                "Invalid filename: {}, expected something like 0000.jpg",
+                last_part
+            ),
+        };
+
+        let hi_res = format!("2000.{}", extension);
+        let new_path = format!("{}/{}", path_split.join("/"), hi_res);
+        parsed_url.set_path(&new_path);
+
+        Ok(parsed_url.to_string())
+    }
+
     // --> Image
 
     /// Stream download the image from the given URL.
@@ -437,15 +469,67 @@ impl RBClient {
             anyhow::bail!("Failed to download image: {}", res.status())
         }
 
-        let image_bytes = res.bytes().await?;
-        let image_dec = decrypt_image(&image_bytes);
-        drop(image_bytes);
+        // Check if we need to decrypt
+        let header_name = &crate::constants::X_DRM_HEADER;
+        let x_drm = res.headers().get(header_name.as_str());
+        let is_drm = match x_drm {
+            Some(x_drm) => x_drm == "true",
+            None => false,
+        };
 
-        writer.write_all(&image_dec).await?;
+        if is_drm {
+            let image_bytes = res.bytes().await?;
+            let image_dec = decrypt_image(&image_bytes);
+            drop(image_bytes);
 
-        drop(image_dec);
+            writer.write_all(&image_dec).await?;
+
+            drop(image_dec);
+        } else {
+            let mut stream = res.bytes_stream();
+            while let Some(item) = stream.next().await {
+                writer.write_all(&item?).await?;
+            }
+        }
 
         Ok(())
+    }
+
+    /// Try checking if the "hidden" high resolution image is available.
+    ///
+    /// Give the URL of any image that is requested from the API.
+    pub async fn test_high_res(&self, url: &str) -> anyhow::Result<bool> {
+        // Do head request to check if the high res image is available
+        let url_mod = Self::modify_url_for_highres(url)?;
+
+        let res = self
+            .inner
+            .head(url_mod)
+            .query(&[("drm", "1")])
+            .headers({
+                let mut headers = reqwest::header::HeaderMap::new();
+                headers.insert(
+                    reqwest::header::USER_AGENT,
+                    reqwest::header::HeaderValue::from_static(self.constants.image_ua),
+                );
+                headers.insert(
+                    reqwest::header::HOST,
+                    reqwest::header::HeaderValue::from_str(IMAGE_HOST.as_str()).unwrap(),
+                );
+                headers
+            })
+            .send()
+            .await?;
+
+        let success = res.status().is_success();
+        let mimetype = res.headers().get(reqwest::header::CONTENT_TYPE);
+        // Good mimetype are either image/jpeg or image/webp
+        let good_mimetype = match mimetype {
+            Some(mimetype) => mimetype == "image/jpeg" || mimetype == "image/webp",
+            None => false,
+        };
+
+        Ok(success && good_mimetype)
     }
 
     // <-- Image
