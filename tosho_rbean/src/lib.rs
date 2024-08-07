@@ -401,6 +401,8 @@ impl RBClient {
         .await
     }
 
+    // --> Image
+
     /// Modify the URL to get the high resolution image URL.
     ///
     /// # Arguments
@@ -431,8 +433,6 @@ impl RBClient {
 
         Ok(parsed_url.to_string())
     }
-
-    // --> Image
 
     /// Stream download the image from the given URL.
     ///
@@ -477,19 +477,17 @@ impl RBClient {
             None => false,
         };
 
-        if is_drm {
-            let image_bytes = res.bytes().await?;
-            let image_dec = decrypt_image(&image_bytes);
-            drop(image_bytes);
+        let mut stream = res.bytes_stream();
+        while let Some(item) = stream.next().await {
+            let item = item?;
 
-            writer.write_all(&image_dec).await?;
+            let dedrmed = if is_drm {
+                decrypt_image(&item)
+            } else {
+                item.to_vec()
+            };
 
-            drop(image_dec);
-        } else {
-            let mut stream = res.bytes_stream();
-            while let Some(item) = stream.next().await {
-                writer.write_all(&item?).await?;
-            }
+            writer.write_all(&dedrmed).await?;
         }
 
         Ok(())
@@ -698,10 +696,5 @@ pub struct RBLoginResponse {
 /// * `data` - The image data to decrypt
 pub fn decrypt_image(data: &[u8]) -> Vec<u8> {
     let image_data = data.to_vec();
-    let length = image_data.len();
-    let mut decrypted: Vec<u8> = vec![0; length];
-    for i in 0..length {
-        decrypted[i] = PATTERN[0] ^ image_data[i];
-    }
-    decrypted
+    image_data.iter().map(|x| PATTERN[0] ^ x).collect()
 }

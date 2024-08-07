@@ -41,6 +41,7 @@ If you use CLI, this is done automatically when you use `download` command.
 - `KM`: Fix failed deserialization on `TitleNode` on some titles
 - `RB`: Fix auth failing when reauthenticating
 - `RB`: Properly hide future chapters from being downloaded
+- `RB`: Do streaming decryption on image download
 
 ## [0.5.1] 2024-06-08
 ### New Features
