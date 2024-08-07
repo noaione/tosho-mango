@@ -46,7 +46,7 @@ pub async fn rbean_account_login(
         }
 
         match old_config {
-            crate::config::ConfigImpl::Amap(c) => {
+            crate::config::ConfigImpl::Rbean(c) => {
                 old_id = Some(c.id.clone());
             }
             _ => unreachable!(),

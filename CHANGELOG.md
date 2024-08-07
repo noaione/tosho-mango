@@ -6,6 +6,7 @@ Starting from Rust port of the project, all changes will be put into this file.
 ### Changes
 - `KM`: Fix failed deserialization on `TitleNode` on some titles
 - `RB`: Try to support hidden higher resolution images
+- `RB`: Fix auth failing when reauthenticating
 
 ## [0.5.1] 2024-06-08
 ### New Features
