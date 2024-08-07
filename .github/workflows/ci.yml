@@ -51,9 +51,6 @@ jobs:
         with:
           prefix-key: "${{ runner.os }}-tosho-rust"
 
-      - name: Build
-        run: cargo build --verbose --all
-
       - name: Test
         run: cargo test --verbose --all
 
