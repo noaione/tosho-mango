@@ -310,7 +310,14 @@ pub(crate) async fn rbean_title_info(
                     }
                 }
             } else if chapter.upcoming {
-                console.info(&cformat!("    <s,m>Upcoming</>: {}", ch_title));
+                let mut merged_string = format!("{}", ch_title);
+
+                if let Some(publish_at) = chapter.published {
+                    let publish_at = publish_at.format("%b %d, %Y").to_string();
+                    merged_string.push_str(&cformat!(" <s>({})</>", publish_at));
+                }
+
+                console.info(&cformat!("    <s,m>Upcoming</>: {}", merged_string));
             } else {
                 console.info(&banner_title);
                 if let Some(publish_at) = chapter.published {

@@ -3,10 +3,44 @@
 Starting from Rust port of the project, all changes will be put into this file.
 
 ## Unreleased (git master)
+### New Features
+- `RB`: Try to support hidden higher resolution images
+
+We've added a simple helper function in `RBClient` to help modify the URL to get higher resolution images.
+
+```rust
+use tosho_rbean::{RBClient, config::{RBConfig, RBPlatform}};
+
+#[tokio::main]
+async fn main() {
+    let mut client = RBClient::new(RBConfig {
+      token: "",
+      refresh_token: "",
+      platform: RBPlatform::Android,
+    });
+
+    // Get the chapters list
+    let chapters = client.get_chapter_list("73cd427b-0740-4911-91bf-ed17cd13df8e").await.unwrap();
+    let first_chapter = chapters.chapters[0].clone();
+
+    // Get the first chapter viewer
+    let viewer = client.get_chapter_viewer(&first_chapter.uuid).await.unwrap();
+    let first_page = viewer.data.pages[0].clone();
+
+    // Get the first image URL
+    let image_url = first_page.image.jpg[0].clone();
+    // Get the high resolution image URL
+    let high_res_image_url = RBClient::modify_url_for_highres(&image_url);
+    println!("High res image URL: {}", high_res_image_url);
+}
+```
+
+If you use CLI, this is done automatically when you use `download` command.
+
 ### Changes
 - `KM`: Fix failed deserialization on `TitleNode` on some titles
-- `RB`: Try to support hidden higher resolution images
 - `RB`: Fix auth failing when reauthenticating
+- `RB`: Properly hide future chapters from being downloaded
 
 ## [0.5.1] 2024-06-08
 ### New Features

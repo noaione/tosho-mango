@@ -124,7 +124,7 @@ fn do_chapter_select(
         .iter()
         .filter(|&&ch| {
             // Hide unavailable chapters
-            ch.published.is_some()
+            ch.published.is_some() && !ch.upcoming
         })
         .filter_map(|&ch| {
             // Download chapter if it's free or user is premium
@@ -296,7 +296,7 @@ pub(crate) async fn rbean_download(
     let download_chapters: Vec<&Chapter> = selected_chapters
         .iter()
         .filter(|&ch| dl_config.chapter_ids.is_empty() || dl_config.chapter_ids.contains(&ch.uuid))
-        .filter(|&ch| ch.published.is_some())
+        .filter(|&ch| ch.published.is_some() && !ch.upcoming)
         .filter(|&ch| {
             // Download chapter if it's free or user is premium
             ch.free_published.is_some() || acc_info.is_premium
@@ -365,19 +365,15 @@ pub(crate) async fn rbean_download(
 
         let total_img_count = view_req.data.pages.len() as u64;
 
-        let progress = create_progress_bar(total_img_count);
-
-        let pages_data = view_req.data.pages.clone();
-
         // Test if 2000x3000 is available
-        let first_page = pages_data.first().unwrap();
+        let pages_data = view_req.data.pages.clone();
         let img_source = match dl_config.format {
-            CLIDownloadFormat::Jpeg => first_page.image.jpg.clone(),
-            CLIDownloadFormat::Webp => first_page.image.webp.clone(),
+            CLIDownloadFormat::Jpeg => pages_data[0].image.jpg.clone(),
+            CLIDownloadFormat::Webp => pages_data[0].image.webp.clone(),
         };
         let first_image = img_source.first().unwrap();
         console.info(&cformat!(
-            "  Testing higher resolution images for <m,s>{}</>...",
+            "   Testing higher resolution images for <m,s>{}</>...",
             chapter.formatted_title()
         ));
         let test_hires = client
@@ -387,9 +383,11 @@ pub(crate) async fn rbean_download(
 
         if test_hires {
             console.info(
-                "   Higher resolution (x3000) images are available for this chapter, using them",
+                "    Higher resolution (x3000) images are available for this chapter, using them",
             );
         }
+
+        let progress = create_progress_bar(total_img_count);
 
         if dl_config.parallel {
             let tasks: Vec<_> = pages_data
