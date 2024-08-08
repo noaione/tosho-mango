@@ -42,6 +42,7 @@ If you use CLI, this is done automatically when you use `download` command.
 - `RB`: Fix auth failing when reauthenticating
 - `RB`: Properly hide future chapters from being downloaded
 - `RB`: Do streaming decryption on image download
+- Multiple: Adjustment to constants
 
 ## [0.5.1] 2024-06-08
 ### New Features

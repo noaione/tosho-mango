@@ -240,6 +240,9 @@ impl KMClient {
         if let KMConfig::Mobile(mobile) = &self.config {
             query_params.insert("user_id".to_string(), mobile.user_id.to_string());
         }
+        if let Some(disp_ver) = self.constants.display_version {
+            query_params.insert("disp_version".to_string(), disp_ver.to_string());
+        }
     }
 
     fn format_request(&self, query_params: &mut HashMap<String, String>) -> String {

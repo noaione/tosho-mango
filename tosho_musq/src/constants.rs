@@ -27,7 +27,7 @@ pub struct Constants {
 lazy_static! {
     /// The constants used for Android devices.
     pub static ref ANDROID_CONSTANTS: Constants = {
-        let android_app_ver = "61"; // 2.2.0
+        let android_app_ver = "68"; // 2.3.1
 
         Constants {
             image_ua: "Dalvik/2.1.0 (Linux; U; Android 12; SM-G935F Build/SQ3A.220705.004)".to_string(),

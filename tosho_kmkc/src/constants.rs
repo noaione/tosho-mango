@@ -22,6 +22,8 @@ pub struct Constants {
     pub(crate) platform: &'static str,
     /// The version string used for API requests.
     pub(crate) version: &'static str,
+    /// Display version?
+    pub(crate) display_version: Option<&'static str>,
     /// The hash header used for API requests.
     pub(crate) hash: String,
 }
@@ -57,7 +59,8 @@ lazy_static! {
             ua: "okhttp/4.9.3".to_string(),
             image_ua: "okhttp/4.9.3".to_string(),
             platform: "2",
-            version: "5.8.0",
+            version: "6.1.0",
+            display_version: Some("2.1.5"),
             hash: hash_header,
         }
     };
@@ -88,6 +91,7 @@ lazy_static! {
             image_ua,
             platform: "1",
             version: "5.3.0",
+            display_version: None,
             hash: hash_header,
         }
     };
@@ -100,13 +104,14 @@ lazy_static! {
         )
         .expect("Invalid base64 string");
 
-        let chrome_ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36".to_string();
+        let chrome_ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36".to_string();
 
         Constants {
             ua: chrome_ua.clone(),
             image_ua: chrome_ua,
             platform: "3",
             version: "6.0.0",
+            display_version: None,
             hash: hash_header,
         }
     };

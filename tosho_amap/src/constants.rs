@@ -46,7 +46,7 @@ lazy_static! {
 
     /// The constants used for Android devices.
     pub static ref ANDROID_CONSTANTS: Constants = {
-        let app_version = "3.0.1";
+        let app_version = "3.0.6";
 
         let ua_base = String::from_utf8(
             general_purpose::STANDARD
