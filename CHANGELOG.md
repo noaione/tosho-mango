@@ -43,6 +43,7 @@ If you use CLI, this is done automatically when you use `download` command.
 - `RB`: Properly hide future chapters from being downloaded
 - `RB`: Do streaming decryption on image download
 - Multiple: Adjustment to constants
+- Multiple: Mark some `prost::Message` with `Copy`
 - All: Rewrite `lazy_static` to `LazyLock`
 - Use static `OnceLock` in win-term VT check
 - Simplify win-term VT check

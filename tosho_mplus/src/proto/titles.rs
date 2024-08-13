@@ -155,7 +155,7 @@ impl TitleDetail {
 }
 
 /// An information about a title with available languages
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[derive(Clone, PartialEq, Copy, ::prost::Message)]
 pub struct TitleLanguages {
     /// Title ID
     #[prost(uint64, tag = "1")]

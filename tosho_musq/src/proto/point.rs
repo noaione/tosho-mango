@@ -9,7 +9,7 @@ use super::{SubscriptionKind, SubscriptionStatus};
 /// The user point information.
 ///
 /// This will be available on almost each request.
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[derive(Clone, PartialEq, Copy, ::prost::Message)]
 pub struct UserPoint {
     /// Free/daily coins that you have.
     #[prost(uint64, tag = "1")]

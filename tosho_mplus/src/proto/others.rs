@@ -115,7 +115,7 @@ pub struct QuestionnaireResponse {
 /// The following is `v1` implementation of the initial view response.
 ///
 /// See also: [`InitialView`]
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[derive(Clone, PartialEq, Copy, ::prost::Message)]
 pub struct InitialView {
     /// Should the user agree to the GDPR or not
     #[prost(bool, tag = "1")]

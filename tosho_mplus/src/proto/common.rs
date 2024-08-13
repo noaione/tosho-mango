@@ -204,7 +204,7 @@ pub struct PublisherItem {
 }
 
 /// Available languages in the source.
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[derive(Clone, PartialEq, Copy, ::prost::Message)]
 pub struct AvailableLanguages {
     /// The language
     #[prost(enumeration = "Language", tag = "1")]

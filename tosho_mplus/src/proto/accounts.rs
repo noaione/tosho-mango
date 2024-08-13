@@ -19,7 +19,7 @@ pub struct RegistrationData {
 }
 
 /// User account ticket information
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[derive(Clone, PartialEq, Copy, ::prost::Message)]
 pub struct UserTickets {
     /// Current ticket amount
     #[prost(uint64, tag = "1")]
@@ -125,7 +125,7 @@ pub struct UserProfileSettings {
 }
 
 /// User profile update result response
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[derive(Clone, PartialEq, Copy, ::prost::Message)]
 pub struct UserUpdateProfileResult {
     /// Result of the profile update
     #[prost(enumeration = "super::UpdateProfileResult", tag = "1")]

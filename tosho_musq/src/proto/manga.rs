@@ -51,7 +51,7 @@ pub struct ViewButtonV2 {
 /// A hidden chapters range.
 ///
 /// Made only for the [``MangaDetailV2``].
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[derive(Clone, PartialEq, Copy, ::prost::Message)]
 pub struct ChaptersRange {
     /// The start chapter ID.
     #[prost(uint64, tag = "1")]
