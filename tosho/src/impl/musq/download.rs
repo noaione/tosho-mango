@@ -161,7 +161,7 @@ pub(crate) async fn musq_download(
                 return 1;
             }
 
-            let mut coin_purse = coin_purse.clone();
+            let mut coin_purse = coin_purse;
 
             if dl_config.no_paid_point {
                 coin_purse.paid = 0;

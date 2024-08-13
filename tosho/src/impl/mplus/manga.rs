@@ -125,13 +125,7 @@ pub(crate) async fn mplus_title_info(
             let filtered_alt_langs = title_info
                 .other_languages
                 .iter()
-                .filter_map(|x| {
-                    if x.id != title.id {
-                        Some(x.clone())
-                    } else {
-                        None
-                    }
-                })
+                .filter_map(|x| if x.id != title.id { Some(*x) } else { None })
                 .collect::<Vec<TitleLanguages>>();
             if !filtered_alt_langs.is_empty() {
                 console.info(&cformat!(

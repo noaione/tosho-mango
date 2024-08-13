@@ -189,7 +189,7 @@ pub async fn musq_account_balance(
     match user_shop {
         Ok(user_shop) => {
             console.info("Your current point balance:");
-            let user_point = user_shop.user_point.clone().unwrap_or_default();
+            let user_point = user_shop.user_point.unwrap_or_default();
             let total_bal = user_point.sum().to_formatted_string(&Locale::en);
             let paid_point = user_point.paid.to_formatted_string(&Locale::en);
             let xp_point = user_point.event.to_formatted_string(&Locale::en);

@@ -25,7 +25,7 @@ pub(crate) async fn musq_purchase(
             let mut claimed_total: u64 = 0;
             let mut failed_claimed: Vec<(ChapterV2, String)> = vec![];
 
-            let mut user_point = user_bal.clone();
+            let mut user_point = user_bal;
             for (idx, chapter) in results.iter().enumerate() {
                 console.status(format!(
                     "Purchasing chapter(s): ({}/{})",

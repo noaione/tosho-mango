@@ -76,7 +76,7 @@ pub(super) async fn common_purchase_select(
     let results = client.get_manga(title_id).await;
     match results {
         Ok(result) => {
-            let user_bal = result.user_point.clone().unwrap();
+            let user_bal = result.user_point.unwrap();
             let total_bal = user_bal.sum().to_formatted_string(&Locale::en);
             let paid_point = user_bal.paid.to_formatted_string(&Locale::en);
             let xp_point = user_bal.event.to_formatted_string(&Locale::en);
