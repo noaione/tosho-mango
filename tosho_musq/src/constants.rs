@@ -36,8 +36,8 @@ pub static ANDROID_CONSTANTS: LazyLock<Constants> = LazyLock::new(|| {
         app_ver: android_app_ver.to_string(),
     }
 });
-/// The constants used for iOS devices.
-pub static IOS_CONSTANTS: LazyLock<Constants> = LazyLock::new(|| {
+/// The constants used for Apple/iOS devices.
+pub static APPLE_CONSTANTS: LazyLock<Constants> = LazyLock::new(|| {
     let ios_app = String::from_utf8(
         general_purpose::STANDARD
             .decode("Y29tLnNxdWFyZS1lbml4Lk1hbmdhVVB3")
@@ -126,6 +126,10 @@ pub static IMAGE_HOST: LazyLock<String> = LazyLock::new(|| {
 /// # Arguments
 /// * `device_type` - The device type to get the constants for.
 ///
+/// # Available device types
+/// * `1` - Android
+/// * `2` - Apple/iOS
+///
 /// # Panics
 /// Panics if the device type is invalid.
 ///
@@ -134,12 +138,12 @@ pub static IMAGE_HOST: LazyLock<String> = LazyLock::new(|| {
 /// use tosho_musq::constants::get_constants;
 ///
 /// let _ = get_constants(1); // Android
-/// let _ = get_constants(2); // iOS
+/// let _ = get_constants(2); // Apple
 /// ```
 pub fn get_constants(device_type: u8) -> &'static Constants {
     match device_type {
         1 => &ANDROID_CONSTANTS,
-        2 => &IOS_CONSTANTS,
+        2 => &APPLE_CONSTANTS,
         _ => panic!("Invalid device type"),
     }
 }

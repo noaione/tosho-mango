@@ -42,6 +42,7 @@ If you use CLI, this is done automatically when you use `download` command.
 - `RB`: Fix auth failing when reauthenticating
 - `RB`: Properly hide future chapters from being downloaded
 - `RB`: Do streaming decryption on image download
+- `MU`, and `KM`: Rename `IOS_CONSTANTS` to `APPLE_CONSTANTS`
 - Multiple: Adjustment to constants
 - Multiple: Mark some `prost::Message` with `Copy`
 - All: Rewrite `lazy_static` to `LazyLock`
@@ -54,6 +55,9 @@ If you use CLI, this is done automatically when you use `download` command.
 - Update multiple dependencies
 - Remove `lazy_static` as direct dependency
 - Update MSRV to 1.80.0
+
+### Docs
+- Reword some parts of the documentation
 
 ## [0.5.1] 2024-06-08
 ### New Features

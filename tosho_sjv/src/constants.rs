@@ -196,7 +196,7 @@ pub static EXPAND_SJ_NAME: LazyLock<String> = LazyLock::new(|| {
 ///
 /// # Available device types
 /// * `1` - Android
-/// * `2` - Apple
+/// * `2` - Apple/iOS
 /// * `3` - Web
 ///
 /// # Panics

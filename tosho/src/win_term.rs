@@ -1,14 +1,15 @@
 #[cfg(windows)]
 use std::sync::OnceLock;
 
+/// The static flag to check for VT support
 #[cfg(windows)]
 static IS_WIN_VT_SUPPORTED: OnceLock<bool> = OnceLock::new();
 
 /// The flag to check for VT support
 ///
-/// According to https://learn.microsoft.com/en-us/windows/console/getconsolemode#parameters
+/// According to <https://learn.microsoft.com/en-us/windows/console/getconsolemode#parameters>
 ///
-/// The flag for output mode is defined: ENABLE_VIRTUAL_TERMINAL_PROCESSING (0x0004)
+/// The flag for output mode is defined: ENABLE_VIRTUAL_TERMINAL_PROCESSING (`0x0004`)
 #[cfg(windows)]
 const ENABLE_VIRTUAL_TERMINAL_PROCESSING: u32 = 0x0004;
 

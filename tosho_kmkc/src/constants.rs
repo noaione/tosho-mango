@@ -65,7 +65,7 @@ pub static ANDROID_CONSTANTS: LazyLock<Constants> = LazyLock::new(|| {
     }
 });
 /// The constants used for iOS devices.
-pub static IOS_CONSTANTS: LazyLock<Constants> = LazyLock::new(|| {
+pub static APPLE_CONSTANTS: LazyLock<Constants> = LazyLock::new(|| {
     let hash_header = String::from_utf8(
         general_purpose::STANDARD
             .decode("eC1tZ3BrLWhhc2g=")
@@ -187,6 +187,11 @@ pub static RANKING_TABS: LazyLock<Vec<RankingTab>> = LazyLock::new(|| {
 /// # Arguments
 /// * `device_type` - The device type to get the constants for.
 ///
+/// # Available device types
+/// * `1` - Apple/iOS
+/// * `2` - Android
+/// * `3` - Web
+///
 /// # Panics
 /// Panics if the device type is invalid.
 ///
@@ -199,7 +204,7 @@ pub static RANKING_TABS: LazyLock<Vec<RankingTab>> = LazyLock::new(|| {
 /// ```
 pub fn get_constants(device_type: u8) -> &'static Constants {
     match device_type {
-        1 => &IOS_CONSTANTS,
+        1 => &APPLE_CONSTANTS,
         2 => &ANDROID_CONSTANTS,
         3 => &WEB_CONSTANTS,
         _ => panic!("Invalid device type"),

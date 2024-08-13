@@ -90,6 +90,9 @@ pub static IMAGE_HOST: LazyLock<String> = LazyLock::new(|| {
 /// # Arguments
 /// * `device_type` - The device type to get the constants for.
 ///
+/// # Available device types
+/// * `1` - Android
+///
 /// # Panics
 /// Panics if the device type is invalid.
 ///
