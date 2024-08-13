@@ -1,9 +1,17 @@
-use std::time::Duration;
+use std::{sync::LazyLock, time::Duration};
 
 use anstream::println;
 use color_print::cformat;
 use indicatif::ProgressStyle;
 use inquire::{Confirm, MultiSelect, Select};
+
+pub(crate) static IS_WIN_VT_SUPPORTED: LazyLock<bool> = LazyLock::new(|| {
+    if ::supports_hyperlinks::on(::supports_hyperlinks::Stream::Stdout) {
+        true
+    } else {
+        crate::win_term::check_windows_vt_support()
+    }
+});
 
 #[derive(Clone, Debug)]
 pub struct ConsoleChoice {
@@ -236,12 +244,10 @@ pub(crate) mod macros {
     /// Ref: [`GitHub Gist`](https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda)
     macro_rules! linkify {
         ($url:expr, $text:expr) => {
-            match supports_hyperlinks::on(supports_hyperlinks::Stream::Stdout) {
-                true => format!("\x1b]8;;{}\x1b\\{}\x1b]8;;\x1b\\", $url, $text),
-                false => match $crate::win_term::check_windows_vt_support() {
-                    true => format!("\x1b]8;;{}\x1b\\{}\x1b]8;;\x1b\\", $url, $text),
-                    false => $text.to_string(),
-                },
+            if *$crate::term::IS_WIN_VT_SUPPORTED {
+                format!("\x1b]8;;{}\x1b\\{}\x1b]8;;\x1b\\", $url, $text)
+            } else {
+                $text.to_string()
             }
         };
         ($url:expr) => {

@@ -46,6 +46,7 @@ If you use CLI, this is done automatically when you use `download` command.
 - Multiple: Mark some `prost::Message` with `Copy`
 - All: Rewrite `lazy_static` to `LazyLock`
 - Use static `OnceLock` in win-term VT check
+- Use `LazyLock` for `linkify!` macro when checking for VT support
 - Simplify win-term VT check
 - Expose some `_HOST` constants to public API
 
