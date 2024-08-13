@@ -39,3 +39,6 @@ cobertura.xml
 /**/tests/*.json
 /**/tests/*.proto
 CHANGELOG-GENERATED.md
+
+/*.cast
+/*.gif
