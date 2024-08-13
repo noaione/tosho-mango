@@ -140,7 +140,7 @@ impl RBClient {
         );
         headers.insert(
             reqwest::header::HOST,
-            reqwest::header::HeaderValue::from_static(&*API_HOST),
+            reqwest::header::HeaderValue::from_static(&API_HOST),
         );
         headers.insert(
             "public",

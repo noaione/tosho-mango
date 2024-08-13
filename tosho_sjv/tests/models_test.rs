@@ -173,7 +173,7 @@ fn test_store_cached_alt_models_loaded() {
                     );
                 }
             };
-            assert!(store_cached.contents.len() > 0)
+            assert!(!store_cached.contents.is_empty())
         }
     }
 }

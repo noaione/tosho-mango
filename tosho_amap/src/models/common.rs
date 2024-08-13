@@ -137,7 +137,7 @@ mod tests {
         )
         .unwrap();
 
-        assert_eq!(data.result.header.result, true);
+        assert!(data.result.header.result);
         assert_eq!(data.result.header.message, None);
         assert_eq!(data.result.body, None);
     }
@@ -181,7 +181,7 @@ mod tests {
         )
         .unwrap();
 
-        assert_eq!(data.result.header.result, true);
+        assert!(data.result.header.result);
         assert_eq!(data.result.header.message, None);
 
         let content_unwrap = data.result.body.unwrap();

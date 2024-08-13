@@ -95,7 +95,7 @@ fn test_proto_chapter_view() {
             assert!(result.next_chapter.is_some());
             assert_eq!(result.images.len(), 11);
 
-            let image = result.images.get(0).unwrap();
+            let image = result.images.first().unwrap();
             assert_eq!(image.file_name(), "1.avif");
             assert_eq!(image.file_stem(), "1");
             assert_eq!(image.extension(), "avif");
@@ -131,9 +131,9 @@ fn test_proto_chapter_viewv2() {
             assert_eq!(result.blocks.len(), 1);
             assert!(result.next_chapter.is_some());
 
-            let block = result.blocks.get(0).unwrap();
+            let block = result.blocks.first().unwrap();
             assert_eq!(block.title, "Chapter 10.1");
-            let image = block.images.get(0).unwrap();
+            let image = block.images.first().unwrap();
             assert_eq!(image.file_name(), "1.avif");
             assert_eq!(image.file_stem(), "1");
             assert_eq!(image.extension(), "avif");
@@ -165,7 +165,7 @@ fn test_proto_coinhistory() {
             assert_eq!(user_point.paid, 280);
             assert_eq!(user_point.sum(), 280);
 
-            assert!(result.logs.len() > 0);
+            assert!(!result.logs.is_empty());
         }
     }
 }
@@ -182,15 +182,15 @@ fn test_proto_homev2() {
             let proto_bytes = hex_to_bytes(&proto_hex);
 
             let result = HomeViewV2::decode(proto_bytes.as_slice()).unwrap();
-            assert!(result.top_banners.len() > 0);
-            assert!(result.top_sub_banners.len() > 0);
+            assert!(!result.top_banners.is_empty());
+            assert!(!result.top_sub_banners.is_empty());
             assert!(result.tutorial_banner.is_none());
             assert_eq!(result.updated_section_name, "Updates for you");
-            assert!(result.updated_titles.len() > 0);
+            assert!(!result.updated_titles.is_empty());
             assert_eq!(result.tags.len(), 8);
             assert!(result.featured.is_some());
             assert_eq!(result.new_section_name, "New Series");
-            assert!(result.new_titles.len() > 0);
+            assert!(!result.new_titles.is_empty());
             assert_eq!(result.ranking_section_name, "Ranking");
             assert_eq!(result.rankings.len(), 4);
             assert_ne!(result.ranking_description, "");
@@ -230,7 +230,7 @@ fn test_proto_mangadetail() {
             assert_eq!(result.tags.len(), 1);
             assert!(result.video_url.is_none());
 
-            assert!(result.chapters.len() > 0);
+            assert!(!result.chapters.is_empty());
 
             let first_ch = result.chapters.last().unwrap();
             let mut last_ch = result.chapters.first().unwrap().clone();
@@ -270,7 +270,7 @@ fn test_proto_mangadetailv2() {
             assert_eq!(result.tags.len(), 3);
             assert!(result.video_url.is_none());
 
-            assert!(result.chapters.len() > 0);
+            assert!(!result.chapters.is_empty());
 
             let first_ch = result.chapters.last().unwrap();
             let mut last_ch = result.chapters.first().unwrap().clone();
@@ -299,8 +299,8 @@ fn test_proto_mypage() {
             let proto_bytes = hex_to_bytes(&proto_hex);
 
             let result = MyPageView::decode(proto_bytes.as_slice()).unwrap();
-            assert!(result.favorites.len() > 0);
-            assert!(result.history.len() > 0);
+            assert!(!result.favorites.is_empty());
+            assert!(!result.history.is_empty());
         }
     }
 }

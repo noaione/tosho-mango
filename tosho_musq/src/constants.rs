@@ -138,8 +138,8 @@ pub static IMAGE_HOST: LazyLock<String> = LazyLock::new(|| {
 /// ```
 pub fn get_constants(device_type: u8) -> &'static Constants {
     match device_type {
-        1 => &*ANDROID_CONSTANTS,
-        2 => &*IOS_CONSTANTS,
+        1 => &ANDROID_CONSTANTS,
+        2 => &IOS_CONSTANTS,
         _ => panic!("Invalid device type"),
     }
 }

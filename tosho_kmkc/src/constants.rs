@@ -199,9 +199,9 @@ pub static RANKING_TABS: LazyLock<Vec<RankingTab>> = LazyLock::new(|| {
 /// ```
 pub fn get_constants(device_type: u8) -> &'static Constants {
     match device_type {
-        1 => &*IOS_CONSTANTS,
-        2 => &*ANDROID_CONSTANTS,
-        3 => &*WEB_CONSTANTS,
+        1 => &IOS_CONSTANTS,
+        2 => &ANDROID_CONSTANTS,
+        3 => &WEB_CONSTANTS,
         _ => panic!("Invalid device type"),
     }
 }

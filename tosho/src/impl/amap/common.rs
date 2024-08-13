@@ -217,7 +217,7 @@ pub(super) fn save_session_config(client: &AMClient, config: &Config) {
 
     let session = store
         .iter_any()
-        .find(|&cookie| cookie.name() == &*SESSION_COOKIE_NAME);
+        .find(|&cookie| cookie.name() == *SESSION_COOKIE_NAME);
 
     if let Some(session) = session {
         config.session = session.value().to_string();

@@ -144,7 +144,7 @@ impl SJClient {
         );
         headers.insert(
             reqwest::header::HOST,
-            reqwest::header::HeaderValue::from_static(&*API_HOST),
+            reqwest::header::HeaderValue::from_static(&API_HOST),
         );
         let referer = match mode {
             SJMode::VM => &constants.vm_name,
@@ -157,7 +157,7 @@ impl SJClient {
 
         let x_header = format!("{} {}", constants.app_ver, &*VALUE_PIECE);
         headers.insert(
-            reqwest::header::HeaderName::from_static(&*HEADER_PIECE),
+            reqwest::header::HeaderName::from_static(&HEADER_PIECE),
             reqwest::header::HeaderValue::from_str(&x_header).unwrap(),
         );
 
@@ -508,7 +508,7 @@ impl SJClient {
         );
         headers.insert(
             reqwest::header::HOST,
-            reqwest::header::HeaderValue::from_static(&*API_HOST),
+            reqwest::header::HeaderValue::from_static(&API_HOST),
         );
         let referer = match mode {
             SJMode::VM => &constants.vm_name,
@@ -521,7 +521,7 @@ impl SJClient {
 
         let x_header = format!("{} {}", constants.app_ver, &*VALUE_PIECE);
         headers.insert(
-            reqwest::header::HeaderName::from_static(&*HEADER_PIECE),
+            reqwest::header::HeaderName::from_static(&HEADER_PIECE),
             reqwest::header::HeaderValue::from_str(&x_header).unwrap(),
         );
 

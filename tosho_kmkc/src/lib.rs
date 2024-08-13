@@ -170,7 +170,7 @@ impl KMClient {
         );
         headers.insert(
             reqwest::header::HOST,
-            reqwest::header::HeaderValue::from_static(&*API_HOST),
+            reqwest::header::HeaderValue::from_static(&API_HOST),
         );
         match config {
             KMConfig::Web(web) => {
@@ -811,7 +811,7 @@ impl KMClient {
                 );
                 headers.insert(
                     reqwest::header::HOST,
-                    reqwest::header::HeaderValue::from_static(&*IMAGE_HOST),
+                    reqwest::header::HeaderValue::from_static(&IMAGE_HOST),
                 );
                 headers
             })
@@ -874,7 +874,7 @@ impl KMClient {
         );
         headers.insert(
             reqwest::header::HOST,
-            reqwest::header::HeaderValue::from_static(&*API_HOST),
+            reqwest::header::HeaderValue::from_static(&API_HOST),
         );
         headers.insert(
             reqwest::header::USER_AGENT,

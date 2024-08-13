@@ -138,7 +138,7 @@ impl AMClient {
         );
         headers.insert(
             reqwest::header::HOST,
-            reqwest::header::HeaderValue::from_static(&*API_HOST),
+            reqwest::header::HeaderValue::from_static(&API_HOST),
         );
         let constants = get_constants(1);
         headers.insert(
@@ -449,7 +449,7 @@ impl AMClient {
         let mut headers = make_header(&self.config, self.constants)?;
         headers.insert(
             "Host",
-            reqwest::header::HeaderValue::from_str(&*IMAGE_HOST).unwrap(),
+            reqwest::header::HeaderValue::from_str(&IMAGE_HOST).unwrap(),
         );
         headers.insert(
             "User-Agent",
@@ -488,7 +488,7 @@ impl AMClient {
         );
         headers.insert(
             reqwest::header::HOST,
-            reqwest::header::HeaderValue::from_static(&*API_HOST),
+            reqwest::header::HeaderValue::from_static(&API_HOST),
         );
         let constants = get_constants(1);
         headers.insert(
