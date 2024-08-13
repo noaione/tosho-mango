@@ -31,7 +31,10 @@ This is just a fun side project, and as a disclaimer, I'm not condoning anything
 **Requirements**:
 - Rust 1.80.0+ (If manually building or using `cargo`)
 - 64-bit devices (ARM64/aarch64 support is untested)
-- Modern enough terminal (VT support)
+- Modern terminal with the following ANSI support:
+  - Support [OSC-8](https://github.com/Alhadis/OSC8-Adoption#terminal-emulators)
+  - Support [truecolor](https://github.com/termstandard/colors#terminal-emulators) and the standard 8/16 colors
+  - Test code: https://gist.github.com/lilydjwg/fdeaf79e921c2f413f44b6f613f6ad53
 
 `tosho` comes with a pre-compiled binary that you can choose:
 - The **Stable** release in the **[Releases](https://github.com/noaione/tosho-mango/releases)** tab.
