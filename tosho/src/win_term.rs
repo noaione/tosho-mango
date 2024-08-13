@@ -1,5 +1,7 @@
+#[cfg(windows)]
 use std::sync::OnceLock;
 
+#[cfg(windows)]
 static IS_WIN_VT_SUPPORTED: OnceLock<bool> = OnceLock::new();
 
 /// The flag to check for VT support
@@ -7,6 +9,7 @@ static IS_WIN_VT_SUPPORTED: OnceLock<bool> = OnceLock::new();
 /// According to https://learn.microsoft.com/en-us/windows/console/getconsolemode#parameters
 ///
 /// The flag for output mode is defined: ENABLE_VIRTUAL_TERMINAL_PROCESSING (0x0004)
+#[cfg(windows)]
 const ENABLE_VIRTUAL_TERMINAL_PROCESSING: u32 = 0x0004;
 
 /// Check if the terminal supports ANSI/VT escape codes
