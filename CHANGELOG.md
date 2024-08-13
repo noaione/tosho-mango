@@ -46,6 +46,7 @@ If you use CLI, this is done automatically when you use `download` command.
 - All: Rewrite `lazy_static` to `LazyLock`
 - Use static `OnceLock` in win-term VT check
 - Simplify win-term VT check
+- Expose some `_HOST` constants to public API
 
 ### Build
 - Update multiple dependencies

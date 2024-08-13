@@ -15,12 +15,12 @@ readme = "./README.md"
 
 [dependencies]
 # Sources deps
-tosho-musq = { path = "../tosho_musq", version = "=0.4.0" }
-tosho-kmkc = { path = "../tosho_kmkc", version = "=0.4.1" }
-tosho-amap = { path = "../tosho_amap", version = "=0.4.0" }
-tosho-sjv = { path = "../tosho_sjv", version = "=0.4.0" }
-tosho-rbean = { path = "../tosho_rbean", version = "=0.2.0" }
-tosho-mplus = { path = "../tosho_mplus", version = "=0.1.1" }
+tosho-musq = { path = "../tosho_musq", version = "=0.5.0" }
+tosho-kmkc = { path = "../tosho_kmkc", version = "=0.5.0" }
+tosho-amap = { path = "../tosho_amap", version = "=0.5.0" }
+tosho-sjv = { path = "../tosho_sjv", version = "=0.5.0" }
+tosho-rbean = { path = "../tosho_rbean", version = "=0.3.0" }
+tosho-mplus = { path = "../tosho_mplus", version = "=0.2.0" }
 tosho-macros = { path = "../tosho_macros", version = "0.3" }
 
 # External deps
