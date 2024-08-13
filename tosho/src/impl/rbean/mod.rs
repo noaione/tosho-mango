@@ -39,6 +39,9 @@ pub(crate) enum RBeanCommands {
         /// Format to use
         #[arg(short = 'f', long = "format", default_value = "jpeg")]
         format: crate::r#impl::rbean::download::CLIDownloadFormat,
+        /// Quality to use
+        #[arg(short = 'q', long = "quality", default_value = "hires")]
+        quality: crate::r#impl::rbean::download::CLIDownloadQuality,
         /// Enable parallel download
         #[arg(short = 'p', long = "parallel")]
         parallel: bool,
@@ -56,6 +59,9 @@ pub(crate) enum RBeanCommands {
         /// Format to use
         #[arg(short = 'f', long = "format", default_value = "jpeg")]
         format: crate::r#impl::rbean::download::CLIDownloadFormat,
+        /// Quality to use
+        #[arg(short = 'q', long = "quality", default_value = "hires")]
+        quality: crate::r#impl::rbean::download::CLIDownloadQuality,
         /// Enable parallel download
         #[arg(short = 'p', long = "parallel")]
         parallel: bool,

@@ -7,7 +7,7 @@ use clap::ValueEnum;
 use color_print::cformat;
 use tosho_macros::EnumName;
 use tosho_rbean::{
-    models::{Chapter, ChapterPage, Manga, UserAccount},
+    models::{Chapter, ChapterPage, ImageSource, Manga, UserAccount},
     RBClient,
 };
 
@@ -56,6 +56,55 @@ impl ValueEnum for CLIDownloadFormat {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, EnumName, Default)]
+pub(crate) enum CLIDownloadQuality {
+    /// This is the lowest quality available, usually 800w
+    Lowest,
+    /// This is medium quality available, usually 1200w
+    Medium,
+    /// This is the highest quality available, usually 1600w
+    High,
+    /// This is the highest quality available, usually 2000w
+    /// but will fallback to 1600w if not available
+    #[default]
+    Highest,
+}
+
+impl ValueEnum for CLIDownloadQuality {
+    fn from_str(input: &str, ignore_case: bool) -> Result<Self, String> {
+        let input = if ignore_case {
+            input.to_lowercase()
+        } else {
+            input.to_string()
+        };
+        match input.as_str() {
+            "low" | "lowest" => Ok(CLIDownloadQuality::Lowest),
+            "medium" | "standard" => Ok(CLIDownloadQuality::Medium),
+            "high" => Ok(CLIDownloadQuality::High),
+            "hi-res" | "hires" | "highest" => Ok(CLIDownloadQuality::Highest),
+            _ => Err(format!("Invalid download quality option: {}", input)),
+        }
+    }
+
+    fn to_possible_value(&self) -> Option<clap::builder::PossibleValue> {
+        match self {
+            CLIDownloadQuality::Lowest => Some(clap::builder::PossibleValue::new("low")),
+            CLIDownloadQuality::Medium => Some(clap::builder::PossibleValue::new("medium")),
+            CLIDownloadQuality::High => Some(clap::builder::PossibleValue::new("high")),
+            CLIDownloadQuality::Highest => Some(clap::builder::PossibleValue::new("hires")),
+        }
+    }
+
+    fn value_variants<'a>() -> &'a [Self] {
+        &[
+            CLIDownloadQuality::Lowest,
+            CLIDownloadQuality::Medium,
+            CLIDownloadQuality::High,
+            CLIDownloadQuality::Highest,
+        ]
+    }
+}
+
 #[derive(Clone, Debug, Default)]
 pub(crate) struct RBDownloadConfigCli {
     /// Disable all input prompt (a.k.a `autodownload`)
@@ -66,6 +115,9 @@ pub(crate) struct RBDownloadConfigCli {
 
     /// The format to download the images in.
     pub(crate) format: CLIDownloadFormat,
+
+    /// The quality of the images to download.
+    pub(crate) quality: CLIDownloadQuality,
 
     /// Parallel download
     pub(crate) parallel: bool,
@@ -174,11 +226,62 @@ struct DownloadNode {
     extension: String,
 }
 
+fn select_quality_url(
+    source: &[ImageSource],
+    quality: CLIDownloadQuality,
+    hires_available: bool,
+) -> anyhow::Result<String> {
+    if hires_available && quality == CLIDownloadQuality::Highest {
+        RBClient::modify_url_for_highres(&source[0].url)
+    } else {
+        // Source is reverse sorted from highest to lowest quality
+        match quality {
+            CLIDownloadQuality::Highest | CLIDownloadQuality::High => {
+                // Get the highest quality image
+                match source.first() {
+                    Some(first_src) => Ok(first_src.url.clone()),
+                    None => Err(anyhow::anyhow!("No image source available for download")),
+                }
+            }
+            CLIDownloadQuality::Lowest => {
+                // Get the lowest quality image
+                match source.last() {
+                    Some(last_src) => Ok(last_src.url.clone()),
+                    None => Err(anyhow::anyhow!("No image source available for download")),
+                }
+            }
+            CLIDownloadQuality::Medium => {
+                // Check if there are at least 3 images
+                if source.len() >= 3 {
+                    // Get the middle quality image
+                    let idx = source.len() / 2;
+                    match source.get(idx) {
+                        Some(mid_src) => Ok(mid_src.url.clone()),
+                        None => {
+                            // get the highest quality image
+                            match source.first() {
+                                Some(first_src) => Ok(first_src.url.clone()),
+                                None => Err(anyhow::anyhow!("Tried to get middle quality {idx} but no image source available for download")),
+                            }
+                        }
+                    }
+                } else {
+                    // Get the highest quality image
+                    match source.first() {
+                        Some(first_src) => Ok(first_src.url.clone()),
+                        None => Err(anyhow::anyhow!("No image source available for download")),
+                    }
+                }
+            }
+        }
+    }
+}
+
 async fn rbean_actual_downloader(
     node: DownloadNode,
     image_dir: PathBuf,
     dl_config: RBDownloadConfigCli,
-    do_hires: bool,
+    hires_available: bool,
     console: Terminal,
     progress: Arc<indicatif::ProgressBar>,
 ) -> anyhow::Result<()> {
@@ -193,13 +296,7 @@ async fn rbean_actual_downloader(
     img_source.sort();
     img_source.reverse();
 
-    let download_meta = img_source.first().unwrap();
-    let download_url = if do_hires {
-        RBClient::modify_url_for_highres(&download_meta.url)?
-    } else {
-        download_meta.url.clone()
-    };
-
+    let download_url = select_quality_url(&img_source, dl_config.quality, hires_available)?;
     let writer = tokio::fs::File::create(&img_dl_path).await?;
 
     if console.is_debug() {
@@ -365,27 +462,35 @@ pub(crate) async fn rbean_download(
 
         let total_img_count = view_req.data.pages.len() as u64;
 
-        // Test if 2000x3000 is available
         let pages_data = view_req.data.pages.clone();
-        let img_source = match dl_config.format {
-            CLIDownloadFormat::Jpeg => pages_data[0].image.jpg.clone(),
-            CLIDownloadFormat::Webp => pages_data[0].image.webp.clone(),
-        };
-        let first_image = img_source.first().unwrap();
-        console.info(&cformat!(
-            "   Testing higher resolution images for <m,s>{}</>...",
-            chapter.formatted_title()
-        ));
-        let test_hires = client
-            .test_high_res(&first_image.url)
-            .await
-            .unwrap_or(false);
 
-        if test_hires {
-            console.info(
-                "    Higher resolution (x3000) images are available for this chapter, using them",
-            );
-        }
+        // Test if 2000x3000 is available when highest quality is selected
+        let hires_available = match dl_config.quality {
+            CLIDownloadQuality::Highest => {
+                let img_source = match dl_config.format {
+                    CLIDownloadFormat::Jpeg => pages_data[0].image.jpg.clone(),
+                    CLIDownloadFormat::Webp => pages_data[0].image.webp.clone(),
+                };
+                let first_image = img_source.first().unwrap();
+                console.info(&cformat!(
+                    "   Testing higher resolution images for <m,s>{}</>...",
+                    chapter.formatted_title()
+                ));
+                let test_hires = client
+                    .test_high_res(&first_image.url)
+                    .await
+                    .unwrap_or(false);
+
+                if test_hires {
+                    console.info(
+                        "    Higher resolution (x3000) images are available for this chapter, using them",
+                    );
+                }
+
+                test_hires
+            }
+            _ => false,
+        };
 
         let progress = create_progress_bar(total_img_count);
 
@@ -411,7 +516,7 @@ pub(crate) async fn rbean_download(
                             },
                             image_dir,
                             dl_config,
-                            test_hires,
+                            hires_available,
                             cnsl.clone(),
                             progress,
                         )
@@ -440,7 +545,7 @@ pub(crate) async fn rbean_download(
                     node,
                     image_dir.clone(),
                     dl_config.clone(),
-                    test_hires,
+                    hires_available,
                     console.clone(),
                     Arc::clone(&progress),
                 )

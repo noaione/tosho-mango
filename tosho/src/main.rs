@@ -738,12 +738,14 @@ async fn main() {
                     uuid,
                     output,
                     format,
+                    quality,
                     parallel,
                 } => {
                     let dl_config = RBDownloadConfigCli {
                         no_input: true,
                         format,
                         parallel,
+                        quality,
                         ..Default::default()
                     };
                     r#impl::rbean::download::rbean_download(
@@ -761,12 +763,14 @@ async fn main() {
                     chapters,
                     output,
                     format,
+                    quality,
                     parallel,
                 } => {
                     let dl_config = RBDownloadConfigCli {
                         format,
                         chapter_ids: chapters.unwrap_or_default(),
                         parallel,
+                        quality,
                         ..Default::default()
                     };
                     r#impl::rbean::download::rbean_download(

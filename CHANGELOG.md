@@ -37,6 +37,9 @@ async fn main() {
 
 If you use CLI, this is done automatically when you use `download` command.
 
+- `RB`: Support downloading chapters with different quality
+  - Available quality are: `low`, `medium`, `high`, and `hires` (default is `hires`)
+
 ### Changes
 - `KM`: Fix failed deserialization on `TitleNode` on some titles
 - `RB`: Fix auth failing when reauthenticating
