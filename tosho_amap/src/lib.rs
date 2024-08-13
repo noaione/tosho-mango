@@ -138,7 +138,7 @@ impl AMClient {
         );
         headers.insert(
             reqwest::header::HOST,
-            reqwest::header::HeaderValue::from_static(&API_HOST),
+            reqwest::header::HeaderValue::from_static(&*API_HOST),
         );
         let constants = get_constants(1);
         headers.insert(
@@ -187,7 +187,7 @@ impl AMClient {
     where
         T: serde::de::DeserializeOwned + std::clone::Clone,
     {
-        let endpoint = format!("{}{}", *BASE_API, endpoint);
+        let endpoint = format!("{}{}", &*BASE_API, endpoint);
 
         let mut cloned_json = json.clone().unwrap_or_default();
         self.apply_json_object(&mut cloned_json);
@@ -449,7 +449,7 @@ impl AMClient {
         let mut headers = make_header(&self.config, self.constants)?;
         headers.insert(
             "Host",
-            reqwest::header::HeaderValue::from_str(&IMAGE_HOST).unwrap(),
+            reqwest::header::HeaderValue::from_str(&*IMAGE_HOST).unwrap(),
         );
         headers.insert(
             "User-Agent",
@@ -488,7 +488,7 @@ impl AMClient {
         );
         headers.insert(
             reqwest::header::HOST,
-            reqwest::header::HeaderValue::from_static(&API_HOST),
+            reqwest::header::HeaderValue::from_static(&*API_HOST),
         );
         let constants = get_constants(1);
         headers.insert(
@@ -526,7 +526,7 @@ impl AMClient {
         let req = session
             .request(
                 reqwest::Method::POST,
-                format!("{}/iap/remainder.json", *BASE_API),
+                format!("{}/iap/remainder.json", &*BASE_API),
             )
             .headers(make_header(&temp_config, android_c)?)
             .json(&json_body)
@@ -561,7 +561,7 @@ impl AMClient {
         let req = session
             .request(
                 reqwest::Method::POST,
-                format!("{}/{}", *BASE_API, *MASKED_LOGIN),
+                format!("{}/{}", &*BASE_API, &*MASKED_LOGIN),
             )
             .headers(make_header(&temp_config, android_c)?)
             .json(&json_body_login)
@@ -594,7 +594,7 @@ impl AMClient {
         let req = session
             .request(
                 reqwest::Method::POST,
-                format!("{}/iap/remainder.json", *BASE_API),
+                format!("{}/iap/remainder.json", &*BASE_API),
             )
             .headers(make_header(&temp_config, android_c)?)
             .json(&json_body_session)
@@ -667,7 +667,7 @@ fn make_header(
     let mut req_headers = reqwest::header::HeaderMap::new();
 
     let current_unix = chrono::Utc::now().timestamp();
-    let av = format!("{}/{}", *APP_NAME, constants.version);
+    let av = format!("{}/{}", &*APP_NAME, constants.version);
     let formulae = format!("{}{}{}", config.token, current_unix, av);
 
     let formulae_hashed = <Sha256 as Digest>::digest(formulae.as_bytes());

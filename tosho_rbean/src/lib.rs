@@ -140,7 +140,7 @@ impl RBClient {
         );
         headers.insert(
             reqwest::header::HOST,
-            reqwest::header::HeaderValue::from_static(&API_HOST),
+            reqwest::header::HeaderValue::from_static(&*API_HOST),
         );
         headers.insert(
             "public",
@@ -238,7 +238,7 @@ impl RBClient {
     {
         self.refresh_token().await?;
 
-        let endpoint = format!("{}{}", *BASE_API, url);
+        let endpoint = format!("{}{}", &*BASE_API, url);
 
         let request = match json_body {
             Some(json_body) => self.inner.request(method, endpoint).json(&json_body),
@@ -635,7 +635,7 @@ impl RBClient {
 
         // Step 4: Auth with 小豆
         let request = client
-            .get(&format!("{}/user/v0", *BASE_API))
+            .get(&format!("{}/user/v0", &*BASE_API))
             .headers({
                 let mut headers = reqwest::header::HeaderMap::new();
                 headers.insert(

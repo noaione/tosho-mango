@@ -170,7 +170,7 @@ impl KMClient {
         );
         headers.insert(
             reqwest::header::HOST,
-            reqwest::header::HeaderValue::from_static(&API_HOST),
+            reqwest::header::HeaderValue::from_static(&*API_HOST),
         );
         match config {
             KMConfig::Web(web) => {
@@ -278,7 +278,7 @@ impl KMClient {
     where
         T: serde::de::DeserializeOwned,
     {
-        let endpoint = format!("{}{}", BASE_API.as_str(), endpoint);
+        let endpoint = format!("{}{}", &*BASE_API, endpoint);
         let mut extend_headers = match headers {
             Some(headers) => headers,
             None => reqwest::header::HeaderMap::new(),
@@ -811,7 +811,7 @@ impl KMClient {
                 );
                 headers.insert(
                     reqwest::header::HOST,
-                    reqwest::header::HeaderValue::from_static(&IMAGE_HOST),
+                    reqwest::header::HeaderValue::from_static(&*IMAGE_HOST),
                 );
                 headers
             })
@@ -874,7 +874,7 @@ impl KMClient {
         );
         headers.insert(
             reqwest::header::HOST,
-            reqwest::header::HeaderValue::from_static(&API_HOST),
+            reqwest::header::HeaderValue::from_static(&*API_HOST),
         );
         headers.insert(
             reqwest::header::USER_AGENT,
@@ -909,7 +909,7 @@ impl KMClient {
         );
         extend_headers.insert(WEB_CONSTANTS.hash.as_str(), req_hash.parse()?);
         let response = client
-            .post(format!("{}/web/user/login", BASE_API.as_str()))
+            .post(format!("{}/web/user/login", &*BASE_API))
             .form(&req_data)
             .headers(extend_headers)
             .send()

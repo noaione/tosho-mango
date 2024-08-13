@@ -142,7 +142,7 @@ impl MPClient {
         let mut headers = reqwest::header::HeaderMap::new();
         headers.insert(
             "Host",
-            reqwest::header::HeaderValue::from_str(&API_HOST).unwrap(),
+            reqwest::header::HeaderValue::from_str(&*API_HOST).unwrap(),
         );
         headers.insert(
             "User-Agent",
@@ -594,7 +594,7 @@ impl MPClient {
                 let mut headers = reqwest::header::HeaderMap::new();
                 headers.insert(
                     "Host",
-                    reqwest::header::HeaderValue::from_str(&IMAGE_HOST).unwrap(),
+                    reqwest::header::HeaderValue::from_str(&*IMAGE_HOST).unwrap(),
                 );
                 headers.insert(
                     "User-Agent",

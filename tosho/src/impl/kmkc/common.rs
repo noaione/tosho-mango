@@ -25,7 +25,7 @@ pub(super) fn do_print_search_information(
 
     for (idx, result) in results.iter().enumerate() {
         let id = result.id;
-        let manga_url = format!("https://{}/title/{}", BASE_HOST.as_str(), result.id);
+        let manga_url = format!("https://{}/title/{}", &*BASE_HOST, result.id);
         let linked = linkify!(&manga_url, &result.title);
         let mut text_data = cformat!("<s>{}</s> ({})", linked, id);
         if result.next_update.is_some() {

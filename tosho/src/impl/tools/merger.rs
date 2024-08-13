@@ -11,13 +11,16 @@ use inquire::{required, validator::StringValidator, Text};
 use std::{
     collections::{BTreeMap, HashMap},
     path::{Path, PathBuf},
+    sync::LazyLock,
 };
 
-lazy_static::lazy_static! {
-    static ref TITLE_REGEX: regex::Regex = regex::Regex::new(
-        r"(?:[\w\.]+ |#|[\w]+)(?P<base>0?[\d]+)?(?:[\(-\. ][\(-\. ]?)?(?P<split>[\d]+)?(?:[\)])?"
-    ).unwrap();
-}
+/// Regex to match chapter title
+static TITLE_REGEX: LazyLock<regex::Regex> = LazyLock::new(|| {
+    regex::Regex::new(
+        r"(?:[\w\.]+ |#|[\w]+)(?P<base>0?[\d]+)?(?:[\(-\. ][\(-\. ]?)?(?P<split>[\d]+)?(?:[\)])?",
+    )
+    .unwrap()
+});
 
 const MODERN_IMAGE_EXT: [&str; 5] = ["avif", "jxl", "webp", "heif", "heic"];
 

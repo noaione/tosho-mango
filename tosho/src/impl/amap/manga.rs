@@ -64,7 +64,7 @@ pub(crate) async fn amap_title_info(
 
     match results {
         Ok(results) => {
-            let manga_url = format!("https://{}/manga/{}", BASE_HOST.as_str(), title_id);
+            let manga_url = format!("https://{}/manga/{}", &*BASE_HOST, title_id);
             let linked = linkify!(&manga_url, &results.info.title);
 
             console.info(&cformat!(

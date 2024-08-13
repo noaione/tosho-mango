@@ -31,7 +31,7 @@ pub(crate) async fn rbean_home_page(
             console.info(&cformat!("Home page for <m,s>{}</>", account.id));
 
             if let Some(hero_manga) = results.hero.manga {
-                let manga_url = format!("https://{}/series/{}", *BASE_HOST, hero_manga.slug);
+                let manga_url = format!("https://{}/series/{}", &*BASE_HOST, hero_manga.slug);
                 let linked_url = linkify!(manga_url, &hero_manga.title);
                 console.info(&cformat!(">> <m,s>{}</> <<", linked_url));
                 console.info(&manga_url);
@@ -53,7 +53,7 @@ pub(crate) async fn rbean_home_page(
             }
 
             for featured in results.featured.iter() {
-                let manga_url = format!("https://{}/series/{}", *BASE_HOST, featured.manga.slug);
+                let manga_url = format!("https://{}/series/{}", &*BASE_HOST, featured.manga.slug);
                 let linked_url = linkify!(manga_url, &featured.manga.title);
                 console.info(&cformat!(
                     " <m,s>{}</>: <s>{}</>",

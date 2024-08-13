@@ -220,7 +220,7 @@ pub(crate) async fn kmkc_purchased(
             ));
 
             for result in results {
-                let manga_url = format!("https://{}/title/{}", BASE_HOST.as_str(), result.id);
+                let manga_url = format!("https://{}/title/{}", &*BASE_HOST, result.id);
                 let linked = linkify!(&manga_url, &result.title);
 
                 console.info(&cformat!("  {} ({})", linked, result.id));

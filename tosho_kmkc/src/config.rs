@@ -101,7 +101,7 @@ impl KMConfigWebKV {
         };
 
         RawCookie::build((name, binding))
-            .domain(BASE_HOST.as_str())
+            .domain(&*BASE_HOST)
             .secure(true)
             .http_only(false)
             .path("/")
@@ -166,7 +166,7 @@ impl From<reqwest_cookie_store::CookieStore> for KMConfigWeb {
 impl From<KMConfigWeb> for reqwest_cookie_store::CookieStore {
     fn from(value: KMConfigWeb) -> Self {
         let mut store = reqwest_cookie_store::CookieStore::default();
-        let base_host_url = Url::parse(&format!("https://{}", BASE_HOST.as_str())).unwrap();
+        let base_host_url = Url::parse(&format!("https://{}", &*BASE_HOST)).unwrap();
 
         let birthday_cookie = value.birthday.to_cookie("birthday".to_string());
         let tos_adult_cookie = value
@@ -180,7 +180,7 @@ impl From<KMConfigWeb> for reqwest_cookie_store::CookieStore {
 
         if !value.uwt.is_empty() {
             let uwt = RawCookie::build(("uwt", value.uwt))
-                .domain(BASE_HOST.as_str())
+                .domain(&*BASE_HOST)
                 .secure(true)
                 .http_only(true)
                 .path("/")

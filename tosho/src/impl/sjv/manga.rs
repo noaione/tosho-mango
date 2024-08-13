@@ -129,7 +129,7 @@ pub(crate) async fn sjv_title_info(
 
             let manga_url = format!(
                 "https://{}/{}",
-                tosho_sjv::constants::BASE_HOST.as_str(),
+                &*tosho_sjv::constants::BASE_HOST,
                 result.slug
             );
             let linked = linkify!(&manga_url, &result.title);
@@ -192,8 +192,8 @@ pub(crate) async fn sjv_title_info(
                         Some(tosho_sjv::models::SubscriptionType::SJ) => {
                             format!(
                                 "https://{}/{}/{}/chapter/{}?action=read",
-                                *tosho_sjv::constants::BASE_HOST,
-                                *EXPAND_SJ_NAME,
+                                &*tosho_sjv::constants::BASE_HOST,
+                                &*EXPAND_SJ_NAME,
                                 result.slug,
                                 chapter.id
                             )
@@ -201,8 +201,8 @@ pub(crate) async fn sjv_title_info(
                         Some(tosho_sjv::models::SubscriptionType::VM) => {
                             format!(
                                 "https://{}/{}/{}/chapter/{}?action=read",
-                                *tosho_sjv::constants::BASE_HOST,
-                                *EXPAND_VM_NAME,
+                                &*tosho_sjv::constants::BASE_HOST,
+                                &*EXPAND_VM_NAME,
                                 result.slug,
                                 chapter.id
                             )

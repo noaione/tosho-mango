@@ -166,7 +166,7 @@ pub(crate) async fn rbean_title_info(
         save_session_config(client, account);
     }
 
-    let manga_url = format!("https://{}/series/{}", *BASE_HOST, result.slug);
+    let manga_url = format!("https://{}/series/{}", &*BASE_HOST, result.slug);
     let linked = linkify!(&manga_url, &result.title);
 
     console.info(&cformat!(
@@ -181,7 +181,7 @@ pub(crate) async fn rbean_title_info(
         .genres
         .iter()
         .map(|g| {
-            let genre_url = format!("https://{}/series?tags={}", *BASE_HOST, g.slug);
+            let genre_url = format!("https://{}/series?tags={}", &*BASE_HOST, g.slug);
             linkify!(&genre_url, &g.name)
         })
         .collect();
@@ -191,7 +191,7 @@ pub(crate) async fn rbean_title_info(
 
     let publish_url = format!(
         "https://{}/publishers/{}",
-        *BASE_HOST, result.publisher.slug
+        &*BASE_HOST, result.publisher.slug
     );
     let linked_pub = linkify!(&publish_url, &result.publisher.name);
     console.info(&cformat!("  <s>Publisher</>: {}", linked_pub));

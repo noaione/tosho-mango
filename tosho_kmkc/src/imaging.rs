@@ -19,7 +19,7 @@ use image::{GenericImage, GenericImageView, ImageEncoder};
 
 fn u32_to_f32(n: u32) -> f32 {
     if n > i32::MAX as u32 {
-        panic!("u32_to_i32: u32 is too big");
+        panic!("u32_to_f32: u32 is too big");
     }
 
     n as f32

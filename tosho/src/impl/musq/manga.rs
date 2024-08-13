@@ -86,7 +86,7 @@ fn format_tags(tags: Vec<Tag>) -> String {
     let parsed_tags = tags
         .iter()
         .map(|tag| {
-            let tag_url = format!("https://{}/genre/{}", BASE_HOST.as_str(), tag.id);
+            let tag_url = format!("https://{}/genre/{}", &*BASE_HOST, tag.id);
             let linked = linkify!(&tag_url, &tag.name);
 
             cformat!("<p(244),reverse,bold>{}</>", linked)
@@ -116,7 +116,7 @@ pub(crate) async fn musq_title_info(
             1
         }
         Ok(result) => {
-            let manga_url = format!("https://{}/manga/{}", BASE_HOST.as_str(), title_id);
+            let manga_url = format!("https://{}/manga/{}", &*BASE_HOST, title_id);
             let linked = linkify!(&manga_url, &result.title);
 
             console.info(&cformat!(

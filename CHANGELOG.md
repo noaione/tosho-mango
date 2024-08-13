@@ -43,11 +43,14 @@ If you use CLI, this is done automatically when you use `download` command.
 - `RB`: Properly hide future chapters from being downloaded
 - `RB`: Do streaming decryption on image download
 - Multiple: Adjustment to constants
+- All: Rewrite `lazy_static` to `LazyLock`
 - Use static `OnceLock` in win-term VT check
 - Simplify win-term VT check
 
 ### Build
 - Update multiple dependencies
+- Remove `lazy_static` as direct dependency
+- Update MSRV to 1.80.0
 
 ## [0.5.1] 2024-06-08
 ### New Features

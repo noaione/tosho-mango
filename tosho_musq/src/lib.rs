@@ -77,10 +77,7 @@ pub mod constants;
 pub mod helper;
 pub mod proto;
 
-use crate::constants::Constants;
-use crate::constants::API_HOST;
-use crate::constants::BASE_API;
-use crate::constants::IMAGE_HOST;
+use crate::constants::{Constants, API_HOST, BASE_API, IMAGE_HOST};
 use crate::proto::*;
 use futures_util::StreamExt;
 pub use helper::ConsumeCoin;
@@ -139,7 +136,7 @@ impl MUClient {
         let mut headers = reqwest::header::HeaderMap::new();
         headers.insert(
             "Host",
-            reqwest::header::HeaderValue::from_str(&API_HOST).unwrap(),
+            reqwest::header::HeaderValue::from_str(&*API_HOST).unwrap(),
         );
         headers.insert(
             "User-Agent",
@@ -291,10 +288,10 @@ impl MUClient {
 
     fn build_url(&self, path: &str) -> String {
         if path.starts_with('/') {
-            return format!("{}{}", *BASE_API, path);
+            return format!("{}{}", &*BASE_API, path);
         }
 
-        format!("{}/{}", *BASE_API, path)
+        format!("{}/{}", &*BASE_API, path)
     }
 
     fn empty_params(&self) -> HashMap<String, String> {
@@ -549,14 +546,14 @@ impl MUClient {
         match ::reqwest::Url::parse(url) {
             Ok(mut parsed_url) => {
                 let valid_host =
-                    ::reqwest::Url::parse(format!("https://{}", *IMAGE_HOST).as_str())?;
+                    ::reqwest::Url::parse(format!("https://{}", &*IMAGE_HOST).as_str())?;
                 parsed_url.set_host(Some(valid_host.host_str().unwrap()))?;
 
                 Ok(parsed_url)
             }
             Err(_) => {
                 // parse url failed, assume it's a relative path
-                let full_url = format!("https://{}{}", *IMAGE_HOST, url);
+                let full_url = format!("https://{}{}", &*IMAGE_HOST, url);
                 let parse_url = ::reqwest::Url::parse(full_url.as_str())?;
                 Ok(parse_url)
             }
@@ -584,7 +581,7 @@ impl MUClient {
                 let mut headers = reqwest::header::HeaderMap::new();
                 headers.insert(
                     "Host",
-                    reqwest::header::HeaderValue::from_str(&IMAGE_HOST).unwrap(),
+                    reqwest::header::HeaderValue::from_str(&*IMAGE_HOST).unwrap(),
                 );
                 headers.insert(
                     "User-Agent",
