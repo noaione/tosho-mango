@@ -263,10 +263,12 @@ pub fn manual_chapters_collector(
             Err(err) => match err {
                 inquire::error::InquireError::OperationCanceled => {
                     console.warn("Aborted.");
+                    abort_after = true;
                     break;
                 }
                 inquire::InquireError::OperationInterrupted => {
                     console.warn("Aborted.");
+                    abort_after = true;
                     break;
                 }
                 _ => {

@@ -3,8 +3,8 @@
 Starting from Rust port of the project, all changes will be put into this file.
 
 ## Unreleased (git master)
-
-Nothing yet!
+### Changes
+- Fix issue with manual merging `Ctrl+C` handling not working properly
 
 ## [0.6.0] (2024-08-13)
 ### New Features
