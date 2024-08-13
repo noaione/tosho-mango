@@ -44,6 +44,9 @@ If you use CLI, this is done automatically when you use `download` command.
 - `RB`: Do streaming decryption on image download
 - Multiple: Adjustment to constants
 
+### Build
+- Update multiple dependencies
+
 ## [0.5.1] 2024-06-08
 ### New Features
 - `M+`: Allow overriding app version code.

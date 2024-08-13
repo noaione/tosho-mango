@@ -44,11 +44,11 @@ impl From<AMConfig> for reqwest_cookie_store::CookieStore {
         let mut store = reqwest_cookie_store::CookieStore::default();
         let base_host_url = Url::parse(&format!("https://{}", *BASE_HOST)).unwrap();
 
-        let session_cookie = RawCookie::build(SESSION_COOKIE_NAME.as_str(), value.session_v2)
+        let session_cookie = RawCookie::build((SESSION_COOKIE_NAME.as_str(), value.session_v2))
             .domain(BASE_HOST.as_str())
             .secure(true)
             .path("/")
-            .finish();
+            .build();
 
         store.insert_raw(&session_cookie, &base_host_url).unwrap();
         store

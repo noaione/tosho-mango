@@ -100,13 +100,13 @@ impl KMConfigWebKV {
             Err(_) => encode(&serde_json::to_string(&self).unwrap()).to_string(),
         };
 
-        RawCookie::build(name, binding)
+        RawCookie::build((name, binding))
             .domain(BASE_HOST.as_str())
             .secure(true)
             .http_only(false)
             .path("/")
             .expires(i64_to_cookie_time(self.expires))
-            .finish()
+            .build()
     }
 }
 
@@ -179,13 +179,13 @@ impl From<KMConfigWeb> for reqwest_cookie_store::CookieStore {
         store.insert_raw(&privacy_cookie, &base_host_url).unwrap();
 
         if !value.uwt.is_empty() {
-            let uwt = RawCookie::build("uwt", value.uwt)
+            let uwt = RawCookie::build(("uwt", value.uwt))
                 .domain(BASE_HOST.as_str())
                 .secure(true)
                 .http_only(true)
                 .path("/")
                 .expires(i64_to_cookie_time(value.birthday.expires))
-                .finish();
+                .build();
             store.insert_raw(&uwt, &base_host_url).unwrap();
         }
 
