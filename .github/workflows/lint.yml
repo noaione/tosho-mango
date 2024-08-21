@@ -33,15 +33,15 @@ concurrency:
 
 jobs:
   lint:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     if: ${{ !startsWith(github.event.head_commit.message, 'docs:') }}
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@b32f140b0c872d58512e0a66172253c302617b90
+        uses: actions/checkout@9a9194f87191a7e9055e3e9b95b8cfb13023bb08
 
       - name: Setup rust cache
-        uses: Swatinem/rust-cache@640a22190e7a783d4c409684cea558f081f92012
+        uses: Swatinem/rust-cache@9bdad043e88c75890e36ad3bbc8d27f0090dd609
         with:
           prefix-key: "${{ runner.os }}-tosho-rust-lint"
 

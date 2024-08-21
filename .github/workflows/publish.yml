@@ -17,15 +17,15 @@ concurrency:
 jobs:
   # Publish to crates.io
   publish:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout repo
         if: inputs.tag == 'latest'
-        uses: actions/checkout@b32f140b0c872d58512e0a66172253c302617b90
+        uses: actions/checkout@9a9194f87191a7e9055e3e9b95b8cfb13023bb08
 
       - name: Checkout repo (tag)
         if: inputs.tag != 'latest'
-        uses: actions/checkout@b32f140b0c872d58512e0a66172253c302617b90
+        uses: actions/checkout@9a9194f87191a7e9055e3e9b95b8cfb13023bb08
         with:
           ref: ${{ inputs.tag }}
 
