@@ -467,8 +467,7 @@ impl MUClient {
             .post(self.build_url("/manga/viewer_v2"))
             .form(&params)
             .send()
-            .await
-            .unwrap();
+            .await?;
 
         let viewer: ChapterViewerV2 = parse_protobuf_response(res).await?;
 
@@ -626,8 +625,7 @@ impl MUClient {
                 headers
             })
             .send()
-            .await
-            .unwrap();
+            .await?;
 
         // bail if not success
         if !res.status().is_success() {
