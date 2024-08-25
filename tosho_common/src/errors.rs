@@ -189,6 +189,12 @@ impl From<reqwest::Error> for ToshoError {
     }
 }
 
+impl From<reqwest::StatusCode> for ToshoError {
+    fn from(value: reqwest::StatusCode) -> Self {
+        ToshoError::ParseError(ToshoParseError::InvalidStatusCode(value))
+    }
+}
+
 impl From<serde_json::Error> for ToshoError {
     fn from(value: serde_json::Error) -> Self {
         ToshoError::ParseError(ToshoParseError::SerdeError(value))

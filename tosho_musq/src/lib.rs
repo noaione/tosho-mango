@@ -629,10 +629,7 @@ impl MUClient {
 
         // bail if not success
         if !res.status().is_success() {
-            Err(ToshoError::new(format!(
-                "Failed to download image: {}",
-                res.status()
-            )))
+            Err(ToshoError::from(res.status()))
         } else {
             let mut stream = res.bytes_stream();
             while let Some(item) = stream.try_next().await? {

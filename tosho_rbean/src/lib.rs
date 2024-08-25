@@ -65,6 +65,7 @@
 use futures_util::StreamExt;
 use std::collections::HashMap;
 use tokio::io::{self, AsyncWriteExt};
+use tosho_common::{bail_on_error, make_error, parse_json_response, ToshoError, ToshoResult};
 
 use crate::models::UserAccount;
 pub use config::*;
@@ -177,7 +178,7 @@ impl RBClient {
     ///
     /// The first request will always be a token refresh, and subsequent requests will only refresh
     /// if the token is expired.
-    pub async fn refresh_token(&mut self) -> anyhow::Result<()> {
+    pub async fn refresh_token(&mut self) -> ToshoResult<()> {
         // If the expiry time is set and it's not expired, return early
         if let Some(expiry_at) = self.expiry_at {
             if expiry_at > chrono::Utc::now().timestamp() {
@@ -208,7 +209,13 @@ impl RBClient {
 
         self.token.clone_from(&response.access_token);
         self.config.token = response.access_token;
-        let expiry_in = response.expires_in.parse::<i64>().unwrap();
+        let expiry_in = response.expires_in.parse::<i64>().map_err(|e| {
+            make_error!(
+                "Failed to parse expiry time: {}, error: {}",
+                response.expires_in,
+                e
+            )
+        })?;
         // Set the expiry time to 3 seconds before the actual expiry time
         self.expiry_at = Some(chrono::Utc::now().timestamp() + expiry_in - 3);
 
@@ -232,7 +239,7 @@ impl RBClient {
         method: reqwest::Method,
         url: &str,
         json_body: Option<HashMap<String, String>>,
-    ) -> anyhow::Result<T>
+    ) -> ToshoResult<T>
     where
         T: serde::de::DeserializeOwned,
     {
@@ -248,31 +255,10 @@ impl RBClient {
         let response = request.send().await?;
 
         if response.status().is_success() {
-            let response = response.text().await?;
-
-            let json_de = serde_json::from_str::<T>(&response);
-
-            match json_de {
-                Ok(json_de) => Ok(json_de),
-                Err(error) => {
-                    let row_line = error.line() - 1;
-                    let split_lines = &response.split('\n').collect::<Vec<&str>>();
-                    let position = error.column();
-                    let start_index = position.saturating_sub(25); // Start 25 characters before the error position
-                    let end_index = position.saturating_add(25); // End 25 characters after the error position
-                    let excerpt = &split_lines[row_line][start_index..end_index];
-
-                    anyhow::bail!(
-                        "Error parsing JSON at line {}, column {}: {}\nExcerpt: '{}'",
-                        error.line(),
-                        error.column(),
-                        error,
-                        excerpt
-                    )
-                }
-            }
+            let json_de = parse_json_response::<T>(response).await?;
+            Ok(json_de)
         } else {
-            anyhow::bail!("Request failed with status: {}", response.status())
+            Err(ToshoError::from(response.status()))
         }
     }
 
@@ -281,12 +267,12 @@ impl RBClient {
     // <-- UserApiInterface.kt
 
     /// Get the current user account information.
-    pub async fn get_user(&mut self) -> anyhow::Result<UserAccount> {
+    pub async fn get_user(&mut self) -> ToshoResult<UserAccount> {
         self.request(reqwest::Method::GET, "/user/v0", None).await
     }
 
     /// Get the current user reading list.
-    pub async fn get_reading_list(&mut self) -> anyhow::Result<Vec<ReadingListItem>> {
+    pub async fn get_reading_list(&mut self) -> ToshoResult<Vec<ReadingListItem>> {
         self.request(reqwest::Method::GET, "/user/reading_list/v0", None)
             .await
     }
@@ -299,13 +285,13 @@ impl RBClient {
     ///
     /// # Arguments
     /// * `uuid` - The UUID of the manga.
-    pub async fn get_manga(&mut self, uuid: &str) -> anyhow::Result<Manga> {
+    pub async fn get_manga(&mut self, uuid: &str) -> ToshoResult<Manga> {
         self.request(reqwest::Method::GET, &format!("/manga/{}/v0", uuid), None)
             .await
     }
 
     /// Get the manga filters for searching manga.
-    pub async fn get_manga_filters(&mut self) -> anyhow::Result<Manga> {
+    pub async fn get_manga_filters(&mut self) -> ToshoResult<Manga> {
         self.request(reqwest::Method::GET, "/manga/filters/v0", None)
             .await
     }
@@ -314,7 +300,7 @@ impl RBClient {
     ///
     /// # Arguments
     /// * `uuid` - The UUID of the manga.
-    pub async fn get_chapter_list(&mut self, uuid: &str) -> anyhow::Result<ChapterListResponse> {
+    pub async fn get_chapter_list(&mut self, uuid: &str) -> ToshoResult<ChapterListResponse> {
         self.request(
             reqwest::Method::GET,
             &format!("/mangas/{}/chapters/v4?order=asc&count=9999&offset=0", uuid),
@@ -327,7 +313,7 @@ impl RBClient {
     ///
     /// # Arguments
     /// * `uuid` - The UUID of the chapter.
-    pub async fn get_chapter(&mut self, uuid: &str) -> anyhow::Result<ChapterDetailsResponse> {
+    pub async fn get_chapter(&mut self, uuid: &str) -> ToshoResult<ChapterDetailsResponse> {
         self.request(
             reqwest::Method::GET,
             &format!("/chapters/{}/v2", uuid),
@@ -343,7 +329,7 @@ impl RBClient {
     pub async fn get_chapter_viewer(
         &mut self,
         uuid: &str,
-    ) -> anyhow::Result<ChapterPageDetailsResponse> {
+    ) -> ToshoResult<ChapterPageDetailsResponse> {
         self.request(
             reqwest::Method::GET,
             &format!("/chapters/{}/pages/v1", uuid),
@@ -365,7 +351,7 @@ impl RBClient {
         offset: Option<u32>,
         count: Option<u32>,
         sort: Option<SortOption>,
-    ) -> anyhow::Result<MangaListResponse> {
+    ) -> ToshoResult<MangaListResponse> {
         let offset = offset.unwrap_or(0);
         let count = count.unwrap_or(999);
         let sort = sort.unwrap_or(SortOption::Alphabetical);
@@ -384,7 +370,7 @@ impl RBClient {
     }
 
     /// Get the home page information.
-    pub async fn get_home_page(&mut self) -> anyhow::Result<HomeResponse> {
+    pub async fn get_home_page(&mut self) -> ToshoResult<HomeResponse> {
         self.request(reqwest::Method::GET, "/home/v0", None).await
     }
 
@@ -392,7 +378,7 @@ impl RBClient {
     ///
     /// # Arguments
     /// * `slug` - The slug of the publisher.
-    pub async fn get_publisher(&mut self, slug: &str) -> anyhow::Result<Publisher> {
+    pub async fn get_publisher(&mut self, slug: &str) -> ToshoResult<Publisher> {
         self.request(
             reqwest::Method::GET,
             &format!("/publisher/slug/{}/v0", slug),
@@ -407,24 +393,28 @@ impl RBClient {
     ///
     /// # Arguments
     /// * `url` - The URL to modify.
-    pub fn modify_url_for_highres(url: &str) -> anyhow::Result<String> {
-        let mut parsed_url = url.parse::<reqwest::Url>()?;
+    pub fn modify_url_for_highres(url: &str) -> ToshoResult<String> {
+        let mut parsed_url = url
+            .parse::<reqwest::Url>()
+            .map_err(|e| ToshoError::new(format!("Failed to parse URL: {}, error: {}", url, e)))?;
 
         // Formatted: https://{hostname}/{uuid}/{img_res}.[jpg/webp]
         let path = parsed_url.path();
         let mut path_split = path.split('/').collect::<Vec<&str>>();
         let last_part = match path_split.pop() {
             Some(last_part) => last_part,
-            None => anyhow::bail!("Invalid URL path: {}", path),
+            None => return Err(ToshoError::new(format!("Invalid URL path: {}", path))),
         };
 
         let filename = last_part.split_once('.');
         let (_, extension) = match filename {
             Some((filename, extension)) => (filename, extension),
-            None => anyhow::bail!(
-                "Invalid filename: {}, expected something like 0000.jpg",
-                last_part
-            ),
+            None => {
+                return Err(ToshoError::new(format!(
+                    "Invalid filename: {}, expected something like 0000.jpg",
+                    last_part
+                )))
+            }
         };
 
         let hi_res = format!("2000.{}", extension);
@@ -445,7 +435,7 @@ impl RBClient {
         &self,
         url: &str,
         mut writer: impl io::AsyncWrite + Unpin,
-    ) -> anyhow::Result<()> {
+    ) -> ToshoResult<()> {
         let res = self
             .inner
             .get(url)
@@ -466,37 +456,37 @@ impl RBClient {
             .await?;
 
         if !res.status().is_success() {
-            anyhow::bail!("Failed to download image: {}", res.status())
-        }
-
-        // Check if we need to decrypt
-        let header_name = &crate::constants::X_DRM_HEADER;
-        let x_drm = res.headers().get(header_name.as_str());
-        let is_drm = match x_drm {
-            Some(x_drm) => x_drm == "true",
-            None => false,
-        };
-
-        let mut stream = res.bytes_stream();
-        while let Some(item) = stream.next().await {
-            let item = item?;
-
-            let dedrmed = if is_drm {
-                decrypt_image(&item)
-            } else {
-                item.to_vec()
+            Err(ToshoError::from(res.status()))
+        } else {
+            // Check if we need to decrypt
+            let header_name = &crate::constants::X_DRM_HEADER;
+            let x_drm = res.headers().get(header_name.as_str());
+            let is_drm = match x_drm {
+                Some(x_drm) => x_drm == "true",
+                None => false,
             };
 
-            writer.write_all(&dedrmed).await?;
-        }
+            let mut stream = res.bytes_stream();
+            while let Some(item) = stream.next().await {
+                let item = item?;
 
-        Ok(())
+                let dedrmed = if is_drm {
+                    decrypt_image(&item)
+                } else {
+                    item.to_vec()
+                };
+
+                writer.write_all(&dedrmed).await?;
+            }
+
+            Ok(())
+        }
     }
 
     /// Try checking if the "hidden" high resolution image is available.
     ///
     /// Give the URL of any image that is requested from the API.
-    pub async fn test_high_res(&self, url: &str) -> anyhow::Result<bool> {
+    pub async fn test_high_res(&self, url: &str) -> ToshoResult<bool> {
         // Do head request to check if the high res image is available
         let url_mod = Self::modify_url_for_highres(url)?;
 
@@ -538,7 +528,7 @@ impl RBClient {
         email: &str,
         password: &str,
         platform: RBPlatform,
-    ) -> anyhow::Result<RBLoginResponse> {
+    ) -> ToshoResult<RBLoginResponse> {
         let constants = crate::constants::get_constants(platform as u8);
 
         let mut headers = reqwest::header::HeaderMap::new();
@@ -605,12 +595,13 @@ impl RBClient {
             .find(|user| user.local_id == verify_resp.local_id);
 
         if goog_user.is_none() {
-            anyhow::bail!(
+            bail_on_error!(
                 "Google user information not found for {}",
                 verify_resp.local_id
             );
         }
 
+        // Guaranteed to be Some
         let goog_user = goog_user.unwrap().clone();
 
         // Step 3: Refresh token
@@ -630,7 +621,13 @@ impl RBClient {
             .json::<crate::models::accounts::google::SecureTokenResponse>()
             .await?;
 
-        let expires_in = secure_token_resp.expires_in.parse::<i64>().unwrap();
+        let expires_in = secure_token_resp.expires_in.parse::<i64>().map_err(|e| {
+            make_error!(
+                "Failed to parse expiry time: {}, error: {}",
+                secure_token_resp.expires_in,
+                e
+            )
+        })?;
         let expiry_at = chrono::Utc::now().timestamp() + expires_in - 3;
 
         // Step 4: Auth with 小豆
