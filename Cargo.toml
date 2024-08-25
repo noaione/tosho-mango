@@ -9,6 +9,7 @@ members = [
     "tosho_rbean",
     "tosho_mplus",
     "tosho_macros",
+    "tosho_common",
 ]
 
 [workspace.package]

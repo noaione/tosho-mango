@@ -1,0 +1,23 @@
+[package]
+name = "tosho-common"
+version = "0.1.0"
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+rust-version.workspace = true
+keywords = ["api", "library"]
+description = "A common shared library used by tosho-* sources crates."
+readme = "./README.md"
+# Do not include tests in crates.io package
+exclude = [
+    "tests/*",
+]
+
+[dependencies]
+reqwest.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+prost.workspace = true
+image.workspace = true
