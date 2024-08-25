@@ -2,6 +2,15 @@
 
 Starting from Rust port of the project, all changes will be put into this file.
 
+## Unreleased
+### Breaking Changes
+- Create a new `Error` type for all sources, this replace `anyhow` error type.
+This should give more consistent error handling across all sources.
+
+### Build
+- Update `reqwest`, and `serde-*`
+- Remove `anyhow` as direct dependency
+
 ## [0.6.1] (2024-08-13)
 ### Changes
 - Fix issue with manual merging `Ctrl+C` handling not working properly
