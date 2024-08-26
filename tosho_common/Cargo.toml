@@ -21,6 +21,7 @@ serde = { workspace = true, optional = true }
 serde_json = { workspace = true, optional = true }
 prost = { workspace = true, optional = true }
 image = { workspace = true, optional = true }
+rand = { workspace = true, optional = true }
 
 [features]
 default = []
@@ -30,5 +31,10 @@ serde = ["dep:serde", "dep:serde_json"]
 protobuf = ["dep:prost"]
 image = ["dep:image"]
 
+# Random generator and stuff
+id-gen = ["dep:rand"]
+
 # All features, used in CLI mainly
-all = ["serde", "protobuf", "image"]
+complete-errors = ["serde", "protobuf", "image"]
+all = ["complete-errors", "id-gen"]
+

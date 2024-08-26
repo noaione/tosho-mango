@@ -67,7 +67,7 @@ use constants::{
     get_constants, API_HOST, APP_NAME, BASE_API, HEADER_NAMES, IMAGE_HOST, MASKED_LOGIN,
 };
 use futures_util::StreamExt;
-use helper::{generate_random_token, ComicPurchase};
+use helper::ComicPurchase;
 use models::{
     APIResult, AccountUserResponse, ComicDiscovery, ComicDiscoveryPaginatedResponse,
     ComicSearchResponse, ComicStatus, StatusResult,
@@ -503,7 +503,7 @@ impl AMClient {
             .default_headers(headers)
             .build()?;
 
-        let secret_token = generate_random_token();
+        let secret_token = tosho_common::generate_random_token(16);
         let temp_config = AMConfig {
             token: secret_token.clone(),
             identifier: "".to_string(),

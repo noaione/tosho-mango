@@ -2503,7 +2503,6 @@ dependencies = [
  "base64",
  "chrono",
  "futures-util",
- "rand",
  "reqwest",
  "reqwest_cookie_store",
  "serde",
@@ -2511,6 +2510,7 @@ dependencies = [
  "sha2",
  "time",
  "tokio",
+ "tosho-common",
  "tosho-macros",
 ]
 
@@ -2520,6 +2520,7 @@ version = "0.1.0"
 dependencies = [
  "image",
  "prost",
+ "rand",
  "reqwest",
  "serde",
  "serde_json",
@@ -2610,7 +2611,6 @@ dependencies = [
  "futures-util",
  "image",
  "kamadak-exif",
- "rand",
  "reqwest",
  "serde",
  "serde_json",

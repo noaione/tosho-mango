@@ -70,7 +70,6 @@ use constants::{
     API_HOST, BASE_API, DATA_APP_ID, HEADER_PIECE, LIB_VERSION, SJ_APP_ID, VALUE_PIECE, VM_APP_ID,
 };
 use futures_util::TryStreamExt;
-use helper::generate_random_token;
 use models::{
     AccountEntitlementsResponse, AccountLoginResponse, MangaAuthResponse, MangaDetail,
     MangaReadMetadataResponse, MangaSeriesResponse, MangaStoreInfo, MangaStoreResponse,
@@ -85,7 +84,6 @@ use tosho_common::{
 
 pub mod config;
 pub mod constants;
-pub(crate) mod helper;
 pub mod imaging;
 pub mod models;
 
@@ -583,7 +581,10 @@ fn common_data_hashmap(
         data.insert("instance_id".to_string(), config.instance.clone());
         data.insert("device_token".to_string(), config.instance.clone());
     } else {
-        data.insert("instance_id".to_string(), generate_random_token());
+        data.insert(
+            "instance_id".to_string(),
+            tosho_common::generate_random_token(16),
+        );
     }
     data.insert("device_id".to_string(), constants.device_id.to_string());
     data.insert("version".to_string(), LIB_VERSION.to_string());

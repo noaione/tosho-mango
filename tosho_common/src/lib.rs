@@ -1,8 +1,12 @@
 #![doc = include_str!("../README.md")]
 pub mod errors;
+#[cfg(feature = "id-gen")]
+pub mod generator;
 pub mod parser;
 
 pub use errors::*;
+#[cfg(feature = "id-gen")]
+pub use generator::*;
 pub use parser::*;
 
 /// Create a [`ToshoError`] with the formatted string and return it.
