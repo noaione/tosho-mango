@@ -16,9 +16,7 @@
 use std::io::Cursor;
 
 use image::{GenericImage, GenericImageView, ImageEncoder};
-use tosho_common::{
-    bail_on_error, ToshoDetailedImageError, ToshoError, ToshoImageError, ToshoResult,
-};
+use tosho_common::{bail_on_error, ToshoDetailedImageError, ToshoImageError, ToshoResult};
 
 fn u32_to_f32(n: u32) -> f32 {
     if n > i32::MAX as u32 {
@@ -141,7 +139,7 @@ pub fn descramble_image(
                             dest_y
                         ),
                     );
-                    ToshoError::ImageError(ToshoImageError::ImageError(e_img))
+                    ToshoImageError::ImageError(e_img)
                 })?;
             }
 

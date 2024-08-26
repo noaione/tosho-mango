@@ -4,13 +4,13 @@
 
 A minimal asynchronous client for the SJ API by V.
 
-The following crate is used by the [`tosho`][tosho crates] app.
+The following crate is used by the [`tosho`](https://crates.io/crates/tosho) app.
 
 ## Usage
 
-Download the [`tosho`][tosho crates] app, or you can utilize this crate like any other Rust crate:
+Download the [`tosho`](https://crates.io/crates/tosho) app, or you can utilize this crate like any other Rust crate:
 
-```rust
+```rust,no_run
 use tosho_sjv::{SJClient, SJConfig, SJMode, SJPlatform};
 
 #[tokio::main]
@@ -22,7 +22,7 @@ async fn main() {
         platform: SJPlatform::Android,
     };
 
-    let client = SJClient::new(config, SJMode::VM);
+    let client = SJClient::new(config, SJMode::VM).unwrap();
     let manga = client.get_manga(vec![777]).await.unwrap();
     println!("{:?}", manga);
 }
@@ -38,7 +38,7 @@ $ tosho sj auth email password --help
 
 Or, if you use the crates:
 
-```rust
+```rust,no_run
 use tosho_sjv::{SJClient, SJConfig, SJMode, SJPlatform};
 
 #[tokio::main]
@@ -48,7 +48,7 @@ async fn main() {
     let config = SJConfig::from_login_response(&account, instance_id, SJPlatform::Android);
 
     // Do stuff
-    let client = SJClient::new(config, SJMode::SJ);
+    let client = SJClient::new(config, SJMode::SJ).unwrap();
 }
 ```
 
@@ -60,6 +60,4 @@ We're not responsible if your account got deactivated.
 
 ## License
 
-This project is licensed with MIT License ([LICENSE](https://github.com/noaione/tosho-mango/blob/master/LICENSE) or http://opensource.org/licenses/MIT)
-
-[tosho crates]: https://crates.io/crates/tosho
+This project is licensed with MIT License ([LICENSE](https://github.com/noaione/tosho-mango/blob/master/LICENSE) or <http://opensource.org/licenses/MIT>)

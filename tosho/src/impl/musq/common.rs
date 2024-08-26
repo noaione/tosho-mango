@@ -1,6 +1,6 @@
 use color_print::cformat;
 use num_format::{Locale, ToFormattedString};
-use tosho_common::{ToshoError, ToshoResult};
+use tosho_common::{make_error, ToshoResult};
 use tosho_musq::{
     constants::BASE_HOST,
     proto::{BadgeManga, ChapterV2, LabelBadgeManga, MangaDetailV2, MangaResultNode, UserPoint},
@@ -162,7 +162,7 @@ pub(super) async fn common_purchase_select(
                 None => {
                     console.warn("Aborted");
                     (
-                        Err(ToshoError::new("Aborted by user")),
+                        Err(make_error!("Aborted by user")),
                         Some(result.clone()),
                         Some(user_bal),
                     )

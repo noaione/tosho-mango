@@ -79,13 +79,9 @@ pub fn descramble_image(img_bytes: &[u8]) -> ToshoResult<Vec<u8>> {
 
     let metadata = exif_meta.get_field(exif::Tag::ImageUniqueID, exif::In::PRIMARY);
 
-    if metadata.is_none() {
-        bail_on_error!("ImageUniqueID not found in EXIF metadata");
-    }
-
     // Guaranteed to be Some because of the check above
     let img_unique_id = metadata
-        .unwrap()
+        .ok_or_else(|| make_error!("ImageUniqueID not found in EXIF metadata"))?
         .value
         .display_as(exif::Tag::ImageUniqueID)
         .to_string();

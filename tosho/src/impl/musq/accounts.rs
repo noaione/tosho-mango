@@ -87,18 +87,25 @@ pub(crate) async fn musq_auth_session(
         config.apply_id(&old_id);
     }
 
-    let client = crate::r#impl::client::make_musq_client(&config);
-    let account = client.get_account().await;
+    match crate::r#impl::client::make_musq_client(&config) {
+        Ok(client) => {
+            let account = client.get_account().await;
 
-    match account {
-        Ok(_) => {
-            // save config
-            console.info("Authentication successful! Saving config...");
-            save_config(crate::config::ConfigImpl::Musq(config), None);
-            0
+            match account {
+                Ok(_) => {
+                    // save config
+                    console.info("Authentication successful! Saving config...");
+                    save_config(crate::config::ConfigImpl::Musq(config), None);
+                    0
+                }
+                Err(e) => {
+                    console.error(&format!("Authentication failed: {}", e));
+                    1
+                }
+            }
         }
         Err(e) => {
-            console.error(&format!("Authentication failed: {}", e));
+            console.error(&format!("Failed to create client: {}", e));
             1
         }
     }

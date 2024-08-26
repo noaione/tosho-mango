@@ -14,6 +14,10 @@ pub use parser::*;
 /// This will use [`ToshoError::CommonError`] type to create the error.
 #[macro_export]
 macro_rules! make_error {
+    // If user only pass a string, then just return the string
+    ($arg:expr) => {
+        $crate::ToshoError::new($arg.to_string())
+    };
     // Accept string that can be formatted, then also accept a list of arguments
     ($($arg:tt)*) => {
         // Return a ToshoError::Error with the formatted string

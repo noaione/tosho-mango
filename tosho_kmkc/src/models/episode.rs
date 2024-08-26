@@ -90,11 +90,18 @@ impl ImagePageNode {
     /// ```
     pub fn file_name(&self) -> String {
         let url = self.url.as_str();
-        let index = url.rfind('/').unwrap();
-        let file_part = &url[index + 1..];
-        // remove ?v=...
-        let index = file_part.find('?').unwrap_or(file_part.len());
-        file_part[..index].to_owned()
+        match url.rfind('/') {
+            Some(index) => {
+                let file_part = &url[index + 1..];
+                // remove ?v=...
+                let index = file_part.find('?').unwrap_or(file_part.len());
+                file_part[..index].to_string()
+            }
+            None => {
+                // Ignore the URL and just return the index
+                url.to_string()
+            }
+        }
     }
 
     /// The file extension of the image.

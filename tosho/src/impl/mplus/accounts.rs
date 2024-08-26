@@ -83,36 +83,42 @@ pub(crate) async fn mplus_auth_session(
         config = config.with_id(&old_id);
     }
 
-    let client =
-        crate::r#impl::client::make_mplus_client(&config, tosho_mplus::proto::Language::English);
-    let account = client.get_user_profile().await;
+    match crate::r#impl::client::make_mplus_client(&config, tosho_mplus::proto::Language::English) {
+        Ok(client) => {
+            let account = client.get_user_profile().await;
 
-    match account {
-        Ok(tosho_mplus::APIResponse::Success(account_resp)) => {
-            let mut final_config = config.clone();
+            match account {
+                Ok(tosho_mplus::APIResponse::Success(account_resp)) => {
+                    let mut final_config = config.clone();
 
-            if let Some(username) = account_resp.user_name {
-                if !username.is_empty() {
-                    final_config = final_config.with_username(&username);
+                    if let Some(username) = account_resp.user_name {
+                        if !username.is_empty() {
+                            final_config = final_config.with_username(&username);
+                        }
+                    }
+
+                    console.info(&cformat!(
+                        "Authenticated as <m,b>{}</> (<s>{}</>)",
+                        final_config.username.as_ref().unwrap_or(&final_config.id),
+                        final_config.r#type().to_name()
+                    ));
+
+                    save_config(crate::config::ConfigImpl::Mplus(final_config), None);
+
+                    0
+                }
+                Ok(tosho_mplus::APIResponse::Error(e)) => {
+                    console.error(&format!("Authentication failed: {}", e.as_string()));
+                    1
+                }
+                Err(e) => {
+                    console.error(&format!("Authentication failed: {}", e));
+                    1
                 }
             }
-
-            console.info(&cformat!(
-                "Authenticated as <m,b>{}</> (<s>{}</>)",
-                final_config.username.as_ref().unwrap_or(&final_config.id),
-                final_config.r#type().to_name()
-            ));
-
-            save_config(crate::config::ConfigImpl::Mplus(final_config), None);
-
-            0
-        }
-        Ok(tosho_mplus::APIResponse::Error(e)) => {
-            console.error(&format!("Authentication failed: {}", e.as_string()));
-            1
         }
         Err(e) => {
-            console.error(&format!("Authentication failed: {}", e));
+            console.error(&format!("Failed to create client: {}", e));
             1
         }
     }

@@ -15,6 +15,7 @@ use std::sync::LazyLock;
 use base64::{engine::general_purpose, Engine as _};
 use reqwest::Url;
 use reqwest_cookie_store::{CookieStoreMutex, RawCookie};
+use tosho_common::{make_error, ToshoError};
 
 use crate::constants::BASE_HOST;
 
@@ -39,10 +40,18 @@ pub struct AMConfig {
     pub session_v2: String,
 }
 
-impl From<AMConfig> for reqwest_cookie_store::CookieStore {
-    fn from(value: AMConfig) -> Self {
+impl TryFrom<AMConfig> for reqwest_cookie_store::CookieStore {
+    type Error = ToshoError;
+
+    fn try_from(value: AMConfig) -> Result<Self, Self::Error> {
         let mut store = reqwest_cookie_store::CookieStore::default();
-        let base_host_url = Url::parse(&format!("https://{}", &*BASE_HOST)).unwrap();
+        let base_host_url = Url::parse(&format!("https://{}", &*BASE_HOST)).map_err(|e| {
+            make_error!(
+                "Failed to parse base host URL of https://{}: {}",
+                &*BASE_HOST,
+                e
+            )
+        })?;
 
         let session_cookie = RawCookie::build((&*SESSION_COOKIE_NAME, value.session_v2))
             .domain(&*BASE_HOST)
@@ -50,14 +59,25 @@ impl From<AMConfig> for reqwest_cookie_store::CookieStore {
             .path("/")
             .build();
 
-        store.insert_raw(&session_cookie, &base_host_url).unwrap();
         store
+            .insert_raw(&session_cookie, &base_host_url)
+            .map_err(|e| {
+                make_error!(
+                    "Failed to insert session cookie of `{}` in `{}` into store: {}",
+                    &session_cookie,
+                    &base_host_url,
+                    e
+                )
+            })?;
+        Ok(store)
     }
 }
 
-impl From<AMConfig> for CookieStoreMutex {
-    fn from(value: AMConfig) -> Self {
-        let store: reqwest_cookie_store::CookieStore = value.into();
-        CookieStoreMutex::new(store)
+impl TryFrom<AMConfig> for CookieStoreMutex {
+    type Error = ToshoError;
+
+    fn try_from(value: AMConfig) -> Result<Self, Self::Error> {
+        let store: reqwest_cookie_store::CookieStore = value.try_into()?;
+        Ok(CookieStoreMutex::new(store))
     }
 }

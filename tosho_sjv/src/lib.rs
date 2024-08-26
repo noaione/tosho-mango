@@ -79,7 +79,7 @@ use std::collections::HashMap;
 use tokio::io::{self, AsyncWriteExt};
 use tosho_common::{
     bail_on_error, make_error, parse_json_response, parse_json_response_failable, ToshoAuthError,
-    ToshoError, ToshoResult,
+    ToshoClientError, ToshoError, ToshoResult,
 };
 
 pub mod config;
@@ -123,7 +123,7 @@ impl SJClient {
     /// # Parameters
     /// * `config` - The configuration to use for the client.
     /// * `mode` - The mode to use for the client.
-    pub fn new(config: SJConfig, mode: SJMode) -> Self {
+    pub fn new(config: SJConfig, mode: SJMode) -> ToshoResult<Self> {
         Self::make_client(config, mode, None)
     }
 
@@ -133,11 +133,15 @@ impl SJClient {
     ///
     /// # Arguments
     /// * `proxy` - The proxy to attach to the client
-    pub fn with_proxy(&self, proxy: reqwest::Proxy) -> Self {
+    pub fn with_proxy(&self, proxy: reqwest::Proxy) -> ToshoResult<Self> {
         Self::make_client(self.config.clone(), self.mode, Some(proxy))
     }
 
-    fn make_client(config: SJConfig, mode: SJMode, proxy: Option<reqwest::Proxy>) -> Self {
+    fn make_client(
+        config: SJConfig,
+        mode: SJMode,
+        proxy: Option<reqwest::Proxy>,
+    ) -> ToshoResult<Self> {
         let constants = crate::constants::get_constants(config.platform as u8);
         let mut headers = reqwest::header::HeaderMap::new();
         headers.insert(
@@ -154,13 +158,15 @@ impl SJClient {
         };
         headers.insert(
             reqwest::header::REFERER,
-            reqwest::header::HeaderValue::from_str(referer).unwrap(),
+            reqwest::header::HeaderValue::from_static(referer),
         );
 
         let x_header = format!("{} {}", constants.app_ver, &*VALUE_PIECE);
         headers.insert(
             reqwest::header::HeaderName::from_static(&HEADER_PIECE),
-            reqwest::header::HeaderValue::from_str(&x_header).unwrap(),
+            reqwest::header::HeaderValue::from_str(&x_header).map_err(|_| {
+                ToshoClientError::HeaderParseError(format!("Header piece of {}", &x_header))
+            })?,
         );
 
         let client = reqwest::Client::builder()
@@ -169,16 +175,19 @@ impl SJClient {
             .default_headers(headers);
 
         let client = match proxy {
-            Some(proxy) => client.proxy(proxy).build().unwrap(),
-            None => client.build().unwrap(),
-        };
+            Some(proxy) => client
+                .proxy(proxy)
+                .build()
+                .map_err(ToshoClientError::BuildError),
+            None => client.build().map_err(ToshoClientError::BuildError),
+        }?;
 
-        Self {
+        Ok(Self {
             inner: client,
             config,
             constants,
             mode,
-        }
+        })
     }
 
     /// Return the mode of the client.
@@ -391,14 +400,18 @@ impl SJClient {
         let response = self.get_manga_url(id, true, None).await?;
         let url_parse = reqwest::Url::parse(&response)
             .map_err(|e| make_error!("Failed to parse URL: {} ({})", response, e))?;
-        let host = url_parse.host_str().unwrap();
+        let host = url_parse
+            .host_str()
+            .ok_or_else(|| make_error!("Failed to get host from URL: {}", url_parse.as_str()))?;
 
         let metadata_resp = self
             .inner
             .get(response)
             .header(
                 reqwest::header::HOST,
-                reqwest::header::HeaderValue::from_str(host).unwrap(),
+                reqwest::header::HeaderValue::from_str(host).map_err(|_| {
+                    ToshoClientError::HeaderParseError(format!("Host for {}", host))
+                })?,
             )
             .send()
             .await?;
@@ -440,14 +453,18 @@ impl SJClient {
     ) -> ToshoResult<()> {
         let url_parse = reqwest::Url::parse(url)
             .map_err(|e| make_error!("Failed to parse URL: {} ({})", url, e))?;
-        let host = url_parse.host_str().unwrap();
+        let host = url_parse
+            .host_str()
+            .ok_or_else(|| make_error!("Failed to get host from URL: {}", url_parse.as_str()))?;
 
         let res = self
             .inner
             .get(url)
             .header(
                 reqwest::header::HOST,
-                reqwest::header::HeaderValue::from_str(host).unwrap(),
+                reqwest::header::HeaderValue::from_str(host).map_err(|_| {
+                    ToshoClientError::HeaderParseError(format!("Host for {}", host))
+                })?,
             )
             .send()
             .await?;
@@ -521,20 +538,23 @@ impl SJClient {
         };
         headers.insert(
             reqwest::header::REFERER,
-            reqwest::header::HeaderValue::from_str(referer).unwrap(),
+            reqwest::header::HeaderValue::from_static(referer),
         );
 
         let x_header = format!("{} {}", constants.app_ver, &*VALUE_PIECE);
         headers.insert(
             reqwest::header::HeaderName::from_static(&HEADER_PIECE),
-            reqwest::header::HeaderValue::from_str(&x_header).unwrap(),
+            reqwest::header::HeaderValue::from_str(&x_header).map_err(|_| {
+                ToshoClientError::HeaderParseError(format!("Header piece of {}", &x_header))
+            })?,
         );
 
         let client = reqwest::Client::builder()
             .http2_adaptive_window(true)
             .use_rustls_tls()
             .default_headers(headers)
-            .build()?;
+            .build()
+            .map_err(ToshoClientError::BuildError)?;
 
         let mut data = common_data_hashmap(constants, &mode, None);
         data.insert("login".to_string(), email.to_string());
@@ -555,8 +575,7 @@ impl SJClient {
             .form(&data)
             .header(
                 reqwest::header::CONTENT_TYPE,
-                reqwest::header::HeaderValue::from_str("application/x-www-form-urlencoded")
-                    .unwrap(),
+                reqwest::header::HeaderValue::from_static("application/x-www-form-urlencoded"),
             )
             .send()
             .await?;

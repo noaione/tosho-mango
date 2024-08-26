@@ -20,6 +20,8 @@ pub enum ToshoError {
     ImageError(ToshoImageError),
     /// Error type that happens when doing any kind of IO operation (e.g. writing a file)
     IOError(std::io::Error),
+    /// Error type that happens when creating new Client instance
+    ClientError(ToshoClientError),
     /// Other errors that doesn't fit the other categories
     CommonError(String),
 }
@@ -149,6 +151,9 @@ pub enum ToshoParseError {
     /// Failed to parse the response as JSON
     #[cfg(feature = "serde")]
     SerdeDetailedError(ToshoDetailedParseError),
+    /// A passthrough error of [`serde_json::Error`]
+    #[cfg(feature = "serde")]
+    SerdeMinimalError(serde_json::Error),
     /// A failable error when parsing the response as JSON
     #[cfg(feature = "serde")]
     SerdeFailableError(ToshoDetailedFailableError),
@@ -161,6 +166,18 @@ pub enum ToshoParseError {
     ExpectedResponse(String),
     /// Invalid status code
     InvalidStatusCode(reqwest::StatusCode),
+}
+
+impl ToshoParseError {
+    /// Create a new instance of the error for [`ToshoParseError::ExpectedResponse`]
+    pub fn expect(response: impl Into<String>) -> ToshoError {
+        ToshoParseError::ExpectedResponse(response.into()).into()
+    }
+
+    /// Create a new instance of the error for [`ToshoParseError::EmptyResponse`]
+    pub fn empty() -> ToshoError {
+        ToshoParseError::EmptyResponse.into()
+    }
 }
 
 /// Error type that happens when processing images
@@ -229,6 +246,15 @@ pub enum ToshoAuthError {
     CommonError(String),
 }
 
+/// Error type that happens when creating new Client instance
+#[derive(Debug)]
+pub enum ToshoClientError {
+    /// Build error, this just wraps [`reqwest::Error`]
+    BuildError(reqwest::Error),
+    /// Fails when parsing into HTTP headers
+    HeaderParseError(String),
+}
+
 impl From<reqwest::Error> for ToshoError {
     fn from(value: reqwest::Error) -> Self {
         ToshoError::RequestError(value)
@@ -290,6 +316,13 @@ impl From<image::ImageError> for ToshoError {
     }
 }
 
+#[cfg(feature = "serde")]
+impl From<serde_json::Error> for ToshoError {
+    fn from(value: serde_json::Error) -> Self {
+        ToshoParseError::SerdeMinimalError(value).into()
+    }
+}
+
 impl From<ToshoParseError> for ToshoError {
     fn from(value: ToshoParseError) -> Self {
         ToshoError::ParseError(value)
@@ -308,6 +341,12 @@ impl From<ToshoAuthError> for ToshoError {
     }
 }
 
+impl From<ToshoClientError> for ToshoError {
+    fn from(value: ToshoClientError) -> Self {
+        ToshoError::ClientError(value)
+    }
+}
+
 impl std::fmt::Display for ToshoError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -316,6 +355,7 @@ impl std::fmt::Display for ToshoError {
             ToshoError::ParseError(e) => write!(f, "Failed to parse response, {}", e),
             ToshoError::ImageError(e) => write!(f, "Image error: {}", e),
             ToshoError::IOError(e) => write!(f, "IO error: {}", e),
+            ToshoError::ClientError(e) => write!(f, "Client error: {}", e),
             ToshoError::AuthError(e) => write!(f, "Authentication error: {}", e),
         }
     }
@@ -328,6 +368,8 @@ impl std::fmt::Display for ToshoParseError {
             ToshoParseError::SerdeDetailedError(e) => write!(f, "{}", e),
             #[cfg(feature = "serde")]
             ToshoParseError::SerdeFailableError(e) => write!(f, "{}", e),
+            #[cfg(feature = "serde")]
+            ToshoParseError::SerdeMinimalError(e) => write!(f, "failed to decode JSON data: {}", e),
             #[cfg(feature = "protobuf")]
             ToshoParseError::ProstError(e) => write!(f, "failed to decode protobuf data: {}", e),
             ToshoParseError::EmptyResponse => write!(f, "empty response received"),
@@ -367,3 +409,14 @@ impl std::fmt::Display for ToshoAuthError {
         }
     }
 }
+
+impl std::fmt::Display for ToshoClientError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ToshoClientError::BuildError(e) => write!(f, "Failed to build client: {}", e),
+            ToshoClientError::HeaderParseError(e) => write!(f, "Failed to parse headers: {}", e),
+        }
+    }
+}
+
+impl std::error::Error for ToshoError {}

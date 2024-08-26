@@ -105,7 +105,7 @@ use sha2::{Digest, Sha256, Sha512};
 use tokio::io::AsyncWriteExt;
 use tosho_common::{
     bail_on_error, make_error, parse_json_response, parse_json_response_failable, ToshoAuthError,
-    ToshoResult,
+    ToshoClientError, ToshoResult,
 };
 
 /// Login result for the API.
@@ -151,7 +151,7 @@ impl KMClient {
     ///
     /// # Arguments
     /// * `config` - The config to use for the client
-    pub fn new(config: KMConfig) -> Self {
+    pub fn new(config: KMConfig) -> ToshoResult<Self> {
         Self::make_client(config, None)
     }
 
@@ -161,12 +161,12 @@ impl KMClient {
     ///
     /// # Arguments
     /// * `proxy` - The proxy to attach to the client
-    pub fn with_proxy(&self, proxy: reqwest::Proxy) -> Self {
+    pub fn with_proxy(&self, proxy: reqwest::Proxy) -> ToshoResult<Self> {
         Self::make_client(self.config.clone(), Some(proxy))
     }
 
     /// Internal function to create new client.
-    fn make_client(config: KMConfig, proxy: Option<reqwest::Proxy>) -> Self {
+    fn make_client(config: KMConfig, proxy: Option<reqwest::Proxy>) -> ToshoResult<Self> {
         let mut headers = reqwest::header::HeaderMap::new();
         headers.insert(
             reqwest::header::ACCEPT,
@@ -180,10 +180,10 @@ impl KMClient {
             KMConfig::Web(web) => {
                 headers.insert(
                     reqwest::header::USER_AGENT,
-                    reqwest::header::HeaderValue::from_str(&WEB_CONSTANTS.ua).unwrap(),
+                    reqwest::header::HeaderValue::from_static(&WEB_CONSTANTS.ua),
                 );
 
-                let cookie_store = CookieStoreMutex::from(web.clone());
+                let cookie_store = CookieStoreMutex::try_from(web.clone())?;
                 let cookie_store = std::sync::Arc::new(cookie_store);
 
                 // make cookie store
@@ -194,16 +194,19 @@ impl KMClient {
                     .cookie_provider(std::sync::Arc::clone(&cookie_store));
 
                 let client = match proxy {
-                    Some(proxy) => client.proxy(proxy).build().unwrap(),
-                    None => client.build().unwrap(),
-                };
+                    Some(proxy) => client
+                        .proxy(proxy)
+                        .build()
+                        .map_err(ToshoClientError::BuildError),
+                    None => client.build().map_err(ToshoClientError::BuildError),
+                }?;
 
-                Self {
+                Ok(Self {
                     inner: client,
                     config: KMConfig::Web(web),
                     constants: get_constants(3),
                     cookie_store,
-                }
+                })
             }
             KMConfig::Mobile(mobile) => {
                 let consts = get_constants(mobile.platform.clone() as u8);
@@ -222,16 +225,19 @@ impl KMClient {
                     .cookie_provider(std::sync::Arc::clone(&cookie_store));
 
                 let client = match proxy {
-                    Some(proxy) => client.proxy(proxy).build().unwrap(),
-                    None => client.build().unwrap(),
-                };
+                    Some(proxy) => client
+                        .proxy(proxy)
+                        .build()
+                        .map_err(ToshoClientError::BuildError),
+                    None => client.build().map_err(ToshoClientError::BuildError),
+                }?;
 
-                Self {
+                Ok(Self {
                     inner: client,
                     config: KMConfig::Mobile(mobile),
                     constants: consts,
                     cookie_store,
-                }
+                })
             }
         }
     }
@@ -249,7 +255,7 @@ impl KMClient {
         }
     }
 
-    fn format_request(&self, query_params: &mut HashMap<String, String>) -> String {
+    fn format_request(&self, query_params: &mut HashMap<String, String>) -> ToshoResult<String> {
         self.apply_query_params(query_params);
 
         create_request_hash(&self.config, query_params.clone())
@@ -290,16 +296,16 @@ impl KMClient {
         let hash_header = self.constants.hash.as_str();
 
         let hash_value = match data.clone() {
-            Some(mut data) => self.format_request(&mut data),
+            Some(mut data) => self.format_request(&mut data)?,
             None => match params.clone() {
-                Some(mut params) => self.format_request(&mut params),
+                Some(mut params) => self.format_request(&mut params)?,
                 None => "".to_string(),
             },
         };
 
         let mut empty_params: HashMap<String, String> = HashMap::new();
         let mut empty_headers = reqwest::header::HeaderMap::new();
-        let empty_hash = self.format_request(&mut empty_params);
+        let empty_hash = self.format_request(&mut empty_params)?;
 
         empty_headers.insert(
             hash_header,
@@ -323,7 +329,7 @@ impl KMClient {
             (Some(mut data), None) => {
                 extend_headers.insert(
                     reqwest::header::CONTENT_TYPE,
-                    "application/x-www-form-urlencoded".parse().unwrap(),
+                    reqwest::header::HeaderValue::from_static("application/x-www-form-urlencoded"),
                 );
                 self.apply_query_params(&mut data);
                 self.inner
@@ -898,7 +904,8 @@ impl KMClient {
         );
 
         let default_web = KMConfigWeb::default();
-        let cookie_store = reqwest_cookie_store::CookieStoreMutex::new(default_web.clone().into());
+        let cookie_store =
+            reqwest_cookie_store::CookieStoreMutex::new(default_web.clone().try_into()?);
         let cookie_store = std::sync::Arc::new(cookie_store);
 
         let client = reqwest::Client::builder()
@@ -906,7 +913,8 @@ impl KMClient {
             .use_rustls_tls()
             .default_headers(headers)
             .cookie_provider(std::sync::Arc::clone(&cookie_store))
-            .build()?;
+            .build()
+            .map_err(ToshoClientError::BuildError)?;
 
         // Perform web login
         let mut req_data = HashMap::new();
@@ -916,12 +924,12 @@ impl KMClient {
         req_data.insert("version".to_string(), WEB_CONSTANTS.version.to_string());
 
         // hash
-        let req_hash = create_request_hash(&KMConfig::Web(default_web.clone()), req_data.clone());
+        let req_hash = create_request_hash(&KMConfig::Web(default_web.clone()), req_data.clone())?;
 
         let mut extend_headers = reqwest::header::HeaderMap::new();
         extend_headers.insert(
             reqwest::header::CONTENT_TYPE,
-            "application/x-www-form-urlencoded".parse().unwrap(),
+            reqwest::header::HeaderValue::from_static("application/x-www-form-urlencoded"),
         );
         extend_headers.insert(
             WEB_CONSTANTS.hash.as_str(),
@@ -944,29 +952,31 @@ impl KMClient {
             );
         }
 
-        let unparse_web = KMConfigWeb::from(cookie_store.lock().unwrap().clone());
+        let unparse_web = KMConfigWeb::try_from(cookie_store.lock().unwrap().clone())?;
         // Get account info
-        let km_client = KMClient::new(KMConfig::Web(unparse_web.clone()));
+        let km_client = KMClient::new(KMConfig::Web(unparse_web.clone()))?;
         let account = km_client.get_account().await?;
 
-        if mobile_platform.is_none() {
-            return Ok(KMLoginResult {
+        match mobile_platform {
+            Some(platform) => {
+                // Authenticate as mobile
+                let user_info = km_client.get_user(account.user_id).await?;
+
+                Ok(KMLoginResult {
+                    config: KMConfig::Mobile(KMConfigMobile {
+                        user_id: user_info.id.to_string(),
+                        hash_key: user_info.hash_key.clone(),
+                        // Guaranteed to be Some because we checked it above
+                        platform,
+                    }),
+                    account,
+                })
+            }
+            None => Ok(KMLoginResult {
                 config: KMConfig::Web(unparse_web),
                 account,
-            });
-        }
-
-        // Authenticate as mobile
-        let user_info = km_client.get_user(account.user_id).await?;
-
-        Ok(KMLoginResult {
-            config: KMConfig::Mobile(KMConfigMobile {
-                user_id: user_info.id.to_string(),
-                hash_key: user_info.hash_key.clone(),
-                platform: mobile_platform.unwrap(),
             }),
-            account,
-        })
+        }
     }
 }
 
@@ -974,7 +984,10 @@ impl KMClient {
 ///
 /// # Arguments
 /// * `query_params` - The query params to hash
-fn create_request_hash(config: &KMConfig, query_params: HashMap<String, String>) -> String {
+fn create_request_hash(
+    config: &KMConfig,
+    query_params: HashMap<String, String>,
+) -> ToshoResult<String> {
     match config {
         KMConfig::Web(web) => {
             let birthday = &web.birthday.value;
@@ -986,7 +999,9 @@ fn create_request_hash(config: &KMConfig, query_params: HashMap<String, String>)
 
             let mut qi_s: Vec<String> = vec![];
             for key in keys {
-                let value = query_params.get(key).unwrap();
+                let value = query_params.get(key).ok_or_else(|| {
+                    make_error!("Key {} not found when hashing query params", key)
+                })?;
                 let hashed = hash_kv(key, value);
                 qi_s.push(hashed);
             }
@@ -998,7 +1013,7 @@ fn create_request_hash(config: &KMConfig, query_params: HashMap<String, String>)
                 format!("{:x}{}", qi_s_hashed, birth_expire_hash).as_bytes(),
             );
 
-            format!("{:x}", merged_hash)
+            Ok(format!("{:x}", merged_hash))
         }
         KMConfig::Mobile(mobile) => {
             let mut hasher = <Sha256 as Digest>::new();
@@ -1013,7 +1028,9 @@ fn create_request_hash(config: &KMConfig, query_params: HashMap<String, String>)
             keys.sort();
 
             for key in keys {
-                let value = query_params.get(key).unwrap();
+                let value = query_params.get(key).ok_or_else(|| {
+                    make_error!("Key {} not found when hashing query params", key)
+                })?;
                 let hashed_value = <Md5 as Digest>::digest(value.as_bytes());
                 let hash_digest = format!("{:x}", hashed_value);
 
@@ -1021,7 +1038,7 @@ fn create_request_hash(config: &KMConfig, query_params: HashMap<String, String>)
             }
 
             let hashed = hasher.finalize();
-            format!("{:x}", hashed)
+            Ok(format!("{:x}", hashed))
         }
     }
 }

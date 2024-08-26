@@ -85,7 +85,10 @@ pub use helper::ImageQuality;
 pub use helper::WeeklyCode;
 use std::collections::HashMap;
 use tokio::io::{self, AsyncWriteExt};
-use tosho_common::{parse_protobuf_response, ToshoError, ToshoResult};
+use tosho_common::{
+    bail_on_error, make_error, parse_protobuf_response, ToshoClientError, ToshoError,
+    ToshoParseError, ToshoResult,
+};
 
 /// Main client for interacting with the SQ MU!
 ///
@@ -114,7 +117,7 @@ impl MUClient {
     /// # Parameters
     /// * `secret` - The secret key to use for the client.
     /// * `constants` - The constants to use for the client.
-    pub fn new(secret: &str, constants: &'static Constants) -> Self {
+    pub fn new(secret: &str, constants: &'static Constants) -> ToshoResult<Self> {
         Self::make_client(secret, constants, None)
     }
 
@@ -124,7 +127,7 @@ impl MUClient {
     ///
     /// # Arguments
     /// * `proxy` - The proxy to attach to the client
-    pub fn with_proxy(&self, proxy: reqwest::Proxy) -> Self {
+    pub fn with_proxy(&self, proxy: reqwest::Proxy) -> ToshoResult<Self> {
         Self::make_client(&self.secret, self.constants, Some(proxy))
     }
 
@@ -132,15 +135,12 @@ impl MUClient {
         secret: &str,
         constants: &'static Constants,
         proxy: Option<reqwest::Proxy>,
-    ) -> Self {
+    ) -> ToshoResult<Self> {
         let mut headers = reqwest::header::HeaderMap::new();
-        headers.insert(
-            "Host",
-            reqwest::header::HeaderValue::from_str(&API_HOST).unwrap(),
-        );
+        headers.insert("Host", reqwest::header::HeaderValue::from_static(&API_HOST));
         headers.insert(
             "User-Agent",
-            reqwest::header::HeaderValue::from_str(&constants.api_ua).unwrap(),
+            reqwest::header::HeaderValue::from_static(&constants.api_ua),
         );
 
         let client = reqwest::Client::builder()
@@ -151,15 +151,18 @@ impl MUClient {
             .default_headers(headers);
 
         let client = match proxy {
-            Some(proxy) => client.proxy(proxy).build().unwrap(),
-            None => client.build().unwrap(),
-        };
+            Some(proxy) => client
+                .proxy(proxy)
+                .build()
+                .map_err(ToshoClientError::BuildError),
+            None => client.build().map_err(ToshoClientError::BuildError),
+        }?;
 
-        Self {
+        Ok(Self {
             inner: client,
             secret: secret.to_string(),
             constants,
-        }
+        })
     }
 
     /// Modify the HashMap to add the required parameters.
@@ -324,7 +327,7 @@ impl MUClient {
         let point = self.get_point_shop().await?;
         match point.user_point {
             Some(point) => Ok(point),
-            None => Err(ToshoError::CommonError("User point not found".to_string())),
+            None => Err(ToshoParseError::expect("user point")),
         }
     }
 
@@ -366,10 +369,7 @@ impl MUClient {
         let manga = parse_protobuf_response::<MangaDetailV2>(res).await?;
 
         if manga.status() != Status::Success {
-            Err(ToshoError::new(format!(
-                "Failed to get manga detail: {:?}",
-                manga
-            )))
+            bail_on_error!("Failed to get manga detail: {:?}", manga)
         } else {
             Ok(manga)
         }
@@ -472,10 +472,7 @@ impl MUClient {
         let viewer: ChapterViewerV2 = parse_protobuf_response(res).await?;
 
         if viewer.status() != Status::Success {
-            Err(ToshoError::new(format!(
-                "Failed to get chapter viewer: {:?}",
-                viewer
-            )))
+            bail_on_error!("Failed to get chapter viewer: {:?}", viewer)
         } else {
             Ok(viewer)
         }
@@ -559,20 +556,18 @@ impl MUClient {
                 let valid_host = ::reqwest::Url::parse(
                     format!("https://{}", &*IMAGE_HOST).as_str(),
                 )
-                .map_err(|e| {
-                    ToshoError::new(format!(
-                        "Failed to parse image host: {}: {}",
-                        &*IMAGE_HOST, e
-                    ))
+                .map_err(|e| make_error!("Failed to parse image host: {}: {}", &*IMAGE_HOST, e))?;
+                let host_name = valid_host
+                    .host_str()
+                    .ok_or_else(|| make_error!("Failed to get host from: {}", &valid_host))?;
+                parsed_url.set_host(Some(host_name)).map_err(|e| {
+                    make_error!(
+                        "Failed to replace image host: {} with {}: {}",
+                        url,
+                        &*IMAGE_HOST,
+                        e
+                    )
                 })?;
-                parsed_url
-                    .set_host(Some(valid_host.host_str().unwrap()))
-                    .map_err(|e| {
-                        ToshoError::new(format!(
-                            "Failed to replace image host: {} with {}: {}",
-                            url, &*IMAGE_HOST, e
-                        ))
-                    })?;
 
                 Ok(parsed_url)
             }
@@ -580,10 +575,7 @@ impl MUClient {
                 // parse url failed, assume it's a relative path
                 let full_url = format!("https://{}{}", &*IMAGE_HOST, url);
                 let parse_url = ::reqwest::Url::parse(full_url.as_str()).map_err(|e| {
-                    ToshoError::new(format!(
-                        "Failed to parse image host: {}: {}",
-                        &*IMAGE_HOST, e
-                    ))
+                    make_error!("Failed to parse image host: {}: {}", &*IMAGE_HOST, e)
                 })?;
                 Ok(parse_url)
             }
@@ -611,11 +603,11 @@ impl MUClient {
                 let mut headers = reqwest::header::HeaderMap::new();
                 headers.insert(
                     "Host",
-                    reqwest::header::HeaderValue::from_str(&IMAGE_HOST).unwrap(),
+                    reqwest::header::HeaderValue::from_static(&IMAGE_HOST),
                 );
                 headers.insert(
                     "User-Agent",
-                    reqwest::header::HeaderValue::from_str(&self.constants.image_ua).unwrap(),
+                    reqwest::header::HeaderValue::from_static(&self.constants.image_ua),
                 );
                 headers.insert(
                     "Cache-Control",

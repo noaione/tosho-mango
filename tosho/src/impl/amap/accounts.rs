@@ -55,35 +55,42 @@ pub async fn amap_account_login(
                 email
             ));
 
-            let client = make_amap_client(&session);
-            let account = client.get_account().await;
+            match make_amap_client(&session) {
+                Ok(client) => {
+                    let account = client.get_account().await;
 
-            let as_config: Config = session.into();
+                    let as_config: Config = session.into();
 
-            match account {
-                Ok(account) => {
-                    let as_config = as_config
-                        .with_email(&email)
-                        .with_account_info(&account.info);
+                    match account {
+                        Ok(account) => {
+                            let as_config = as_config
+                                .with_email(&email)
+                                .with_account_info(&account.info);
 
-                    console.info(&cformat!("Logged in as <m,s>{}</>", account.info.name));
+                            console.info(&cformat!("Logged in as <m,s>{}</>", account.info.name));
 
-                    let final_config = match old_id {
-                        Some(old_id) => as_config.with_id(&old_id),
-                        None => as_config,
-                    };
+                            let final_config = match old_id {
+                                Some(old_id) => as_config.with_id(&old_id),
+                                None => as_config,
+                            };
 
-                    console.info(&cformat!(
-                        "Created session ID <m,s>{}</>, saving config...",
-                        final_config.id
-                    ));
+                            console.info(&cformat!(
+                                "Created session ID <m,s>{}</>, saving config...",
+                                final_config.id
+                            ));
 
-                    save_config(crate::config::ConfigImpl::Amap(final_config), None);
+                            save_config(crate::config::ConfigImpl::Amap(final_config), None);
 
-                    0
+                            0
+                        }
+                        Err(e) => {
+                            console.error(&format!("Failed to login: {}", e));
+                            1
+                        }
+                    }
                 }
                 Err(e) => {
-                    console.error(&format!("Failed to login: {}", e));
+                    console.error(&format!("Failed to create client: {}", e));
                     1
                 }
             }

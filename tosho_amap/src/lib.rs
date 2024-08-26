@@ -79,7 +79,7 @@ use tokio::io::AsyncWriteExt;
 pub use config::*;
 use tosho_common::{
     make_error, parse_json_response, parse_json_response_failable, FailableResponse,
-    ToshoAuthError, ToshoResult,
+    ToshoAuthError, ToshoClientError, ToshoParseError, ToshoResult,
 };
 pub mod config;
 pub mod constants;
@@ -120,7 +120,7 @@ impl AMClient {
     ///
     /// # Parameters
     /// * `config` - The configuration to use for the client.
-    pub fn new(config: AMConfig) -> Self {
+    pub fn new(config: AMConfig) -> ToshoResult<Self> {
         Self::make_client(config, None)
     }
 
@@ -130,11 +130,11 @@ impl AMClient {
     ///
     /// # Arguments
     /// * `proxy` - The proxy to attach to the client
-    pub fn with_proxy(&self, proxy: reqwest::Proxy) -> Self {
+    pub fn with_proxy(&self, proxy: reqwest::Proxy) -> ToshoResult<Self> {
         Self::make_client(self.config.clone(), Some(proxy))
     }
 
-    fn make_client(config: AMConfig, proxy: Option<reqwest::Proxy>) -> Self {
+    fn make_client(config: AMConfig, proxy: Option<reqwest::Proxy>) -> ToshoResult<Self> {
         let mut headers = reqwest::header::HeaderMap::new();
         headers.insert(
             reqwest::header::ACCEPT,
@@ -150,7 +150,7 @@ impl AMClient {
             reqwest::header::HeaderValue::from_static(&constants.ua),
         );
 
-        let cookie_store = CookieStoreMutex::from(config.clone());
+        let cookie_store = CookieStoreMutex::try_from(config.clone())?;
         let cookie_store = std::sync::Arc::new(cookie_store);
 
         let client = reqwest::Client::builder()
@@ -160,16 +160,19 @@ impl AMClient {
             .cookie_provider(std::sync::Arc::clone(&cookie_store));
 
         let client = match proxy {
-            Some(proxy) => client.proxy(proxy).build().unwrap(),
-            None => client.build().unwrap(),
-        };
+            Some(proxy) => client
+                .proxy(proxy)
+                .build()
+                .map_err(ToshoClientError::BuildError),
+            None => client.build().map_err(ToshoClientError::BuildError),
+        }?;
 
-        Self {
+        Ok(Self {
             inner: client,
             config,
             constants,
             cookie_store,
-        }
+        })
     }
 
     /// Apply the JSON object with the default values.
@@ -235,9 +238,7 @@ impl AMClient {
             )
             .await?;
 
-        results.result.body.ok_or_else(|| {
-            tosho_common::ToshoError::ParseError(tosho_common::ToshoParseError::EmptyResponse)
-        })
+        results.result.body.ok_or_else(ToshoParseError::empty)
     }
 
     /// Get a single comic information by ID.
@@ -264,9 +265,7 @@ impl AMClient {
             )
             .await?;
 
-        results.result.body.ok_or_else(|| {
-            tosho_common::ToshoError::ParseError(tosho_common::ToshoParseError::EmptyResponse)
-        })
+        results.result.body.ok_or_else(ToshoParseError::empty)
     }
 
     /// Get reader/viewer for an episode.
@@ -330,9 +329,7 @@ impl AMClient {
             )
             .await?;
 
-        results.result.body.ok_or_else(|| {
-            tosho_common::ToshoError::ParseError(tosho_common::ToshoParseError::EmptyResponse)
-        })
+        results.result.body.ok_or_else(ToshoParseError::empty)
     }
 
     /// Get the account for the current session.
@@ -348,9 +345,7 @@ impl AMClient {
             )
             .await?;
 
-        results.result.body.ok_or_else(|| {
-            tosho_common::ToshoError::ParseError(tosho_common::ToshoParseError::EmptyResponse)
-        })
+        results.result.body.ok_or_else(ToshoParseError::empty)
     }
 
     /// Get account favorites.
@@ -363,9 +358,7 @@ impl AMClient {
             )
             .await?;
 
-        results.result.body.ok_or_else(|| {
-            tosho_common::ToshoError::ParseError(tosho_common::ToshoParseError::EmptyResponse)
-        })
+        results.result.body.ok_or_else(ToshoParseError::empty)
     }
 
     /// Search for comics.
@@ -420,9 +413,7 @@ impl AMClient {
             )
             .await?;
 
-        results.result.body.ok_or_else(|| {
-            tosho_common::ToshoError::ParseError(tosho_common::ToshoParseError::EmptyResponse)
-        })
+        results.result.body.ok_or_else(ToshoParseError::empty)
     }
 
     /// Get home discovery.
@@ -431,9 +422,7 @@ impl AMClient {
             .request::<ComicDiscovery>(reqwest::Method::POST, "/manga/discover.json", None)
             .await?;
 
-        results.result.body.ok_or_else(|| {
-            tosho_common::ToshoError::ParseError(tosho_common::ToshoParseError::EmptyResponse)
-        })
+        results.result.body.ok_or_else(ToshoParseError::empty)
     }
 
     /// Stream download the image from the given URL.
@@ -449,11 +438,11 @@ impl AMClient {
         let mut headers = make_header(&self.config, self.constants)?;
         headers.insert(
             "Host",
-            reqwest::header::HeaderValue::from_str(&IMAGE_HOST).unwrap(),
+            reqwest::header::HeaderValue::from_static(&IMAGE_HOST),
         );
         headers.insert(
             "User-Agent",
-            reqwest::header::HeaderValue::from_str(&self.constants.image_ua).unwrap(),
+            reqwest::header::HeaderValue::from_static(&self.constants.image_ua),
         );
 
         let res = self.inner.get(url).headers(headers).send().await?;
@@ -500,7 +489,8 @@ impl AMClient {
             .use_rustls_tls()
             .cookie_provider(std::sync::Arc::clone(&cookie_store))
             .default_headers(headers)
-            .build()?;
+            .build()
+            .map_err(ToshoClientError::BuildError)?;
 
         let secret_token = tosho_common::generate_random_token(16);
         let temp_config = AMConfig {

@@ -65,7 +65,10 @@
 use futures_util::TryStreamExt;
 use std::collections::HashMap;
 use tokio::io::{self, AsyncWriteExt};
-use tosho_common::{make_error, parse_json_response, ToshoAuthError, ToshoError, ToshoResult};
+use tosho_common::{
+    bail_on_error, make_error, parse_json_response, ToshoAuthError, ToshoClientError, ToshoError,
+    ToshoResult,
+};
 
 use crate::models::UserAccount;
 pub use config::*;
@@ -117,7 +120,7 @@ impl RBClient {
     ///
     /// # Arguments
     /// * `config` - The configuration to use for the client.
-    pub fn new(config: RBConfig) -> Self {
+    pub fn new(config: RBConfig) -> ToshoResult<Self> {
         Self::make_client(config, None)
     }
 
@@ -127,11 +130,11 @@ impl RBClient {
     ///
     /// # Arguments
     /// * `proxy` - The proxy to attach to the client
-    pub fn with_proxy(&self, proxy: reqwest::Proxy) -> Self {
+    pub fn with_proxy(&self, proxy: reqwest::Proxy) -> ToshoResult<Self> {
         Self::make_client(self.config.clone(), Some(proxy))
     }
 
-    fn make_client(config: RBConfig, proxy: Option<reqwest::Proxy>) -> Self {
+    fn make_client(config: RBConfig, proxy: Option<reqwest::Proxy>) -> ToshoResult<Self> {
         let constants = crate::constants::get_constants(config.platform as u8);
         let mut headers = reqwest::header::HeaderMap::new();
 
@@ -147,7 +150,12 @@ impl RBClient {
             "public",
             reqwest::header::HeaderValue::from_static(&constants.public),
         );
-        headers.insert("x-user-token", config.token.parse().unwrap());
+        headers.insert(
+            "x-user-token",
+            config.token.parse().map_err(|_| {
+                ToshoClientError::HeaderParseError(format!("x-user-token for {}", config.token))
+            })?,
+        );
 
         let client = reqwest::Client::builder()
             .http2_adaptive_window(true)
@@ -155,17 +163,20 @@ impl RBClient {
             .default_headers(headers);
 
         let client = match proxy {
-            Some(proxy) => client.proxy(proxy).build().unwrap(),
-            None => client.build().unwrap(),
-        };
+            Some(proxy) => client
+                .proxy(proxy)
+                .build()
+                .map_err(ToshoClientError::BuildError),
+            None => client.build().map_err(ToshoClientError::BuildError),
+        }?;
 
-        Self {
+        Ok(Self {
             inner: client,
             config: config.clone(),
             constants,
             token: config.token.clone(),
             expiry_at: None,
-        }
+        })
     }
 
     pub fn set_expiry_at(&mut self, expiry_at: Option<i64>) {
@@ -194,7 +205,8 @@ impl RBClient {
         let client = reqwest::Client::builder()
             .http2_adaptive_window(true)
             .use_rustls_tls()
-            .build()?;
+            .build()
+            .map_err(ToshoClientError::BuildError)?;
         let request = client
             .post("https://securetoken.googleapis.com/v1/token")
             .header(reqwest::header::USER_AGENT, self.constants.image_ua)
@@ -396,24 +408,26 @@ impl RBClient {
     pub fn modify_url_for_highres(url: &str) -> ToshoResult<String> {
         let mut parsed_url = url
             .parse::<reqwest::Url>()
-            .map_err(|e| ToshoError::new(format!("Failed to parse URL: {}, error: {}", url, e)))?;
+            .map_err(|e| make_error!("Failed to parse URL: {}, error: {}", url, e))?;
 
         // Formatted: https://{hostname}/{uuid}/{img_res}.[jpg/webp]
         let path = parsed_url.path();
         let mut path_split = path.split('/').collect::<Vec<&str>>();
         let last_part = match path_split.pop() {
             Some(last_part) => last_part,
-            None => return Err(ToshoError::new(format!("Invalid URL path: {}", path))),
+            None => {
+                bail_on_error!("Invalid URL path: {}", path);
+            }
         };
 
         let filename = last_part.split_once('.');
         let (_, extension) = match filename {
             Some((filename, extension)) => (filename, extension),
             None => {
-                return Err(ToshoError::new(format!(
+                bail_on_error!(
                     "Invalid filename: {}, expected something like 0000.jpg",
                     last_part
-                )))
+                );
             }
         };
 
@@ -448,7 +462,7 @@ impl RBClient {
                 );
                 headers.insert(
                     reqwest::header::HOST,
-                    reqwest::header::HeaderValue::from_str(IMAGE_HOST.as_str()).unwrap(),
+                    reqwest::header::HeaderValue::from_static(&IMAGE_HOST),
                 );
                 headers
             })
@@ -500,7 +514,7 @@ impl RBClient {
                 );
                 headers.insert(
                     reqwest::header::HOST,
-                    reqwest::header::HeaderValue::from_str(IMAGE_HOST.as_str()).unwrap(),
+                    reqwest::header::HeaderValue::from_static(&IMAGE_HOST),
                 );
                 headers
             })
@@ -554,7 +568,8 @@ impl RBClient {
             .http2_adaptive_window(true)
             .use_rustls_tls()
             .default_headers(headers)
-            .build()?;
+            .build()
+            .map_err(ToshoClientError::BuildError)?;
 
         let key_param = &[("key", TOKEN_AUTH.to_string())];
 
@@ -641,7 +656,12 @@ impl RBClient {
                 headers.insert(
                     "x-user-token",
                     reqwest::header::HeaderValue::from_str(&secure_token_resp.access_token)
-                        .unwrap(),
+                        .map_err(|_| {
+                            ToshoClientError::HeaderParseError(format!(
+                                "x-user-token for {}",
+                                secure_token_resp.access_token
+                            ))
+                        })?,
                 );
                 headers
             })

@@ -34,11 +34,16 @@ impl ImageSource {
     /// ```
     pub fn file_name(&self) -> String {
         let url = self.url.as_str();
-        let index = url.rfind('/').unwrap();
-        let file_part = &url[index + 1..];
-        // remove ?v=...
-        let index = file_part.find('?').unwrap_or(file_part.len());
-        file_part[..index].to_owned()
+        match url.rfind('/') {
+            Some(index) => {
+                let file_part = &url[index + 1..];
+                // remove ?v=...
+                let index = file_part.find('?').unwrap_or(file_part.len());
+                file_part[..index].to_owned()
+            }
+            // Can't find? Just return the whole URL
+            None => url.to_string(),
+        }
     }
 
     /// The file extension of the image.

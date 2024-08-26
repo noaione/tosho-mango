@@ -64,7 +64,8 @@ pub mod proto;
 use futures_util::TryStreamExt;
 use tokio::io::{self, AsyncWriteExt};
 use tosho_common::{
-    bail_on_error, parse_protobuf_response, ToshoError, ToshoParseError, ToshoResult,
+    bail_on_error, parse_protobuf_response, ToshoClientError, ToshoError, ToshoParseError,
+    ToshoResult,
 };
 
 use constants::{Constants, API_HOST, IMAGE_HOST};
@@ -108,7 +109,11 @@ impl MPClient {
     /// * `secret` - The secret key to use for the client.
     /// * `language` - The language to use for the client.
     /// * `constants` - The constants to use for the client.
-    pub fn new(secret: &str, language: Language, constants: &'static Constants) -> Self {
+    pub fn new(
+        secret: &str,
+        language: Language,
+        constants: &'static Constants,
+    ) -> ToshoResult<Self> {
         Self::make_client(secret, language, constants, None)
     }
 
@@ -118,7 +123,7 @@ impl MPClient {
     ///
     /// # Arguments
     /// * `proxy` - The proxy to attach to the client
-    pub fn with_proxy(&self, proxy: reqwest::Proxy) -> Self {
+    pub fn with_proxy(&self, proxy: reqwest::Proxy) -> ToshoResult<Self> {
         Self::make_client(&self.secret, self.language, self.constants, Some(proxy))
     }
 
@@ -139,15 +144,12 @@ impl MPClient {
         language: Language,
         constants: &'static Constants,
         proxy: Option<reqwest::Proxy>,
-    ) -> Self {
+    ) -> ToshoResult<Self> {
         let mut headers = reqwest::header::HeaderMap::new();
-        headers.insert(
-            "Host",
-            reqwest::header::HeaderValue::from_str(&API_HOST).unwrap(),
-        );
+        headers.insert("Host", reqwest::header::HeaderValue::from_static(&API_HOST));
         headers.insert(
             "User-Agent",
-            reqwest::header::HeaderValue::from_str(&constants.api_ua).unwrap(),
+            reqwest::header::HeaderValue::from_static(&constants.api_ua),
         );
 
         let client = reqwest::Client::builder()
@@ -157,17 +159,20 @@ impl MPClient {
             .default_headers(headers);
 
         let client = match proxy {
-            Some(proxy) => client.proxy(proxy).build().unwrap(),
-            None => client.build().unwrap(),
-        };
+            Some(proxy) => client
+                .proxy(proxy)
+                .build()
+                .map_err(ToshoClientError::BuildError),
+            None => client.build().map_err(ToshoClientError::BuildError),
+        }?;
 
-        Self {
+        Ok(Self {
             inner: client,
             secret: secret.to_string(),
             language,
             constants,
             app_ver: None,
-        }
+        })
     }
 
     /// Modify the HashMap to add the required parameters.
@@ -225,9 +230,7 @@ impl MPClient {
         match response {
             SuccessOrError::Success(data) => match data.initial_view_v2 {
                 Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
-                None => Err(ToshoError::ParseError(ToshoParseError::ExpectedResponse(
-                    "initial_view_v2".to_string(),
-                ))),
+                None => Err(ToshoParseError::expect("initial view")),
             },
             SuccessOrError::Error(error) => Ok(APIResponse::Error(error)),
         }
@@ -250,9 +253,7 @@ impl MPClient {
         match response {
             SuccessOrError::Success(data) => match data.home_view_v3 {
                 Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
-                None => Err(ToshoError::ParseError(ToshoParseError::ExpectedResponse(
-                    "home_view_v3".to_string(),
-                ))),
+                None => Err(ToshoParseError::expect("home view v3")),
             },
             SuccessOrError::Error(error) => Ok(APIResponse::Error(error)),
         }
@@ -273,9 +274,7 @@ impl MPClient {
         match response {
             SuccessOrError::Success(data) => match data.user_profile_settings {
                 Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
-                None => Err(ToshoError::ParseError(ToshoParseError::ExpectedResponse(
-                    "user_profile_settings".to_string(),
-                ))),
+                None => Err(ToshoParseError::expect("user profile settings")),
             },
             SuccessOrError::Error(error) => Ok(APIResponse::Error(error)),
         }
@@ -298,9 +297,7 @@ impl MPClient {
         match response {
             SuccessOrError::Success(data) => match data.user_settings_v2 {
                 Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
-                None => Err(ToshoError::ParseError(ToshoParseError::ExpectedResponse(
-                    "user_settings_v2".to_string(),
-                ))),
+                None => Err(ToshoParseError::expect("user settings v2")),
             },
             SuccessOrError::Error(error) => Ok(APIResponse::Error(error)),
         }
@@ -320,9 +317,7 @@ impl MPClient {
         match response {
             SuccessOrError::Success(data) => match data.subscriptions {
                 Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
-                None => Err(ToshoError::ParseError(ToshoParseError::ExpectedResponse(
-                    "subscriptions".to_string(),
-                ))),
+                None => Err(ToshoParseError::expect("subscriptions")),
             },
             SuccessOrError::Error(error) => Ok(APIResponse::Error(error)),
         }
@@ -342,9 +337,7 @@ impl MPClient {
         match response {
             SuccessOrError::Success(data) => match data.all_titles_v2 {
                 Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
-                None => Err(ToshoError::ParseError(ToshoParseError::ExpectedResponse(
-                    "all_titles_v2".to_string(),
-                ))),
+                None => Err(ToshoParseError::expect("all titles v2")),
             },
             SuccessOrError::Error(error) => Ok(APIResponse::Error(error)),
         }
@@ -374,9 +367,7 @@ impl MPClient {
         match response {
             SuccessOrError::Success(data) => match data.title_ranking_v2 {
                 Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
-                None => Err(ToshoError::ParseError(ToshoParseError::ExpectedResponse(
-                    "title_ranking_v2".to_string(),
-                ))),
+                None => Err(ToshoParseError::expect("title ranking v2")),
             },
             SuccessOrError::Error(error) => Ok(APIResponse::Error(error)),
         }
@@ -396,9 +387,7 @@ impl MPClient {
         match response {
             SuccessOrError::Success(data) => match data.free_titles {
                 Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
-                None => Err(ToshoError::ParseError(ToshoParseError::ExpectedResponse(
-                    "free_titles".to_string(),
-                ))),
+                None => Err(ToshoParseError::expect("free titles")),
             },
             SuccessOrError::Error(error) => Ok(APIResponse::Error(error)),
         }
@@ -418,9 +407,7 @@ impl MPClient {
         match response {
             SuccessOrError::Success(data) => match data.subscribed_titles {
                 Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
-                None => Err(ToshoError::ParseError(ToshoParseError::ExpectedResponse(
-                    "subscribed_titles".to_string(),
-                ))),
+                None => Err(ToshoParseError::expect("subscribed/bookmarked titles")),
             },
             SuccessOrError::Error(error) => Ok(APIResponse::Error(error)),
         }
@@ -443,9 +430,7 @@ impl MPClient {
         match response {
             SuccessOrError::Success(data) => match data.search_results {
                 Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
-                None => Err(ToshoError::ParseError(ToshoParseError::ExpectedResponse(
-                    "search_results".to_string(),
-                ))),
+                None => Err(ToshoParseError::expect("search results")),
             },
             SuccessOrError::Error(error) => Ok(APIResponse::Error(error)),
         }
@@ -494,9 +479,7 @@ impl MPClient {
 
                     Ok(APIResponse::Success(Box::new(cloned_data)))
                 }
-                None => Err(ToshoError::ParseError(ToshoParseError::ExpectedResponse(
-                    "title_detail".to_string(),
-                ))),
+                None => Err(ToshoParseError::expect("title_detail")),
             },
             SuccessOrError::Error(error) => Ok(APIResponse::Error(error)),
         }
@@ -562,9 +545,7 @@ impl MPClient {
         match response {
             SuccessOrError::Success(data) => match data.chapter_viewer {
                 Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
-                None => Err(ToshoError::ParseError(ToshoParseError::ExpectedResponse(
-                    "chapter_viewer".to_string(),
-                ))),
+                None => Err(ToshoParseError::expect("chapter viewer")),
             },
             SuccessOrError::Error(error) => Ok(APIResponse::Error(error)),
         }
@@ -590,9 +571,7 @@ impl MPClient {
         match response {
             SuccessOrError::Success(data) => match data.comment_list {
                 Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
-                None => Err(ToshoError::ParseError(ToshoParseError::ExpectedResponse(
-                    "comment_list".to_string(),
-                ))),
+                None => Err(ToshoParseError::expect("comment list")),
             },
             SuccessOrError::Error(error) => Ok(APIResponse::Error(error)),
         }
@@ -617,11 +596,11 @@ impl MPClient {
                 let mut headers = reqwest::header::HeaderMap::new();
                 headers.insert(
                     "Host",
-                    reqwest::header::HeaderValue::from_str(&IMAGE_HOST).unwrap(),
+                    reqwest::header::HeaderValue::from_static(&IMAGE_HOST),
                 );
                 headers.insert(
                     "User-Agent",
-                    reqwest::header::HeaderValue::from_str(&self.constants.image_ua).unwrap(),
+                    reqwest::header::HeaderValue::from_static(&self.constants.image_ua),
                 );
                 headers.insert(
                     "Cache-Control",
@@ -675,8 +654,6 @@ async fn parse_response(res: reqwest::Response) -> ToshoResult<SuccessOrError> {
     // oneof response on .response
     match decoded_response.response {
         Some(response) => Ok(response),
-        None => Err(tosho_common::ToshoError::ParseError(
-            tosho_common::ToshoParseError::EmptyResponse,
-        )),
+        None => Err(tosho_common::ToshoParseError::empty()),
     }
 }
