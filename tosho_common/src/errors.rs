@@ -49,7 +49,7 @@ pub struct ToshoDetailedParseError {
 #[cfg(feature = "serde")]
 impl ToshoDetailedParseError {
     /// Create a new instance of the error
-    pub fn new(
+    pub(crate) fn new(
         inner: serde_json::Error,
         status_code: reqwest::StatusCode,
         headers: reqwest::header::HeaderMap,
@@ -66,7 +66,11 @@ impl ToshoDetailedParseError {
     }
 
     /// Get the JSON excerpt from the raw text
-    fn get_json_excerpt(&self) -> String {
+    ///
+    /// This will return a string that contains where the deserialization error happened.
+    ///
+    /// It will take 25 characters before and after the error position.
+    pub fn get_json_excerpt(&self) -> String {
         let row_line = self.inner.line() - 1;
         let split_lines = self.raw_text.split('\n').collect::<Vec<&str>>();
 
@@ -119,7 +123,7 @@ pub struct ToshoDetailedFailableError {
 }
 
 impl ToshoDetailedFailableError {
-    pub fn new(message: impl Into<String>, inner: ToshoError) -> Self {
+    pub(crate) fn new(message: impl Into<String>, inner: ToshoError) -> Self {
         Self {
             message: message.into(),
             inner: Box::new(inner),
