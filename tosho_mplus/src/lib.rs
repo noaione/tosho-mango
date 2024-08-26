@@ -21,14 +21,14 @@ pub use crate::helper::ImageQuality;
 /// Main client for interacting with the M+ API.
 ///
 /// # Example
-/// ```no_run
+/// ```rust,no_run
 /// use tosho_mplus::MPClient;
 /// use tosho_mplus::proto::Language;
 /// use tosho_mplus::constants::get_constants;
 ///
 /// #[tokio::main]
 /// async fn main() {
-///     let client = MPClient::new("1234", Language::English, get_constants(1));
+///     let client = MPClient::new("1234", Language::English, get_constants(1)).unwrap();
 ///     let home_view = client.get_home_page().await.unwrap();
 /// }
 /// ```

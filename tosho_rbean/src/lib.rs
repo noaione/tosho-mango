@@ -26,7 +26,7 @@ const PATTERN: [u8; 1] = [174];
 /// Main client for interacting with the 小豆 (Red Bean) API
 ///
 /// # Examples
-/// ```no_run
+/// ```rust,no_run
 /// use tosho_rbean::{RBClient, RBConfig, RBPlatform};
 ///
 /// #[tokio::main]
@@ -37,7 +37,7 @@ const PATTERN: [u8; 1] = [174];
 ///         platform: RBPlatform::Android,
 ///     };
 ///
-///     let mut client = RBClient::new(config);
+///     let mut client = RBClient::new(config).unwrap();
 ///     // Refresh token
 ///     client.refresh_token().await.unwrap();
 ///     let user = client.get_user().await.unwrap();

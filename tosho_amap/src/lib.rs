@@ -30,7 +30,7 @@ const SCREEN_INCH: f64 = 61.1918658356194;
 /// Main client for interacting with the AP AM
 ///
 /// # Example
-/// ```no_run
+/// ```rust,no_run
 /// use tosho_amap::{AMClient, AMConfig};
 ///
 /// #[tokio::main]
@@ -41,7 +41,7 @@ const SCREEN_INCH: f64 = 61.1918658356194;
 ///         session_v2: "xyz987abc".to_string(),
 ///     };
 ///
-///     let client = AMClient::new(config);
+///     let client = AMClient::new(config).unwrap();
 ///     let manga = client.get_comic(48000051).await.unwrap();
 ///     println!("{:?}", manga);
 /// }

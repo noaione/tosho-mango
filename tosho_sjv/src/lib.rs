@@ -26,7 +26,7 @@ pub use config::*;
 /// Main client for interacting with the SJ/M API.
 ///
 /// # Examples
-/// ```no_run
+/// ```rust,no_run
 /// use tosho_sjv::{SJClient, SJConfig, SJMode, SJPlatform};
 ///
 /// #[tokio::main]
@@ -38,7 +38,7 @@ pub use config::*;
 ///         platform: SJPlatform::Android,
 ///     };
 ///
-///     let client = SJClient::new(config, SJMode::VM);
+///     let client = SJClient::new(config, SJMode::VM).unwrap();
 ///     let manga = client.get_manga(vec![777]).await.unwrap();
 ///     println!("{:?}", manga);
 /// }

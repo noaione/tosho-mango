@@ -7,7 +7,8 @@ Starting from Rust port of the project, all changes will be put into this file.
 - Create a new `Error` type for all sources, this replace `anyhow` error type.
 This should give more consistent error handling across all sources.
 - `KM`: Replace all `From` instance that is failable into `TryFrom` instead.
-- All sources: Make `new` function return `ToshoResult<Self>` instead of `Self`.
+- All sources: Client initialization now returns `Result<Self, Error>` format instead of `Self`.
+  - `Error` is the new error type that is used across all sources.
 
 ### Build
 - Update `reqwest`, and `serde-*`

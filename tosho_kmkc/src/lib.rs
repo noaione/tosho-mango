@@ -40,7 +40,7 @@ pub struct KMLoginResult {
 /// Main client for interacting with the SQ MU!
 ///
 /// # Example
-/// ```no_run
+/// ```rust,no_run
 /// use tosho_kmkc::{KMClient, KMConfig, KMConfigMobile, KMConfigMobilePlatform};
 ///
 /// #[tokio::main]
@@ -51,7 +51,7 @@ pub struct KMLoginResult {
 ///         platform: KMConfigMobilePlatform::Android,
 ///     };
 ///
-///     let client = KMClient::new(KMConfig::Mobile(config));
+///     let client = KMClient::new(KMConfig::Mobile(config)).unwrap();
 ///
 ///     let manga = client.get_titles(vec![10007]).await.unwrap();
 ///     println!("{:?}", manga[0]);

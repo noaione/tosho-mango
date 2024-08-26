@@ -20,13 +20,13 @@ use tosho_common::{
 /// Main client for interacting with the SQ MU!
 ///
 /// # Example
-/// ```no_run
+/// ```rust,no_run
 /// use tosho_musq::MUClient;
 /// use tosho_musq::constants::get_constants;
 ///
 /// #[tokio::main]
 /// async fn main() {
-///     let client = MUClient::new("1234", get_constants(1));
+///     let client = MUClient::new("1234", get_constants(1)).unwrap();
 ///     let manga = client.get_manga(240).await.unwrap();
 ///     println!("{:?}", manga);
 /// }
