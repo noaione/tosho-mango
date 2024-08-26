@@ -133,7 +133,7 @@ impl MUClient {
     ///
     /// #[tokio::main]
     /// async fn main() {
-    ///     let client = MUClient::new("1234", tosho_musq::constants::get_constants(1));
+    ///     let client = MUClient::new("1234", tosho_musq::constants::get_constants(1)).unwrap();
     ///    
     ///     let user_point = client.get_user_point().await.unwrap();
     ///     let manga = client.get_manga(240).await.unwrap();

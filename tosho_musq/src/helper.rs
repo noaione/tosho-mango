@@ -23,7 +23,7 @@ use serde::{Deserialize, Serialize};
 /// ```no_run
 /// use tosho_musq::{constants::get_constants, MUClient};
 ///
-/// let client = MUClient::new("123456", get_constants(1));
+/// let client = MUClient::new("123456", get_constants(1)).unwrap();
 ///
 /// let weekly_titles = client.get_weekly_titles(tosho_musq::WeeklyCode::today());
 /// ```
@@ -142,7 +142,7 @@ impl WeeklyCode {
 /// ```no_run
 /// use tosho_musq::{constants::get_constants, MUClient, ImageQuality};
 ///
-/// let client = MUClient::new("123456", get_constants(1));
+/// let client = MUClient::new("123456", get_constants(1)).unwrap();
 ///
 /// let chapter_images = client.get_chapter_images(12345, ImageQuality::Normal, None);
 /// ```
