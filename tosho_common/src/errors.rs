@@ -12,6 +12,8 @@ pub type ToshoResult<T> = Result<T, ToshoError>;
 pub enum ToshoError {
     /// Error type that happens when making a request
     RequestError(reqwest::Error),
+    /// Error type that happens when authenticating
+    AuthError(ToshoAuthError),
     /// Error type that happens when parsing the response from the API
     ParseError(ToshoParseError),
     /// Error type that happens when processing images
@@ -218,11 +220,13 @@ impl From<ToshoDetailedParseError> for ToshoError {
 #[derive(Debug)]
 pub enum ToshoAuthError {
     /// Happens when the credentials are invalid
-    InvalidCredentials,
+    InvalidCredentials(String),
     /// Happens when the session is invalid
     InvalidSession,
     /// Happens when tosho unable to get the session
     UnknownSession,
+    /// Other errors that doesn't fit the other categories
+    CommonError(String),
 }
 
 impl From<reqwest::Error> for ToshoError {
@@ -298,6 +302,12 @@ impl From<ToshoImageError> for ToshoError {
     }
 }
 
+impl From<ToshoAuthError> for ToshoError {
+    fn from(value: ToshoAuthError) -> Self {
+        ToshoError::AuthError(value)
+    }
+}
+
 impl std::fmt::Display for ToshoError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -306,6 +316,7 @@ impl std::fmt::Display for ToshoError {
             ToshoError::ParseError(e) => write!(f, "Failed to parse response, {}", e),
             ToshoError::ImageError(e) => write!(f, "Image error: {}", e),
             ToshoError::IOError(e) => write!(f, "IO error: {}", e),
+            ToshoError::AuthError(e) => write!(f, "Authentication error: {}", e),
         }
     }
 }
@@ -340,6 +351,19 @@ impl std::fmt::Display for ToshoImageError {
             ToshoImageError::ImageError(e) => write!(f, "{}", e),
             ToshoImageError::ReadError(e) => write!(f, "Failed to read image: {}", e),
             ToshoImageError::WriteError(e) => write!(f, "Failed to write image: {}", e),
+        }
+    }
+}
+
+impl std::fmt::Display for ToshoAuthError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ToshoAuthError::InvalidCredentials(reason) => {
+                write!(f, "Invalid credentials, reason: {}", reason)
+            }
+            ToshoAuthError::InvalidSession => write!(f, "Invalid session"),
+            ToshoAuthError::UnknownSession => write!(f, "Unknown session"),
+            ToshoAuthError::CommonError(e) => write!(f, "{}", e),
         }
     }
 }

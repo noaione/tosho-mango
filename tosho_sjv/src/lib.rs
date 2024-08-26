@@ -78,8 +78,8 @@ use models::{
 use std::collections::HashMap;
 use tokio::io::{self, AsyncWriteExt};
 use tosho_common::{
-    bail_on_error, make_error, parse_json_response, parse_json_response_failable, ToshoError,
-    ToshoResult,
+    bail_on_error, make_error, parse_json_response, parse_json_response_failable, ToshoAuthError,
+    ToshoError, ToshoResult,
 };
 
 pub mod config;
@@ -543,7 +543,10 @@ impl SJClient {
         let instance_id = match data.get("instance_id") {
             Some(instance) => instance.clone(),
             None => {
-                bail_on_error!("Unable to get instance_id from common_data_hashmap");
+                return Err(ToshoAuthError::CommonError(
+                    "Unable to get instance_id from common_data_hashmap".to_string(),
+                )
+                .into());
             }
         };
 

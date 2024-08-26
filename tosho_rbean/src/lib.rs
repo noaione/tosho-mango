@@ -65,7 +65,7 @@
 use futures_util::TryStreamExt;
 use std::collections::HashMap;
 use tokio::io::{self, AsyncWriteExt};
-use tosho_common::{bail_on_error, make_error, parse_json_response, ToshoError, ToshoResult};
+use tosho_common::{make_error, parse_json_response, ToshoAuthError, ToshoError, ToshoResult};
 
 use crate::models::UserAccount;
 pub use config::*;
@@ -593,10 +593,7 @@ impl RBClient {
             .find(|user| user.local_id == verify_resp.local_id);
 
         if goog_user.is_none() {
-            bail_on_error!(
-                "Google user information not found for {}",
-                verify_resp.local_id
-            );
+            return Err(ToshoAuthError::UnknownSession.into());
         }
 
         // Guaranteed to be Some

@@ -104,7 +104,8 @@ use reqwest_cookie_store::CookieStoreMutex;
 use sha2::{Digest, Sha256, Sha512};
 use tokio::io::AsyncWriteExt;
 use tosho_common::{
-    bail_on_error, make_error, parse_json_response, parse_json_response_failable, ToshoResult,
+    bail_on_error, make_error, parse_json_response, parse_json_response_failable, ToshoAuthError,
+    ToshoResult,
 };
 
 /// Login result for the API.
@@ -938,7 +939,9 @@ impl KMClient {
         let login_status = parse_json_response::<StatusResponse>(response).await?;
 
         if login_status.response_code != 0 {
-            bail_on_error!("Failed to login: {}", login_status.error_message);
+            return Err(
+                ToshoAuthError::InvalidCredentials(login_status.error_message.clone()).into(),
+            );
         }
 
         let unparse_web = KMConfigWeb::from(cookie_store.lock().unwrap().clone());

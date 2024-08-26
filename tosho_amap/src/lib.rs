@@ -78,8 +78,8 @@ use tokio::io::AsyncWriteExt;
 
 pub use config::*;
 use tosho_common::{
-    bail_on_error, make_error, parse_json_response, parse_json_response_failable, FailableResponse,
-    ToshoResult,
+    make_error, parse_json_response, parse_json_response_failable, FailableResponse,
+    ToshoAuthError, ToshoResult,
 };
 pub mod config;
 pub mod constants;
@@ -532,7 +532,9 @@ impl AMClient {
             .send()
             .await?;
 
-        let results = parse_json_response::<APIResult<models::IAPRemainder>>(req).await?;
+        let results =
+            parse_json_response_failable::<APIResult<models::IAPRemainder>, BasicWrapStatus>(req)
+                .await?;
         let result = results.clone().result.body.ok_or_else(|| {
             make_error!(
                 "Failed to get remainder, got empty response: {:#?}",
@@ -575,7 +577,7 @@ impl AMClient {
         let results = parse_json_response::<APIResult<models::LoginResult>>(req).await?;
         let result =
             results.clone().result.body.ok_or_else(|| {
-                make_error!("Failed to login, got empty response: {:#?}", results)
+                ToshoAuthError::InvalidCredentials("Got empty response".to_string())
             })?;
 
         // final step: get session_v2
@@ -622,7 +624,7 @@ impl AMClient {
         }
 
         if session_v2.is_empty() {
-            bail_on_error!("Failed to get session_v2");
+            return Err(ToshoAuthError::UnknownSession.into());
         }
 
         Ok(AMConfig {
