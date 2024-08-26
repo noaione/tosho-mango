@@ -2526,6 +2526,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "tosho-dio"
+version = "0.1.0"
+dependencies = [
+ "base64",
+ "futures-util",
+ "reqwest",
+ "reqwest_cookie_store",
+ "time",
+ "tokio",
+ "tosho-common",
+]
+
+[[package]]
 name = "tosho-kmkc"
 version = "0.6.0"
 dependencies = [
