@@ -1,6 +1,13 @@
+//! Error types for the library
+//!
+//! This module contains all the error types used in the library.
+
+/// The result type used in the library
 pub type ToshoResult<T> = Result<T, ToshoError>;
 
-/// All the common error types for the library
+/// The main error type used in the library
+///
+/// This is what being used in [`ToshoResult`] as the error type.
 #[derive(Debug)]
 pub enum ToshoError {
     /// Error type that happens when making a request
@@ -25,6 +32,12 @@ impl ToshoError {
     }
 }
 
+/// Error type that happens when parsing the response from the API
+///
+/// This is specifically for [`serde`] errors.
+///
+/// When formatted as a string, it will show the error message, status code, headers, and a JSON excerpt.
+#[cfg(feature = "serde")]
 pub struct ToshoDetailedParseError {
     inner: serde_json::Error,
     status_code: reqwest::StatusCode,
@@ -33,6 +46,7 @@ pub struct ToshoDetailedParseError {
     raw_text: String,
 }
 
+#[cfg(feature = "serde")]
 impl ToshoDetailedParseError {
     /// Create a new instance of the error
     pub fn new(
@@ -68,6 +82,7 @@ impl ToshoDetailedParseError {
     }
 }
 
+#[cfg(feature = "serde")]
 impl std::fmt::Display for ToshoDetailedParseError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
@@ -78,6 +93,7 @@ impl std::fmt::Display for ToshoDetailedParseError {
     }
 }
 
+#[cfg(feature = "serde")]
 impl std::fmt::Debug for ToshoDetailedParseError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         // make struct, do not include raw_text
@@ -90,6 +106,12 @@ impl std::fmt::Debug for ToshoDetailedParseError {
     }
 }
 
+/// Error type that happens when parsing the response from the API
+///
+/// This is specifically for [`serde`] errors that are failable.
+/// and usually are called in [`crate::parse_json_response_failable`].
+///
+/// `inner` are usually a wrap for [`ToshoParseError::SerdeDetailedError`]
 #[derive(Debug)]
 pub struct ToshoDetailedFailableError {
     message: String,
@@ -115,11 +137,16 @@ impl std::fmt::Display for ToshoDetailedFailableError {
 #[derive(Debug)]
 pub enum ToshoParseError {
     /// Failed to parse the response as JSON
+    #[cfg(feature = "serde")]
     SerdeError(serde_json::Error),
     /// A more detailed error when parsing the response as JSON
+    #[cfg(feature = "serde")]
     SerdeDetailedError(ToshoDetailedParseError),
+    /// A failable error when parsing the response as JSON
+    #[cfg(feature = "serde")]
     SerdeFailableError(ToshoDetailedFailableError),
     /// Failed to parse the response as Protobuf
+    #[cfg(feature = "protobuf")]
     ProstError(prost::DecodeError),
     /// Response is empty
     EmptyResponse,
@@ -133,6 +160,7 @@ pub enum ToshoImageError {
     /// Number conversion error
     ConversionError(std::num::ParseIntError),
     /// Image processing error
+    #[cfg(feature = "image")]
     ImageError(ToshoDetailedImageError),
     /// Image decoding error
     ReadError(String),
@@ -142,11 +170,13 @@ pub enum ToshoImageError {
 
 /// Error type that happens when processing images
 #[derive(Debug)]
+#[cfg(feature = "image")]
 pub struct ToshoDetailedImageError {
     inner: image::ImageError,
     description: String,
 }
 
+#[cfg(feature = "image")]
 impl ToshoDetailedImageError {
     pub fn with_description(mut self, description: impl Into<String>) -> Self {
         self.description = description.into();
@@ -154,18 +184,21 @@ impl ToshoDetailedImageError {
     }
 }
 
+#[cfg(feature = "image")]
 impl std::fmt::Display for ToshoDetailedImageError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}: {}", self.description, self.inner)
     }
 }
 
+#[cfg(feature = "image")]
 impl From<ToshoDetailedParseError> for ToshoParseError {
     fn from(value: ToshoDetailedParseError) -> Self {
         ToshoParseError::SerdeDetailedError(value)
     }
 }
 
+#[cfg(feature = "image")]
 impl From<ToshoDetailedParseError> for ToshoError {
     fn from(value: ToshoDetailedParseError) -> Self {
         ToshoError::ParseError(ToshoParseError::SerdeDetailedError(value))
@@ -195,12 +228,14 @@ impl From<reqwest::StatusCode> for ToshoError {
     }
 }
 
+#[cfg(feature = "serde")]
 impl From<serde_json::Error> for ToshoError {
     fn from(value: serde_json::Error) -> Self {
         ToshoError::ParseError(ToshoParseError::SerdeError(value))
     }
 }
 
+#[cfg(feature = "protobuf")]
 impl From<prost::DecodeError> for ToshoError {
     fn from(value: prost::DecodeError) -> Self {
         ToshoError::ParseError(ToshoParseError::ProstError(value))
@@ -213,6 +248,7 @@ impl From<std::io::Error> for ToshoError {
     }
 }
 
+#[cfg(feature = "image")]
 impl From<image::ImageError> for ToshoError {
     fn from(value: image::ImageError) -> Self {
         // Determine error kind
@@ -275,9 +311,13 @@ impl std::fmt::Display for ToshoError {
 impl std::fmt::Display for ToshoParseError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            #[cfg(feature = "serde")]
             ToshoParseError::SerdeError(e) => write!(f, "Serde error: {}", e),
+            #[cfg(feature = "serde")]
             ToshoParseError::SerdeDetailedError(e) => write!(f, "{}", e),
+            #[cfg(feature = "serde")]
             ToshoParseError::SerdeFailableError(e) => write!(f, "{}", e),
+            #[cfg(feature = "protobuf")]
             ToshoParseError::ProstError(e) => write!(f, "Failed to decode protobuf data: {}", e),
             ToshoParseError::EmptyResponse => write!(f, "Empty response received"),
             ToshoParseError::InvalidStatusCode(code) => write!(f, "Invalid status code: {}", code),
@@ -291,6 +331,7 @@ impl std::fmt::Display for ToshoImageError {
             ToshoImageError::ConversionError(e) => {
                 write!(f, "An error occured while tyring to convert number: {}", e)
             }
+            #[cfg(feature = "image")]
             ToshoImageError::ImageError(e) => write!(f, "{}", e),
             ToshoImageError::ReadError(e) => write!(f, "Failed to read image: {}", e),
             ToshoImageError::WriteError(e) => write!(f, "Failed to write image: {}", e),

@@ -15,7 +15,7 @@ readme = "./README.md"
 
 [dependencies]
 # Sources deps
-tosho-common = { path = "../tosho_common", version = "=0.1.0" }
+tosho-common = { path = "../tosho_common", version = "=0.1.0", features = ["all"] }
 tosho-musq = { path = "../tosho_musq", version = "=0.5.0" }
 tosho-kmkc = { path = "../tosho_kmkc", version = "=0.5.0" }
 tosho-amap = { path = "../tosho_amap", version = "=0.5.0" }

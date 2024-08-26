@@ -17,7 +17,18 @@ exclude = [
 
 [dependencies]
 reqwest.workspace = true
-serde.workspace = true
-serde_json.workspace = true
-prost.workspace = true
-image.workspace = true
+serde = { workspace = true, optional = true }
+serde_json = { workspace = true, optional = true }
+prost = { workspace = true, optional = true }
+image = { workspace = true, optional = true }
+
+[features]
+default = []
+
+# Each source crate can enable the features they need
+serde = ["dep:serde", "dep:serde_json"]
+protobuf = ["dep:prost"]
+image = ["dep:image"]
+
+# All features, used in CLI mainly
+all = ["serde", "protobuf", "image"]

@@ -23,4 +23,4 @@ base64.workspace = true
 chrono.workspace = true
 
 tosho-macros = { path = "../tosho_macros", version = "0.3" }
-tosho-common = { path = "../tosho_common", version = "=0.1.0" }
+tosho-common = { path = "../tosho_common", version = "=0.1.0", features = ["serde"] }
