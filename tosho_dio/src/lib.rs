@@ -9,14 +9,7 @@ pub mod constants;
 ///
 /// # Example
 /// ```rust,no_run
-/// use tosho_dio::MUClient;
-///
-/// #[tokio::main]
-/// async fn main() {
-///     let client = MUClient::new("1234", get_constants(1)).unwrap();
-///     let manga = client.get_manga(240).await.unwrap();
-///     println!("{:?}", manga);
-/// }
+/// // TODO: Add example
 /// ```
 #[derive(Debug)]
 #[allow(dead_code)]
