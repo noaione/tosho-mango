@@ -4,13 +4,13 @@
 
 A minimal asynchronous client for the KM API by KC.
 
-The following crate is used by the [`tosho`](tosho) app.
+The following crate is used by the [`tosho`](https://crates.io/crates/tosho) app.
 
 ## Usage
 
-Download the [`tosho`](tosho) app, or you can utilize this crate like any other Rust crate:
+Download the [`tosho`](https://crates.io/crates/tosho) app, or you can utilize this crate like any other Rust crate:
 
-```rust
+```rust,no_run
 use tosho_kmkc::{KMClient, KMConfig, KMConfigMobile, KMConfigMobilePlatform};
 
 #[tokio::main]
@@ -21,7 +21,7 @@ async fn main() {
         platform: KMConfigMobilePlatform::Android,
     };
 
-    let client = KMClient::new(KMConfig::Mobile(config));
+    let client = KMClient::new(KMConfig::Mobile(config)).unwrap();
 
     let manga = client.get_titles(vec![10007]).await.unwrap();
     println!("{:?}", manga[0]);
@@ -54,7 +54,7 @@ $ tosho km auth email password -t ios
 
 Or, if you use this crates as library:
 
-```rust
+```rust,no_run
 use tosho_kmkc::{KMClient, KMConfigMobilePlatform};
 
 #[tokio::main]
@@ -75,6 +75,4 @@ We're not responsible if your account got deactivated.
 
 ## License
 
-This project is licensed with MIT License ([LICENSE](https://github.com/noaione/tosho-mango/blob/master/LICENSE) or http://opensource.org/licenses/MIT)
-
-[tosho]: https://crates.io/crates/tosho
+This project is licensed with MIT License ([LICENSE](https://github.com/noaione/tosho-mango/blob/master/LICENSE) or <http://opensource.org/licenses/MIT>)

@@ -162,7 +162,8 @@ async fn sjv_actual_downloader(
     let download_url = node
         .client
         .get_manga_url(node.id, false, Some(node.page))
-        .await?;
+        .await
+        .map_err(|e| anyhow::anyhow!(e))?;
 
     let image_fn = format!("p{:03}.{}", node.page, node.extension);
     let img_dl_path = image_dir.join(&image_fn);

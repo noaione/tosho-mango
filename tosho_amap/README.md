@@ -4,13 +4,13 @@
 
 A minimal asynchronous client for the AM API by AP.
 
-The following crate is used by the [`tosho`](tosho) app.
+The following crate is used by the [`tosho`](https://crates.io/crates/tosho) app.
 
 ## Usage
 
-Download the [`tosho`](tosho) app, or you can utilize this crate like any other Rust crate:
+Download the [`tosho`](https://crates.io/crates/tosho) app, or you can utilize this crate like any other Rust crate:
 
-```rust
+```rust,no_run
 use tosho_amap::{AMClient, AMConfig};
 
 #[tokio::main]
@@ -21,7 +21,7 @@ async fn main() {
         session_v2: "xyz987abc".to_string(),
     };
 
-    let client = AMClient::new(config);
+    let client = AMClient::new(config).unwrap();
 
     let manga = client.get_comic(48000051).await.unwrap();
     println!("{:?}", manga);
@@ -38,7 +38,7 @@ $ tosho am auth email password
 
 Or, if you use this crates as library:
 
-```rust
+```rust,no_run
 use tosho_amap::AMClient;
 
 #[tokio::main]
@@ -55,6 +55,4 @@ We're not responsible if your account got deactivated.
 
 ## License
 
-This project is licensed with MIT License ([LICENSE](https://github.com/noaione/tosho-mango/blob/master/LICENSE) or http://opensource.org/licenses/MIT)
-
-[tosho]: https://crates.io/crates/tosho
+This project is licensed with MIT License ([LICENSE](https://github.com/noaione/tosho-mango/blob/master/LICENSE) or <http://opensource.org/licenses/MIT>)

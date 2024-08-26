@@ -4,4 +4,4 @@ A collection of macros used by [`tosho`](https://github.com/noaione/tosho-mango)
 
 ## License
 
-This project is licensed with MIT License ([LICENSE](https://github.com/noaione/tosho-mango/blob/master/LICENSE) or http://opensource.org/licenses/MIT)
+This project is licensed with MIT License ([LICENSE](https://github.com/noaione/tosho-mango/blob/master/LICENSE) or <http://opensource.org/licenses/MIT>)

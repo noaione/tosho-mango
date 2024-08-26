@@ -13,6 +13,7 @@
 use reqwest::Url;
 use reqwest_cookie_store::{CookieStoreMutex, RawCookie};
 use time::OffsetDateTime;
+use tosho_common::{bail_on_error, make_error, ToshoAuthError, ToshoError, ToshoResult};
 use tosho_macros::{EnumName, EnumU32};
 use urlencoding::{decode, encode};
 
@@ -59,10 +60,11 @@ impl From<KMConfigWebKV64> for KMConfigWebKV {
 }
 
 impl TryFrom<&str> for KMConfigWebKV64 {
-    type Error = serde_json::Error;
+    type Error = ToshoError;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
-        let decoded = decode(value).unwrap();
+        let decoded =
+            decode(value).map_err(|e| make_error!("Failed to decode urlencoded cookie: {}", e))?;
         let parsed: KMConfigWebKV64 = serde_json::from_str(&decoded)?;
         Ok(parsed)
     }
@@ -80,11 +82,15 @@ impl Default for KMConfigWebKV {
     }
 }
 
-impl From<&str> for KMConfigWebKV {
-    fn from(value: &str) -> Self {
-        let data = decode(value).unwrap();
-        let parsed: KMConfigWebKV = serde_json::from_str(&data).unwrap();
-        parsed
+impl TryFrom<&str> for KMConfigWebKV {
+    type Error = ToshoError;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        let data =
+            decode(value).map_err(|e| make_error!("Failed to decode urlencoded cookie: {}", e))?;
+        let parsed: KMConfigWebKV = serde_json::from_str(&data)
+            .map_err(|e| make_error!("Failed to parse cookie as JSON: {}", e))?;
+        Ok(parsed)
     }
 }
 
@@ -123,8 +129,10 @@ pub struct KMConfigWeb {
     pub privacy: KMConfigWebKV,
 }
 
-impl From<reqwest_cookie_store::CookieStore> for KMConfigWeb {
-    fn from(value: reqwest_cookie_store::CookieStore) -> Self {
+impl TryFrom<reqwest_cookie_store::CookieStore> for KMConfigWeb {
+    type Error = ToshoError;
+
+    fn try_from(value: reqwest_cookie_store::CookieStore) -> Result<Self, Self::Error> {
         let mut uwt = String::new();
         let mut birthday = KMConfigWebKV::default();
         let mut tos_adult = KMConfigWebKV::default();
@@ -133,17 +141,17 @@ impl From<reqwest_cookie_store::CookieStore> for KMConfigWeb {
         for cookie in value.iter_any() {
             match cookie.name() {
                 "uwt" => uwt = cookie.value().to_string(),
-                "birthday" => birthday = KMConfigWebKV::from(cookie.value()),
+                "birthday" => birthday = KMConfigWebKV::try_from(cookie.value())?,
                 "terms_of_service_adult" => {
                     tos_adult = match KMConfigWebKV64::try_from(cookie.value()) {
                         Ok(parsed) => KMConfigWebKV::from(parsed),
-                        Err(_) => KMConfigWebKV::from(cookie.value()),
+                        Err(_) => KMConfigWebKV::try_from(cookie.value())?,
                     }
                 }
                 "privacy_policy" => {
                     privacy = match KMConfigWebKV64::try_from(cookie.value()) {
                         Ok(parsed) => KMConfigWebKV::from(parsed),
-                        Err(_) => KMConfigWebKV::from(cookie.value()),
+                        Err(_) => KMConfigWebKV::try_from(cookie.value())?,
                     }
                 }
                 _ => (),
@@ -151,22 +159,25 @@ impl From<reqwest_cookie_store::CookieStore> for KMConfigWeb {
         }
 
         if uwt.is_empty() {
-            panic!("uwt cookie not found");
+            return Err(ToshoAuthError::UnknownSession.into());
         }
 
-        KMConfigWeb {
+        Ok(KMConfigWeb {
             uwt,
             birthday,
             tos_adult,
             privacy,
-        }
+        })
     }
 }
 
-impl From<KMConfigWeb> for reqwest_cookie_store::CookieStore {
-    fn from(value: KMConfigWeb) -> Self {
+impl TryFrom<KMConfigWeb> for reqwest_cookie_store::CookieStore {
+    type Error = ToshoError;
+
+    fn try_from(value: KMConfigWeb) -> Result<Self, Self::Error> {
         let mut store = reqwest_cookie_store::CookieStore::default();
-        let base_host_url = Url::parse(&format!("https://{}", &*BASE_HOST)).unwrap();
+        let base_host_url = Url::parse(&format!("https://{}", &*BASE_HOST))
+            .map_err(|e| make_error!("Failed to parse base host url of {}: {}", &*BASE_HOST, e))?;
 
         let birthday_cookie = value.birthday.to_cookie("birthday".to_string());
         let tos_adult_cookie = value
@@ -174,9 +185,36 @@ impl From<KMConfigWeb> for reqwest_cookie_store::CookieStore {
             .to_cookie("terms_of_service_adult".to_string());
         let privacy_cookie = value.privacy.to_cookie("privacy_policy".to_string());
 
-        store.insert_raw(&birthday_cookie, &base_host_url).unwrap();
-        store.insert_raw(&tos_adult_cookie, &base_host_url).unwrap();
-        store.insert_raw(&privacy_cookie, &base_host_url).unwrap();
+        store
+            .insert_raw(&birthday_cookie, &base_host_url)
+            .map_err(|e| {
+                make_error!(
+                    "Failed to insert birthday cookie of `{}` in `{}` into store: {}",
+                    &birthday_cookie,
+                    &base_host_url,
+                    e
+                )
+            })?;
+        store
+            .insert_raw(&tos_adult_cookie, &base_host_url)
+            .map_err(|e| {
+                make_error!(
+                    "Failed to insert ToS cookie of `{}` in `{}` into store: {}",
+                    &tos_adult_cookie,
+                    &base_host_url,
+                    e
+                )
+            })?;
+        store
+            .insert_raw(&privacy_cookie, &base_host_url)
+            .map_err(|e| {
+                make_error!(
+                    "Failed to insert privacy cookie of `{}` in `{}` into store: {}",
+                    &privacy_cookie,
+                    &base_host_url,
+                    e
+                )
+            })?;
 
         if !value.uwt.is_empty() {
             let uwt = RawCookie::build(("uwt", value.uwt))
@@ -186,17 +224,30 @@ impl From<KMConfigWeb> for reqwest_cookie_store::CookieStore {
                 .path("/")
                 .expires(i64_to_cookie_time(value.birthday.expires))
                 .build();
-            store.insert_raw(&uwt, &base_host_url).unwrap();
+            store.insert_raw(&uwt, &base_host_url).map_err(|e| {
+                make_error!(
+                    "Failed to insert uwt cookie of `{}` in `{}` into store: {}",
+                    &uwt,
+                    &base_host_url,
+                    e
+                )
+            })?;
         }
 
-        store
+        Ok(store)
     }
 }
 
-impl From<KMConfigWeb> for CookieStoreMutex {
-    fn from(value: KMConfigWeb) -> Self {
-        let store: reqwest_cookie_store::CookieStore = value.into();
-        CookieStoreMutex::new(store)
+// impl From<KMConfigWeb> for reqwest_cookie_store::CookieStore {
+//     fn from(value: KMConfigWeb) -> Self {}
+// }
+
+impl TryFrom<KMConfigWeb> for CookieStoreMutex {
+    type Error = ToshoError;
+
+    fn try_from(value: KMConfigWeb) -> Result<Self, Self::Error> {
+        let store: reqwest_cookie_store::CookieStore = value.try_into()?;
+        Ok(CookieStoreMutex::new(store))
     }
 }
 
@@ -262,30 +313,20 @@ impl From<KMConfigMobile> for KMConfig {
     }
 }
 
-fn parse_cookie_as_str_kv(cookie_value: &str) -> KMConfigWebKV {
+fn parse_cookie_as_str_kv(cookie_value: &str) -> ToshoResult<KMConfigWebKV> {
     let kv64 = KMConfigWebKV64::try_from(cookie_value);
+
     match kv64 {
         Ok(parsed) => {
-            // Parse firsst from kv64 since number will fails on string KV
-            KMConfigWebKV::from(parsed)
+            // Parse first from kv64 since number will fails on string KV
+            Ok(KMConfigWebKV::from(parsed))
         }
-        Err(_) => KMConfigWebKV::from(cookie_value),
-    }
-}
-
-/// Error when parsing a netscape cookie string into a [`KMConfigWeb`] fails
-pub struct KMConfigWebFromStrError {
-    line: String,
-}
-
-impl std::fmt::Display for KMConfigWebFromStrError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "The line '{}' is not a valid cookie", self.line)
+        Err(_) => KMConfigWebKV::try_from(cookie_value),
     }
 }
 
 impl TryFrom<String> for KMConfigWeb {
-    type Error = KMConfigWebFromStrError;
+    type Error = ToshoError;
 
     /// Parse a netscape cookie string into a [`KMConfigWeb`]
     fn try_from(value: String) -> Result<Self, Self::Error> {
@@ -303,9 +344,7 @@ impl TryFrom<String> for KMConfigWeb {
             // domain, include subdomain, path, secure, expiration, name, value
             let cookie_parts: Vec<&str> = cookie_line.split('\t').collect();
             if cookie_parts.len() != 7 {
-                return Err(KMConfigWebFromStrError {
-                    line: cookie_line.to_string(),
-                });
+                bail_on_error!("Failed to parse cookie line: {}", cookie_line.to_string());
             }
 
             let cookie_name = cookie_parts[5];
@@ -313,9 +352,9 @@ impl TryFrom<String> for KMConfigWeb {
 
             match cookie_name {
                 "uwt" => uwt = cookie_value.to_string(),
-                "birthday" => birthday = parse_cookie_as_str_kv(cookie_value),
-                "terms_of_service_adult" => tos_adult = parse_cookie_as_str_kv(cookie_value),
-                "privacy_policy" => privacy = parse_cookie_as_str_kv(cookie_value),
+                "birthday" => birthday = parse_cookie_as_str_kv(cookie_value)?,
+                "terms_of_service_adult" => tos_adult = parse_cookie_as_str_kv(cookie_value)?,
+                "privacy_policy" => privacy = parse_cookie_as_str_kv(cookie_value)?,
                 _ => (),
             }
         }

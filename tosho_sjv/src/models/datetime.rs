@@ -14,7 +14,7 @@ where
     D: Deserializer<'de>,
 {
     let s = String::deserialize(deserializer)?;
-    let datetime = DateTime::parse_from_rfc3339(&s).unwrap();
+    let datetime = DateTime::parse_from_rfc3339(&s).map_err(serde::de::Error::custom)?;
     Ok(datetime)
 }
 
@@ -40,7 +40,7 @@ where
 {
     match String::deserialize(deserializer) {
         Ok(s) => {
-            let datetime = DateTime::parse_from_rfc3339(&s).unwrap();
+            let datetime = DateTime::parse_from_rfc3339(&s).map_err(serde::de::Error::custom)?;
             Ok(Some(datetime))
         }
         Err(_) => Ok(None),

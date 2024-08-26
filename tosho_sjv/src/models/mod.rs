@@ -12,6 +12,7 @@ pub mod manga;
 pub use account::*;
 pub use enums::*;
 pub use manga::*;
+use tosho_common::FailableResponse;
 
 /// A simple response to check if request successful or not
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -20,14 +21,19 @@ pub struct SimpleResponse {
     pub error: Option<String>,
 }
 
-impl SimpleResponse {
-    /// Check if response is OK
-    pub fn is_ok(&self) -> bool {
-        self.ok == IntBool::True
+impl FailableResponse for SimpleResponse {
+    fn format_error(&self) -> String {
+        self.error
+            .clone()
+            .unwrap_or_else(|| "Unknown error".to_string())
     }
 
-    /// Check if response is not OK
-    pub fn is_err(&self) -> bool {
-        self.ok == IntBool::False || self.error.is_some()
+    fn raise_for_status(&self) -> tosho_common::ToshoResult<()> {
+        if let Some(error) = &self.error {
+            if self.ok != IntBool::True {
+                return Err(tosho_common::make_error!("{}", error));
+            }
+        }
+        Ok(())
     }
 }

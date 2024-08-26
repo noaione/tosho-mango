@@ -90,11 +90,14 @@ fn get_default_download_dir() -> PathBuf {
 async fn main() {
     // For some god know what reason, `clap` + rustc_lint will show this as unreachable code.
     let _cli = ToshoCli::parse();
+    entrypoint(_cli).await.unwrap();
+}
 
-    let t = term::get_console(_cli.verbose);
-    let mut t_mut = term::get_console(_cli.verbose);
+async fn entrypoint(cli: ToshoCli) -> anyhow::Result<()> {
+    let t = term::get_console(cli.verbose);
+    let mut t_mut = term::get_console(cli.verbose);
 
-    let parsed_proxy = match _cli.proxy {
+    let parsed_proxy = match cli.proxy {
         Some(proxy) => match reqwest::Proxy::all(proxy) {
             Ok(proxy) => Some(proxy),
             Err(e) => {
@@ -109,7 +112,7 @@ async fn main() {
         t.warn(&format!("Failed to check for update: {}", e));
     });
 
-    match _cli.command {
+    match cli.command {
         ToshoCommands::Musq {
             account_id,
             subcommand,
@@ -139,9 +142,9 @@ async fn main() {
                 }
             };
 
-            let client = r#impl::client::make_musq_client(&config);
+            let client = r#impl::client::make_musq_client(&config)?;
             let client = if let Some(proxy) = parsed_proxy {
-                client.with_proxy(proxy)
+                client.with_proxy(proxy)?
             } else {
                 client
             };
@@ -307,9 +310,9 @@ async fn main() {
                 }
             };
 
-            let client = r#impl::client::make_kmkc_client(&config.clone().into());
+            let client = r#impl::client::make_kmkc_client(&config.clone().into())?;
             let client = if let Some(proxy) = parsed_proxy {
-                client.with_proxy(proxy)
+                client.with_proxy(proxy)?
             } else {
                 client
             };
@@ -465,9 +468,9 @@ async fn main() {
                 }
             };
 
-            let client = r#impl::client::make_amap_client(&config.clone().into());
+            let client = r#impl::client::make_amap_client(&config.clone().into())?;
             let client = if let Some(proxy) = parsed_proxy {
-                client.with_proxy(proxy)
+                client.with_proxy(proxy)?
             } else {
                 client
             };
@@ -602,9 +605,9 @@ async fn main() {
                 }
             };
 
-            let client = r#impl::client::make_sjv_client(&config.clone());
+            let client = r#impl::client::make_sjv_client(&config.clone())?;
             let client = if let Some(proxy) = parsed_proxy {
-                client.with_proxy(proxy)
+                client.with_proxy(proxy)?
             } else {
                 client
             };
@@ -715,9 +718,9 @@ async fn main() {
                 }
             };
 
-            let client = r#impl::client::make_rbean_client(&config);
+            let client = r#impl::client::make_rbean_client(&config)?;
             let mut client = if let Some(proxy) = parsed_proxy {
-                client.with_proxy(proxy)
+                client.with_proxy(proxy)?
             } else {
                 client
             };
@@ -850,9 +853,9 @@ async fn main() {
             };
 
             let client =
-                r#impl::client::make_mplus_client(&config, language.unwrap_or_default().into());
+                r#impl::client::make_mplus_client(&config, language.unwrap_or_default().into())?;
             let client = if let Some(proxy) = parsed_proxy {
-                client.with_proxy(proxy)
+                client.with_proxy(proxy)?
             } else {
                 client
             }

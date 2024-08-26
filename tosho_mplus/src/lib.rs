@@ -1,73 +1,18 @@
-//! # tosho-mplus
-//!
-//! ![crates.io version](https://img.shields.io/crates/v/tosho-mplus)
-//!
-//! An asynchronous client for the M+ API by S.
-//!
-//! The following crate is used by the [`tosho`] app.
-//!
-//! ## Usage
-//!
-//! Download the [`tosho`] app, or you can utilize this crate like any other Rust crate:
-//!
-//! ```rust,no_run
-//! use tosho_mplus::MPClient;
-//! use tosho_mplus::proto::Language;
-//! use tosho_mplus::constants::get_constants;
-//!
-//! #[tokio::main]
-//! async fn main() {
-//!     let client = MPClient::new("1234", Language::English, get_constants(1));
-//!     let home_view = client.get_home_page().await.unwrap();
-//! }
-//! ```
-//!
-//! ## Authentication
-//!
-//! The following sources do not have any easy authentication method.
-//!
-//! The command to authenticate is `tosho mp auth`.
-//!
-//! It's recommended that you set up network intercepting first; please read [INTERCEPTING](https://github.com/noaione/tosho-mango/blob/master/INTERCEPTING.md).
-//!
-//! Using the CLI, you can do this:
-//!
-//! ```bash
-//! $ tosho mp auth secret
-//! ```
-//!
-//! With crates, you can follow the above usages.
-//!
-//! ### Android
-//!
-//! 1. Open the source app.
-//! 2. Click on the home page or my page.
-//! 3. Observe the requests on HTTP Toolkit and find the request to the API that has `secret` as the query parameters.
-//! 4. Save that secret elsewhere and authenticate with `tosho`.
-//!
-//! ## Disclaimer
-//!
-//! This project is designed as an experiment and to create a local copy for personal use. These tools will not circumvent any paywall, and you will need to purchase and own each chapter with your own account to be able to make your own local copy.
-//!
-//! We're not responsible if your account got deactivated.
-//!
-//! ## License
-//!
-//! This project is licensed with MIT License ([LICENSE](https://github.com/noaione/tosho-mango/blob/master/LICENSE) or <http://opensource.org/licenses/MIT>)
-//!
-//! [`tosho`]: https://crates.io/crates/tosho
+#![doc = include_str!("../README.md")]
 
 pub mod constants;
 pub mod helper;
 pub mod proto;
 
-use futures_util::StreamExt;
-use std::io::Cursor;
+use futures_util::TryStreamExt;
 use tokio::io::{self, AsyncWriteExt};
+use tosho_common::{
+    bail_on_error, parse_protobuf_response, ToshoClientError, ToshoError, ToshoParseError,
+    ToshoResult,
+};
 
 use constants::{Constants, API_HOST, IMAGE_HOST};
 use helper::RankingType;
-use prost::Message;
 use proto::{CommentList, ErrorResponse, Language, SuccessOrError};
 
 use crate::constants::BASE_API;
@@ -76,14 +21,14 @@ pub use crate::helper::ImageQuality;
 /// Main client for interacting with the M+ API.
 ///
 /// # Example
-/// ```no_run
+/// ```rust,no_run
 /// use tosho_mplus::MPClient;
 /// use tosho_mplus::proto::Language;
 /// use tosho_mplus::constants::get_constants;
 ///
 /// #[tokio::main]
 /// async fn main() {
-///     let client = MPClient::new("1234", Language::English, get_constants(1));
+///     let client = MPClient::new("1234", Language::English, get_constants(1)).unwrap();
 ///     let home_view = client.get_home_page().await.unwrap();
 /// }
 /// ```
@@ -107,7 +52,11 @@ impl MPClient {
     /// * `secret` - The secret key to use for the client.
     /// * `language` - The language to use for the client.
     /// * `constants` - The constants to use for the client.
-    pub fn new(secret: &str, language: Language, constants: &'static Constants) -> Self {
+    pub fn new(
+        secret: &str,
+        language: Language,
+        constants: &'static Constants,
+    ) -> ToshoResult<Self> {
         Self::make_client(secret, language, constants, None)
     }
 
@@ -117,7 +66,7 @@ impl MPClient {
     ///
     /// # Arguments
     /// * `proxy` - The proxy to attach to the client
-    pub fn with_proxy(&self, proxy: reqwest::Proxy) -> Self {
+    pub fn with_proxy(&self, proxy: reqwest::Proxy) -> ToshoResult<Self> {
         Self::make_client(&self.secret, self.language, self.constants, Some(proxy))
     }
 
@@ -138,15 +87,12 @@ impl MPClient {
         language: Language,
         constants: &'static Constants,
         proxy: Option<reqwest::Proxy>,
-    ) -> Self {
+    ) -> ToshoResult<Self> {
         let mut headers = reqwest::header::HeaderMap::new();
-        headers.insert(
-            "Host",
-            reqwest::header::HeaderValue::from_str(&API_HOST).unwrap(),
-        );
+        headers.insert("Host", reqwest::header::HeaderValue::from_static(&API_HOST));
         headers.insert(
             "User-Agent",
-            reqwest::header::HeaderValue::from_str(&constants.api_ua).unwrap(),
+            reqwest::header::HeaderValue::from_static(&constants.api_ua),
         );
 
         let client = reqwest::Client::builder()
@@ -156,17 +102,20 @@ impl MPClient {
             .default_headers(headers);
 
         let client = match proxy {
-            Some(proxy) => client.proxy(proxy).build().unwrap(),
-            None => client.build().unwrap(),
-        };
+            Some(proxy) => client
+                .proxy(proxy)
+                .build()
+                .map_err(ToshoClientError::BuildError),
+            None => client.build().map_err(ToshoClientError::BuildError),
+        }?;
 
-        Self {
+        Ok(Self {
             inner: client,
             secret: secret.to_string(),
             language,
             constants,
             app_ver: None,
-        }
+        })
     }
 
     /// Modify the HashMap to add the required parameters.
@@ -211,7 +160,7 @@ impl MPClient {
     }
 
     /// Get the initial view of the app.
-    pub async fn get_initial(&self) -> anyhow::Result<APIResponse<proto::InitialViewV2>> {
+    pub async fn get_initial(&self) -> ToshoResult<APIResponse<proto::InitialViewV2>> {
         let request = self
             .inner
             .get(self.build_url("init_v2"))
@@ -224,14 +173,14 @@ impl MPClient {
         match response {
             SuccessOrError::Success(data) => match data.initial_view_v2 {
                 Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
-                None => anyhow::bail!("No initial view found"),
+                None => Err(ToshoParseError::expect("initial view")),
             },
             SuccessOrError::Error(error) => Ok(APIResponse::Error(error)),
         }
     }
 
     /// Get the main home view of the app.
-    pub async fn get_home_page(&self) -> anyhow::Result<APIResponse<proto::HomeViewV3>> {
+    pub async fn get_home_page(&self) -> ToshoResult<APIResponse<proto::HomeViewV3>> {
         let mut query_params = self.empty_params(true);
         query_params.insert(0, ("viewer_mode".to_string(), "horizontal".to_string()));
 
@@ -247,16 +196,14 @@ impl MPClient {
         match response {
             SuccessOrError::Success(data) => match data.home_view_v3 {
                 Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
-                None => anyhow::bail!("No home view found"),
+                None => Err(ToshoParseError::expect("home view v3")),
             },
             SuccessOrError::Error(error) => Ok(APIResponse::Error(error)),
         }
     }
 
     /// Get the user profile
-    pub async fn get_user_profile(
-        &self,
-    ) -> anyhow::Result<APIResponse<proto::UserProfileSettings>> {
+    pub async fn get_user_profile(&self) -> ToshoResult<APIResponse<proto::UserProfileSettings>> {
         let query = self.empty_params(false);
         let request = self
             .inner
@@ -270,14 +217,14 @@ impl MPClient {
         match response {
             SuccessOrError::Success(data) => match data.user_profile_settings {
                 Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
-                None => anyhow::bail!("No user profile found"),
+                None => Err(ToshoParseError::expect("user profile settings")),
             },
             SuccessOrError::Error(error) => Ok(APIResponse::Error(error)),
         }
     }
 
     /// Get the user settings.
-    pub async fn get_user_settings(&self) -> anyhow::Result<APIResponse<proto::UserSettingsV2>> {
+    pub async fn get_user_settings(&self) -> ToshoResult<APIResponse<proto::UserSettingsV2>> {
         let mut query_params = self.empty_params(true);
         query_params.insert(0, ("viewer_mode".to_string(), "horizontal".to_string()));
 
@@ -293,16 +240,14 @@ impl MPClient {
         match response {
             SuccessOrError::Success(data) => match data.user_settings_v2 {
                 Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
-                None => anyhow::bail!("No user settings found"),
+                None => Err(ToshoParseError::expect("user settings v2")),
             },
             SuccessOrError::Error(error) => Ok(APIResponse::Error(error)),
         }
     }
 
     /// Get the subscriptions list and details.
-    pub async fn get_subscriptions(
-        &self,
-    ) -> anyhow::Result<APIResponse<proto::SubscriptionResponse>> {
+    pub async fn get_subscriptions(&self) -> ToshoResult<APIResponse<proto::SubscriptionResponse>> {
         let request = self
             .inner
             .get(self.build_url("subscription"))
@@ -315,14 +260,14 @@ impl MPClient {
         match response {
             SuccessOrError::Success(data) => match data.subscriptions {
                 Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
-                None => anyhow::bail!("No subscription response found"),
+                None => Err(ToshoParseError::expect("subscriptions")),
             },
             SuccessOrError::Error(error) => Ok(APIResponse::Error(error)),
         }
     }
 
     /// Get all the available titles.
-    pub async fn get_all_titles(&self) -> anyhow::Result<APIResponse<proto::TitleListOnlyV2>> {
+    pub async fn get_all_titles(&self) -> ToshoResult<APIResponse<proto::TitleListOnlyV2>> {
         let request = self
             .inner
             .get(self.build_url("title_list/all_v2"))
@@ -335,7 +280,7 @@ impl MPClient {
         match response {
             SuccessOrError::Success(data) => match data.all_titles_v2 {
                 Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
-                None => anyhow::bail!("No title list found"),
+                None => Err(ToshoParseError::expect("all titles v2")),
             },
             SuccessOrError::Error(error) => Ok(APIResponse::Error(error)),
         }
@@ -348,7 +293,7 @@ impl MPClient {
     pub async fn get_title_ranking(
         &self,
         kind: Option<RankingType>,
-    ) -> anyhow::Result<APIResponse<proto::TitleRankingList>> {
+    ) -> ToshoResult<APIResponse<proto::TitleRankingList>> {
         let kind = kind.unwrap_or(RankingType::Hottest);
         let mut query_params = self.empty_params(true);
         query_params.insert(0, ("type".to_string(), kind.to_string()));
@@ -365,14 +310,14 @@ impl MPClient {
         match response {
             SuccessOrError::Success(data) => match data.title_ranking_v2 {
                 Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
-                None => anyhow::bail!("No title ranking found"),
+                None => Err(ToshoParseError::expect("title ranking v2")),
             },
             SuccessOrError::Error(error) => Ok(APIResponse::Error(error)),
         }
     }
 
     /// Get all free titles
-    pub async fn get_free_titles(&self) -> anyhow::Result<APIResponse<proto::FreeTitles>> {
+    pub async fn get_free_titles(&self) -> ToshoResult<APIResponse<proto::FreeTitles>> {
         let request = self
             .inner
             .get(self.build_url("title_list/free_titles"))
@@ -385,14 +330,14 @@ impl MPClient {
         match response {
             SuccessOrError::Success(data) => match data.free_titles {
                 Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
-                None => anyhow::bail!("No free titles found"),
+                None => Err(ToshoParseError::expect("free titles")),
             },
             SuccessOrError::Error(error) => Ok(APIResponse::Error(error)),
         }
     }
 
     /// Get the bookmarked titles
-    pub async fn get_bookmarked_titles(&self) -> anyhow::Result<APIResponse<proto::TitleListOnly>> {
+    pub async fn get_bookmarked_titles(&self) -> ToshoResult<APIResponse<proto::TitleListOnly>> {
         let request = self
             .inner
             .get(self.build_url("title_list/bookmark"))
@@ -405,7 +350,7 @@ impl MPClient {
         match response {
             SuccessOrError::Success(data) => match data.subscribed_titles {
                 Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
-                None => anyhow::bail!("No bookmarked titles found"),
+                None => Err(ToshoParseError::expect("subscribed/bookmarked titles")),
             },
             SuccessOrError::Error(error) => Ok(APIResponse::Error(error)),
         }
@@ -415,7 +360,7 @@ impl MPClient {
     ///
     /// Internally, this use the "search" API which does not take any
     /// query information for some unknown reason.
-    pub async fn get_search(&self) -> anyhow::Result<APIResponse<proto::SearchResults>> {
+    pub async fn get_search(&self) -> ToshoResult<APIResponse<proto::SearchResults>> {
         let request = self
             .inner
             .get(self.build_url("title_list/search"))
@@ -428,7 +373,7 @@ impl MPClient {
         match response {
             SuccessOrError::Success(data) => match data.search_results {
                 Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
-                None => anyhow::bail!("No titles found"),
+                None => Err(ToshoParseError::expect("search results")),
             },
             SuccessOrError::Error(error) => Ok(APIResponse::Error(error)),
         }
@@ -441,7 +386,7 @@ impl MPClient {
     pub async fn get_title_details(
         &self,
         title_id: u64,
-    ) -> anyhow::Result<APIResponse<proto::TitleDetail>> {
+    ) -> ToshoResult<APIResponse<proto::TitleDetail>> {
         let mut query_params = self.empty_params(true);
         query_params.insert(0, ("title_id".to_string(), title_id.to_string()));
 
@@ -477,7 +422,7 @@ impl MPClient {
 
                     Ok(APIResponse::Success(Box::new(cloned_data)))
                 }
-                None => anyhow::bail!("No title details found"),
+                None => Err(ToshoParseError::expect("title_detail")),
             },
             SuccessOrError::Error(error) => Ok(APIResponse::Error(error)),
         }
@@ -496,7 +441,7 @@ impl MPClient {
         title: &proto::TitleDetail,
         quality: ImageQuality,
         split: bool,
-    ) -> anyhow::Result<APIResponse<proto::ChapterViewer>> {
+    ) -> ToshoResult<APIResponse<proto::ChapterViewer>> {
         let mut query_params = vec![];
         query_params.push(("chapter_id".to_string(), chapter.chapter_id.to_string()));
         query_params.push((
@@ -522,7 +467,7 @@ impl MPClient {
                 query_params.push(("ticket_reading".to_string(), "no".to_string()));
                 query_params.push(("free_reading".to_string(), "no".to_string()));
             } else {
-                anyhow::bail!(
+                bail_on_error!(
                     "Chapter is not free and user does not have minimum subscription: {:?} < {:?}",
                     user_sub.plan(),
                     title_labels.plan_type()
@@ -543,7 +488,7 @@ impl MPClient {
         match response {
             SuccessOrError::Success(data) => match data.chapter_viewer {
                 Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
-                None => anyhow::bail!("No chapter viewer found"),
+                None => Err(ToshoParseError::expect("chapter viewer")),
             },
             SuccessOrError::Error(error) => Ok(APIResponse::Error(error)),
         }
@@ -553,7 +498,7 @@ impl MPClient {
     ///
     /// # Parameters
     /// * `id` - The ID of the chapter to get comments for.
-    pub async fn get_comments(&self, id: u64) -> anyhow::Result<APIResponse<CommentList>> {
+    pub async fn get_comments(&self, id: u64) -> ToshoResult<APIResponse<CommentList>> {
         let mut query_params = self.empty_params(false);
         query_params.insert(0, ("chapter_id".to_string(), id.to_string()));
 
@@ -569,7 +514,7 @@ impl MPClient {
         match response {
             SuccessOrError::Success(data) => match data.comment_list {
                 Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
-                None => anyhow::bail!("No comments found"),
+                None => Err(ToshoParseError::expect("comment list")),
             },
             SuccessOrError::Error(error) => Ok(APIResponse::Error(error)),
         }
@@ -586,7 +531,7 @@ impl MPClient {
         &self,
         url: &str,
         mut writer: impl io::AsyncWrite + Unpin,
-    ) -> anyhow::Result<()> {
+    ) -> ToshoResult<()> {
         let res = self
             .inner
             .get(url)
@@ -594,11 +539,11 @@ impl MPClient {
                 let mut headers = reqwest::header::HeaderMap::new();
                 headers.insert(
                     "Host",
-                    reqwest::header::HeaderValue::from_str(&IMAGE_HOST).unwrap(),
+                    reqwest::header::HeaderValue::from_static(&IMAGE_HOST),
                 );
                 headers.insert(
                     "User-Agent",
-                    reqwest::header::HeaderValue::from_str(&self.constants.image_ua).unwrap(),
+                    reqwest::header::HeaderValue::from_static(&self.constants.image_ua),
                 );
                 headers.insert(
                     "Cache-Control",
@@ -611,16 +556,15 @@ impl MPClient {
 
         // bail if not success
         if !res.status().is_success() {
-            anyhow::bail!("Failed to download image: {}", res.status())
-        }
+            Err(ToshoError::from(res.status()))
+        } else {
+            let mut stream = res.bytes_stream();
+            while let Some(item) = stream.try_next().await? {
+                writer.write_all(&item).await?;
+            }
 
-        let mut stream = res.bytes_stream();
-        while let Some(item) = stream.next().await {
-            let item = item.unwrap();
-            writer.write_all(&item).await?;
+            Ok(())
         }
-
-        Ok(())
     }
 }
 
@@ -646,25 +590,13 @@ impl<T: ::prost::Message + Clone> APIResponse<T> {
     }
 }
 
-async fn parse_response(res: reqwest::Response) -> anyhow::Result<SuccessOrError> {
-    if !res.status().is_success() {
-        anyhow::bail!("Error response: {:?}", res.status());
-    }
-
-    let bytes_data = res.bytes().await?;
-    let cursor = bytes_data.as_ref();
-
-    let decoded_response = crate::proto::Response::decode(&mut Cursor::new(cursor));
-
-    if let Err(e) = decoded_response {
-        anyhow::bail!("Error decoding response: {:?}", e);
-    }
-
-    let decoded_response = decoded_response.unwrap();
+/// A quick wrapper for [`parse_protobuf_response`]
+async fn parse_response(res: reqwest::Response) -> ToshoResult<SuccessOrError> {
+    let decoded_response = parse_protobuf_response::<crate::proto::Response>(res).await?;
 
     // oneof response on .response
     match decoded_response.response {
         Some(response) => Ok(response),
-        None => anyhow::bail!("No response found"),
+        None => Err(tosho_common::ToshoParseError::empty()),
     }
 }

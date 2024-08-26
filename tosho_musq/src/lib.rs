@@ -1,77 +1,4 @@
-//! # tosho-musq
-//!
-//! ![crates.io version](https://img.shields.io/crates/v/tosho-musq)
-//!
-//! An asynchronous client for the MU! API by SQ.
-//!
-//! The following crate is used by the [`tosho`] app.
-//!
-//! ## Usage
-//!
-//! Download the [`tosho`] app, or you can utilize this crate like any other Rust crate:
-//!
-//! ```rust,no_run
-//! use tosho_musq::MUClient;
-//! use tosho_musq::constants::get_constants;
-//!
-//! #[tokio::main]
-//! async fn main() {
-//!     let client = MUClient::new("1234", get_constants(1));
-//!     let manga = client.get_manga(240).await.unwrap();
-//!     println!("{:?}", manga);
-//! }
-//! ```
-//!
-//! ## Authentication
-//!
-//! The following sources do not have any easy authentication method.
-//!
-//! The command to authenticate is `tosho mu auth`.
-//!
-//! It's recommended that you set up network intercepting first; please read [INTERCEPTING](https://github.com/noaione/tosho-mango/blob/master/INTERCEPTING.md).
-//!
-//! Using the CLI, you can do this:
-//!
-//! ```bash
-//! $ tosho mu auth secret -t android
-//! ```
-//!
-//! Or, with Apple constants:
-//!
-//! ```bash
-//! $ tosho mu auth secret -t ios
-//! ```
-//!
-//! With crates, you can follow the above usages.
-//!
-//! ### Android
-//!
-//! 1. Open the source app.
-//! 2. Click on the home page or my page.
-//! 3. Observe the requests on HTTP Toolkit and find the request to the API that has `secret` as the query parameters.
-//! 4. Save that secret elsewhere and authenticate with `tosho`.
-//!
-//! ### Apple
-//!
-//! 1. Open the Stream app and click `Sniff Now`.
-//! 2. Go to the source app and open the `Home` or `My Page`.
-//! 3. Return to the Stream app and click `Sniff History`, then select the most recent item.
-//! 4. Find the request that goes to the API of the source app and locate the request that has `secret=xxxxx` in them.
-//! 5. Copy the link and save the secret value somewhere so you can authenticate with `tosho`.
-//!
-//! ## Disclaimer
-//!
-//! This project is designed as an experiment and to create a local copy for personal use.
-//! These tools will not circumvent any paywall, and you will need to purchase and own each chapter
-//! with your own account to be able to make your own local copy.
-//!
-//! We're not responsible if your account got deactivated.
-//!
-//! ## License
-//!
-//! This project is licensed with MIT License ([LICENSE](https://github.com/noaione/tosho-mango/blob/master/LICENSE) or <http://opensource.org/licenses/MIT>)
-//!
-//! [`tosho`]: https://crates.io/crates/tosho
+#![doc = include_str!("../README.md")]
 
 pub mod constants;
 pub mod helper;
@@ -79,24 +6,27 @@ pub mod proto;
 
 use crate::constants::{Constants, API_HOST, BASE_API, IMAGE_HOST};
 use crate::proto::*;
-use futures_util::StreamExt;
+use futures_util::TryStreamExt;
 pub use helper::ConsumeCoin;
 pub use helper::ImageQuality;
 pub use helper::WeeklyCode;
 use std::collections::HashMap;
-use std::io::Cursor;
 use tokio::io::{self, AsyncWriteExt};
+use tosho_common::{
+    bail_on_error, make_error, parse_protobuf_response, ToshoClientError, ToshoError,
+    ToshoParseError, ToshoResult,
+};
 
 /// Main client for interacting with the SQ MU!
 ///
 /// # Example
-/// ```no_run
+/// ```rust,no_run
 /// use tosho_musq::MUClient;
 /// use tosho_musq::constants::get_constants;
 ///
 /// #[tokio::main]
 /// async fn main() {
-///     let client = MUClient::new("1234", get_constants(1));
+///     let client = MUClient::new("1234", get_constants(1)).unwrap();
 ///     let manga = client.get_manga(240).await.unwrap();
 ///     println!("{:?}", manga);
 /// }
@@ -114,7 +44,7 @@ impl MUClient {
     /// # Parameters
     /// * `secret` - The secret key to use for the client.
     /// * `constants` - The constants to use for the client.
-    pub fn new(secret: &str, constants: &'static Constants) -> Self {
+    pub fn new(secret: &str, constants: &'static Constants) -> ToshoResult<Self> {
         Self::make_client(secret, constants, None)
     }
 
@@ -124,7 +54,7 @@ impl MUClient {
     ///
     /// # Arguments
     /// * `proxy` - The proxy to attach to the client
-    pub fn with_proxy(&self, proxy: reqwest::Proxy) -> Self {
+    pub fn with_proxy(&self, proxy: reqwest::Proxy) -> ToshoResult<Self> {
         Self::make_client(&self.secret, self.constants, Some(proxy))
     }
 
@@ -132,15 +62,12 @@ impl MUClient {
         secret: &str,
         constants: &'static Constants,
         proxy: Option<reqwest::Proxy>,
-    ) -> Self {
+    ) -> ToshoResult<Self> {
         let mut headers = reqwest::header::HeaderMap::new();
-        headers.insert(
-            "Host",
-            reqwest::header::HeaderValue::from_str(&API_HOST).unwrap(),
-        );
+        headers.insert("Host", reqwest::header::HeaderValue::from_static(&API_HOST));
         headers.insert(
             "User-Agent",
-            reqwest::header::HeaderValue::from_str(&constants.api_ua).unwrap(),
+            reqwest::header::HeaderValue::from_static(&constants.api_ua),
         );
 
         let client = reqwest::Client::builder()
@@ -151,15 +78,18 @@ impl MUClient {
             .default_headers(headers);
 
         let client = match proxy {
-            Some(proxy) => client.proxy(proxy).build().unwrap(),
-            None => client.build().unwrap(),
-        };
+            Some(proxy) => client
+                .proxy(proxy)
+                .build()
+                .map_err(ToshoClientError::BuildError),
+            None => client.build().map_err(ToshoClientError::BuildError),
+        }?;
 
-        Self {
+        Ok(Self {
             inner: client,
             secret: secret.to_string(),
             constants,
-        }
+        })
     }
 
     /// Modify the HashMap to add the required parameters.
@@ -203,7 +133,7 @@ impl MUClient {
     ///
     /// #[tokio::main]
     /// async fn main() {
-    ///     let client = MUClient::new("1234", tosho_musq::constants::get_constants(1));
+    ///     let client = MUClient::new("1234", tosho_musq::constants::get_constants(1)).unwrap();
     ///    
     ///     let user_point = client.get_user_point().await.unwrap();
     ///     let manga = client.get_manga(240).await.unwrap();
@@ -307,7 +237,7 @@ impl MUClient {
     // --> PointEndpoints.kt
 
     /// Get the point shop information.
-    pub async fn get_point_shop(&self) -> anyhow::Result<PointShopView> {
+    pub async fn get_point_shop(&self) -> ToshoResult<PointShopView> {
         let res = self
             .inner
             .get(self.build_url("/point/shop"))
@@ -315,16 +245,21 @@ impl MUClient {
             .send()
             .await?;
 
-        parse_response(res).await
+        parse_protobuf_response(res).await
     }
 
     /// Get your current user point.
-    pub async fn get_user_point(&self) -> anyhow::Result<UserPoint> {
-        self.get_point_shop().await.map(|x| x.user_point.unwrap())
+    pub async fn get_user_point(&self) -> ToshoResult<UserPoint> {
+        // Guarantee that the user point is always available
+        let point = self.get_point_shop().await?;
+        match point.user_point {
+            Some(point) => Ok(point),
+            None => Err(ToshoParseError::expect("user point")),
+        }
     }
 
     /// Get your point acquisition history.
-    pub async fn get_point_history(&self) -> anyhow::Result<PointHistoryView> {
+    pub async fn get_point_history(&self) -> ToshoResult<PointHistoryView> {
         let res = self
             .inner
             .get(self.build_url("/point/history"))
@@ -332,7 +267,7 @@ impl MUClient {
             .send()
             .await?;
 
-        parse_response(res).await
+        parse_protobuf_response(res).await
     }
 
     // <-- PointEndpoints.kt
@@ -343,7 +278,7 @@ impl MUClient {
     ///
     /// # Parameters
     /// * `manga_id` - The manga ID.
-    pub async fn get_manga(&self, manga_id: u64) -> anyhow::Result<MangaDetailV2> {
+    pub async fn get_manga(&self, manga_id: u64) -> ToshoResult<MangaDetailV2> {
         let mut params: HashMap<String, String> = HashMap::new();
         params.insert("title_id".to_string(), manga_id.to_string());
         params.insert("ui_lang".to_string(), "en".to_string());
@@ -358,20 +293,20 @@ impl MUClient {
             .send()
             .await?;
 
-        let manga = parse_response::<MangaDetailV2>(res).await?;
+        let manga = parse_protobuf_response::<MangaDetailV2>(res).await?;
 
         if manga.status() != Status::Success {
-            anyhow::bail!("Failed to get manga detail: {:?}", manga)
+            bail_on_error!("Failed to get manga detail: {:?}", manga)
+        } else {
+            Ok(manga)
         }
-
-        Ok(manga)
     }
 
     /// Get weekly manga updates.
     ///
     /// # Parameters
     /// * `weekday` - The day of the week to get the updates from.
-    pub async fn get_weekly_titles(&self, weekday: WeeklyCode) -> anyhow::Result<MangaResults> {
+    pub async fn get_weekly_titles(&self, weekday: WeeklyCode) -> ToshoResult<MangaResults> {
         let mut params: HashMap<String, String> = HashMap::new();
         params.insert("code".to_string(), weekday.to_string());
 
@@ -384,14 +319,14 @@ impl MUClient {
             .send()
             .await?;
 
-        parse_response(res).await
+        parse_protobuf_response(res).await
     }
 
     /// Search manga by query.
     ///
     /// # Parameters
     /// * `query` - The query to search for.
-    pub async fn search(&self, query: &str) -> anyhow::Result<MangaResults> {
+    pub async fn search(&self, query: &str) -> ToshoResult<MangaResults> {
         let mut params: HashMap<String, String> = HashMap::new();
         params.insert("word".to_string(), query.to_string());
 
@@ -404,14 +339,14 @@ impl MUClient {
             .send()
             .await?;
 
-        parse_response(res).await
+        parse_protobuf_response(res).await
     }
 
     /// Search manga by tag.
     ///
     /// # Parameters
     /// * `tag_id` - The tag ID to search for.
-    pub async fn search_by_tag(&self, tag_id: u64) -> anyhow::Result<MangaResults> {
+    pub async fn search_by_tag(&self, tag_id: u64) -> ToshoResult<MangaResults> {
         let mut params: HashMap<String, String> = HashMap::new();
         params.insert("tag_id".to_string(), tag_id.to_string());
 
@@ -424,7 +359,7 @@ impl MUClient {
             .send()
             .await?;
 
-        parse_response(res).await
+        parse_protobuf_response(res).await
     }
 
     // <-- MangaEndpoints.kt
@@ -442,7 +377,7 @@ impl MUClient {
         chapter_id: u64,
         quality: ImageQuality,
         coins: Option<ConsumeCoin>,
-    ) -> anyhow::Result<ChapterViewerV2> {
+    ) -> ToshoResult<ChapterViewerV2> {
         let coins = coins.unwrap_or_default();
 
         let mut params = HashMap::new();
@@ -459,15 +394,15 @@ impl MUClient {
             .post(self.build_url("/manga/viewer_v2"))
             .form(&params)
             .send()
-            .await
-            .unwrap();
+            .await?;
 
-        let viewer: ChapterViewerV2 = parse_response(res).await?;
+        let viewer: ChapterViewerV2 = parse_protobuf_response(res).await?;
+
         if viewer.status() != Status::Success {
-            anyhow::bail!("Failed to get chapter viewer: {:?}", viewer)
+            bail_on_error!("Failed to get chapter viewer: {:?}", viewer)
+        } else {
+            Ok(viewer)
         }
-
-        Ok(viewer)
     }
 
     // <-- ChapterEndpoints.kt
@@ -475,7 +410,7 @@ impl MUClient {
     // --> AccountEndpoints.kt
 
     /// Get your account information.
-    pub async fn get_account(&self) -> anyhow::Result<AccountView> {
+    pub async fn get_account(&self) -> ToshoResult<AccountView> {
         let res = self
             .inner
             .get(self.build_url("/account/account"))
@@ -483,11 +418,11 @@ impl MUClient {
             .send()
             .await?;
 
-        parse_response(res).await
+        parse_protobuf_response(res).await
     }
 
     /// Get your account setting.
-    pub async fn get_setting(&self) -> anyhow::Result<SettingView> {
+    pub async fn get_setting(&self) -> ToshoResult<SettingView> {
         let res = self
             .inner
             .get(self.build_url("/setting/setting"))
@@ -495,7 +430,7 @@ impl MUClient {
             .send()
             .await?;
 
-        parse_response(res).await
+        parse_protobuf_response(res).await
     }
 
     // <-- AccountEndpoints.kt
@@ -503,7 +438,7 @@ impl MUClient {
     // --> Api.kt (Personalized)
 
     /// Get your manga list for your account.
-    pub async fn get_my_manga(&self) -> anyhow::Result<MyPageView> {
+    pub async fn get_my_manga(&self) -> ToshoResult<MyPageView> {
         let res = self
             .inner
             .get(self.build_url("/my_page"))
@@ -511,13 +446,13 @@ impl MUClient {
             .send()
             .await?;
 
-        parse_response(res).await
+        parse_protobuf_response(res).await
     }
 
     /// Get your personalized home view.
     ///
     /// Same result when you click the ``Home`` button in the app.
-    pub async fn get_my_home(&self) -> anyhow::Result<HomeViewV2> {
+    pub async fn get_my_home(&self) -> ToshoResult<HomeViewV2> {
         let mut params = HashMap::new();
         params.insert("ui_lang".to_string(), "en".to_string());
 
@@ -530,7 +465,7 @@ impl MUClient {
             .send()
             .await?;
 
-        parse_response(res).await
+        parse_protobuf_response(res).await
     }
 
     // <-- Api.kt (Personalized)
@@ -542,19 +477,33 @@ impl MUClient {
     /// Sometimes the API would return a URL with cloudfront host,
     /// which can't be accessed directly but need to use the "mirror" host
     /// provided by the client.
-    fn replace_image_host(&self, url: &str) -> anyhow::Result<::reqwest::Url> {
+    fn replace_image_host(&self, url: &str) -> ToshoResult<::reqwest::Url> {
         match ::reqwest::Url::parse(url) {
             Ok(mut parsed_url) => {
-                let valid_host =
-                    ::reqwest::Url::parse(format!("https://{}", &*IMAGE_HOST).as_str())?;
-                parsed_url.set_host(Some(valid_host.host_str().unwrap()))?;
+                let valid_host = ::reqwest::Url::parse(
+                    format!("https://{}", &*IMAGE_HOST).as_str(),
+                )
+                .map_err(|e| make_error!("Failed to parse image host: {}: {}", &*IMAGE_HOST, e))?;
+                let host_name = valid_host
+                    .host_str()
+                    .ok_or_else(|| make_error!("Failed to get host from: {}", &valid_host))?;
+                parsed_url.set_host(Some(host_name)).map_err(|e| {
+                    make_error!(
+                        "Failed to replace image host: {} with {}: {}",
+                        url,
+                        &*IMAGE_HOST,
+                        e
+                    )
+                })?;
 
                 Ok(parsed_url)
             }
             Err(_) => {
                 // parse url failed, assume it's a relative path
                 let full_url = format!("https://{}{}", &*IMAGE_HOST, url);
-                let parse_url = ::reqwest::Url::parse(full_url.as_str())?;
+                let parse_url = ::reqwest::Url::parse(full_url.as_str()).map_err(|e| {
+                    make_error!("Failed to parse image host: {}: {}", &*IMAGE_HOST, e)
+                })?;
                 Ok(parse_url)
             }
         }
@@ -571,7 +520,7 @@ impl MUClient {
         &self,
         url: &str,
         mut writer: impl io::AsyncWrite + Unpin,
-    ) -> anyhow::Result<()> {
+    ) -> ToshoResult<()> {
         let actual_url = self.replace_image_host(url)?;
 
         let res = self
@@ -581,11 +530,11 @@ impl MUClient {
                 let mut headers = reqwest::header::HeaderMap::new();
                 headers.insert(
                     "Host",
-                    reqwest::header::HeaderValue::from_str(&IMAGE_HOST).unwrap(),
+                    reqwest::header::HeaderValue::from_static(&IMAGE_HOST),
                 );
                 headers.insert(
                     "User-Agent",
-                    reqwest::header::HeaderValue::from_str(&self.constants.image_ua).unwrap(),
+                    reqwest::header::HeaderValue::from_static(&self.constants.image_ua),
                 );
                 headers.insert(
                     "Cache-Control",
@@ -595,36 +544,20 @@ impl MUClient {
                 headers
             })
             .send()
-            .await
-            .unwrap();
+            .await?;
 
         // bail if not success
         if !res.status().is_success() {
-            anyhow::bail!("Failed to download image: {}", res.status())
-        }
+            Err(ToshoError::from(res.status()))
+        } else {
+            let mut stream = res.bytes_stream();
+            while let Some(item) = stream.try_next().await? {
+                writer.write_all(&item).await?;
+            }
 
-        let mut stream = res.bytes_stream();
-        while let Some(item) = stream.next().await {
-            let item = item.unwrap();
-            writer.write_all(&item).await?;
+            Ok(())
         }
-
-        Ok(())
     }
 
     // <-- Downloader
-}
-
-async fn parse_response<T>(res: reqwest::Response) -> anyhow::Result<T>
-where
-    T: ::prost::Message + Default + Clone,
-{
-    if res.status().is_success() {
-        let bytes_data = res.bytes().await?;
-        let cursor = bytes_data.as_ref();
-
-        Ok(T::decode(&mut Cursor::new(cursor))?)
-    } else {
-        anyhow::bail!("MU! request failed with status: {}", res.status())
-    }
 }

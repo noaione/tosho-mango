@@ -1,76 +1,9 @@
-//! # tosho-sjv
-//!
-//! ![crates.io version](https://img.shields.io/crates/v/tosho-sjv)
-//!
-//! A minimal asynchronous client for the SJ API by V.
-//!
-//! The following crate is used by the [`tosho`] app.
-//!
-//! ## Usage
-//!
-//! Download the [`tosho`] app, or you can utilize this crate like any other Rust crate:
-//!
-//! ```rust,no_run
-//! use tosho_sjv::{SJClient, SJConfig, SJMode, SJPlatform};
-//!
-//! #[tokio::main]
-//! async fn main() {
-//!     let config = SJConfig {
-//!         user_id: 123,
-//!         token: "xyz987abc".to_string(),
-//!         instance: "abcxyz".to_string(),
-//!         platform: SJPlatform::Android,
-//!     };
-//!
-//!     let client = SJClient::new(config, SJMode::VM);
-//!     let manga = client.get_manga(vec![777]).await.unwrap();
-//!     println!("{:?}", manga);
-//! }
-//! ```
-//!
-//! ## Authentication
-//!
-//! The following sources only have one method of authentication, and that method uses your email and password.
-//!
-//! ```bash
-//! $ tosho sj auth email password --help
-//! ```
-//!
-//! Or, if you use the crates:
-//!
-//! ```rust,no_run
-//! use tosho_sjv::{SJClient, SJConfig, SJMode, SJPlatform};
-//!
-//! #[tokio::main]
-//! async fn main() {
-//!     let (account, instance_id) = SJClient::login("test@mail.com", "mypassword", SJMode::SJ, SJPlatform::Android).await.unwrap();
-//!
-//!     let config = SJConfig::from_login_response(&account, instance_id, SJPlatform::Android);
-//!
-//!     // Do stuff
-//!     let client = SJClient::new(config, SJMode::SJ);
-//! }
-//! ```
-//!
-//! ## Disclaimer
-//!
-//! This project is designed as an experiment and to create a local copy for personal use.
-//! These tools will not circumvent any paywall, and you will need to purchase and own each chapter
-//! with your own account to be able to make your own local copy.
-//!
-//! We're not responsible if your account got deactivated.
-//!
-//! ## License
-//!
-//! This project is licensed with MIT License ([LICENSE](https://github.com/noaione/tosho-mango/blob/master/LICENSE) or <http://opensource.org/licenses/MIT>)
-//!
-//! [`tosho`]: https://crates.io/crates/tosho
+#![doc = include_str!("../README.md")]
 
 use constants::{
     API_HOST, BASE_API, DATA_APP_ID, HEADER_PIECE, LIB_VERSION, SJ_APP_ID, VALUE_PIECE, VM_APP_ID,
 };
-use futures_util::StreamExt;
-use helper::generate_random_token;
+use futures_util::TryStreamExt;
 use models::{
     AccountEntitlementsResponse, AccountLoginResponse, MangaAuthResponse, MangaDetail,
     MangaReadMetadataResponse, MangaSeriesResponse, MangaStoreInfo, MangaStoreResponse,
@@ -78,10 +11,13 @@ use models::{
 };
 use std::collections::HashMap;
 use tokio::io::{self, AsyncWriteExt};
+use tosho_common::{
+    bail_on_error, make_error, parse_json_response, parse_json_response_failable, ToshoAuthError,
+    ToshoClientError, ToshoError, ToshoResult,
+};
 
 pub mod config;
 pub mod constants;
-pub(crate) mod helper;
 pub mod imaging;
 pub mod models;
 
@@ -90,7 +26,7 @@ pub use config::*;
 /// Main client for interacting with the SJ/M API.
 ///
 /// # Examples
-/// ```no_run
+/// ```rust,no_run
 /// use tosho_sjv::{SJClient, SJConfig, SJMode, SJPlatform};
 ///
 /// #[tokio::main]
@@ -102,7 +38,7 @@ pub use config::*;
 ///         platform: SJPlatform::Android,
 ///     };
 ///
-///     let client = SJClient::new(config, SJMode::VM);
+///     let client = SJClient::new(config, SJMode::VM).unwrap();
 ///     let manga = client.get_manga(vec![777]).await.unwrap();
 ///     println!("{:?}", manga);
 /// }
@@ -121,7 +57,7 @@ impl SJClient {
     /// # Parameters
     /// * `config` - The configuration to use for the client.
     /// * `mode` - The mode to use for the client.
-    pub fn new(config: SJConfig, mode: SJMode) -> Self {
+    pub fn new(config: SJConfig, mode: SJMode) -> ToshoResult<Self> {
         Self::make_client(config, mode, None)
     }
 
@@ -131,11 +67,15 @@ impl SJClient {
     ///
     /// # Arguments
     /// * `proxy` - The proxy to attach to the client
-    pub fn with_proxy(&self, proxy: reqwest::Proxy) -> Self {
+    pub fn with_proxy(&self, proxy: reqwest::Proxy) -> ToshoResult<Self> {
         Self::make_client(self.config.clone(), self.mode, Some(proxy))
     }
 
-    fn make_client(config: SJConfig, mode: SJMode, proxy: Option<reqwest::Proxy>) -> Self {
+    fn make_client(
+        config: SJConfig,
+        mode: SJMode,
+        proxy: Option<reqwest::Proxy>,
+    ) -> ToshoResult<Self> {
         let constants = crate::constants::get_constants(config.platform as u8);
         let mut headers = reqwest::header::HeaderMap::new();
         headers.insert(
@@ -152,13 +92,15 @@ impl SJClient {
         };
         headers.insert(
             reqwest::header::REFERER,
-            reqwest::header::HeaderValue::from_str(referer).unwrap(),
+            reqwest::header::HeaderValue::from_static(referer),
         );
 
         let x_header = format!("{} {}", constants.app_ver, &*VALUE_PIECE);
         headers.insert(
             reqwest::header::HeaderName::from_static(&HEADER_PIECE),
-            reqwest::header::HeaderValue::from_str(&x_header).unwrap(),
+            reqwest::header::HeaderValue::from_str(&x_header).map_err(|_| {
+                ToshoClientError::HeaderParseError(format!("Header piece of {}", &x_header))
+            })?,
         );
 
         let client = reqwest::Client::builder()
@@ -167,16 +109,19 @@ impl SJClient {
             .default_headers(headers);
 
         let client = match proxy {
-            Some(proxy) => client.proxy(proxy).build().unwrap(),
-            None => client.build().unwrap(),
-        };
+            Some(proxy) => client
+                .proxy(proxy)
+                .build()
+                .map_err(ToshoClientError::BuildError),
+            None => client.build().map_err(ToshoClientError::BuildError),
+        }?;
 
-        Self {
+        Ok(Self {
             inner: client,
             config,
             constants,
             mode,
-        }
+        })
     }
 
     /// Return the mode of the client.
@@ -205,7 +150,7 @@ impl SJClient {
         endpoint: &str,
         data: Option<HashMap<String, String>>,
         params: Option<HashMap<String, String>>,
-    ) -> anyhow::Result<T>
+    ) -> ToshoResult<T>
     where
         T: serde::de::DeserializeOwned,
     {
@@ -217,7 +162,9 @@ impl SJClient {
                 let mut extend_headers = reqwest::header::HeaderMap::new();
                 extend_headers.insert(
                     reqwest::header::CONTENT_TYPE,
-                    "application/x-www-form-urlencoded".parse()?,
+                    "application/x-www-form-urlencoded"
+                        .parse()
+                        .map_err(|e| make_error!("Failed to parse header: {}", e))?,
                 );
                 self.inner
                     .request(method, endpoint)
@@ -226,17 +173,17 @@ impl SJClient {
             }
             (None, Some(params)) => self.inner.request(method, endpoint).query(&params),
             (Some(_), Some(_)) => {
-                anyhow::bail!("Cannot have both data and params")
+                bail_on_error!("Cannot have both data and params")
             }
         };
 
-        parse_response(request.send().await?).await
+        parse_json_response_failable::<T, SimpleResponse>(request.send().await?).await
     }
 
     /// Get the manga store cache that can be use for other route.
     ///
     /// Can be used to get every possible manga series.
-    pub async fn get_store_cache(&self) -> anyhow::Result<MangaStoreResponse> {
+    pub async fn get_store_cache(&self) -> ToshoResult<MangaStoreResponse> {
         let app_id = match self.mode {
             SJMode::VM => VM_APP_ID,
             SJMode::SJ => SJ_APP_ID,
@@ -257,7 +204,7 @@ impl SJClient {
     ///
     /// # Arguments
     /// * `manga_ids` - The list of manga IDs to get
-    pub async fn get_manga(&self, manga_ids: Vec<u32>) -> anyhow::Result<Vec<MangaDetail>> {
+    pub async fn get_manga(&self, manga_ids: Vec<u32>) -> ToshoResult<Vec<MangaDetail>> {
         let response = self.get_store_cache().await?;
 
         let manga_lists: Vec<MangaDetail> = response
@@ -283,7 +230,7 @@ impl SJClient {
     ///
     /// # Arguments
     /// * `id` - The manga ID
-    pub async fn get_chapters(&self, id: u32) -> anyhow::Result<MangaSeriesResponse> {
+    pub async fn get_chapters(&self, id: u32) -> ToshoResult<MangaSeriesResponse> {
         let app_id = match self.mode {
             SJMode::VM => VM_APP_ID,
             SJMode::SJ => SJ_APP_ID,
@@ -304,7 +251,7 @@ impl SJClient {
     ///
     /// # Arguments
     /// * `id` - The chapter ID
-    pub async fn verify_chapter(&self, id: u32) -> anyhow::Result<()> {
+    pub async fn verify_chapter(&self, id: u32) -> ToshoResult<()> {
         let mut data = common_data_hashmap(self.constants, &self.mode, Some(&self.config));
         data.insert("manga_id".to_string(), id.to_string());
 
@@ -327,12 +274,12 @@ impl SJClient {
         id: u32,
         metadata: bool,
         page: Option<u32>,
-    ) -> anyhow::Result<String> {
+    ) -> ToshoResult<String> {
         let mut data = common_data_hashmap(self.constants, &self.mode, Some(&self.config));
         data.insert("manga_id".to_string(), id.to_string());
 
         if !metadata && page.is_none() {
-            anyhow::bail!("You must set either metadata or page!");
+            bail_on_error!("You must set either metadata or page!");
         }
 
         if metadata {
@@ -352,7 +299,7 @@ impl SJClient {
                     .await?;
 
                 if !response.status().is_success() {
-                    anyhow::bail!("Failed to get manga URL: {}", response.status())
+                    bail_on_error!("Failed to get manga URL: {}", response.status());
                 }
 
                 let url = response.text().await?;
@@ -373,7 +320,7 @@ impl SJClient {
                 } else if let Some(url) = resp.metadata {
                     Ok(url)
                 } else {
-                    anyhow::bail!("No URL or metadata found")
+                    bail_on_error!("No URL or metadata found")
                 }
             }
         }
@@ -383,23 +330,27 @@ impl SJClient {
     ///
     /// # Arguments
     /// * `id` - The chapter ID
-    pub async fn get_chapter_metadata(&self, id: u32) -> anyhow::Result<MangaReadMetadataResponse> {
+    pub async fn get_chapter_metadata(&self, id: u32) -> ToshoResult<MangaReadMetadataResponse> {
         let response = self.get_manga_url(id, true, None).await?;
-        let url_parse = reqwest::Url::parse(&response)?;
-        let host = url_parse.host_str().unwrap();
+        let url_parse = reqwest::Url::parse(&response)
+            .map_err(|e| make_error!("Failed to parse URL: {} ({})", response, e))?;
+        let host = url_parse
+            .host_str()
+            .ok_or_else(|| make_error!("Failed to get host from URL: {}", url_parse.as_str()))?;
 
         let metadata_resp = self
             .inner
             .get(response)
             .header(
                 reqwest::header::HOST,
-                reqwest::header::HeaderValue::from_str(host).unwrap(),
+                reqwest::header::HeaderValue::from_str(host).map_err(|_| {
+                    ToshoClientError::HeaderParseError(format!("Host for {}", host))
+                })?,
             )
             .send()
             .await?;
 
-        let metadata: MangaReadMetadataResponse =
-            serde_json::from_str(&metadata_resp.text().await?)?;
+        let metadata: MangaReadMetadataResponse = parse_json_response(metadata_resp).await?;
 
         Ok(metadata)
     }
@@ -407,7 +358,7 @@ impl SJClient {
     /// Get the current user entitlements.
     ///
     /// This contains subscription information and other details.
-    pub async fn get_entitlements(&self) -> anyhow::Result<AccountEntitlementsResponse> {
+    pub async fn get_entitlements(&self) -> ToshoResult<AccountEntitlementsResponse> {
         let data = common_data_hashmap(self.constants, &self.mode, Some(&self.config));
 
         let response = self
@@ -433,48 +384,53 @@ impl SJClient {
         &self,
         url: &str,
         mut writer: impl io::AsyncWrite + Unpin,
-    ) -> anyhow::Result<()> {
-        let url_parse = reqwest::Url::parse(url)?;
-        let host = url_parse.host_str().unwrap();
+    ) -> ToshoResult<()> {
+        let url_parse = reqwest::Url::parse(url)
+            .map_err(|e| make_error!("Failed to parse URL: {} ({})", url, e))?;
+        let host = url_parse
+            .host_str()
+            .ok_or_else(|| make_error!("Failed to get host from URL: {}", url_parse.as_str()))?;
 
         let res = self
             .inner
             .get(url)
             .header(
                 reqwest::header::HOST,
-                reqwest::header::HeaderValue::from_str(host).unwrap(),
+                reqwest::header::HeaderValue::from_str(host).map_err(|_| {
+                    ToshoClientError::HeaderParseError(format!("Host for {}", host))
+                })?,
             )
             .send()
             .await?;
 
         if !res.status().is_success() {
-            anyhow::bail!("Failed to download image: {}", res.status())
-        }
+            Err(ToshoError::from(res.status()))
+        } else {
+            match &self.config.platform {
+                SJPlatform::Web => {
+                    let image_bytes = res.bytes().await?;
+                    let descrambled = tokio::task::spawn_blocking(move || {
+                        crate::imaging::descramble_image(&image_bytes)
+                    })
+                    .await
+                    .map_err(|e| make_error!("Failed to execute blocking task: {}", e))?;
 
-        match &self.config.platform {
-            SJPlatform::Web => {
-                let image_bytes = res.bytes().await?;
-                let descrambled = tokio::task::spawn_blocking(move || {
-                    crate::imaging::descramble_image(&image_bytes)
-                })
-                .await?;
-
-                match descrambled {
-                    Ok(descrambled) => {
-                        writer.write_all(&descrambled).await?;
+                    match descrambled {
+                        Ok(descrambled) => {
+                            writer.write_all(&descrambled).await?;
+                        }
+                        Err(e) => return Err(e),
                     }
-                    Err(e) => anyhow::bail!("Failed to descramble image: {}", e),
-                }
 
-                Ok(())
-            }
-            _ => {
-                let mut stream = res.bytes_stream();
-                while let Some(item) = stream.next().await {
-                    let item = item.unwrap();
-                    writer.write_all(&item).await?;
+                    Ok(())
                 }
-                Ok(())
+                _ => {
+                    let mut stream = res.bytes_stream();
+                    while let Some(item) = stream.try_next().await? {
+                        writer.write_all(&item).await?;
+                    }
+                    Ok(())
+                }
             }
         }
     }
@@ -493,7 +449,7 @@ impl SJClient {
         password: &str,
         mode: SJMode,
         platform: SJPlatform,
-    ) -> anyhow::Result<(AccountLoginResponse, String)> {
+    ) -> ToshoResult<(AccountLoginResponse, String)> {
         let const_plat = match platform {
             SJPlatform::Android => 1_u8,
             SJPlatform::Apple => 2,
@@ -516,39 +472,49 @@ impl SJClient {
         };
         headers.insert(
             reqwest::header::REFERER,
-            reqwest::header::HeaderValue::from_str(referer).unwrap(),
+            reqwest::header::HeaderValue::from_static(referer),
         );
 
         let x_header = format!("{} {}", constants.app_ver, &*VALUE_PIECE);
         headers.insert(
             reqwest::header::HeaderName::from_static(&HEADER_PIECE),
-            reqwest::header::HeaderValue::from_str(&x_header).unwrap(),
+            reqwest::header::HeaderValue::from_str(&x_header).map_err(|_| {
+                ToshoClientError::HeaderParseError(format!("Header piece of {}", &x_header))
+            })?,
         );
 
         let client = reqwest::Client::builder()
             .http2_adaptive_window(true)
             .use_rustls_tls()
             .default_headers(headers)
-            .build()?;
+            .build()
+            .map_err(ToshoClientError::BuildError)?;
 
         let mut data = common_data_hashmap(constants, &mode, None);
         data.insert("login".to_string(), email.to_string());
         data.insert("pass".to_string(), password.to_string());
 
-        let instance_id = data.get("instance_id").unwrap().clone();
+        let instance_id = match data.get("instance_id") {
+            Some(instance) => instance.clone(),
+            None => {
+                return Err(ToshoAuthError::CommonError(
+                    "Unable to get instance_id from common_data_hashmap".to_string(),
+                )
+                .into());
+            }
+        };
 
         let response = client
             .post(format!("{}/manga/try_manga_login", &*BASE_API))
             .form(&data)
             .header(
                 reqwest::header::CONTENT_TYPE,
-                reqwest::header::HeaderValue::from_str("application/x-www-form-urlencoded")
-                    .unwrap(),
+                reqwest::header::HeaderValue::from_static("application/x-www-form-urlencoded"),
             )
             .send()
             .await?;
 
-        let account_resp: AccountLoginResponse = parse_response(response).await?;
+        let account_resp: AccountLoginResponse = parse_json_response(response).await?;
 
         Ok((account_resp, instance_id))
     }
@@ -570,7 +536,10 @@ fn common_data_hashmap(
         data.insert("instance_id".to_string(), config.instance.clone());
         data.insert("device_token".to_string(), config.instance.clone());
     } else {
-        data.insert("instance_id".to_string(), generate_random_token());
+        data.insert(
+            "instance_id".to_string(),
+            tosho_common::generate_random_token(16),
+        );
     }
     data.insert("device_id".to_string(), constants.device_id.to_string());
     data.insert("version".to_string(), LIB_VERSION.to_string());
@@ -579,41 +548,4 @@ fn common_data_hashmap(
         data.insert(version_body.clone(), constants.app_ver.to_string());
     }
     data
-}
-
-async fn parse_response<T>(response: reqwest::Response) -> anyhow::Result<T>
-where
-    T: serde::de::DeserializeOwned,
-{
-    let stat_code = response.status();
-    let headers = response.headers().clone();
-    let url = response.url().clone();
-    let raw_text = response.text().await.unwrap();
-    let status_resp = serde_json::from_str::<SimpleResponse>(&raw_text.clone()).unwrap_or_else(|_| panic!(
-        "Failed to parse response.\nURL: {}\nStatus code: {}\nHeaders: {:?}\nContents: {}\nBacktrace",
-        url, stat_code, headers, raw_text
-    ));
-
-    if status_resp.is_err() {
-        anyhow::bail!(
-            "Response is not OK: {}",
-            status_resp.error.unwrap_or("unknown error".to_string())
-        )
-    }
-
-    let parsed = serde_json::from_str(&raw_text).unwrap_or_else(|error| {
-        let row_line = error.line() - 1;
-        let split_lines = &raw_text.split('\n').collect::<Vec<&str>>();
-        let position = error.column();
-        let start_index = position.saturating_sub(25); // Start 25 characters before the error position
-        let end_index = position.saturating_add(25); // End 25 characters after the error position
-        let excerpt = &split_lines[row_line][start_index..end_index];
-
-        panic!(
-            "Failed when deserializing response, error: {}\nURL: {}\nExcerpt: {}",
-            error, url, excerpt
-        )
-    });
-
-    Ok(parsed)
 }

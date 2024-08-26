@@ -1,73 +1,12 @@
-//! # tosho-amap
-//!
-//! ![crates.io version](https://img.shields.io/crates/v/tosho-amap)
-//!
-//! A minimal asynchronous client for the AM API by AP.
-//!
-//! The following crate is used by the [`tosho`] app.
-//!
-//! ## Usage
-//!
-//! Download the [`tosho`] app, or you can utilize this crate like any other Rust crate:
-//!
-//! ```rust,no_run
-//! use tosho_amap::{AMClient, AMConfig};
-//!
-//! #[tokio::main]
-//! async fn main() {
-//!     let config = AMConfig {
-//!         token: "123".to_string(),
-//!         identifier: "abcxyz".to_string(),
-//!         session_v2: "xyz987abc".to_string(),
-//!     };
-//!
-//!     let client = AMClient::new(config);
-//!
-//!     let manga = client.get_comic(48000051).await.unwrap();
-//!     println!("{:?}", manga);
-//! }
-//! ```
-//!
-//! ## Authentication
-//!
-//! The following sources only have one method of authentication, and that method uses your email and password.
-//!
-//! ```bash
-//! $ tosho am auth email password
-//! ```
-//!
-//! Or, if you use this crates as library:
-//!
-//! ```rust,no_run
-//! use tosho_amap::AMClient;
-//!
-//! #[tokio::main]
-//! async fn main() {
-//!     let login_res = AMClient::login("test@mail.com", "mypassword").await.unwrap();
-//! }
-//! ```
-//!
-//! ## Disclaimer
-//!
-//! This project is designed as an experiment and to create a local copy for personal use.
-//! These tools will not circumvent any paywall, and you will need to purchase and own each chapter
-//! with your own account to be able to make your own local copy.
-//!
-//! We're not responsible if your account got deactivated.
-//!
-//! ## License
-//!
-//! This project is licensed with MIT License ([LICENSE](https://github.com/noaione/tosho-mango/blob/master/LICENSE) or <http://opensource.org/licenses/MIT>)
-//!
-//! [`tosho`]: https://crates.io/crates/tosho
+#![doc = include_str!("../README.md")]
 
 use std::{collections::HashMap, sync::MutexGuard};
 
 use constants::{
     get_constants, API_HOST, APP_NAME, BASE_API, HEADER_NAMES, IMAGE_HOST, MASKED_LOGIN,
 };
-use futures_util::StreamExt;
-use helper::{generate_random_token, ComicPurchase};
+use futures_util::TryStreamExt;
+use helper::ComicPurchase;
 use models::{
     APIResult, AccountUserResponse, ComicDiscovery, ComicDiscoveryPaginatedResponse,
     ComicSearchResponse, ComicStatus, StatusResult,
@@ -77,6 +16,10 @@ use sha2::{Digest, Sha256};
 use tokio::io::AsyncWriteExt;
 
 pub use config::*;
+use tosho_common::{
+    make_error, parse_json_response, parse_json_response_failable, FailableResponse,
+    ToshoAuthError, ToshoClientError, ToshoParseError, ToshoResult,
+};
 pub mod config;
 pub mod constants;
 pub mod helper;
@@ -87,7 +30,7 @@ const SCREEN_INCH: f64 = 61.1918658356194;
 /// Main client for interacting with the AP AM
 ///
 /// # Example
-/// ```no_run
+/// ```rust,no_run
 /// use tosho_amap::{AMClient, AMConfig};
 ///
 /// #[tokio::main]
@@ -98,7 +41,7 @@ const SCREEN_INCH: f64 = 61.1918658356194;
 ///         session_v2: "xyz987abc".to_string(),
 ///     };
 ///
-///     let client = AMClient::new(config);
+///     let client = AMClient::new(config).unwrap();
 ///     let manga = client.get_comic(48000051).await.unwrap();
 ///     println!("{:?}", manga);
 /// }
@@ -116,7 +59,7 @@ impl AMClient {
     ///
     /// # Parameters
     /// * `config` - The configuration to use for the client.
-    pub fn new(config: AMConfig) -> Self {
+    pub fn new(config: AMConfig) -> ToshoResult<Self> {
         Self::make_client(config, None)
     }
 
@@ -126,11 +69,11 @@ impl AMClient {
     ///
     /// # Arguments
     /// * `proxy` - The proxy to attach to the client
-    pub fn with_proxy(&self, proxy: reqwest::Proxy) -> Self {
+    pub fn with_proxy(&self, proxy: reqwest::Proxy) -> ToshoResult<Self> {
         Self::make_client(self.config.clone(), Some(proxy))
     }
 
-    fn make_client(config: AMConfig, proxy: Option<reqwest::Proxy>) -> Self {
+    fn make_client(config: AMConfig, proxy: Option<reqwest::Proxy>) -> ToshoResult<Self> {
         let mut headers = reqwest::header::HeaderMap::new();
         headers.insert(
             reqwest::header::ACCEPT,
@@ -146,7 +89,7 @@ impl AMClient {
             reqwest::header::HeaderValue::from_static(&constants.ua),
         );
 
-        let cookie_store = CookieStoreMutex::from(config.clone());
+        let cookie_store = CookieStoreMutex::try_from(config.clone())?;
         let cookie_store = std::sync::Arc::new(cookie_store);
 
         let client = reqwest::Client::builder()
@@ -156,20 +99,26 @@ impl AMClient {
             .cookie_provider(std::sync::Arc::clone(&cookie_store));
 
         let client = match proxy {
-            Some(proxy) => client.proxy(proxy).build().unwrap(),
-            None => client.build().unwrap(),
-        };
+            Some(proxy) => client
+                .proxy(proxy)
+                .build()
+                .map_err(ToshoClientError::BuildError),
+            None => client.build().map_err(ToshoClientError::BuildError),
+        }?;
 
-        Self {
+        Ok(Self {
             inner: client,
             config,
             constants,
             cookie_store,
-        }
+        })
     }
 
     /// Apply the JSON object with the default values.
-    fn apply_json_object(&self, json_obj: &mut HashMap<String, serde_json::Value>) {
+    fn apply_json_object(
+        &self,
+        json_obj: &mut HashMap<String, serde_json::Value>,
+    ) -> ToshoResult<()> {
         json_with_common(json_obj, self.constants)
     }
 
@@ -183,14 +132,14 @@ impl AMClient {
         method: reqwest::Method,
         endpoint: &str,
         json: Option<HashMap<String, serde_json::Value>>,
-    ) -> anyhow::Result<APIResult<T>>
+    ) -> ToshoResult<APIResult<T>>
     where
         T: serde::de::DeserializeOwned + std::clone::Clone,
     {
         let endpoint = format!("{}{}", &*BASE_API, endpoint);
 
         let mut cloned_json = json.clone().unwrap_or_default();
-        self.apply_json_object(&mut cloned_json);
+        self.apply_json_object(&mut cloned_json)?;
 
         let headers = make_header(&self.config, self.constants)?;
 
@@ -202,13 +151,13 @@ impl AMClient {
             .send()
             .await?;
 
-        parse_response(req).await
+        parse_json_response_failable::<APIResult<T>, BasicWrapStatus>(req).await
     }
 
     /// Get the account information or remainder.
     ///
     /// This request has data related to user point and more.
-    pub async fn get_remainder(&self) -> anyhow::Result<models::IAPRemainder> {
+    pub async fn get_remainder(&self) -> ToshoResult<models::IAPRemainder> {
         let mut json_body = HashMap::new();
         json_body.insert(
             "i_token".to_string(),
@@ -220,7 +169,7 @@ impl AMClient {
         );
         json_body.insert("app_login".to_string(), serde_json::Value::Bool(true));
 
-        let result = self
+        let results = self
             .request::<models::IAPRemainder>(
                 reqwest::Method::POST,
                 "/iap/remainder.json",
@@ -228,17 +177,14 @@ impl AMClient {
             )
             .await?;
 
-        result
-            .result
-            .body
-            .ok_or_else(|| anyhow::anyhow!("No content in response"))
+        results.result.body.ok_or_else(ToshoParseError::empty)
     }
 
     /// Get a single comic information by ID.
     ///
     /// # Arguments
     /// * `id` - The ID of the comic.
-    pub async fn get_comic(&self, id: u64) -> anyhow::Result<models::ComicInfoResponse> {
+    pub async fn get_comic(&self, id: u64) -> ToshoResult<models::ComicInfoResponse> {
         let mut json_body = HashMap::new();
         json_body.insert(
             "manga_sele_id".to_string(),
@@ -250,7 +196,7 @@ impl AMClient {
         );
         json_body.insert("app_login".to_string(), serde_json::Value::Bool(true));
 
-        let result = self
+        let results = self
             .request::<models::ComicInfoResponse>(
                 reqwest::Method::POST,
                 "/iap/comicCover.json",
@@ -258,10 +204,7 @@ impl AMClient {
             )
             .await?;
 
-        result
-            .result
-            .body
-            .ok_or_else(|| anyhow::anyhow!("No content in response"))
+        results.result.body.ok_or_else(ToshoParseError::empty)
     }
 
     /// Get reader/viewer for an episode.
@@ -273,7 +216,7 @@ impl AMClient {
         &self,
         id: u64,
         episode: &ComicPurchase,
-    ) -> anyhow::Result<models::ComicReadResponse> {
+    ) -> ToshoResult<models::ComicReadResponse> {
         let mut json_body = HashMap::new();
         json_body.insert(
             "manga_sele_id".to_string(),
@@ -317,7 +260,7 @@ impl AMClient {
         );
         json_body.insert("app_login".to_string(), serde_json::Value::Bool(true));
 
-        let result = self
+        let results = self
             .request::<models::ComicReadResponse>(
                 reqwest::Method::POST,
                 "/iap/mangaDownload.json",
@@ -325,18 +268,15 @@ impl AMClient {
             )
             .await?;
 
-        result
-            .result
-            .body
-            .ok_or_else(|| anyhow::anyhow!("No content in response"))
+        results.result.body.ok_or_else(ToshoParseError::empty)
     }
 
     /// Get the account for the current session.
-    pub async fn get_account(&self) -> anyhow::Result<AccountUserResponse> {
+    pub async fn get_account(&self) -> ToshoResult<AccountUserResponse> {
         let mut json_body = HashMap::new();
         json_body.insert("mine".to_string(), serde_json::Value::Bool(true));
 
-        let result = self
+        let results = self
             .request::<AccountUserResponse>(
                 reqwest::Method::POST,
                 "/author/profile.json",
@@ -344,15 +284,12 @@ impl AMClient {
             )
             .await?;
 
-        result
-            .result
-            .body
-            .ok_or_else(|| anyhow::anyhow!("No content in response"))
+        results.result.body.ok_or_else(ToshoParseError::empty)
     }
 
     /// Get account favorites.
-    pub async fn get_favorites(&self) -> anyhow::Result<ComicDiscoveryPaginatedResponse> {
-        let result = self
+    pub async fn get_favorites(&self) -> ToshoResult<ComicDiscoveryPaginatedResponse> {
+        let results = self
             .request::<ComicDiscoveryPaginatedResponse>(
                 reqwest::Method::POST,
                 "/mypage/favOfficialComicList.json",
@@ -360,10 +297,7 @@ impl AMClient {
             )
             .await?;
 
-        result
-            .result
-            .body
-            .ok_or_else(|| anyhow::anyhow!("No content in response"))
+        results.result.body.ok_or_else(ToshoParseError::empty)
     }
 
     /// Search for comics.
@@ -379,7 +313,7 @@ impl AMClient {
         tag_id: Option<u64>,
         page: Option<u64>,
         limit: Option<u64>,
-    ) -> anyhow::Result<ComicSearchResponse> {
+    ) -> ToshoResult<ComicSearchResponse> {
         let mut json_body = HashMap::new();
 
         let mut conditions = serde_json::Map::new();
@@ -410,7 +344,7 @@ impl AMClient {
             serde_json::Value::Number(serde_json::Number::from(limit.unwrap_or(30))),
         );
 
-        let result = self
+        let results = self
             .request::<ComicSearchResponse>(
                 reqwest::Method::POST,
                 "/manga/official.json",
@@ -418,22 +352,16 @@ impl AMClient {
             )
             .await?;
 
-        result
-            .result
-            .body
-            .ok_or_else(|| anyhow::anyhow!("No content in response"))
+        results.result.body.ok_or_else(ToshoParseError::empty)
     }
 
     /// Get home discovery.
-    pub async fn get_discovery(&self) -> anyhow::Result<ComicDiscovery> {
+    pub async fn get_discovery(&self) -> ToshoResult<ComicDiscovery> {
         let results = self
             .request::<ComicDiscovery>(reqwest::Method::POST, "/manga/discover.json", None)
             .await?;
 
-        results
-            .result
-            .body
-            .ok_or_else(|| anyhow::anyhow!("No content in response"))
+        results.result.body.ok_or_else(ToshoParseError::empty)
     }
 
     /// Stream download the image from the given URL.
@@ -445,31 +373,30 @@ impl AMClient {
         &self,
         url: &str,
         mut writer: impl tokio::io::AsyncWrite + Unpin,
-    ) -> anyhow::Result<()> {
+    ) -> ToshoResult<()> {
         let mut headers = make_header(&self.config, self.constants)?;
         headers.insert(
             "Host",
-            reqwest::header::HeaderValue::from_str(&IMAGE_HOST).unwrap(),
+            reqwest::header::HeaderValue::from_static(&IMAGE_HOST),
         );
         headers.insert(
             "User-Agent",
-            reqwest::header::HeaderValue::from_str(&self.constants.image_ua).unwrap(),
+            reqwest::header::HeaderValue::from_static(&self.constants.image_ua),
         );
 
-        let res = self.inner.get(url).headers(headers).send().await.unwrap();
+        let res = self.inner.get(url).headers(headers).send().await?;
 
         // bail if not success
         if !res.status().is_success() {
-            anyhow::bail!("Failed to download image: {}", res.status())
-        }
+            Err(tosho_common::ToshoError::from(res.status()))
+        } else {
+            let mut stream = res.bytes_stream();
+            while let Some(item) = stream.try_next().await? {
+                writer.write_all(&item).await?;
+            }
 
-        let mut stream = res.bytes_stream();
-        while let Some(item) = stream.next().await {
-            let item = item.unwrap();
-            writer.write_all(&item).await?;
+            Ok(())
         }
-
-        Ok(())
     }
 
     /// Perform a login request.
@@ -477,7 +404,7 @@ impl AMClient {
     /// # Arguments
     /// * `email` - The email of the user.
     /// * `password` - The password of the user.
-    pub async fn login(email: &str, password: &str) -> anyhow::Result<AMConfig> {
+    pub async fn login(email: &str, password: &str) -> ToshoResult<AMConfig> {
         let cookie_store = CookieStoreMutex::default();
         let cookie_store = std::sync::Arc::new(cookie_store);
 
@@ -501,9 +428,10 @@ impl AMClient {
             .use_rustls_tls()
             .cookie_provider(std::sync::Arc::clone(&cookie_store))
             .default_headers(headers)
-            .build()?;
+            .build()
+            .map_err(ToshoClientError::BuildError)?;
 
-        let secret_token = generate_random_token();
+        let secret_token = tosho_common::generate_random_token(16);
         let temp_config = AMConfig {
             token: secret_token.clone(),
             identifier: "".to_string(),
@@ -521,7 +449,7 @@ impl AMClient {
             serde_json::Value::Number(serde_json::Number::from(0_u32)),
         );
         json_body.insert("app_login".to_string(), serde_json::Value::Bool(false));
-        json_with_common(&mut json_body, android_c);
+        json_with_common(&mut json_body, android_c)?;
 
         let req = session
             .request(
@@ -533,8 +461,15 @@ impl AMClient {
             .send()
             .await?;
 
-        let result = parse_response::<models::IAPRemainder>(req).await?;
-        let result = result.result.body.unwrap();
+        let results =
+            parse_json_response_failable::<APIResult<models::IAPRemainder>, BasicWrapStatus>(req)
+                .await?;
+        let result = results.clone().result.body.ok_or_else(|| {
+            make_error!(
+                "Failed to get remainder, got empty response: {:#?}",
+                results
+            )
+        })?;
 
         // Step 2: Perform login
         let mut json_body_login = HashMap::new();
@@ -550,7 +485,7 @@ impl AMClient {
             "iap_token".to_string(),
             serde_json::Value::String(secret_token.clone()),
         );
-        json_with_common(&mut json_body_login, android_c);
+        json_with_common(&mut json_body_login, android_c)?;
 
         let temp_config = AMConfig {
             token: secret_token.clone(),
@@ -566,11 +501,13 @@ impl AMClient {
             .headers(make_header(&temp_config, android_c)?)
             .json(&json_body_login)
             .send()
-            .await
-            .unwrap();
+            .await?;
 
-        let result = parse_response::<models::LoginResult>(req).await.unwrap();
-        let result = result.result.body.unwrap();
+        let results = parse_json_response::<APIResult<models::LoginResult>>(req).await?;
+        let result =
+            results.clone().result.body.ok_or_else(|| {
+                ToshoAuthError::InvalidCredentials("Got empty response".to_string())
+            })?;
 
         // final step: get session_v2
         let mut json_body_session = HashMap::new();
@@ -583,7 +520,7 @@ impl AMClient {
             serde_json::Value::Number(serde_json::Number::from(0_u32)),
         );
         json_body_session.insert("app_login".to_string(), serde_json::Value::Bool(true));
-        json_with_common(&mut json_body_session, android_c);
+        json_with_common(&mut json_body_session, android_c)?;
 
         let temp_config = AMConfig {
             token: secret_token.clone(),
@@ -602,7 +539,7 @@ impl AMClient {
             .await?;
 
         if req.status() != reqwest::StatusCode::OK {
-            anyhow::bail!("Failed to get session_v2");
+            return Err(tosho_common::ToshoError::from(req.status()));
         }
 
         // session_v2 is cookies
@@ -616,7 +553,7 @@ impl AMClient {
         }
 
         if session_v2.is_empty() {
-            anyhow::bail!("Failed to get session_v2");
+            return Err(ToshoAuthError::UnknownSession.into());
         }
 
         Ok(AMConfig {
@@ -632,30 +569,13 @@ struct BasicWrapStatus {
     result: StatusResult,
 }
 
-async fn parse_response<T>(response: reqwest::Response) -> anyhow::Result<models::APIResult<T>>
-where
-    T: serde::de::DeserializeOwned + std::clone::Clone,
-{
-    let stat_code = response.status();
-    let headers = response.headers().clone();
-    let url = response.url().clone();
-    let raw_text = response.text().await.unwrap();
-    let status_resp = serde_json::from_str::<BasicWrapStatus>(&raw_text.clone()).unwrap_or_else(|_| panic!(
-        "Failed to parse response.\nURL: {}\nStatus code: {}\nHeaders: {:?}\nContents: {}\nBacktrace",
-        url, stat_code, headers, raw_text
-    ));
+impl FailableResponse for BasicWrapStatus {
+    fn format_error(&self) -> String {
+        self.result.format_error()
+    }
 
-    match status_resp.result.raise_for_status() {
-        Ok(_) => {
-            let parsed = serde_json::from_str(&raw_text).unwrap_or_else(|err| {
-                panic!(
-                    "Failed when deserializing response, error: {}\nURL: {}\nContents: {}",
-                    err, url, raw_text
-                )
-            });
-            Ok(parsed)
-        }
-        Err(e) => Err(anyhow::Error::new(e)),
+    fn raise_for_status(&self) -> ToshoResult<()> {
+        self.result.raise_for_status()
     }
 }
 
@@ -663,7 +583,7 @@ where
 fn make_header(
     config: &AMConfig,
     constants: &constants::Constants,
-) -> anyhow::Result<reqwest::header::HeaderMap> {
+) -> ToshoResult<reqwest::header::HeaderMap> {
     let mut req_headers = reqwest::header::HeaderMap::new();
 
     let current_unix = chrono::Utc::now().timestamp();
@@ -673,12 +593,38 @@ fn make_header(
     let formulae_hashed = <Sha256 as Digest>::digest(formulae.as_bytes());
     let formulae_hashed = format!("{:x}", formulae_hashed);
 
-    req_headers.insert(HEADER_NAMES.s.as_str(), formulae_hashed.parse()?);
+    req_headers.insert(
+        HEADER_NAMES.s.as_str(),
+        formulae_hashed
+            .parse()
+            .map_err(|e| make_error!("Failed to parse custom hash into header value: {}", e))?,
+    );
     if !config.identifier.is_empty() {
-        req_headers.insert(HEADER_NAMES.i.as_str(), config.identifier.parse()?);
+        req_headers.insert(
+            HEADER_NAMES.i.as_str(),
+            config
+                .identifier
+                .parse()
+                .map_err(|e| make_error!("Failed to parse identifier into header value: {}", e))?,
+        );
     }
-    req_headers.insert(HEADER_NAMES.n.as_str(), current_unix.to_string().parse()?);
-    req_headers.insert(HEADER_NAMES.t.as_str(), config.token.clone().parse()?);
+    req_headers.insert(
+        HEADER_NAMES.n.as_str(),
+        current_unix.to_string().parse().map_err(|e| {
+            make_error!(
+                "Failed to parse current unix timestamp into header value: {}",
+                e
+            )
+        })?,
+    );
+    req_headers.insert(
+        HEADER_NAMES.t.as_str(),
+        config
+            .token
+            .clone()
+            .parse()
+            .map_err(|e| make_error!("Failed to parse token into header value: {}", e))?,
+    );
 
     Ok(req_headers)
 }
@@ -686,7 +632,7 @@ fn make_header(
 fn json_with_common(
     json_obj: &mut HashMap<String, serde_json::Value>,
     constants: &constants::Constants,
-) {
+) -> ToshoResult<()> {
     let platform = constants.platform.to_string();
     let version = constants.version.to_string();
     let app_name = APP_NAME.to_string();
@@ -698,7 +644,12 @@ fn json_with_common(
     let mut screen = serde_json::Map::new();
     screen.insert(
         "inch".to_string(),
-        serde_json::Value::Number(serde_json::Number::from_f64(SCREEN_INCH).unwrap()),
+        serde_json::Value::Number(
+            serde_json::Number::from_f64(SCREEN_INCH)
+                .ok_or_else(|| make_error!("Failed to convert screen inch to f64"))?,
+        ),
     );
     json_obj.insert("screen".to_string(), serde_json::Value::Object(screen));
+
+    Ok(())
 }

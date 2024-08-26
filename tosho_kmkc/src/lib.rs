@@ -1,85 +1,4 @@
-//! # tosho-kmkc
-//!
-//! ![crates.io version](https://img.shields.io/crates/v/tosho-kmkc)
-//!
-//! A minimal asynchronous client for the KM API by KC.
-//!
-//! The following crate is used by the [`tosho`] app.
-//!
-//! ## Usage
-//!
-//! Download the [`tosho`] app, or you can utilize this crate like any other Rust crate:
-//!
-//! ```rust,no_run
-//! use tosho_kmkc::{KMClient, KMConfig, KMConfigMobile, KMConfigMobilePlatform};
-//!
-//! #[tokio::main]
-//! async fn main() {
-//!     let config = KMConfigMobile {
-//!         user_id: "123".to_string(),
-//!         hash_key: "abcxyz".to_string(),
-//!         platform: KMConfigMobilePlatform::Android,
-//!     };
-//!
-//!     let client = KMClient::new(KMConfig::Mobile(config));
-//!
-//!     let manga = client.get_titles(vec![10007]).await.unwrap();
-//!     println!("{:?}", manga[0]);
-//! }
-//! ```
-//!
-//! ## Authentication
-//!
-//! The following source has many kinds of authentication methods:
-//! - `auth`: Experimental login system with email + password.
-//! - `auth-mobile`: Login by providing user ID and key.
-//! - `auth-web`: Login by providing a [Netscape Cookies file](http://fileformats.archiveteam.org/wiki/Netscape_cookies.txt).
-//! - `auth-adapt`: Convert a web authentication into mobile authentication.
-//!
-//! For the easiest method, use the `auth` command and then `auth-adapt` to obtain the mobile version.
-//!
-//! ```bash
-//! $ tosho km auth email password -t web
-//! ```
-//!
-//! Alternatively, if you only want the mobile version:
-//!
-//! ```bash
-//! $ tosho km auth email password -t android
-//! ```
-//!
-//! ```bash
-//! $ tosho km auth email password -t ios
-//! ```
-//!
-//! Or, if you use this crates as library:
-//!
-//! ```rust,no_run
-//! use tosho_kmkc::{KMClient, KMConfigMobilePlatform};
-//!
-//! #[tokio::main]
-//! async fn main() {
-//!     let login_res = KMClient::login("test@mail.com", "mypassword", None).await.unwrap();
-//!     // Or, with mobile platform
-//!     let login_res = KMClient::login("test@mail.com", "mypassword", Some(KMConfigMobilePlatform::Android)).await.unwrap();
-//! }
-//! ```
-//!
-//! There is no significant difference between Android and iOS.
-//!
-//! ## Disclaimer
-//!
-//! This project is designed as an experiment and to create a local copy for personal use.
-//! These tools will not circumvent any paywall, and you will need to purchase and own each chapter
-//! with your own account to be able to make your own local copy.
-//!
-//! We're not responsible if your account got deactivated.
-//!
-//! ## License
-//!
-//! This project is licensed with MIT License ([LICENSE](https://github.com/noaione/tosho-mango/blob/master/LICENSE) or <http://opensource.org/licenses/MIT>)
-//!
-//! [`tosho`]: https://crates.io/crates/tosho
+#![doc = include_str!("../README.md")]
 
 use std::{collections::HashMap, sync::MutexGuard};
 
@@ -89,7 +8,7 @@ pub mod constants;
 pub mod imaging;
 pub mod models;
 use constants::{get_constants, API_HOST, BASE_API, IMAGE_HOST, WEB_CONSTANTS};
-use futures_util::StreamExt;
+use futures_util::TryStreamExt;
 use md5::Md5;
 use models::{
     AccountResponse, BulkEpisodePurchaseResponse, EpisodeNode, EpisodePurchaseResponse,
@@ -103,6 +22,10 @@ use models::{
 use reqwest_cookie_store::CookieStoreMutex;
 use sha2::{Digest, Sha256, Sha512};
 use tokio::io::AsyncWriteExt;
+use tosho_common::{
+    bail_on_error, make_error, parse_json_response, parse_json_response_failable, ToshoAuthError,
+    ToshoClientError, ToshoResult,
+};
 
 /// Login result for the API.
 ///
@@ -117,7 +40,7 @@ pub struct KMLoginResult {
 /// Main client for interacting with the SQ MU!
 ///
 /// # Example
-/// ```no_run
+/// ```rust,no_run
 /// use tosho_kmkc::{KMClient, KMConfig, KMConfigMobile, KMConfigMobilePlatform};
 ///
 /// #[tokio::main]
@@ -128,7 +51,7 @@ pub struct KMLoginResult {
 ///         platform: KMConfigMobilePlatform::Android,
 ///     };
 ///
-///     let client = KMClient::new(KMConfig::Mobile(config));
+///     let client = KMClient::new(KMConfig::Mobile(config)).unwrap();
 ///
 ///     let manga = client.get_titles(vec![10007]).await.unwrap();
 ///     println!("{:?}", manga[0]);
@@ -147,7 +70,7 @@ impl KMClient {
     ///
     /// # Arguments
     /// * `config` - The config to use for the client
-    pub fn new(config: KMConfig) -> Self {
+    pub fn new(config: KMConfig) -> ToshoResult<Self> {
         Self::make_client(config, None)
     }
 
@@ -157,12 +80,12 @@ impl KMClient {
     ///
     /// # Arguments
     /// * `proxy` - The proxy to attach to the client
-    pub fn with_proxy(&self, proxy: reqwest::Proxy) -> Self {
+    pub fn with_proxy(&self, proxy: reqwest::Proxy) -> ToshoResult<Self> {
         Self::make_client(self.config.clone(), Some(proxy))
     }
 
     /// Internal function to create new client.
-    fn make_client(config: KMConfig, proxy: Option<reqwest::Proxy>) -> Self {
+    fn make_client(config: KMConfig, proxy: Option<reqwest::Proxy>) -> ToshoResult<Self> {
         let mut headers = reqwest::header::HeaderMap::new();
         headers.insert(
             reqwest::header::ACCEPT,
@@ -176,10 +99,10 @@ impl KMClient {
             KMConfig::Web(web) => {
                 headers.insert(
                     reqwest::header::USER_AGENT,
-                    reqwest::header::HeaderValue::from_str(&WEB_CONSTANTS.ua).unwrap(),
+                    reqwest::header::HeaderValue::from_static(&WEB_CONSTANTS.ua),
                 );
 
-                let cookie_store = CookieStoreMutex::from(web.clone());
+                let cookie_store = CookieStoreMutex::try_from(web.clone())?;
                 let cookie_store = std::sync::Arc::new(cookie_store);
 
                 // make cookie store
@@ -190,16 +113,19 @@ impl KMClient {
                     .cookie_provider(std::sync::Arc::clone(&cookie_store));
 
                 let client = match proxy {
-                    Some(proxy) => client.proxy(proxy).build().unwrap(),
-                    None => client.build().unwrap(),
-                };
+                    Some(proxy) => client
+                        .proxy(proxy)
+                        .build()
+                        .map_err(ToshoClientError::BuildError),
+                    None => client.build().map_err(ToshoClientError::BuildError),
+                }?;
 
-                Self {
+                Ok(Self {
                     inner: client,
                     config: KMConfig::Web(web),
                     constants: get_constants(3),
                     cookie_store,
-                }
+                })
             }
             KMConfig::Mobile(mobile) => {
                 let consts = get_constants(mobile.platform.clone() as u8);
@@ -218,16 +144,19 @@ impl KMClient {
                     .cookie_provider(std::sync::Arc::clone(&cookie_store));
 
                 let client = match proxy {
-                    Some(proxy) => client.proxy(proxy).build().unwrap(),
-                    None => client.build().unwrap(),
-                };
+                    Some(proxy) => client
+                        .proxy(proxy)
+                        .build()
+                        .map_err(ToshoClientError::BuildError),
+                    None => client.build().map_err(ToshoClientError::BuildError),
+                }?;
 
-                Self {
+                Ok(Self {
                     inner: client,
                     config: KMConfig::Mobile(mobile),
                     constants: consts,
                     cookie_store,
-                }
+                })
             }
         }
     }
@@ -245,7 +174,7 @@ impl KMClient {
         }
     }
 
-    fn format_request(&self, query_params: &mut HashMap<String, String>) -> String {
+    fn format_request(&self, query_params: &mut HashMap<String, String>) -> ToshoResult<String> {
         self.apply_query_params(query_params);
 
         create_request_hash(&self.config, query_params.clone())
@@ -274,7 +203,7 @@ impl KMClient {
         data: Option<HashMap<String, String>>,
         params: Option<HashMap<String, String>>,
         headers: Option<reqwest::header::HeaderMap>,
-    ) -> anyhow::Result<T>
+    ) -> ToshoResult<T>
     where
         T: serde::de::DeserializeOwned,
     {
@@ -286,19 +215,29 @@ impl KMClient {
         let hash_header = self.constants.hash.as_str();
 
         let hash_value = match data.clone() {
-            Some(mut data) => self.format_request(&mut data),
+            Some(mut data) => self.format_request(&mut data)?,
             None => match params.clone() {
-                Some(mut params) => self.format_request(&mut params),
+                Some(mut params) => self.format_request(&mut params)?,
                 None => "".to_string(),
             },
         };
 
         let mut empty_params: HashMap<String, String> = HashMap::new();
         let mut empty_headers = reqwest::header::HeaderMap::new();
-        let empty_hash = self.format_request(&mut empty_params);
+        let empty_hash = self.format_request(&mut empty_params)?;
 
-        empty_headers.insert(hash_header, empty_hash.parse()?);
-        extend_headers.insert(hash_header, hash_value.parse()?);
+        empty_headers.insert(
+            hash_header,
+            empty_hash
+                .parse()
+                .map_err(|e| make_error!("Failed to parse empty hash header: {}", e))?,
+        );
+        extend_headers.insert(
+            hash_header,
+            hash_value
+                .parse()
+                .map_err(|e| make_error!("Failed to parse value hash header: {}", e))?,
+        );
 
         let request = match (data.clone(), params.clone()) {
             (None, None) => self
@@ -309,7 +248,7 @@ impl KMClient {
             (Some(mut data), None) => {
                 extend_headers.insert(
                     reqwest::header::CONTENT_TYPE,
-                    "application/x-www-form-urlencoded".parse()?,
+                    reqwest::header::HeaderValue::from_static("application/x-www-form-urlencoded"),
                 );
                 self.apply_query_params(&mut data);
                 self.inner
@@ -325,18 +264,18 @@ impl KMClient {
                     .headers(extend_headers)
             }
             (Some(_), Some(_)) => {
-                anyhow::bail!("Cannot have both data and params")
+                bail_on_error!("Cannot have both data and params")
             }
         };
 
-        parse_response(request.send().await?).await
+        parse_json_response_failable::<T, StatusResponse>(request.send().await?).await
     }
 
     /// Get the list of episodes from the given list of episode IDs
     ///
     /// # Arguments
     /// * `episodes` - The list of episode IDs to get
-    pub async fn get_episodes(&self, episodes: Vec<i32>) -> anyhow::Result<Vec<EpisodeNode>> {
+    pub async fn get_episodes(&self, episodes: Vec<i32>) -> ToshoResult<Vec<EpisodeNode>> {
         let mut data = HashMap::new();
         let episode_str = episodes
             .iter()
@@ -361,7 +300,7 @@ impl KMClient {
     ///
     /// # Arguments
     /// * `titles` - The list of title IDs to get
-    pub async fn get_titles(&self, titles: Vec<i32>) -> anyhow::Result<Vec<TitleNode>> {
+    pub async fn get_titles(&self, titles: Vec<i32>) -> ToshoResult<Vec<TitleNode>> {
         let mut data = HashMap::new();
         let title_str = titles
             .iter()
@@ -394,7 +333,7 @@ impl KMClient {
     pub async fn get_episode_viewer(
         &self,
         episode: &EpisodeNode,
-    ) -> anyhow::Result<EpisodeViewerResponse> {
+    ) -> ToshoResult<EpisodeViewerResponse> {
         match &self.config {
             KMConfig::Web(_) => {
                 let mut params = HashMap::new();
@@ -446,7 +385,7 @@ impl KMClient {
     pub async fn finish_episode_viewer(
         &self,
         episode: &EpisodeNode,
-    ) -> anyhow::Result<EpisodeViewerFinishResponse> {
+    ) -> ToshoResult<EpisodeViewerFinishResponse> {
         let mut params = HashMap::new();
         params.insert("episode_id".to_string(), episode.id.to_string());
 
@@ -467,7 +406,7 @@ impl KMClient {
     ///
     /// # Arguments
     /// * `title_id` - The title ID to get the ticket for
-    pub async fn get_title_ticket(&self, title_id: i32) -> anyhow::Result<TitleTicketListNode> {
+    pub async fn get_title_ticket(&self, title_id: i32) -> ToshoResult<TitleTicketListNode> {
         let mut params = HashMap::new();
         params.insert("title_id_list".to_string(), title_id.to_string());
 
@@ -493,14 +432,15 @@ impl KMClient {
         &self,
         episode: &EpisodeNode,
         wallet: &mut UserPoint,
-    ) -> anyhow::Result<EpisodePurchaseResponse> {
+    ) -> ToshoResult<EpisodePurchaseResponse> {
         if !wallet.can_purchase(episode.point.try_into().unwrap_or(0)) {
-            // bail with custom error
-            return Err(anyhow::Error::new(KMAPINotEnoughPointsError {
+            let km_error = KMAPINotEnoughPointsError {
                 message: "Not enough points to purchase episode".to_string(),
                 points_needed: episode.point.try_into().unwrap_or(0),
                 points_have: wallet.total_point(),
-            }));
+            };
+            // bail with custom error
+            return Err(km_error.into());
         }
 
         let mut data = HashMap::new();
@@ -531,7 +471,7 @@ impl KMClient {
         &self,
         episodes: Vec<&EpisodeNode>,
         wallet: &mut UserPoint,
-    ) -> anyhow::Result<BulkEpisodePurchaseResponse> {
+    ) -> ToshoResult<BulkEpisodePurchaseResponse> {
         let mut data = HashMap::new();
         let mut episode_ids = vec![];
 
@@ -549,11 +489,12 @@ impl KMClient {
         cloned_wallet.add(bonus_point);
         if !cloned_wallet.can_purchase(paid_point) {
             // bail with custom error
-            return Err(anyhow::Error::new(KMAPINotEnoughPointsError {
+            let km_error = KMAPINotEnoughPointsError {
                 message: "Not enough points to purchase episode".to_string(),
                 points_needed: paid_point,
                 points_have: cloned_wallet.total_point(),
-            }));
+            };
+            return Err(km_error.into());
         }
 
         data.insert("episode_id_list".to_owned(), episode_ids.join(","));
@@ -587,7 +528,7 @@ impl KMClient {
         &self,
         episode_id: i32,
         ticket: &TicketInfoType,
-    ) -> anyhow::Result<(StatusResponse, bool)> {
+    ) -> ToshoResult<(StatusResponse, bool)> {
         let mut data = HashMap::new();
         data.insert("episode_id".to_owned(), episode_id.to_string());
 
@@ -618,7 +559,7 @@ impl KMClient {
     }
 
     /// Get the user's point.
-    pub async fn get_user_point(&self) -> anyhow::Result<UserPointResponse> {
+    pub async fn get_user_point(&self) -> ToshoResult<UserPointResponse> {
         let response = self
             .request::<UserPointResponse>(reqwest::Method::GET, "/account/point", None, None, None)
             .await?;
@@ -631,7 +572,7 @@ impl KMClient {
     /// # Arguments
     /// * `query` - The query to search for
     /// * `limit` - The limit of results to return
-    pub async fn search(&self, query: &str, limit: Option<u32>) -> anyhow::Result<Vec<TitleNode>> {
+    pub async fn search(&self, query: &str, limit: Option<u32>) -> ToshoResult<Vec<TitleNode>> {
         let mut params = HashMap::new();
         params.insert("keyword".to_owned(), query.to_owned());
         let limit = limit.unwrap_or(99_999);
@@ -651,7 +592,7 @@ impl KMClient {
     }
 
     /// Get the weekly ranking/list.
-    pub async fn get_weekly(&self) -> anyhow::Result<WeeklyListResponse> {
+    pub async fn get_weekly(&self) -> ToshoResult<WeeklyListResponse> {
         let response = self
             .request::<WeeklyListResponse>(reqwest::Method::GET, "/title/weekly", None, None, None)
             .await?;
@@ -660,7 +601,7 @@ impl KMClient {
     }
 
     /// Get the current user's account information.
-    pub async fn get_account(&self) -> anyhow::Result<UserAccount> {
+    pub async fn get_account(&self) -> ToshoResult<UserAccount> {
         let response = self
             .request::<AccountResponse>(reqwest::Method::GET, "/account", None, None, None)
             .await?;
@@ -672,7 +613,7 @@ impl KMClient {
     ///
     /// This is different to [`Self::get_account`] as it needs
     /// the user ID to get the user information.
-    pub async fn get_user(&self, user_id: u32) -> anyhow::Result<UserInfoResponse> {
+    pub async fn get_user(&self, user_id: u32) -> ToshoResult<UserInfoResponse> {
         let mut params = HashMap::new();
         params.insert("user_id".to_owned(), user_id.to_string());
 
@@ -684,7 +625,7 @@ impl KMClient {
     }
 
     /// Get the user's purchased titles.
-    pub async fn get_purchased(&self) -> anyhow::Result<Vec<TitlePurchaseNode>> {
+    pub async fn get_purchased(&self) -> ToshoResult<Vec<TitlePurchaseNode>> {
         let response = self
             .request::<TitlePurchaseResponse>(
                 reqwest::Method::GET,
@@ -699,7 +640,7 @@ impl KMClient {
     }
 
     /// Get the user's favorites.
-    pub async fn get_favorites(&self) -> anyhow::Result<TitleFavoriteResponse> {
+    pub async fn get_favorites(&self) -> ToshoResult<TitleFavoriteResponse> {
         let mut params = HashMap::new();
         params.insert("limit".to_owned(), "0".to_owned());
         params.insert("offset".to_owned(), "0".to_owned());
@@ -720,7 +661,7 @@ impl KMClient {
     }
 
     /// Get the magazine list.
-    pub async fn get_magazines(&self) -> anyhow::Result<MagazineCategoryResponse> {
+    pub async fn get_magazines(&self) -> ToshoResult<MagazineCategoryResponse> {
         let mut params = HashMap::new();
         params.insert("limit".to_owned(), "99999".to_owned());
         params.insert("offset".to_owned(), "0".to_owned());
@@ -738,7 +679,7 @@ impl KMClient {
     }
 
     /// Get the genre list.
-    pub async fn get_genres(&self) -> anyhow::Result<GenreSearchResponse> {
+    pub async fn get_genres(&self) -> ToshoResult<GenreSearchResponse> {
         let response = self
             .request::<GenreSearchResponse>(
                 reqwest::Method::GET,
@@ -765,7 +706,7 @@ impl KMClient {
         ranking_id: u32,
         limit: Option<u32>,
         offset: Option<u32>,
-    ) -> anyhow::Result<RankingListResponse> {
+    ) -> ToshoResult<RankingListResponse> {
         let mut params = HashMap::new();
         params.insert("ranking_id".to_owned(), ranking_id.to_string());
         params.insert("limit".to_owned(), limit.unwrap_or(101).to_string());
@@ -799,7 +740,7 @@ impl KMClient {
         url: &str,
         scramble_seed: Option<u32>,
         mut writer: impl tokio::io::AsyncWrite + std::marker::Unpin,
-    ) -> anyhow::Result<()> {
+    ) -> ToshoResult<()> {
         let res = self
             .inner
             .get(url)
@@ -821,8 +762,7 @@ impl KMClient {
         match (&self.config, scramble_seed) {
             (KMConfig::Mobile(_), _) => {
                 let mut stream = res.bytes_stream();
-                while let Some(item) = stream.next().await {
-                    let bytes = item.unwrap_or_default();
+                while let Some(bytes) = stream.try_next().await? {
                     writer.write_all(&bytes).await?;
                 }
 
@@ -833,21 +773,22 @@ impl KMClient {
                 let descrambled = tokio::task::spawn_blocking(move || {
                     imaging::descramble_image(image_bytes.as_ref(), 4, scramble_seed)
                 })
-                .await?;
+                .await
+                .map_err(|e| make_error!("Failed to execute blocking task: {}", e))?;
 
                 match descrambled {
                     Ok(descram_bytes) => {
                         writer.write_all(&descram_bytes).await?;
                     }
                     Err(e) => {
-                        anyhow::bail!("Failed to descramble image: {}", e)
+                        return Err(e);
                     }
                 }
 
                 Ok(())
             }
             (KMConfig::Web(_), None) => {
-                anyhow::bail!("Cannot descramble image without scramble seed")
+                bail_on_error!("Cannot descramble image without scramble seed")
             }
         }
     }
@@ -865,7 +806,7 @@ impl KMClient {
         email: &str,
         password: &str,
         mobile_platform: Option<KMConfigMobilePlatform>,
-    ) -> anyhow::Result<KMLoginResult> {
+    ) -> ToshoResult<KMLoginResult> {
         // Create a new client
         let mut headers = reqwest::header::HeaderMap::new();
         headers.insert(
@@ -882,7 +823,8 @@ impl KMClient {
         );
 
         let default_web = KMConfigWeb::default();
-        let cookie_store = reqwest_cookie_store::CookieStoreMutex::new(default_web.clone().into());
+        let cookie_store =
+            reqwest_cookie_store::CookieStoreMutex::new(default_web.clone().try_into()?);
         let cookie_store = std::sync::Arc::new(cookie_store);
 
         let client = reqwest::Client::builder()
@@ -890,7 +832,8 @@ impl KMClient {
             .use_rustls_tls()
             .default_headers(headers)
             .cookie_provider(std::sync::Arc::clone(&cookie_store))
-            .build()?;
+            .build()
+            .map_err(ToshoClientError::BuildError)?;
 
         // Perform web login
         let mut req_data = HashMap::new();
@@ -900,14 +843,19 @@ impl KMClient {
         req_data.insert("version".to_string(), WEB_CONSTANTS.version.to_string());
 
         // hash
-        let req_hash = create_request_hash(&KMConfig::Web(default_web.clone()), req_data.clone());
+        let req_hash = create_request_hash(&KMConfig::Web(default_web.clone()), req_data.clone())?;
 
         let mut extend_headers = reqwest::header::HeaderMap::new();
         extend_headers.insert(
             reqwest::header::CONTENT_TYPE,
-            "application/x-www-form-urlencoded".parse()?,
+            reqwest::header::HeaderValue::from_static("application/x-www-form-urlencoded"),
         );
-        extend_headers.insert(WEB_CONSTANTS.hash.as_str(), req_hash.parse()?);
+        extend_headers.insert(
+            WEB_CONSTANTS.hash.as_str(),
+            req_hash
+                .parse()
+                .map_err(|e| make_error!("Failed to parse hash header: {}", e))?,
+        );
         let response = client
             .post(format!("{}/web/user/login", &*BASE_API))
             .form(&req_data)
@@ -915,35 +863,39 @@ impl KMClient {
             .send()
             .await?;
 
-        let login_status = parse_response::<StatusResponse>(response).await?;
+        let login_status = parse_json_response::<StatusResponse>(response).await?;
 
         if login_status.response_code != 0 {
-            anyhow::bail!("Failed to login: {}", login_status.error_message);
+            return Err(
+                ToshoAuthError::InvalidCredentials(login_status.error_message.clone()).into(),
+            );
         }
 
-        let unparse_web = KMConfigWeb::from(cookie_store.lock().unwrap().clone());
+        let unparse_web = KMConfigWeb::try_from(cookie_store.lock().unwrap().clone())?;
         // Get account info
-        let km_client = KMClient::new(KMConfig::Web(unparse_web.clone()));
+        let km_client = KMClient::new(KMConfig::Web(unparse_web.clone()))?;
         let account = km_client.get_account().await?;
 
-        if mobile_platform.is_none() {
-            return Ok(KMLoginResult {
+        match mobile_platform {
+            Some(platform) => {
+                // Authenticate as mobile
+                let user_info = km_client.get_user(account.user_id).await?;
+
+                Ok(KMLoginResult {
+                    config: KMConfig::Mobile(KMConfigMobile {
+                        user_id: user_info.id.to_string(),
+                        hash_key: user_info.hash_key.clone(),
+                        // Guaranteed to be Some because we checked it above
+                        platform,
+                    }),
+                    account,
+                })
+            }
+            None => Ok(KMLoginResult {
                 config: KMConfig::Web(unparse_web),
                 account,
-            });
-        }
-
-        // Authenticate as mobile
-        let user_info = km_client.get_user(account.user_id).await?;
-
-        Ok(KMLoginResult {
-            config: KMConfig::Mobile(KMConfigMobile {
-                user_id: user_info.id.to_string(),
-                hash_key: user_info.hash_key.clone(),
-                platform: mobile_platform.unwrap(),
             }),
-            account,
-        })
+        }
     }
 }
 
@@ -951,7 +903,10 @@ impl KMClient {
 ///
 /// # Arguments
 /// * `query_params` - The query params to hash
-fn create_request_hash(config: &KMConfig, query_params: HashMap<String, String>) -> String {
+fn create_request_hash(
+    config: &KMConfig,
+    query_params: HashMap<String, String>,
+) -> ToshoResult<String> {
     match config {
         KMConfig::Web(web) => {
             let birthday = &web.birthday.value;
@@ -963,7 +918,9 @@ fn create_request_hash(config: &KMConfig, query_params: HashMap<String, String>)
 
             let mut qi_s: Vec<String> = vec![];
             for key in keys {
-                let value = query_params.get(key).unwrap();
+                let value = query_params.get(key).ok_or_else(|| {
+                    make_error!("Key {} not found when hashing query params", key)
+                })?;
                 let hashed = hash_kv(key, value);
                 qi_s.push(hashed);
             }
@@ -975,7 +932,7 @@ fn create_request_hash(config: &KMConfig, query_params: HashMap<String, String>)
                 format!("{:x}{}", qi_s_hashed, birth_expire_hash).as_bytes(),
             );
 
-            format!("{:x}", merged_hash)
+            Ok(format!("{:x}", merged_hash))
         }
         KMConfig::Mobile(mobile) => {
             let mut hasher = <Sha256 as Digest>::new();
@@ -990,7 +947,9 @@ fn create_request_hash(config: &KMConfig, query_params: HashMap<String, String>)
             keys.sort();
 
             for key in keys {
-                let value = query_params.get(key).unwrap();
+                let value = query_params.get(key).ok_or_else(|| {
+                    make_error!("Key {} not found when hashing query params", key)
+                })?;
                 let hashed_value = <Md5 as Digest>::digest(value.as_bytes());
                 let hash_digest = format!("{:x}", hashed_value);
 
@@ -998,7 +957,7 @@ fn create_request_hash(config: &KMConfig, query_params: HashMap<String, String>)
             }
 
             let hashed = hasher.finalize();
-            format!("{:x}", hashed)
+            Ok(format!("{:x}", hashed))
         }
     }
 }
@@ -1013,33 +972,6 @@ fn hash_kv(key: &str, value: &str) -> String {
     let hasher512 = <Sha512 as Digest>::digest(value);
 
     format!("{:x}_{:x}", hasher256, hasher512)
-}
-
-async fn parse_response<T>(response: reqwest::Response) -> anyhow::Result<T>
-where
-    T: serde::de::DeserializeOwned,
-{
-    let stat_code = response.status();
-    let headers = response.headers().clone();
-    let url = response.url().clone();
-    let raw_text = response.text().await.unwrap();
-    let status_resp = serde_json::from_str::<StatusResponse>(&raw_text.clone()).unwrap_or_else(|_| panic!(
-        "Failed to parse response.\nURL: {}\nStatus code: {}\nHeaders: {:?}\nContents: {}\nBacktrace",
-        url, stat_code, headers, raw_text
-    ));
-
-    match status_resp.raise_for_status() {
-        Ok(_) => {
-            let parsed = serde_json::from_str(&raw_text).unwrap_or_else(|err| {
-                panic!(
-                    "Failed when deserializing response, error: {}\nURL: {}\nContents: {}",
-                    err, url, raw_text
-                )
-            });
-            Ok(parsed)
-        }
-        Err(e) => Err(anyhow::Error::new(e)),
-    }
 }
 
 #[cfg(test)]

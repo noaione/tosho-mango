@@ -1,0 +1,40 @@
+[package]
+name = "tosho-common"
+version = "0.1.0"
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+rust-version.workspace = true
+keywords = ["api", "library"]
+description = "A common shared library used by tosho-* sources crates."
+readme = "./README.md"
+# Do not include tests in crates.io package
+exclude = [
+    "tests/*",
+]
+
+[dependencies]
+reqwest.workspace = true
+serde = { workspace = true, optional = true }
+serde_json = { workspace = true, optional = true }
+prost = { workspace = true, optional = true }
+image = { workspace = true, optional = true }
+rand = { workspace = true, optional = true }
+
+[features]
+default = []
+
+# Each source crate can enable the features they need
+serde = ["dep:serde", "dep:serde_json"]
+protobuf = ["dep:prost"]
+image = ["dep:image"]
+
+# Random generator and stuff
+id-gen = ["dep:rand"]
+
+# All features, used in CLI mainly
+complete-errors = ["serde", "protobuf", "image"]
+all = ["complete-errors", "id-gen"]
+

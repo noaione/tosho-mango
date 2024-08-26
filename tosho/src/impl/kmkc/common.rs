@@ -2,6 +2,7 @@ use std::path::PathBuf;
 
 use color_print::cformat;
 use num_format::{Locale, ToFormattedString};
+use tosho_common::{make_error, ToshoResult};
 use tosho_kmkc::{
     constants::BASE_HOST,
     models::{TitleNode, TitleTicketListNode, UserPointResponse},
@@ -86,7 +87,7 @@ pub(super) async fn common_purchase_select(
     no_input: bool,
     console: &crate::term::Terminal,
 ) -> (
-    anyhow::Result<Vec<tosho_kmkc::models::EpisodeNode>>,
+    ToshoResult<Vec<tosho_kmkc::models::EpisodeNode>>,
     Option<TitleNode>,
     Vec<tosho_kmkc::models::EpisodeNode>,
     Option<PurchasePoint>,
@@ -116,7 +117,7 @@ pub(super) async fn common_purchase_select(
     if results.is_empty() {
         console.error("Unable to find title information");
         return (
-            Err(anyhow::anyhow!("Unable to find title information")),
+            Err(make_error!("Unable to find title information")),
             None,
             vec![],
             None,
@@ -282,7 +283,7 @@ pub(super) async fn common_purchase_select(
         None => {
             console.warn("Aborted!");
             (
-                Err(anyhow::anyhow!("Aborted!")),
+                Err(make_error!("Aborted!")),
                 Some(result.clone()),
                 chapters_entry,
                 Some(PurchasePoint {

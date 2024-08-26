@@ -4,19 +4,19 @@
 
 An asynchronous client for the MU! API by SQ.
 
-The following crate is used by the [`tosho`](tosho) app.
+The following crate is used by the [`tosho`](https://crates.io/crates/tosho) app.
 
 ## Usage
 
-Download the [`tosho`](tosho) app, or you can utilize this crate like any other Rust crate:
+Download the [`tosho`](https://crates.io/crates/tosho) app, or you can utilize this crate like any other Rust crate:
 
-```rust
+```rust,no_run
 use tosho_musq::MUClient;
 use tosho_musq::constants::get_constants;
 
 #[tokio::main]
 async fn main() {
-    let client = MUClient::new("1234", get_constants(1));
+    let client = MUClient::new("1234", get_constants(1)).unwrap();
     let manga = client.get_manga(240).await.unwrap();
     println!("{:?}", manga);
 }
@@ -67,6 +67,4 @@ We're not responsible if your account got deactivated.
 
 ## License
 
-This project is licensed with MIT License ([LICENSE](https://github.com/noaione/tosho-mango/blob/master/LICENSE) or http://opensource.org/licenses/MIT)
-
-[tosho]: https://crates.io/crates/tosho
+This project is licensed with MIT License ([LICENSE](https://github.com/noaione/tosho-mango/blob/master/LICENSE) or <http://opensource.org/licenses/MIT>)

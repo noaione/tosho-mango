@@ -14,6 +14,7 @@
 use std::io::Cursor;
 
 use image::{GenericImage, GenericImageView, ImageEncoder};
+use tosho_common::{bail_on_error, make_error, ToshoResult};
 
 const CUT_WIDTH: u32 = 90;
 const CUT_HEIGHT: u32 = 140;
@@ -36,7 +37,7 @@ fn draw_image(
     dest: &mut image::DynamicImage,
     src: &image::DynamicImage,
     target: DrawTarget,
-) -> anyhow::Result<()> {
+) -> ToshoResult<()> {
     let src_rect = src
         .crop_imm(
             target.src_x,
@@ -51,13 +52,7 @@ fn draw_image(
         );
     let result = dest.copy_from(&src_rect, target.dest_x, target.dest_y);
     if result.is_err() {
-        anyhow::bail!(
-            "Failed to copy from source image to canvas. source_x: {}, source_y: {}, dest_x: {}, dest_y: {}",
-            target.src_x,
-            target.src_y,
-            target.dest_x,
-            target.dest_y
-        );
+        bail_on_error!("Failed to copy from source image to canvas. source_x: {}, source_y: {}, dest_x: {}, dest_y: {}", target.src_x, target.src_y, target.dest_x, target.dest_y);
     }
 
     Ok(())
@@ -76,31 +71,35 @@ fn draw_image(
 ///
 /// let descrambled_img_bytes = descramble_image(&img_bytes).unwrap();
 /// ```
-pub fn descramble_image(img_bytes: &[u8]) -> anyhow::Result<Vec<u8>> {
+pub fn descramble_image(img_bytes: &[u8]) -> ToshoResult<Vec<u8>> {
     let mut cursor = Cursor::new(img_bytes);
-    let exif_meta = exif::Reader::new().read_from_container(&mut cursor)?;
+    let exif_meta = exif::Reader::new()
+        .read_from_container(&mut cursor)
+        .map_err(|e| make_error!("Failed to read EXIF metadata from image: {}", e))?;
 
     let metadata = exif_meta.get_field(exif::Tag::ImageUniqueID, exif::In::PRIMARY);
 
-    if metadata.is_none() {
-        anyhow::bail!("ImageUniqueID not found in EXIF metadata");
-    }
-
+    // Guaranteed to be Some because of the check above
     let img_unique_id = metadata
-        .unwrap()
+        .ok_or_else(|| make_error!("ImageUniqueID not found in EXIF metadata"))?
         .value
         .display_as(exif::Tag::ImageUniqueID)
         .to_string();
     let img_unique_id = img_unique_id.replace('"', "");
 
-    let keys: Vec<u32> = img_unique_id
-        .split(':')
-        .map(|x| {
-            u32::from_str_radix(x, 16).unwrap_or_else(|_| {
-                panic!("Failed to parse ImageUniqueID: {} ({})", img_unique_id, x)
-            })
-        })
-        .collect();
+    let mut keys: Vec<u32> = vec![];
+    for key in img_unique_id.split(':') {
+        // Do it like this so we can get a better error message
+        let key = u32::from_str_radix(key, 16).map_err(|e| {
+            make_error!(
+                "Failed to parse ImageUniqueID: {} at {} ({})",
+                key,
+                img_unique_id,
+                e
+            )
+        })?;
+        keys.push(key);
+    }
 
     let img = image::load_from_memory(img_bytes)?;
     let (width, height) = img.dimensions();

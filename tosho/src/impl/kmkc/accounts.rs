@@ -85,49 +85,55 @@ pub(crate) async fn kmkc_account_login_web(
     let cookie_config = super::common::parse_netscape_cookies(cookies_path);
     let all_configs = get_all_config(&crate::r#impl::Implementations::Kmkc, None);
 
-    let client = make_kmkc_client(&KMConfig::Web(cookie_config.clone()));
+    match make_kmkc_client(&KMConfig::Web(cookie_config.clone())) {
+        Ok(client) => {
+            let account = client.get_account().await;
 
-    let account = client.get_account().await;
+            match account {
+                Ok(account) => {
+                    console.info(&cformat!("Authenticated as <m,s>{}</>", account.email));
+                    let old_config = all_configs.iter().find(|&c| match c {
+                        crate::config::ConfigImpl::Kmkc(super::config::Config::Web(cc)) => {
+                            cc.account_id == account.id && cc.device_id == account.user_id
+                        }
+                        _ => false,
+                    });
 
-    match account {
-        Ok(account) => {
-            console.info(&cformat!("Authenticated as <m,s>{}</>", account.email));
-            let old_config = all_configs.iter().find(|&c| match c {
-                crate::config::ConfigImpl::Kmkc(super::config::Config::Web(cc)) => {
-                    cc.account_id == account.id && cc.device_id == account.user_id
-                }
-                _ => false,
-            });
+                    let mut acc_config =
+                        super::config::ConfigWeb::from(cookie_config).with_user_account(&account);
 
-            let mut acc_config =
-                super::config::ConfigWeb::from(cookie_config).with_user_account(&account);
+                    if let Some(old_config) = old_config {
+                        console.warn("Session ID already exists!");
+                        let abort_it = console.confirm(Some("Do you want to replace it?"));
+                        if !abort_it {
+                            console.info("Aborting...");
+                            return 0;
+                        }
 
-            if let Some(old_config) = old_config {
-                console.warn("Session ID already exists!");
-                let abort_it = console.confirm(Some("Do you want to replace it?"));
-                if !abort_it {
-                    console.info("Aborting...");
-                    return 0;
-                }
-
-                match old_config {
-                    crate::config::ConfigImpl::Kmkc(super::config::Config::Web(cc)) => {
-                        acc_config = acc_config.with_id(cc.id.clone());
+                        match old_config {
+                            crate::config::ConfigImpl::Kmkc(super::config::Config::Web(cc)) => {
+                                acc_config = acc_config.with_id(cc.id.clone());
+                            }
+                            _ => unreachable!(),
+                        }
                     }
-                    _ => unreachable!(),
+
+                    console.info("Authentication successful! Saving config...");
+                    save_config(
+                        crate::config::ConfigImpl::Kmkc(Config::Web(acc_config)),
+                        None,
+                    );
+                    0
+                }
+                Err(err) => {
+                    console.error(&format!("Failed to authenticate your account: {}", err));
+
+                    1
                 }
             }
-
-            console.info("Authentication successful! Saving config...");
-            save_config(
-                crate::config::ConfigImpl::Kmkc(Config::Web(acc_config)),
-                None,
-            );
-            0
         }
         Err(err) => {
-            console.error(&format!("Failed to authenticate your account: {}", err));
-
+            console.error(&format!("Failed to create client: {}", err));
             1
         }
     }
@@ -183,32 +189,38 @@ pub(crate) async fn kmkc_account_login_mobile(
         hash_key,
         platform: platform.try_into().unwrap(),
     };
-    let client = make_kmkc_client(&KMConfig::Mobile(config.clone()));
+    match make_kmkc_client(&KMConfig::Mobile(config.clone())) {
+        Ok(client) => {
+            let account = client.get_account().await;
 
-    let account = client.get_account().await;
+            match account {
+                Ok(account) => {
+                    console.info(&cformat!("Authenticated as <m,s>{}</>", account.email));
 
-    match account {
-        Ok(account) => {
-            console.info(&cformat!("Authenticated as <m,s>{}</>", account.email));
+                    let mut acc_config =
+                        super::config::ConfigMobile::from(config).with_user_account(&account);
 
-            let mut acc_config =
-                super::config::ConfigMobile::from(config).with_user_account(&account);
+                    if let Some(old_id) = old_id {
+                        acc_config = acc_config.with_id(old_id);
+                    }
 
-            if let Some(old_id) = old_id {
-                acc_config = acc_config.with_id(old_id);
+                    console.info("Authentication successful! Saving config...");
+                    save_config(
+                        crate::config::ConfigImpl::Kmkc(Config::Mobile(acc_config)),
+                        None,
+                    );
+
+                    0
+                }
+                Err(err) => {
+                    console.error(&format!("Failed to authenticate your account: {}", err));
+
+                    1
+                }
             }
-
-            console.info("Authentication successful! Saving config...");
-            save_config(
-                crate::config::ConfigImpl::Kmkc(Config::Mobile(acc_config)),
-                None,
-            );
-
-            0
         }
         Err(err) => {
-            console.error(&format!("Failed to authenticate your account: {}", err));
-
+            console.error(&format!("Failed to create client: {}", err));
             1
         }
     }
@@ -337,40 +349,47 @@ pub async fn kmkc_account_login_adapt(
                 .find(|&c| c.id == selected.name)
                 .unwrap();
 
-            let client = make_kmkc_client(&config.clone().into());
-            console.info(&cformat!(
-                "Re-Authenticating with email <m,s>{}</>...",
-                config.email
-            ));
-
-            let account = client.get_account().await;
-
-            match account {
-                Ok(account) => {
-                    let user_info = client.get_user(account.id).await.unwrap();
-
-                    console.info(&cformat!("Authenticated as <m,s>{}</>", account.email));
-
-                    let mobile_config = KMConfigMobile {
-                        user_id: account.id.to_string(),
-                        hash_key: user_info.hash_key,
-                        platform: platform.try_into().unwrap(),
-                    };
-                    let into_tosho: ConfigMobile = mobile_config.into();
-                    let final_config = into_tosho.with_user_account(&account);
-
+            match make_kmkc_client(&config.clone().into()) {
+                Ok(client) => {
                     console.info(&cformat!(
-                        "Created session ID <m,s>{}</>, saving config...",
-                        final_config.id.clone()
+                        "Re-Authenticating with email <m,s>{}</>...",
+                        config.email
                     ));
 
-                    save_config(final_config.into(), None);
+                    let account = client.get_account().await;
 
-                    0
+                    match account {
+                        Ok(account) => {
+                            let user_info = client.get_user(account.id).await.unwrap();
+
+                            console.info(&cformat!("Authenticated as <m,s>{}</>", account.email));
+
+                            let mobile_config = KMConfigMobile {
+                                user_id: account.id.to_string(),
+                                hash_key: user_info.hash_key,
+                                platform: platform.try_into().unwrap(),
+                            };
+                            let into_tosho: ConfigMobile = mobile_config.into();
+                            let final_config = into_tosho.with_user_account(&account);
+
+                            console.info(&cformat!(
+                                "Created session ID <m,s>{}</>, saving config...",
+                                final_config.id.clone()
+                            ));
+
+                            save_config(final_config.into(), None);
+
+                            0
+                        }
+                        Err(err) => {
+                            console.error(&format!("Failed to authenticate your account: {}", err));
+
+                            1
+                        }
+                    }
                 }
                 Err(err) => {
-                    console.error(&format!("Failed to authenticate your account: {}", err));
-
+                    console.error(&format!("Failed to create client: {}", err));
                     1
                 }
             }

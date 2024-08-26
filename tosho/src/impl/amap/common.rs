@@ -5,6 +5,7 @@ use tosho_amap::{
     models::{ComicEpisodeInfo, ComicInfo, ComicSimpleInfo, IAPInfo},
     AMClient, SESSION_COOKIE_NAME,
 };
+use tosho_common::{make_error, ToshoResult};
 
 use super::config::Config;
 use crate::r#impl::common::unix_timestamp_to_string;
@@ -76,7 +77,7 @@ pub(super) async fn common_purchase_select(
     no_input: bool,
     console: &crate::term::Terminal,
 ) -> (
-    anyhow::Result<Vec<ComicEpisodeInfo>>,
+    ToshoResult<Vec<ComicEpisodeInfo>>,
     Option<ComicInfo>,
     Option<IAPInfo>,
 ) {
@@ -196,7 +197,7 @@ pub(super) async fn common_purchase_select(
                 None => {
                     console.warn("Aborted");
                     (
-                        Err(anyhow::anyhow!("Aborted")),
+                        Err(make_error!("Aborted by user")),
                         Some(result.info.clone()),
                         Some(result.account.clone()),
                     )

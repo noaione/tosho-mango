@@ -232,7 +232,7 @@ fn select_quality_url(
     hires_available: bool,
 ) -> anyhow::Result<String> {
     if hires_available && quality == CLIDownloadQuality::Highest {
-        RBClient::modify_url_for_highres(&source[0].url)
+        RBClient::modify_url_for_highres(&source[0].url).map_err(|e| anyhow::anyhow!(e))
     } else {
         // Source is reverse sorted from highest to lowest quality
         match quality {

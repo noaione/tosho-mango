@@ -1,3 +1,5 @@
+use tosho_common::ToshoResult;
+
 use crate::{
     config::{get_all_config, get_config},
     term::ConsoleChoice,
@@ -108,21 +110,25 @@ pub(crate) fn select_single_account(
     }
 }
 
-pub(crate) fn make_musq_client(config: &super::musq::config::Config) -> tosho_musq::MUClient {
+pub(crate) fn make_musq_client(
+    config: &super::musq::config::Config,
+) -> ToshoResult<tosho_musq::MUClient> {
     let constants = tosho_musq::constants::get_constants(config.r#type() as u8);
 
     tosho_musq::MUClient::new(&config.session, constants)
 }
 
-pub(crate) fn make_kmkc_client(config: &tosho_kmkc::KMConfig) -> tosho_kmkc::KMClient {
+pub(crate) fn make_kmkc_client(config: &tosho_kmkc::KMConfig) -> ToshoResult<tosho_kmkc::KMClient> {
     tosho_kmkc::KMClient::new(config.clone())
 }
 
-pub(crate) fn make_amap_client(config: &tosho_amap::AMConfig) -> tosho_amap::AMClient {
+pub(crate) fn make_amap_client(config: &tosho_amap::AMConfig) -> ToshoResult<tosho_amap::AMClient> {
     tosho_amap::AMClient::new(config.clone())
 }
 
-pub(crate) fn make_sjv_client(config: &super::sjv::config::Config) -> tosho_sjv::SJClient {
+pub(crate) fn make_sjv_client(
+    config: &super::sjv::config::Config,
+) -> ToshoResult<tosho_sjv::SJClient> {
     let mode = match config.mode() {
         crate::r#impl::sjv::config::SJDeviceMode::SJ => tosho_sjv::SJMode::SJ,
         crate::r#impl::sjv::config::SJDeviceMode::VM => tosho_sjv::SJMode::VM,
@@ -130,14 +136,16 @@ pub(crate) fn make_sjv_client(config: &super::sjv::config::Config) -> tosho_sjv:
     tosho_sjv::SJClient::new(config.clone().into(), mode)
 }
 
-pub(crate) fn make_rbean_client(config: &super::rbean::config::Config) -> tosho_rbean::RBClient {
+pub(crate) fn make_rbean_client(
+    config: &super::rbean::config::Config,
+) -> ToshoResult<tosho_rbean::RBClient> {
     tosho_rbean::RBClient::new(config.clone().into())
 }
 
 pub(crate) fn make_mplus_client(
     config: &super::mplus::config::Config,
     language: tosho_mplus::proto::Language,
-) -> tosho_mplus::MPClient {
+) -> ToshoResult<tosho_mplus::MPClient> {
     let constants = tosho_mplus::constants::get_constants(config.r#type() as u8);
 
     tosho_mplus::MPClient::new(&config.session, language, constants)

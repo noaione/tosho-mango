@@ -4,20 +4,20 @@
 
 An asynchronous client for the M+ API by S.
 
-The following crate is used by the [`tosho`](tosho) app.
+The following crate is used by the [`tosho`](https://crates.io/crates/tosho) app.
 
 ## Usage
 
-Download the [`tosho`](tosho) app, or you can utilize this crate like any other Rust crate:
+Download the [`tosho`](https://crates.io/crates/tosho) app, or you can utilize this crate like any other Rust crate:
 
-```rust
+```rust,no_run
 use tosho_mplus::MPClient;
 use tosho_mplus::proto::Language;
 use tosho_mplus::constants::get_constants;
 
 #[tokio::main]
 async fn main() {
-    let client = MPClient::new("1234", Language::English, get_constants(1));
+    let client = MPClient::new("1234", Language::English, get_constants(1)).unwrap();
     let home_view = client.get_home_page().await.unwrap();
 }
 ```
@@ -53,6 +53,4 @@ We're not responsible if your account got deactivated.
 
 ## License
 
-This project is licensed with MIT License ([LICENSE](https://github.com/noaione/tosho-mango/blob/master/LICENSE) or http://opensource.org/licenses/MIT)
-
-[tosho]: https://crates.io/crates/tosho
+This project is licensed with MIT License ([LICENSE](https://github.com/noaione/tosho-mango/blob/master/LICENSE) or <http://opensource.org/licenses/MIT>)

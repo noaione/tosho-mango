@@ -2,6 +2,21 @@
 
 Starting from Rust port of the project, all changes will be put into this file.
 
+## Unreleased
+### Breaking Changes
+- Create a new `Error` type for all sources, this replace `anyhow` error type.
+This should give more consistent error handling across all sources.
+- `KM`: Replace all `From` instance that is failable into `TryFrom` instead.
+- All sources: Client initialization now returns `Result<Self, Error>` format instead of `Self`.
+  - `Error` is the new error type that is used across all sources.
+
+### Build
+- Update `reqwest`, and `serde-*`
+- Remove `anyhow` as direct dependency
+
+### Docs
+- Use `README.md` on each source crate as the docs instead of duplicating the content in `lib.rs`
+
 ## [0.6.1] (2024-08-13)
 ### Changes
 - Fix issue with manual merging `Ctrl+C` handling not working properly
