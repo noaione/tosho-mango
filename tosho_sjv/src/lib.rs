@@ -403,8 +403,7 @@ impl SJClient {
             .send()
             .await?;
 
-        let metadata: MangaReadMetadataResponse =
-            serde_json::from_str(&metadata_resp.text().await?)?;
+        let metadata: MangaReadMetadataResponse = parse_json_response(metadata_resp).await?;
 
         Ok(metadata)
     }

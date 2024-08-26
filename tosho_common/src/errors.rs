@@ -142,9 +142,6 @@ impl std::fmt::Display for ToshoDetailedFailableError {
 pub enum ToshoParseError {
     /// Failed to parse the response as JSON
     #[cfg(feature = "serde")]
-    SerdeError(serde_json::Error),
-    /// A more detailed error when parsing the response as JSON
-    #[cfg(feature = "serde")]
     SerdeDetailedError(ToshoDetailedParseError),
     /// A failable error when parsing the response as JSON
     #[cfg(feature = "serde")]
@@ -236,13 +233,6 @@ impl From<reqwest::StatusCode> for ToshoError {
     }
 }
 
-#[cfg(feature = "serde")]
-impl From<serde_json::Error> for ToshoError {
-    fn from(value: serde_json::Error) -> Self {
-        ToshoError::ParseError(ToshoParseError::SerdeError(value))
-    }
-}
-
 #[cfg(feature = "protobuf")]
 impl From<prost::DecodeError> for ToshoError {
     fn from(value: prost::DecodeError) -> Self {
@@ -319,8 +309,6 @@ impl std::fmt::Display for ToshoError {
 impl std::fmt::Display for ToshoParseError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            #[cfg(feature = "serde")]
-            ToshoParseError::SerdeError(e) => write!(f, "serde failed to deserialize: {}", e),
             #[cfg(feature = "serde")]
             ToshoParseError::SerdeDetailedError(e) => write!(f, "{}", e),
             #[cfg(feature = "serde")]
