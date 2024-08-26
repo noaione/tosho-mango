@@ -52,15 +52,15 @@ impl ToshoDetailedParseError {
     pub(crate) fn new(
         inner: serde_json::Error,
         status_code: reqwest::StatusCode,
-        headers: reqwest::header::HeaderMap,
-        url: reqwest::Url,
+        headers: &reqwest::header::HeaderMap,
+        url: &reqwest::Url,
         raw_text: impl Into<String>,
     ) -> Self {
         Self {
             inner,
             status_code,
-            headers,
-            url,
+            headers: headers.clone(),
+            url: url.clone(),
             raw_text: raw_text.into(),
         }
     }
@@ -91,7 +91,7 @@ impl std::fmt::Display for ToshoDetailedParseError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "Failed to parse response from {} with status code {}: {}\n\nHeaders: {:?}\nExcerpt: {}",
+            "Failed to parse response from {} with status code {}: {}\n\nHeaders: {:#?}\nExcerpt: {}",
             self.url, self.status_code, self.inner, self.headers, self.get_json_excerpt()
         )
     }
@@ -309,7 +309,7 @@ impl std::fmt::Display for ToshoError {
         match self {
             ToshoError::CommonError(msg) => write!(f, "{}", msg),
             ToshoError::RequestError(e) => write!(f, "Request error: {}", e),
-            ToshoError::ParseError(e) => write!(f, "Parse error: {}", e),
+            ToshoError::ParseError(e) => write!(f, "Failed to parse response, {}", e),
             ToshoError::ImageError(e) => write!(f, "Image error: {}", e),
             ToshoError::IOError(e) => write!(f, "IO error: {}", e),
         }
@@ -320,20 +320,20 @@ impl std::fmt::Display for ToshoParseError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             #[cfg(feature = "serde")]
-            ToshoParseError::SerdeError(e) => write!(f, "Serde error: {}", e),
+            ToshoParseError::SerdeError(e) => write!(f, "serde failed to deserialize: {}", e),
             #[cfg(feature = "serde")]
             ToshoParseError::SerdeDetailedError(e) => write!(f, "{}", e),
             #[cfg(feature = "serde")]
             ToshoParseError::SerdeFailableError(e) => write!(f, "{}", e),
             #[cfg(feature = "protobuf")]
-            ToshoParseError::ProstError(e) => write!(f, "Failed to decode protobuf data: {}", e),
-            ToshoParseError::EmptyResponse => write!(f, "Empty response received"),
+            ToshoParseError::ProstError(e) => write!(f, "failed to decode protobuf data: {}", e),
+            ToshoParseError::EmptyResponse => write!(f, "empty response received"),
             ToshoParseError::ExpectedResponse(e) => write!(
                 f,
-                "Invalid response: expected {} but got empty/unknown response",
+                "invalid response: expected {} but got empty/unknown response",
                 e
             ),
-            ToshoParseError::InvalidStatusCode(code) => write!(f, "Invalid status code: {}", code),
+            ToshoParseError::InvalidStatusCode(code) => write!(f, "invalid status code: {}", code),
         }
     }
 }

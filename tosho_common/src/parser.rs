@@ -22,7 +22,7 @@ where
     let url = response.url().clone();
     let raw_text = response.text().await?;
     let json: T = ::serde_json::from_str(&raw_text)
-        .map_err(|e| crate::ToshoDetailedParseError::new(e, stat_code, headers, url, raw_text))?;
+        .map_err(|e| crate::ToshoDetailedParseError::new(e, stat_code, &headers, &url, raw_text))?;
 
     Ok(json)
 }
@@ -41,12 +41,15 @@ where
     let headers = response.headers().clone();
     let url = response.url().clone();
     let raw_text = response.text().await?;
-    let status_resp: E = ::serde_json::from_str(&raw_text)
-        .map_err(|e| crate::ToshoDetailedParseError::new(e, stat_code, headers, url, &raw_text))?;
+    let status_resp: E = ::serde_json::from_str(&raw_text).map_err(|e| {
+        crate::ToshoDetailedParseError::new(e, stat_code, &headers, &url, &raw_text)
+    })?;
 
     match status_resp.raise_for_status() {
         Ok(_) => {
-            let json: T = ::serde_json::from_str(&raw_text)?;
+            let json: T = ::serde_json::from_str(&raw_text).map_err(|e| {
+                crate::ToshoDetailedParseError::new(e, stat_code, &headers, &url, raw_text)
+            })?;
             Ok(json)
         }
         // If the status response is an error, return the error
