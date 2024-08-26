@@ -178,9 +178,11 @@ pub struct ToshoDetailedImageError {
 
 #[cfg(feature = "image")]
 impl ToshoDetailedImageError {
-    pub fn with_description(mut self, description: impl Into<String>) -> Self {
-        self.description = description.into();
-        self
+    pub fn new(inner: image::ImageError, description: impl Into<String>) -> Self {
+        Self {
+            inner,
+            description: description.into(),
+        }
     }
 }
 

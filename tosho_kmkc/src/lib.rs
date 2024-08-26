@@ -103,6 +103,9 @@ use models::{
 use reqwest_cookie_store::CookieStoreMutex;
 use sha2::{Digest, Sha256, Sha512};
 use tokio::io::AsyncWriteExt;
+use tosho_common::{
+    bail_on_error, make_error, parse_json_response, parse_json_response_failable, ToshoResult,
+};
 
 /// Login result for the API.
 ///
@@ -274,7 +277,7 @@ impl KMClient {
         data: Option<HashMap<String, String>>,
         params: Option<HashMap<String, String>>,
         headers: Option<reqwest::header::HeaderMap>,
-    ) -> anyhow::Result<T>
+    ) -> ToshoResult<T>
     where
         T: serde::de::DeserializeOwned,
     {
@@ -297,8 +300,18 @@ impl KMClient {
         let mut empty_headers = reqwest::header::HeaderMap::new();
         let empty_hash = self.format_request(&mut empty_params);
 
-        empty_headers.insert(hash_header, empty_hash.parse()?);
-        extend_headers.insert(hash_header, hash_value.parse()?);
+        empty_headers.insert(
+            hash_header,
+            empty_hash
+                .parse()
+                .map_err(|e| make_error!("Failed to parse empty hash header: {}", e))?,
+        );
+        extend_headers.insert(
+            hash_header,
+            hash_value
+                .parse()
+                .map_err(|e| make_error!("Failed to parse value hash header: {}", e))?,
+        );
 
         let request = match (data.clone(), params.clone()) {
             (None, None) => self
@@ -309,7 +322,7 @@ impl KMClient {
             (Some(mut data), None) => {
                 extend_headers.insert(
                     reqwest::header::CONTENT_TYPE,
-                    "application/x-www-form-urlencoded".parse()?,
+                    "application/x-www-form-urlencoded".parse().unwrap(),
                 );
                 self.apply_query_params(&mut data);
                 self.inner
@@ -325,18 +338,18 @@ impl KMClient {
                     .headers(extend_headers)
             }
             (Some(_), Some(_)) => {
-                anyhow::bail!("Cannot have both data and params")
+                bail_on_error!("Cannot have both data and params")
             }
         };
 
-        parse_response(request.send().await?).await
+        parse_json_response_failable::<T, StatusResponse>(request.send().await?).await
     }
 
     /// Get the list of episodes from the given list of episode IDs
     ///
     /// # Arguments
     /// * `episodes` - The list of episode IDs to get
-    pub async fn get_episodes(&self, episodes: Vec<i32>) -> anyhow::Result<Vec<EpisodeNode>> {
+    pub async fn get_episodes(&self, episodes: Vec<i32>) -> ToshoResult<Vec<EpisodeNode>> {
         let mut data = HashMap::new();
         let episode_str = episodes
             .iter()
@@ -361,7 +374,7 @@ impl KMClient {
     ///
     /// # Arguments
     /// * `titles` - The list of title IDs to get
-    pub async fn get_titles(&self, titles: Vec<i32>) -> anyhow::Result<Vec<TitleNode>> {
+    pub async fn get_titles(&self, titles: Vec<i32>) -> ToshoResult<Vec<TitleNode>> {
         let mut data = HashMap::new();
         let title_str = titles
             .iter()
@@ -394,7 +407,7 @@ impl KMClient {
     pub async fn get_episode_viewer(
         &self,
         episode: &EpisodeNode,
-    ) -> anyhow::Result<EpisodeViewerResponse> {
+    ) -> ToshoResult<EpisodeViewerResponse> {
         match &self.config {
             KMConfig::Web(_) => {
                 let mut params = HashMap::new();
@@ -446,7 +459,7 @@ impl KMClient {
     pub async fn finish_episode_viewer(
         &self,
         episode: &EpisodeNode,
-    ) -> anyhow::Result<EpisodeViewerFinishResponse> {
+    ) -> ToshoResult<EpisodeViewerFinishResponse> {
         let mut params = HashMap::new();
         params.insert("episode_id".to_string(), episode.id.to_string());
 
@@ -467,7 +480,7 @@ impl KMClient {
     ///
     /// # Arguments
     /// * `title_id` - The title ID to get the ticket for
-    pub async fn get_title_ticket(&self, title_id: i32) -> anyhow::Result<TitleTicketListNode> {
+    pub async fn get_title_ticket(&self, title_id: i32) -> ToshoResult<TitleTicketListNode> {
         let mut params = HashMap::new();
         params.insert("title_id_list".to_string(), title_id.to_string());
 
@@ -493,14 +506,15 @@ impl KMClient {
         &self,
         episode: &EpisodeNode,
         wallet: &mut UserPoint,
-    ) -> anyhow::Result<EpisodePurchaseResponse> {
+    ) -> ToshoResult<EpisodePurchaseResponse> {
         if !wallet.can_purchase(episode.point.try_into().unwrap_or(0)) {
-            // bail with custom error
-            return Err(anyhow::Error::new(KMAPINotEnoughPointsError {
+            let km_error = KMAPINotEnoughPointsError {
                 message: "Not enough points to purchase episode".to_string(),
                 points_needed: episode.point.try_into().unwrap_or(0),
                 points_have: wallet.total_point(),
-            }));
+            };
+            // bail with custom error
+            return Err(km_error.into());
         }
 
         let mut data = HashMap::new();
@@ -531,7 +545,7 @@ impl KMClient {
         &self,
         episodes: Vec<&EpisodeNode>,
         wallet: &mut UserPoint,
-    ) -> anyhow::Result<BulkEpisodePurchaseResponse> {
+    ) -> ToshoResult<BulkEpisodePurchaseResponse> {
         let mut data = HashMap::new();
         let mut episode_ids = vec![];
 
@@ -549,11 +563,12 @@ impl KMClient {
         cloned_wallet.add(bonus_point);
         if !cloned_wallet.can_purchase(paid_point) {
             // bail with custom error
-            return Err(anyhow::Error::new(KMAPINotEnoughPointsError {
+            let km_error = KMAPINotEnoughPointsError {
                 message: "Not enough points to purchase episode".to_string(),
                 points_needed: paid_point,
                 points_have: cloned_wallet.total_point(),
-            }));
+            };
+            return Err(km_error.into());
         }
 
         data.insert("episode_id_list".to_owned(), episode_ids.join(","));
@@ -587,7 +602,7 @@ impl KMClient {
         &self,
         episode_id: i32,
         ticket: &TicketInfoType,
-    ) -> anyhow::Result<(StatusResponse, bool)> {
+    ) -> ToshoResult<(StatusResponse, bool)> {
         let mut data = HashMap::new();
         data.insert("episode_id".to_owned(), episode_id.to_string());
 
@@ -618,7 +633,7 @@ impl KMClient {
     }
 
     /// Get the user's point.
-    pub async fn get_user_point(&self) -> anyhow::Result<UserPointResponse> {
+    pub async fn get_user_point(&self) -> ToshoResult<UserPointResponse> {
         let response = self
             .request::<UserPointResponse>(reqwest::Method::GET, "/account/point", None, None, None)
             .await?;
@@ -631,7 +646,7 @@ impl KMClient {
     /// # Arguments
     /// * `query` - The query to search for
     /// * `limit` - The limit of results to return
-    pub async fn search(&self, query: &str, limit: Option<u32>) -> anyhow::Result<Vec<TitleNode>> {
+    pub async fn search(&self, query: &str, limit: Option<u32>) -> ToshoResult<Vec<TitleNode>> {
         let mut params = HashMap::new();
         params.insert("keyword".to_owned(), query.to_owned());
         let limit = limit.unwrap_or(99_999);
@@ -651,7 +666,7 @@ impl KMClient {
     }
 
     /// Get the weekly ranking/list.
-    pub async fn get_weekly(&self) -> anyhow::Result<WeeklyListResponse> {
+    pub async fn get_weekly(&self) -> ToshoResult<WeeklyListResponse> {
         let response = self
             .request::<WeeklyListResponse>(reqwest::Method::GET, "/title/weekly", None, None, None)
             .await?;
@@ -660,7 +675,7 @@ impl KMClient {
     }
 
     /// Get the current user's account information.
-    pub async fn get_account(&self) -> anyhow::Result<UserAccount> {
+    pub async fn get_account(&self) -> ToshoResult<UserAccount> {
         let response = self
             .request::<AccountResponse>(reqwest::Method::GET, "/account", None, None, None)
             .await?;
@@ -672,7 +687,7 @@ impl KMClient {
     ///
     /// This is different to [`Self::get_account`] as it needs
     /// the user ID to get the user information.
-    pub async fn get_user(&self, user_id: u32) -> anyhow::Result<UserInfoResponse> {
+    pub async fn get_user(&self, user_id: u32) -> ToshoResult<UserInfoResponse> {
         let mut params = HashMap::new();
         params.insert("user_id".to_owned(), user_id.to_string());
 
@@ -684,7 +699,7 @@ impl KMClient {
     }
 
     /// Get the user's purchased titles.
-    pub async fn get_purchased(&self) -> anyhow::Result<Vec<TitlePurchaseNode>> {
+    pub async fn get_purchased(&self) -> ToshoResult<Vec<TitlePurchaseNode>> {
         let response = self
             .request::<TitlePurchaseResponse>(
                 reqwest::Method::GET,
@@ -699,7 +714,7 @@ impl KMClient {
     }
 
     /// Get the user's favorites.
-    pub async fn get_favorites(&self) -> anyhow::Result<TitleFavoriteResponse> {
+    pub async fn get_favorites(&self) -> ToshoResult<TitleFavoriteResponse> {
         let mut params = HashMap::new();
         params.insert("limit".to_owned(), "0".to_owned());
         params.insert("offset".to_owned(), "0".to_owned());
@@ -720,7 +735,7 @@ impl KMClient {
     }
 
     /// Get the magazine list.
-    pub async fn get_magazines(&self) -> anyhow::Result<MagazineCategoryResponse> {
+    pub async fn get_magazines(&self) -> ToshoResult<MagazineCategoryResponse> {
         let mut params = HashMap::new();
         params.insert("limit".to_owned(), "99999".to_owned());
         params.insert("offset".to_owned(), "0".to_owned());
@@ -738,7 +753,7 @@ impl KMClient {
     }
 
     /// Get the genre list.
-    pub async fn get_genres(&self) -> anyhow::Result<GenreSearchResponse> {
+    pub async fn get_genres(&self) -> ToshoResult<GenreSearchResponse> {
         let response = self
             .request::<GenreSearchResponse>(
                 reqwest::Method::GET,
@@ -765,7 +780,7 @@ impl KMClient {
         ranking_id: u32,
         limit: Option<u32>,
         offset: Option<u32>,
-    ) -> anyhow::Result<RankingListResponse> {
+    ) -> ToshoResult<RankingListResponse> {
         let mut params = HashMap::new();
         params.insert("ranking_id".to_owned(), ranking_id.to_string());
         params.insert("limit".to_owned(), limit.unwrap_or(101).to_string());
@@ -799,7 +814,7 @@ impl KMClient {
         url: &str,
         scramble_seed: Option<u32>,
         mut writer: impl tokio::io::AsyncWrite + std::marker::Unpin,
-    ) -> anyhow::Result<()> {
+    ) -> ToshoResult<()> {
         let res = self
             .inner
             .get(url)
@@ -833,21 +848,22 @@ impl KMClient {
                 let descrambled = tokio::task::spawn_blocking(move || {
                     imaging::descramble_image(image_bytes.as_ref(), 4, scramble_seed)
                 })
-                .await?;
+                .await
+                .map_err(|e| make_error!("Failed to execute blocking task: {}", e))?;
 
                 match descrambled {
                     Ok(descram_bytes) => {
                         writer.write_all(&descram_bytes).await?;
                     }
                     Err(e) => {
-                        anyhow::bail!("Failed to descramble image: {}", e)
+                        return Err(e);
                     }
                 }
 
                 Ok(())
             }
             (KMConfig::Web(_), None) => {
-                anyhow::bail!("Cannot descramble image without scramble seed")
+                bail_on_error!("Cannot descramble image without scramble seed")
             }
         }
     }
@@ -865,7 +881,7 @@ impl KMClient {
         email: &str,
         password: &str,
         mobile_platform: Option<KMConfigMobilePlatform>,
-    ) -> anyhow::Result<KMLoginResult> {
+    ) -> ToshoResult<KMLoginResult> {
         // Create a new client
         let mut headers = reqwest::header::HeaderMap::new();
         headers.insert(
@@ -905,9 +921,14 @@ impl KMClient {
         let mut extend_headers = reqwest::header::HeaderMap::new();
         extend_headers.insert(
             reqwest::header::CONTENT_TYPE,
-            "application/x-www-form-urlencoded".parse()?,
+            "application/x-www-form-urlencoded".parse().unwrap(),
         );
-        extend_headers.insert(WEB_CONSTANTS.hash.as_str(), req_hash.parse()?);
+        extend_headers.insert(
+            WEB_CONSTANTS.hash.as_str(),
+            req_hash
+                .parse()
+                .map_err(|e| make_error!("Failed to parse hash header: {}", e))?,
+        );
         let response = client
             .post(format!("{}/web/user/login", &*BASE_API))
             .form(&req_data)
@@ -915,10 +936,10 @@ impl KMClient {
             .send()
             .await?;
 
-        let login_status = parse_response::<StatusResponse>(response).await?;
+        let login_status = parse_json_response::<StatusResponse>(response).await?;
 
         if login_status.response_code != 0 {
-            anyhow::bail!("Failed to login: {}", login_status.error_message);
+            bail_on_error!("Failed to login: {}", login_status.error_message);
         }
 
         let unparse_web = KMConfigWeb::from(cookie_store.lock().unwrap().clone());
@@ -1013,33 +1034,6 @@ fn hash_kv(key: &str, value: &str) -> String {
     let hasher512 = <Sha512 as Digest>::digest(value);
 
     format!("{:x}_{:x}", hasher256, hasher512)
-}
-
-async fn parse_response<T>(response: reqwest::Response) -> anyhow::Result<T>
-where
-    T: serde::de::DeserializeOwned,
-{
-    let stat_code = response.status();
-    let headers = response.headers().clone();
-    let url = response.url().clone();
-    let raw_text = response.text().await.unwrap();
-    let status_resp = serde_json::from_str::<StatusResponse>(&raw_text.clone()).unwrap_or_else(|_| panic!(
-        "Failed to parse response.\nURL: {}\nStatus code: {}\nHeaders: {:?}\nContents: {}\nBacktrace",
-        url, stat_code, headers, raw_text
-    ));
-
-    match status_resp.raise_for_status() {
-        Ok(_) => {
-            let parsed = serde_json::from_str(&raw_text).unwrap_or_else(|err| {
-                panic!(
-                    "Failed when deserializing response, error: {}\nURL: {}\nContents: {}",
-                    err, url, raw_text
-                )
-            });
-            Ok(parsed)
-        }
-        Err(e) => Err(anyhow::Error::new(e)),
-    }
 }
 
 #[cfg(test)]

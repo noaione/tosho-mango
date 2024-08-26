@@ -3,6 +3,7 @@
 //! If something is missing, please [open an issue](https://github.com/noaione/tosho-mango/issues/new/choose) or a [pull request](https://github.com/noaione/tosho-mango/compare).
 
 use serde::{Deserialize, Serialize};
+use tosho_common::FailableResponse;
 
 use super::KMAPIError;
 
@@ -24,12 +25,13 @@ pub struct StatusResponse {
     pub error_message: String,
 }
 
-impl StatusResponse {
+impl FailableResponse for StatusResponse {
     /// Raise/return an error if the response code is not 0.
     ///
     /// # Examples
     /// ```
     /// use tosho_kmkc::models::StatusResponse;
+    /// use tosho_common::FailableResponse;
     ///
     /// let response = StatusResponse {
     ///     status: "success".to_string(),
@@ -47,14 +49,24 @@ impl StatusResponse {
     ///
     /// assert!(response.raise_for_status().is_err());
     /// ```
-    pub fn raise_for_status(&self) -> Result<(), KMAPIError> {
+    fn raise_for_status(&self) -> tosho_common::ToshoResult<()> {
         if self.response_code != 0 {
-            Err(KMAPIError {
+            let api_error = KMAPIError {
                 error_code: self.response_code,
                 message: self.error_message.clone(),
-            })
+            };
+            Err(api_error.into())
         } else {
             Ok(())
         }
+    }
+
+    /// Format the error message.
+    fn format_error(&self) -> String {
+        KMAPIError {
+            error_code: self.response_code,
+            message: self.error_message.clone(),
+        }
+        .to_string()
     }
 }

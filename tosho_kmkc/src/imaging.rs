@@ -16,6 +16,9 @@
 use std::io::Cursor;
 
 use image::{GenericImage, GenericImageView, ImageEncoder};
+use tosho_common::{
+    bail_on_error, ToshoDetailedImageError, ToshoError, ToshoImageError, ToshoResult,
+};
 
 fn u32_to_f32(n: u32) -> f32 {
     if n > i32::MAX as u32 {
@@ -106,7 +109,7 @@ pub fn descramble_image(
     img_bytes: &[u8],
     rectbox: u32,
     scramble_seed: u32,
-) -> anyhow::Result<Vec<u8>> {
+) -> ToshoResult<Vec<u8>> {
     // read img_source as image
     let img = image::load_from_memory(img_bytes)?;
 
@@ -127,9 +130,19 @@ pub fn descramble_image(
                 let dest_y = dest_y * height_rect;
 
                 let cropped_img = img.crop_imm(source_x, source_y, width_rect, height_rect);
-                canvas.copy_from(&cropped_img, dest_x, dest_y).unwrap_or_else(|_| {
-                    panic!("Failed to copy from source image to canvas. source_x: {}, source_y: {}, dest_x: {}, dest_y: {}", source_x, source_y, dest_x, dest_y)
-                });
+                canvas.copy_from(&cropped_img, dest_x, dest_y).map_err(|e| {
+                    let e_img = ToshoDetailedImageError::new(
+                        e,
+                        format!(
+                            "Failed to copy from source image to canvas. source_x: {}, source_y: {}, dest_x: {}, dest_y: {}",
+                            source_x,
+                            source_y,
+                            dest_x,
+                            dest_y
+                        ),
+                    );
+                    ToshoError::ImageError(ToshoImageError::ImageError(e_img))
+                })?;
             }
 
             // output image to Vec<u8>
@@ -157,7 +170,7 @@ pub fn descramble_image(
             Ok(data)
         }
         _ => {
-            anyhow::bail!("Image is too small!")
+            bail_on_error!("Image is too small!")
         }
     }
 }

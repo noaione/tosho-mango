@@ -2529,7 +2529,6 @@ dependencies = [
 name = "tosho-kmkc"
 version = "0.5.0"
 dependencies = [
- "anyhow",
  "base64",
  "chrono",
  "documented",
@@ -2543,6 +2542,7 @@ dependencies = [
  "sha2",
  "time",
  "tokio",
+ "tosho-common",
  "tosho-macros",
  "urlencoding",
 ]

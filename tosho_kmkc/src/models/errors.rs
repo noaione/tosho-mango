@@ -2,6 +2,8 @@
 //!
 //! If something is missing, please [open an issue](https://github.com/noaione/tosho-mango/issues/new/choose) or a [pull request](https://github.com/noaione/tosho-mango/compare).
 
+use tosho_common::{make_error, ToshoError};
+
 /// The used error type for the API.
 #[derive(Debug)]
 pub struct KMAPIError {
@@ -44,3 +46,15 @@ impl std::fmt::Display for KMAPINotEnoughPointsError {
 }
 
 impl std::error::Error for KMAPINotEnoughPointsError {}
+
+impl From<KMAPIError> for ToshoError {
+    fn from(value: KMAPIError) -> Self {
+        make_error!("{}", value)
+    }
+}
+
+impl From<KMAPINotEnoughPointsError> for ToshoError {
+    fn from(value: KMAPINotEnoughPointsError) -> Self {
+        make_error!("{}", value)
+    }
+}

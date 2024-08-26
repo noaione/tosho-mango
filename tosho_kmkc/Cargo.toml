@@ -23,7 +23,6 @@ reqwest = { workspace = true, features = ["cookies"] }
 futures-util.workspace = true
 serde.workspace = true
 serde_json.workspace = true
-anyhow.workspace = true
 base64.workspace = true
 chrono.workspace = true
 time.workspace = true
@@ -35,3 +34,4 @@ md-5 = "0.10.6"
 documented = "0.5.0"
 
 tosho-macros = { path = "../tosho_macros", version = "0.3" }
+tosho-common = { path = "../tosho_common", version = "=0.1.0", features = ["serde", "image"] }
