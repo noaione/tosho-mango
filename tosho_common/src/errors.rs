@@ -91,8 +91,12 @@ impl std::fmt::Display for ToshoDetailedParseError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "Failed to parse response from {} with status code {}: {}\n\nHeaders: {:#?}\nExcerpt: {}",
-            self.url, self.status_code, self.inner, self.headers, self.get_json_excerpt()
+            "with request from {} with status code {}: {}\n\nHeaders: {:#?}\nExcerpt: {}",
+            self.url,
+            self.status_code,
+            self.inner,
+            self.headers,
+            self.get_json_excerpt()
         )
     }
 }
