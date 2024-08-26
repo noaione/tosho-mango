@@ -13,6 +13,9 @@ This should give more consistent error handling across all sources.
 - Update `reqwest`, and `serde-*`
 - Remove `anyhow` as direct dependency
 
+### Docs
+- Use `README.md` on each source crate as the docs instead of duplicating the content in `lib.rs`
+
 ## [0.6.1] (2024-08-13)
 ### Changes
 - Fix issue with manual merging `Ctrl+C` handling not working properly
