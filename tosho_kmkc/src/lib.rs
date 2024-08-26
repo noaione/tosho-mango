@@ -89,7 +89,7 @@ pub mod constants;
 pub mod imaging;
 pub mod models;
 use constants::{get_constants, API_HOST, BASE_API, IMAGE_HOST, WEB_CONSTANTS};
-use futures_util::StreamExt;
+use futures_util::TryStreamExt;
 use md5::Md5;
 use models::{
     AccountResponse, BulkEpisodePurchaseResponse, EpisodeNode, EpisodePurchaseResponse,
@@ -836,8 +836,7 @@ impl KMClient {
         match (&self.config, scramble_seed) {
             (KMConfig::Mobile(_), _) => {
                 let mut stream = res.bytes_stream();
-                while let Some(item) = stream.next().await {
-                    let bytes = item.unwrap_or_default();
+                while let Some(bytes) = stream.try_next().await? {
                     writer.write_all(&bytes).await?;
                 }
 

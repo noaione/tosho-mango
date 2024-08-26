@@ -150,6 +150,8 @@ pub enum ToshoParseError {
     ProstError(prost::DecodeError),
     /// Response is empty
     EmptyResponse,
+    /// Response has invalid expected response
+    ExpectedResponse(String),
     /// Invalid status code
     InvalidStatusCode(reqwest::StatusCode),
 }
@@ -322,6 +324,11 @@ impl std::fmt::Display for ToshoParseError {
             #[cfg(feature = "protobuf")]
             ToshoParseError::ProstError(e) => write!(f, "Failed to decode protobuf data: {}", e),
             ToshoParseError::EmptyResponse => write!(f, "Empty response received"),
+            ToshoParseError::ExpectedResponse(e) => write!(
+                f,
+                "Invalid response: expected {} but got empty/unknown response",
+                e
+            ),
             ToshoParseError::InvalidStatusCode(code) => write!(f, "Invalid status code: {}", code),
         }
     }
