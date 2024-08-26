@@ -3,6 +3,7 @@
 //! If something is missing, please [open an issue](https://github.com/noaione/tosho-mango/issues/new/choose) or a [pull request](https://github.com/noaione/tosho-mango/compare).
 
 use serde::{Deserialize, Serialize};
+use tosho_common::FailableResponse;
 
 use super::AMAPIError;
 
@@ -33,9 +34,9 @@ pub struct StatusResult {
     pub body: Option<serde_json::Value>,
 }
 
-impl StatusResult {
+impl FailableResponse for StatusResult {
     /// Try to unwrap the body into [`ErrorBody`] and return the error message.
-    fn unwrap_body_error(&self) -> String {
+    fn format_error(&self) -> String {
         // try to unwrap the body into ErrorBody
         if let Some(body) = &self.body {
             if let Ok(error_body) = serde_json::from_value::<ErrorBody>(body.clone()) {
@@ -49,6 +50,7 @@ impl StatusResult {
     ///
     /// # Examples
     /// ```
+    /// use tosho_common::FailableResponse;
     /// use tosho_amap::models::{ResultHeader, StatusResult};
     ///
     /// let response = StatusResult {
@@ -71,15 +73,15 @@ impl StatusResult {
     ///
     /// assert!(response.raise_for_status().is_err());
     /// ```
-    pub fn raise_for_status(&self) -> Result<(), AMAPIError> {
+    fn raise_for_status(&self) -> Result<(), tosho_common::ToshoError> {
         if !self.header.result {
             let message = self
                 .header
                 .message
                 .clone()
-                .unwrap_or_else(|| self.unwrap_body_error());
+                .unwrap_or_else(|| self.format_error());
 
-            Err(AMAPIError { message })
+            Err(AMAPIError { message }.into())
         } else {
             Ok(())
         }
@@ -161,7 +163,10 @@ mod tests {
         let raise_error = data.raise_for_status();
 
         assert!(raise_error.is_err());
-        assert_eq!(raise_error.unwrap_err().message, "Unable to authenticate");
+        assert_eq!(
+            raise_error.unwrap_err().to_string(),
+            "An error occurred: Unable to authenticate"
+        );
     }
 
     #[test]
