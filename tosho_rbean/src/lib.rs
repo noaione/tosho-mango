@@ -62,7 +62,7 @@
 //!
 //! [`tosho`]: https://crates.io/crates/tosho
 
-use futures_util::StreamExt;
+use futures_util::TryStreamExt;
 use std::collections::HashMap;
 use tokio::io::{self, AsyncWriteExt};
 use tosho_common::{bail_on_error, make_error, parse_json_response, ToshoError, ToshoResult};
@@ -467,9 +467,7 @@ impl RBClient {
             };
 
             let mut stream = res.bytes_stream();
-            while let Some(item) = stream.next().await {
-                let item = item?;
-
+            while let Some(item) = stream.try_next().await? {
                 let dedrmed = if is_drm {
                     decrypt_image(&item)
                 } else {
