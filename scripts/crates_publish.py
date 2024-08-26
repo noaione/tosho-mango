@@ -78,6 +78,10 @@ for crate in ALL_CRATES:
 if "tosho" in PUBLISH_CRATE:
     PUBLISH_CRATE.remove("tosho")
     PUBLISH_CRATE.append("tosho")
+# common should be second
+if "tosho-common" in PUBLISH_CRATE:
+    PUBLISH_CRATE.remove("tosho-common")
+    PUBLISH_CRATE.insert(0, "tosho-common")
 # macros should be first
 if "tosho-macros" in PUBLISH_CRATE:
     PUBLISH_CRATE.remove("tosho-macros")
