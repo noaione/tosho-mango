@@ -162,9 +162,7 @@ impl SJClient {
                 let mut extend_headers = reqwest::header::HeaderMap::new();
                 extend_headers.insert(
                     reqwest::header::CONTENT_TYPE,
-                    "application/x-www-form-urlencoded"
-                        .parse()
-                        .map_err(|e| make_error!("Failed to parse header: {}", e))?,
+                    reqwest::header::HeaderValue::from_static("application/x-www-form-urlencoded"),
                 );
                 self.inner
                     .request(method, endpoint)

@@ -621,7 +621,6 @@ fn make_header(
         HEADER_NAMES.t.as_str(),
         config
             .token
-            .clone()
             .parse()
             .map_err(|e| make_error!("Failed to parse token into header value: {}", e))?,
     );
