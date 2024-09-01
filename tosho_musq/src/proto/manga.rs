@@ -3,7 +3,7 @@
 //! If something is missing, please [open an issue](https://github.com/noaione/tosho-mango/issues/new/choose) or a [pull request](https://github.com/noaione/tosho-mango/compare).
 
 use super::{
-    BadgeManga, LabelBadgeManga, Status, SubscriptionBadge, SubscriptionStatus, UserPoint,
+    AccountSubscriptionStatus, BadgeManga, LabelBadgeManga, Status, SubscriptionBadge, UserPoint,
 };
 
 /// The tag or genre information.
@@ -185,8 +185,8 @@ pub struct MangaDetailV2 {
     #[prost(message, optional, tag = "18")]
     pub hidden_chapters: ::core::option::Option<ChaptersRange>,
     /// The subscription status of the user.
-    #[prost(enumeration = "SubscriptionStatus", tag = "19")]
-    pub subscription_status: i32,
+    #[prost(message, optional, tag = "19")]
+    pub subscription_status: ::core::option::Option<AccountSubscriptionStatus>,
 }
 
 /// A simplified manga information used in the search result.

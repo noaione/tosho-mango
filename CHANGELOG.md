@@ -10,6 +10,10 @@ This should give more consistent error handling across all sources.
 - All sources: Client initialization now returns `Result<Self, Error>` format instead of `Self`.
   - `Error` is the new error type that is used across all sources.
 
+### Changes
+- `MU`: Proto changes for subscription in manga detail
+- `MU`: Bump constants version
+
 ### Build
 - Update `reqwest`, and `serde-*`
 - Remove `anyhow` as direct dependency

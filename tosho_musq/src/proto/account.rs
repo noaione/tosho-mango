@@ -4,7 +4,7 @@
 
 #![allow(clippy::derive_partial_eq_without_eq)]
 
-use super::UserPoint;
+use super::{SubscriptionStatus, UserPoint};
 
 /// The device connected to the account.
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -145,4 +145,12 @@ pub struct HomeViewV2 {
     /// The recommended banner image URL.
     #[prost(string, tag = "15")]
     pub recommended_banner_image_url: ::prost::alloc::string::String,
+}
+
+/// The account subscription status
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct AccountSubscriptionStatus {
+    /// The subscription status.
+    #[prost(enumeration = "SubscriptionStatus", tag = "1")]
+    pub status: i32,
 }

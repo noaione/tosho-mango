@@ -27,7 +27,7 @@ pub struct Constants {
 
 /// The constants used for Android devices.
 pub static ANDROID_CONSTANTS: LazyLock<Constants> = LazyLock::new(|| {
-    let android_app_ver = "68"; // 2.3.1
+    let android_app_ver = "69"; // 2.4.0
 
     Constants {
         image_ua: "Dalvik/2.1.0 (Linux; U; Android 12; SM-G935F Build/SQ3A.220705.004)".to_string(),
