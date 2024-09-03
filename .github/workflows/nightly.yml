@@ -5,6 +5,8 @@ on:
   # Run every 3 days at 00:00 UTC
   schedule:
     - cron: '0 0 */3 * *'
+  # Manual trigger
+  workflow_dispatch:
 
 env:
   RUST_BACKTRACE: full
