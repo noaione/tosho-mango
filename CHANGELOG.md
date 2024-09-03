@@ -13,6 +13,7 @@ This should give more consistent error handling across all sources.
 ### Changes
 - `MU`: Proto changes for subscription in manga detail
 - `MU`: Bump constants version
+- `KM`: Fix precalculation of point usages
 
 ### Build
 - Update `reqwest`, and `serde-*`

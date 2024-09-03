@@ -251,7 +251,6 @@ pub(crate) async fn kmkc_purchase_precalculate(
                 return 1;
             }
 
-            let mut wallet_copy = user_point.point.point.clone();
             let mut ticket_entry = user_point.ticket.clone();
 
             let mut chapter_point_claim: Vec<EpisodeNode> = vec![];
@@ -261,6 +260,8 @@ pub(crate) async fn kmkc_purchase_precalculate(
                     continue;
                 }
 
+                // For ticket, we simulate by removing the ticket from the entry, while for point
+                // we just add it into the list since we want to see how much point we need to spend
                 if chapter.is_ticketable() && ticket_entry.is_title_available() {
                     ticketing_claim.push((
                         chapter,
@@ -273,9 +274,7 @@ pub(crate) async fn kmkc_purchase_precalculate(
                         TicketInfoType::Premium(ticket_entry.info.premium.clone().unwrap()),
                     ));
                     ticket_entry.subtract_premium();
-                } else if wallet_copy.can_purchase(chapter.point.try_into().unwrap_or(0)) {
-                    wallet_copy.subtract(chapter.point.try_into().unwrap_or(0));
-                    wallet_copy.add(chapter.bonus_point.try_into().unwrap_or(0));
+                } else {
                     chapter_point_claim.push(chapter);
                 }
             }
@@ -287,48 +286,6 @@ pub(crate) async fn kmkc_purchase_precalculate(
 
                 return 1;
             }
-
-            console.info("Your current point balance:");
-            let total_bal = user_point
-                .point
-                .point
-                .total_point()
-                .to_formatted_string(&Locale::en);
-            let paid_point = user_point
-                .point
-                .point
-                .paid_point
-                .to_formatted_string(&Locale::en);
-            let free_point = user_point
-                .point
-                .point
-                .free_point
-                .to_formatted_string(&Locale::en);
-            let premium_ticket = user_point
-                .point
-                .ticket
-                .total_num
-                .to_formatted_string(&Locale::en);
-            console.info(&cformat!(
-                "  - <bold>Total:</> <cyan!,bold><reverse>{}</>c</cyan!,bold>",
-                total_bal
-            ));
-            console.info(&cformat!(
-                "  - <bold>Paid point:</> <g,bold><reverse>{}</>c</g,bold>",
-                paid_point
-            ));
-            console.info(&cformat!(
-                "  - <bold>Free point:</> <cyan,bold><reverse>{}</>c</cyan,bold>",
-                free_point
-            ));
-            console.info(&cformat!(
-                "  - <bold>Premium ticket:</> <yellow,bold><reverse>{}</> ticket</yellow,bold>",
-                premium_ticket
-            ));
-            console.info(&cformat!(
-                "  - <bold>Title ticket?</bold>: {}",
-                ticket_entry.is_title_available()
-            ));
 
             let coin_total = chapter_point_claim
                 .iter()
