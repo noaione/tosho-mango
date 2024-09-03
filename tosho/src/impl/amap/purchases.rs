@@ -116,11 +116,11 @@ pub(crate) async fn amap_purchase_precalculate(
     account: &Config,
     console: &crate::term::Terminal,
 ) -> ExitCode {
-    let (results, _, user_bal) =
+    let (results, _, _) =
         common_purchase_select(title_id, client, account, false, true, false, console).await;
 
-    match (results, user_bal) {
-        (Ok(results), Some(balance)) => {
+    match results {
+        Ok(results) => {
             if results.is_empty() {
                 return 1;
             }
@@ -128,31 +128,9 @@ pub(crate) async fn amap_purchase_precalculate(
             console.info("Calculating chapters cost...");
             let price_ticket: u64 = results.iter().map(|c| c.info.price).sum();
 
-            let total_ticket = balance.sum().to_formatted_string(&Locale::en);
-            let purchased = balance.purchased.to_formatted_string(&Locale::en);
-            let premium = balance.premium.to_formatted_string(&Locale::en);
-            let total_point = balance.sum_point().to_formatted_string(&Locale::en);
-
             let price_ticket_fmt = price_ticket.to_formatted_string(&Locale::en);
             let ch_count = results.len().to_formatted_string(&Locale::en);
 
-            console.info("Your current point balance:");
-            console.info(&cformat!(
-                "  - <s>Total</>: <magenta,bold><reverse>{}</>T</magenta,bold>",
-                total_ticket
-            ));
-            console.info(&cformat!(
-                "  - <s>Purchased</>: <yellow,bold><reverse>{}</>T</yellow,bold>",
-                purchased
-            ));
-            console.info(&cformat!(
-                "  - <s>Premium</>: <green,bold><reverse>{}</>T</green,bold>",
-                premium
-            ));
-            console.info(&cformat!(
-                "  - <s>Total point</>: <cyan!,bold><reverse>{}</>p</cyan!,bold>",
-                total_point
-            ));
             console.info("Precalculated purchase cost:");
             console.info(&cformat!("  - <s>Total</>: {}", ch_count));
             console.info(&cformat!("  - <s>Cost</>: {}T", price_ticket_fmt));

@@ -14,6 +14,7 @@ This should give more consistent error handling across all sources.
 - `MU`: Proto changes for subscription in manga detail
 - `MU`: Bump constants version
 - `KM`: Fix precalculation of point usages
+- `MU`, `KM`, and `AM`: Cleanup `precalculate` command output a bit more
 
 ### Build
 - Update `reqwest`, and `serde-*`
