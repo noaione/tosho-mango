@@ -1,0 +1,38 @@
+# The following Actions/Workflow is to test tosho with latest nightly Rust compiler.
+# This is to ensure that tosho is always compatible with the latest Rust compiler.
+name: Nightly Check
+on:
+  # Run every 3 days at 00:00 UTC
+  schedule:
+    - cron: '0 0 */3 * *'
+
+env:
+  RUST_BACKTRACE: full
+  CARGO_TERM_COLOR: always
+  PKG_CONFIG_SYSROOT_DIR: /
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@9a9194f87191a7e9055e3e9b95b8cfb13023bb08
+        with:
+          submodules: 'true'
+
+      - name: Rustup nightly
+        run: |
+          rustup update nightly
+
+      - name: Setup rust cache
+        uses: Swatinem/rust-cache@9bdad043e88c75890e36ad3bbc8d27f0090dd609
+        with:
+          prefix-key: "${{ runner.os }}-nightly-check-tosho-rust"
+      
+      - name: Test and Build
+        run: |
+          cargo +nightly test --verbose --all
+          cargo +nightly build --release --verbose --all
