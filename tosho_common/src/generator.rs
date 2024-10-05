@@ -1,3 +1,14 @@
+//! Generator functions for creating random data used in the other library.
+//!
+//! As an example, you can use the `generate_random_token` function to create a random token for use in your application.
+//!
+//! ```rust
+//! use tosho_common::generator::generate_random_token;
+//!
+//! let _ = generate_random_token(16);
+//! # assert_eq!(generate_random_token(16).len(), 16);
+//! ```
+
 use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};
 

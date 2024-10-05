@@ -202,7 +202,7 @@ impl Terminal {
 
     /// Make a new progress bar
     ///
-    /// Similar to [`make_progress`] but returns an [`Arc`] of the
+    /// Similar to [`Terminal::make_progress`] but returns an [`Arc`] of the
     /// progress bar so it can be shared across threads without
     /// recreating the progress bar again.
     pub fn make_progress_arc(
