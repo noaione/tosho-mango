@@ -165,9 +165,9 @@ fn do_chapter_select(
     console: &mut crate::term::Terminal,
 ) -> Vec<Chapter> {
     console.info("Title information:");
-    console.info(&cformat!("  - <bold>ID:</> {}", result.uuid));
-    console.info(&cformat!("  - <bold>Title:</> {}", result.title));
-    console.info(&cformat!(
+    console.info(cformat!("  - <bold>ID:</> {}", result.uuid));
+    console.info(cformat!("  - <bold>Title:</> {}", result.title));
+    console.info(cformat!(
         "  - <bold>Chapters:</> {} chapters",
         chapters_entry.len()
     ));
@@ -300,7 +300,7 @@ async fn rbean_actual_downloader(
     let writer = tokio::fs::File::create(&img_dl_path).await?;
 
     if console.is_debug() {
-        console.log(&cformat!(
+        console.log(cformat!(
             "   Downloading image <s>{}</> to <s>{}</>...",
             &download_url,
             image_fn
@@ -310,7 +310,7 @@ async fn rbean_actual_downloader(
     match node.client.stream_download(&download_url, writer).await {
         Ok(_) => {}
         Err(err) => {
-            console.error(&format!("    Failed to download image: {}", err));
+            console.error(format!("    Failed to download image: {}", err));
             // silent delete the file
             tokio::fs::remove_file(&img_dl_path).await?;
         }
@@ -329,21 +329,21 @@ pub(crate) async fn rbean_download(
     account: &Config,
     console: &mut crate::term::Terminal,
 ) -> ExitCode {
-    console.info(&cformat!(
+    console.info(cformat!(
         "Fetching user information for <magenta,bold>{}</>...",
         account.email
     ));
 
     let acc_info = client.get_user().await;
     if let Err(e) = acc_info {
-        console.error(&format!("Failed to fetch user information: {}", e));
+        console.error(format!("Failed to fetch user information: {}", e));
         return 1;
     }
 
     let acc_info = acc_info.unwrap();
     save_session_config(client, account);
 
-    console.info(&cformat!(
+    console.info(cformat!(
         "Fetching info for ID <magenta,bold>{}</>...",
         uuid
     ));
@@ -351,14 +351,14 @@ pub(crate) async fn rbean_download(
     let result = client.get_manga(uuid).await;
 
     if let Err(e) = result {
-        console.error(&format!("Failed to fetch manga: {}", e));
+        console.error(format!("Failed to fetch manga: {}", e));
         return 1;
     }
 
     let result = result.unwrap();
     save_session_config(client, account);
 
-    console.info(&cformat!(
+    console.info(cformat!(
         "Fetching chapters for <magenta,bold>{}</>...",
         result.title
     ));
@@ -366,7 +366,7 @@ pub(crate) async fn rbean_download(
     let chapter_meta = client.get_chapter_list(uuid).await;
 
     if let Err(e) = chapter_meta {
-        console.error(&format!("Failed to fetch chapters: {}", e));
+        console.error(format!("Failed to fetch chapters: {}", e));
         return 1;
     }
 
@@ -414,7 +414,7 @@ pub(crate) async fn rbean_download(
         .expect("Failed to dump title info");
 
     for chapter in download_chapters {
-        console.info(&cformat!(
+        console.info(cformat!(
             "  Downloading chapter <m,s>{}</> ({})...",
             chapter.formatted_title(),
             chapter.uuid
@@ -435,7 +435,7 @@ pub(crate) async fn rbean_download(
         let view_req = client.get_chapter_viewer(&chapter.uuid).await;
 
         if let Err(e) = view_req {
-            console.error(&cformat!(
+            console.error(cformat!(
                 "Failed to fetch viewer for <m,s>{}</>: {}",
                 chapter.formatted_title(),
                 e
@@ -448,7 +448,7 @@ pub(crate) async fn rbean_download(
 
         if let Some(count) = check_downloaded_image_count(&image_dir, image_ext) {
             if count >= view_req.data.pages.len() {
-                console.warn(&cformat!(
+                console.warn(cformat!(
                     "   Chapter <m,s>{}</> (<s>{}</>) has been downloaded, skipping",
                     chapter.formatted_title(),
                     chapter.uuid
@@ -472,7 +472,7 @@ pub(crate) async fn rbean_download(
                     CLIDownloadFormat::Webp => pages_data[0].image.webp.clone(),
                 };
                 let first_image = img_source.first().unwrap();
-                console.info(&cformat!(
+                console.info(cformat!(
                     "   Testing higher resolution images for <m,s>{}</>...",
                     chapter.formatted_title()
                 ));
@@ -524,7 +524,7 @@ pub(crate) async fn rbean_download(
                         {
                             Ok(_) => {}
                             Err(e) => {
-                                cnsl.error(&format!("Failed to download image: {}", e));
+                                cnsl.error(format!("Failed to download image: {}", e));
                             }
                         }
                     })
@@ -553,7 +553,7 @@ pub(crate) async fn rbean_download(
                 {
                     Ok(_) => {}
                     Err(e) => {
-                        console.error(&format!("Failed to download image: {}", e));
+                        console.error(format!("Failed to download image: {}", e));
                     }
                 }
             }

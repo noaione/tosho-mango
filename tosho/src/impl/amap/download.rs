@@ -136,7 +136,7 @@ pub(crate) async fn amap_download(
                 ticket_purse.purchased = 0;
             }
 
-            console.info(&format!("Downloading {} chapters...", results.len()));
+            console.info(format!("Downloading {} chapters...", results.len()));
             let mut download_chapters = vec![];
             for chapter in results {
                 if chapter.info.is_available() {
@@ -152,7 +152,7 @@ pub(crate) async fn amap_download(
 
                 if consume.is_none() {
                     if !dl_config.no_input {
-                        console.warn(&cformat!(
+                        console.warn(cformat!(
                             "  Chapter <m,s>{}</> (<s>{}</>) is not available for purchase, skipping",
                             chapter.info.title,
                             chapter.info.id
@@ -174,7 +174,7 @@ pub(crate) async fn amap_download(
                 }
 
                 if should_purchase {
-                    console.info(&cformat!(
+                    console.info(cformat!(
                         "  Purchasing chapter <m,s>{}</> (<s>{}</>) with consumption <s>{:?}</>...",
                         chapter.info.title,
                         chapter.info.id,
@@ -187,15 +187,15 @@ pub(crate) async fn amap_download(
 
                     match purchase_result {
                         Err(err) => {
-                            console.error(&format!("   Failed to purchase chapter: {}", err));
-                            console.error(&format!(
+                            console.error(format!("   Failed to purchase chapter: {}", err));
+                            console.error(format!(
                                 "    Skipping chapter <m,s>{}</> (<s>{}</>)",
                                 chapter.info.title, chapter.info.id
                             ));
                         }
                         Ok(ch_view) => {
                             if ch_view.info.pages.is_empty() {
-                                console.warn(&cformat!(
+                                console.warn(cformat!(
                                     "   Unable to purchase chapter <m,s>{}</> (<s>{}</>) since image block is empty, skipping",
                                     chapter.info.title,
                                     chapter.info.id
@@ -228,7 +228,7 @@ pub(crate) async fn amap_download(
                 .expect("Failed to dump title info");
 
             for chapter in download_chapters {
-                console.info(&cformat!(
+                console.info(cformat!(
                     "  Downloading chapter <m,s>{}</> ({})...",
                     chapter.info.title,
                     chapter.info.id
@@ -245,8 +245,8 @@ pub(crate) async fn amap_download(
 
                 let ch_view = client.get_comic_viewer(title_id, &consume).await;
                 if let Err(err) = ch_view {
-                    console.error(&format!("Failed to download chapter: {}", err));
-                    console.error(&cformat!(
+                    console.error(format!("Failed to download chapter: {}", err));
+                    console.error(cformat!(
                         "   Skipping chapter <m,s>{}</> (<s>{}</>)",
                         chapter.info.title,
                         chapter.info.id
@@ -256,7 +256,7 @@ pub(crate) async fn amap_download(
 
                 let ch_view = ch_view.unwrap();
                 if ch_view.info.pages.is_empty() {
-                    console.warn(&cformat!(
+                    console.warn(cformat!(
                         "   Unable to download chapter <m,s>{}</> (<s>{}</>) since image block is empty, skipping",
                         chapter.info.title,
                         chapter.info.id
@@ -272,7 +272,7 @@ pub(crate) async fn amap_download(
                     get_output_directory(&output_dir, title_id, Some(chapter.info.id), false);
                 if let Some(count) = check_downloaded_image_count(&ch_dir, "jpg") {
                     if count >= ch_pages.len() {
-                        console.warn(&cformat!(
+                        console.warn(cformat!(
                             "   Chapter <m,s>{}</> (<s>{}</>) has been downloaded, skipping",
                             chapter.info.title,
                             chapter.info.id
@@ -295,7 +295,7 @@ pub(crate) async fn amap_download(
                         .expect("Failed to create image file");
 
                     if console.is_debug() {
-                        console.log(&cformat!(
+                        console.log(cformat!(
                             "   Downloading image <s>{}</> to <s>{}</>...",
                             idx + 1,
                             img_fn
@@ -307,7 +307,7 @@ pub(crate) async fn amap_download(
                     match client.stream_download(&image.info.url, writer).await {
                         Ok(_) => {}
                         Err(err) => {
-                            console.error(&format!("    Failed to download image: {}", err));
+                            console.error(format!("    Failed to download image: {}", err));
                             // silently delete the file
                             tokio::fs::remove_file(&img_dl_path)
                                 .await

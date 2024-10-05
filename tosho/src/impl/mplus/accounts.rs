@@ -72,7 +72,7 @@ pub(crate) async fn mplus_auth_session(
         }
     }
 
-    console.info(&cformat!(
+    console.info(cformat!(
         "Authenticating with session ID <m,s>{}</> (<s>{}</>)",
         session_id,
         device_type.to_name()
@@ -97,7 +97,7 @@ pub(crate) async fn mplus_auth_session(
                         }
                     }
 
-                    console.info(&cformat!(
+                    console.info(cformat!(
                         "Authenticated as <m,b>{}</> (<s>{}</>)",
                         final_config.username.as_ref().unwrap_or(&final_config.id),
                         final_config.r#type().to_name()
@@ -108,17 +108,17 @@ pub(crate) async fn mplus_auth_session(
                     0
                 }
                 Ok(tosho_mplus::APIResponse::Error(e)) => {
-                    console.error(&format!("Authentication failed: {}", e.as_string()));
+                    console.error(format!("Authentication failed: {}", e.as_string()));
                     1
                 }
                 Err(e) => {
-                    console.error(&format!("Authentication failed: {}", e));
+                    console.error(format!("Authentication failed: {}", e));
                     1
                 }
             }
         }
         Err(e) => {
-            console.error(&format!("Failed to create client: {}", e));
+            console.error(format!("Failed to create client: {}", e));
             1
         }
     }
@@ -134,12 +134,12 @@ pub(crate) fn mplus_accounts(console: &crate::term::Terminal) -> ExitCode {
             1
         }
         _ => {
-            console.info(&format!("Found {} accounts:", all_configs.len()));
+            console.info(format!("Found {} accounts:", all_configs.len()));
             for (i, c) in all_configs.iter().enumerate() {
                 match c {
                     crate::config::ConfigImpl::Mplus(c) => {
                         if c.username.is_some() {
-                            console.info(&format!(
+                            console.info(format!(
                                 "{:02}. {} - {} ({})",
                                 i + 1,
                                 c.id,
@@ -147,7 +147,7 @@ pub(crate) fn mplus_accounts(console: &crate::term::Terminal) -> ExitCode {
                                 c.r#type().to_name()
                             ));
                         } else {
-                            console.info(&format!(
+                            console.info(format!(
                                 "{:02}. {} ({})",
                                 i + 1,
                                 c.id,
@@ -169,7 +169,7 @@ pub async fn mplus_account_info(
     acc_info: &Config,
     console: &crate::term::Terminal,
 ) -> ExitCode {
-    console.info(&cformat!(
+    console.info(cformat!(
         "Fetching account info for <magenta,bold>{}</>...",
         acc_info.id
     ));
@@ -178,31 +178,28 @@ pub async fn mplus_account_info(
 
     match account {
         Ok(tosho_mplus::APIResponse::Success(account_resp)) => {
-            console.info(&cformat!(
+            console.info(cformat!(
                 "Account info for <magenta,bold>{}</> (<s>{}</>):",
                 acc_info.id,
                 acc_info.r#type().to_name()
             ));
 
-            console.info(&cformat!("  <bold>Session:</> {}", acc_info.session));
-            console.info(&cformat!(
-                "  <bold>Type:</> {}",
-                acc_info.r#type().to_name()
-            ));
+            console.info(cformat!("  <bold>Session:</> {}", acc_info.session));
+            console.info(cformat!("  <bold>Type:</> {}", acc_info.r#type().to_name()));
 
             let mut username = account_resp.user_name.clone();
             if username.is_empty() {
                 username = "[No username]".to_string();
             }
 
-            console.info(&cformat!("  <bold>Username:</> {}", username));
+            console.info(cformat!("  <bold>Username:</> {}", username));
             let subs_info = account_resp.subscription.unwrap_or_default();
-            console.info(&cformat!(
+            console.info(cformat!(
                 "  <bold>Subscription:</> {}",
                 subs_info.plan().to_name()
             ));
 
-            console.info(&cformat!(
+            console.info(cformat!(
                 "  <bold>Notify news?</> {}",
                 if account_resp.news_notification {
                     "Yes"
@@ -211,7 +208,7 @@ pub async fn mplus_account_info(
                 }
             ));
 
-            console.info(&cformat!(
+            console.info(cformat!(
                 "  <bold>Notify chapter update?</> {}",
                 if account_resp.chapter_notification {
                     "Yes"
@@ -223,11 +220,11 @@ pub async fn mplus_account_info(
             0
         }
         Ok(tosho_mplus::APIResponse::Error(e)) => {
-            console.error(&format!("Failed to fetch account info: {}", e.as_string()));
+            console.error(format!("Failed to fetch account info: {}", e.as_string()));
             1
         }
         Err(e) => {
-            console.error(&format!("Failed to fetch account info: {}", e));
+            console.error(format!("Failed to fetch account info: {}", e));
             1
         }
     }
@@ -250,14 +247,14 @@ pub(crate) fn mplus_account_revoke(account: &Config, console: &crate::term::Term
         None,
     ) {
         Ok(_) => {
-            console.info(&cformat!(
+            console.info(cformat!(
                 "Successfully deleted <magenta,bold>{}</>",
                 account.id
             ));
             0
         }
         Err(err) => {
-            console.error(&format!("Failed to delete account: {}", err));
+            console.error(format!("Failed to delete account: {}", err));
             1
         }
     }

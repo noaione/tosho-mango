@@ -76,7 +76,7 @@ pub(crate) async fn musq_auth_session(
         }
     }
 
-    console.info(&cformat!(
+    console.info(cformat!(
         "Authenticating with session ID <m,s>{}</> (<s>{}</>)",
         session_id,
         r#type.to_name()
@@ -99,13 +99,13 @@ pub(crate) async fn musq_auth_session(
                     0
                 }
                 Err(e) => {
-                    console.error(&format!("Authentication failed: {}", e));
+                    console.error(format!("Authentication failed: {}", e));
                     1
                 }
             }
         }
         Err(e) => {
-            console.error(&format!("Failed to create client: {}", e));
+            console.error(format!("Failed to create client: {}", e));
             1
         }
     }
@@ -121,16 +121,11 @@ pub(crate) fn musq_accounts(console: &crate::term::Terminal) -> ExitCode {
             1
         }
         _ => {
-            console.info(&format!("Found {} accounts:", all_configs.len()));
+            console.info(format!("Found {} accounts:", all_configs.len()));
             for (i, c) in all_configs.iter().enumerate() {
                 match c {
                     crate::config::ConfigImpl::Musq(c) => {
-                        console.info(&format!(
-                            "{:02}. {} ({})",
-                            i + 1,
-                            c.id,
-                            c.r#type().to_name()
-                        ));
+                        console.info(format!("{:02}. {} ({})", i + 1, c.id, c.r#type().to_name()));
                     }
                     _ => unreachable!(),
                 }
@@ -146,7 +141,7 @@ pub async fn musq_account_info(
     acc_info: &Config,
     console: &crate::term::Terminal,
 ) -> ExitCode {
-    console.info(&cformat!(
+    console.info(cformat!(
         "Fetching account info for <magenta,bold>{}</>...",
         acc_info.id
     ));
@@ -154,29 +149,26 @@ pub async fn musq_account_info(
     let account = client.get_account().await;
     match account {
         Ok(account) => {
-            console.info(&cformat!(
+            console.info(cformat!(
                 "Account info for <magenta,bold>{}</>:",
                 acc_info.id
             ));
-            console.info(&cformat!("  <bold>Session:</> {}", acc_info.session));
-            console.info(&cformat!(
-                "  <bold>Type:</> {}",
-                acc_info.r#type().to_name()
-            ));
-            console.info(&cformat!("  <bold>Registered?</> {}", account.registered()));
+            console.info(cformat!("  <bold>Session:</> {}", acc_info.session));
+            console.info(cformat!("  <bold>Type:</> {}", acc_info.r#type().to_name()));
+            console.info(cformat!("  <bold>Registered?</> {}", account.registered()));
             if !account.devices.is_empty() {
-                console.info(&cformat!("  <bold>Devices:</>"));
+                console.info(cformat!("  <bold>Devices:</>"));
                 for device in account.devices {
                     let device_name = device.name;
                     let device_id = device.id;
-                    console.info(&cformat!("    - <bold>{}:</> ({})", device_name, device_id));
+                    console.info(cformat!("    - <bold>{}:</> ({})", device_name, device_id));
                 }
             }
 
             0
         }
         Err(e) => {
-            console.error(&format!("Failed to fetch account info: {}", e));
+            console.error(format!("Failed to fetch account info: {}", e));
             1
         }
     }
@@ -187,7 +179,7 @@ pub async fn musq_account_balance(
     acc_info: &Config,
     console: &crate::term::Terminal,
 ) -> ExitCode {
-    console.info(&cformat!(
+    console.info(cformat!(
         "Checking balance for <magenta,bold>{}</>...",
         acc_info.id
     ));
@@ -201,19 +193,19 @@ pub async fn musq_account_balance(
             let paid_point = user_point.paid.to_formatted_string(&Locale::en);
             let xp_point = user_point.event.to_formatted_string(&Locale::en);
             let free_point = user_point.free.to_formatted_string(&Locale::en);
-            console.info(&cformat!(
+            console.info(cformat!(
                 "  - <bold>Total:</> <cyan!,bold><reverse>{}</>c</cyan!,bold>",
                 total_bal
             ));
-            console.info(&cformat!(
+            console.info(cformat!(
                 "  - <bold>Paid point:</> <yellow!,bold><reverse>{}</>c</yellow!,bold>",
                 paid_point
             ));
-            console.info(&cformat!(
+            console.info(cformat!(
                 "  - <bold>Event/XP point:</> <magenta,bold><reverse>{}</>c</magenta,bold>",
                 xp_point
             ));
-            console.info(&cformat!(
+            console.info(cformat!(
                 "  - <bold>Free point:</> <green,bold><reverse>{}</>c</green,bold>",
                 free_point
             ));
@@ -231,11 +223,11 @@ pub async fn musq_account_balance(
             } else {
                 cformat!("<red,bold>Unsubscribed</>")
             };
-            console.info(&cformat!("  - <bold>Subscription:</> {}", subs_status));
+            console.info(cformat!("  - <bold>Subscription:</> {}", subs_status));
             0
         }
         Err(e) => {
-            console.error(&format!("Failed to fetch account info: {}", e));
+            console.error(format!("Failed to fetch account info: {}", e));
             1
         }
     }
@@ -258,14 +250,14 @@ pub(crate) fn musq_account_revoke(account: &Config, console: &crate::term::Termi
         None,
     ) {
         Ok(_) => {
-            console.info(&cformat!(
+            console.info(cformat!(
                 "Successfully deleted <magenta,bold>{}</>",
                 account.id
             ));
             0
         }
         Err(err) => {
-            console.error(&format!("Failed to delete account: {}", err));
+            console.error(format!("Failed to delete account: {}", err));
             1
         }
     }

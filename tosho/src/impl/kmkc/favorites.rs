@@ -9,7 +9,7 @@ pub(crate) async fn kmkc_my_favorites(
     acc_info: &Config,
     console: &crate::term::Terminal,
 ) -> ExitCode {
-    console.info(&cformat!(
+    console.info(cformat!(
         "Getting favorites list for <magenta,bold>{}</>...",
         acc_info.get_username()
     ));
@@ -33,7 +33,7 @@ pub(crate) async fn kmkc_my_favorites(
                 })
                 .collect();
 
-            console.info(&cformat!(
+            console.info(cformat!(
                 "Your favorites list (<m,s>{}</> results):",
                 mapped_favorites.len()
             ));
@@ -43,7 +43,7 @@ pub(crate) async fn kmkc_my_favorites(
             0
         }
         Err(err) => {
-            console.error(&format!("Failed to fetch favorites: {}", err));
+            console.error(format!("Failed to fetch favorites: {}", err));
 
             1
         }

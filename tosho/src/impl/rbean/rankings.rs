@@ -14,7 +14,7 @@ pub(crate) async fn rbean_home_page(
     account: &super::config::Config,
     console: &crate::term::Terminal,
 ) -> ExitCode {
-    console.info(&cformat!(
+    console.info(cformat!(
         "Getting home page for user <m,s>{}</>",
         account.id
     ));
@@ -23,45 +23,45 @@ pub(crate) async fn rbean_home_page(
 
     match results {
         Err(e) => {
-            console.error(&cformat!("Unable to get home page: {}", e));
+            console.error(cformat!("Unable to get home page: {}", e));
             1
         }
         Ok(results) => {
             save_session_config(client, account);
-            console.info(&cformat!("Home page for <m,s>{}</>", account.id));
+            console.info(cformat!("Home page for <m,s>{}</>", account.id));
 
             if let Some(hero_manga) = results.hero.manga {
                 let manga_url = format!("https://{}/series/{}", &*BASE_HOST, hero_manga.slug);
                 let linked_url = linkify!(manga_url, &hero_manga.title);
-                console.info(&cformat!(">> <m,s>{}</> <<", linked_url));
+                console.info(cformat!(">> <m,s>{}</> <<", linked_url));
                 console.info(&manga_url);
                 if !results.hero.title.is_empty() {
-                    console.info(&cformat!("<m,s>{}</>", results.hero.title));
+                    console.info(cformat!("<m,s>{}</>", results.hero.title));
                 }
                 if !results.hero.subtitle.is_empty() {
-                    console.info(&cformat!(" <s>{}</>", results.hero.subtitle));
+                    console.info(cformat!(" <s>{}</>", results.hero.subtitle));
                 }
                 if !results.hero.alt_text.is_empty() {
-                    console.info(&format!(" {}", results.hero.alt_text));
+                    console.info(format!(" {}", results.hero.alt_text));
                 }
 
                 println!();
             }
 
             if !results.featured.is_empty() {
-                console.info(&cformat!("<s>Featured manga:</>"));
+                console.info(cformat!("<s>Featured manga:</>"));
             }
 
             for featured in results.featured.iter() {
                 let manga_url = format!("https://{}/series/{}", &*BASE_HOST, featured.manga.slug);
                 let linked_url = linkify!(manga_url, &featured.manga.title);
-                console.info(&cformat!(
+                console.info(cformat!(
                     " <m,s>{}</>: <s>{}</>",
                     featured.title,
                     linked_url
                 ));
-                console.info(&format!("  {}", featured.description));
-                console.info(&format!("   {}", manga_url));
+                console.info(format!("  {}", featured.description));
+                console.info(format!("   {}", manga_url));
             }
 
             loop {
@@ -116,7 +116,7 @@ pub(crate) async fn rbean_home_page(
                             Carousel::MangaWithChapters(c) => c.items.to_vec(),
                         };
 
-                        console.info(&cformat!(
+                        console.info(cformat!(
                             "Carousel for <m,s>{}</> ({} titles):",
                             title,
                             manga_list.len()

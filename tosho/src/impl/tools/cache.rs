@@ -30,13 +30,13 @@ pub(crate) async fn tools_clear_cache(console: &mut crate::term::Terminal) -> Ex
         return 1;
     }
 
-    console.info(&cformat!(
+    console.info(cformat!(
         "Found <magenta,bold>{}</> cache files to delete:",
         sjv_caches.len() + mplus_caches.len()
     ));
 
-    console.info(&cformat!(" SJ/M: <bold>{}</bold> files", sjv_caches.len()));
-    console.info(&cformat!(" M+: <bold>{}</bold> files", mplus_caches.len()));
+    console.info(cformat!(" SJ/M: <bold>{}</bold> files", sjv_caches.len()));
+    console.info(cformat!(" M+: <bold>{}</bold> files", mplus_caches.len()));
 
     let continue_it = console.confirm(Some("Are you sure you want to delete?"));
 
@@ -47,8 +47,8 @@ pub(crate) async fn tools_clear_cache(console: &mut crate::term::Terminal) -> Ex
         for entry in sjv_caches {
             let file_name = entry.file_name().unwrap();
             match tokio::fs::remove_file(entry.clone()).await {
-                Ok(_) => console.info(&cformat!("Deleted: <bold>{:?}</>", file_name)),
-                Err(e) => console.error(&cformat!(
+                Ok(_) => console.info(cformat!("Deleted: <bold>{:?}</>", file_name)),
+                Err(e) => console.error(cformat!(
                     "Failed to delete: <bold>{:?}</>\n  <red,bold>{}</>",
                     file_name,
                     e
@@ -58,8 +58,8 @@ pub(crate) async fn tools_clear_cache(console: &mut crate::term::Terminal) -> Ex
         for entry in mplus_caches {
             let file_name = entry.file_name().unwrap();
             match tokio::fs::remove_file(entry.clone()).await {
-                Ok(_) => console.info(&cformat!("Deleted: <bold>{:?}</>", file_name)),
-                Err(e) => console.error(&cformat!(
+                Ok(_) => console.info(cformat!("Deleted: <bold>{:?}</>", file_name)),
+                Err(e) => console.error(cformat!(
                     "Failed to delete: <bold>{:?}</>\n  <red,bold>{}</>",
                     file_name,
                     e

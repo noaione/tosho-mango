@@ -33,7 +33,7 @@ pub(crate) async fn kmkc_purchase(
             // let mut chapter_point_back: Vec<EpisodeNode> = vec![];
             for chapter in results {
                 if chapter.is_available() {
-                    console.warn(&cformat!(
+                    console.warn(cformat!(
                         "Chapter <m,s>{}</> is already purchased, skipping",
                         chapter.title
                     ));
@@ -76,11 +76,11 @@ pub(crate) async fn kmkc_purchase(
             }
 
             console.info("Precalculate purchase information...");
-            console.info(&cformat!(
+            console.info(cformat!(
                 "  - <bold>With point:</> {} chapters",
                 chapter_point_claim.len()
             ));
-            console.info(&cformat!(
+            console.info(cformat!(
                 "  - <bold>With ticket:</> {} chapters",
                 ticketing_claim.len()
             ));
@@ -101,7 +101,7 @@ pub(crate) async fn kmkc_purchase(
                     .await;
 
                 if let Err(error) = result {
-                    console.error(&format!("Failed to purchase chapter: {}", error));
+                    console.error(format!("Failed to purchase chapter: {}", error));
                     failure_count += 1;
                 }
             }
@@ -127,7 +127,7 @@ pub(crate) async fn kmkc_purchase(
                         purchase_count += chapter_point_claim.len();
                     }
                     Err(error) => {
-                        console.error(&format!("Failed to purchase chapter: {}", error));
+                        console.error(format!("Failed to purchase chapter: {}", error));
                         failure_count += chapter_point_claim.len() as u64;
                     }
                 }
@@ -136,7 +136,7 @@ pub(crate) async fn kmkc_purchase(
             console.stop_status_msg(cformat!("Purchased <m,s>{}</> chapters", purchase_count));
 
             if failure_count > 0 {
-                console.warn(&cformat!(
+                console.warn(cformat!(
                     "  There is <m,s>{}</> chapters that we failed to purchase",
                     failure_count
                 ));
@@ -201,7 +201,7 @@ pub(crate) async fn kmkc_purchased(
     account: &Config,
     console: &crate::term::Terminal,
 ) -> ExitCode {
-    console.info(&cformat!(
+    console.info(cformat!(
         "Getting user purchased title for <m,s>{}</>...",
         account.get_username()
     ));
@@ -214,7 +214,7 @@ pub(crate) async fn kmkc_purchased(
                 return 1;
             }
 
-            console.info(&cformat!(
+            console.info(cformat!(
                 "Purchased title (<m,s>{}</> results):",
                 results.len()
             ));
@@ -223,14 +223,14 @@ pub(crate) async fn kmkc_purchased(
                 let manga_url = format!("https://{}/title/{}", &*BASE_HOST, result.id);
                 let linked = linkify!(&manga_url, &result.title);
 
-                console.info(&cformat!("  {} ({})", linked, result.id));
-                console.info(&format!("   {}", manga_url));
+                console.info(cformat!("  {} ({})", linked, result.id));
+                console.info(format!("   {}", manga_url));
             }
 
             0
         }
         Err(error) => {
-            console.error(&format!("Failed to get purchased title: {}", error));
+            console.error(format!("Failed to get purchased title: {}", error));
             1
         }
     }
@@ -301,9 +301,9 @@ pub(crate) async fn kmkc_purchase_precalculate(
                 > 0;
 
             console.info("Precalculated purchase cost:");
-            console.info(&cformat!("  - <bold>Total</>: {}", total_claim));
-            console.info(&cformat!("  - <bold>Coins</>: {}c", coin_total));
-            console.info(&cformat!("  - <bold>Ticket</>: {}c", ticket_total));
+            console.info(cformat!("  - <bold>Total</>: {}", total_claim));
+            console.info(cformat!("  - <bold>Coins</>: {}c", coin_total));
+            console.info(cformat!("  - <bold>Ticket</>: {}c", ticket_total));
 
             if use_title_ticket {
                 console.info("     Will also use title ticket!")

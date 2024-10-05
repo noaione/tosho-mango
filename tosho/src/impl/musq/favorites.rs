@@ -10,7 +10,7 @@ pub(crate) async fn musq_my_favorites(
     account: &super::config::Config,
     console: &crate::term::Terminal,
 ) -> ExitCode {
-    console.info(&cformat!(
+    console.info(cformat!(
         "Getting favorites list for user <m,s>{}</>",
         account.id
     ));
@@ -18,7 +18,7 @@ pub(crate) async fn musq_my_favorites(
 
     match results {
         Err(e) => {
-            console.error(&cformat!("Unable to connect to MU!: {}", e));
+            console.error(cformat!("Unable to connect to MU!: {}", e));
             1
         }
         Ok(results) => {
@@ -27,7 +27,7 @@ pub(crate) async fn musq_my_favorites(
                 return 0;
             }
 
-            console.info(&cformat!(
+            console.info(cformat!(
                 "Your favorites list (<m,s>{}</> results):",
                 results.favorites.len()
             ));
@@ -44,7 +44,7 @@ pub(crate) async fn musq_my_history(
     account: &super::config::Config,
     console: &crate::term::Terminal,
 ) -> ExitCode {
-    console.info(&cformat!(
+    console.info(cformat!(
         "Getting favorites list for user <m,s>{}</>",
         account.id
     ));
@@ -53,7 +53,7 @@ pub(crate) async fn musq_my_history(
 
     match results {
         Err(e) => {
-            console.error(&cformat!("Unable to connect to MU!: {}", e));
+            console.error(cformat!("Unable to connect to MU!: {}", e));
             1
         }
         Ok(results) => {
@@ -62,7 +62,7 @@ pub(crate) async fn musq_my_history(
                 return 0;
             }
 
-            console.info(&cformat!(
+            console.info(cformat!(
                 "Your read history (<m,s>{}</> results):",
                 results.history.len()
             ));

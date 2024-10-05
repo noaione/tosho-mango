@@ -53,11 +53,11 @@ pub(crate) async fn check_for_update(console: &crate::term::Terminal) -> anyhow:
     let current_version = updater.current_version();
 
     if self_update::version::bump_is_greater(&current_version, &latest_version.version)? {
-        console.info(&cformat!(
+        console.info(cformat!(
             "There is a new version available: <m,s>{}</>",
             latest_version.version
         ));
-        console.info(&cformat!(
+        console.info(cformat!(
             "Update now by running <m,s>tosho update</> or <m,s>cargo [b]install tosho</>!",
         ));
     }
@@ -74,13 +74,13 @@ pub(crate) async fn perform_update(console: &crate::term::Terminal) -> anyhow::R
 
     match status {
         self_update::Status::UpToDate(v) => {
-            console.info(&cformat!(
+            console.info(cformat!(
                 "You are already using the latest version: <m,s>{}</>",
                 v
             ));
         }
         self_update::Status::Updated(v) => {
-            console.info(&cformat!("Updated to version: <m,s>{}</>", v));
+            console.info(cformat!("Updated to version: <m,s>{}</>", v));
         }
     }
 

@@ -15,7 +15,7 @@ pub(crate) async fn kmkc_search(
     client: &KMClient,
     console: &crate::term::Terminal,
 ) -> ExitCode {
-    console.info(&cformat!("Searching for <magenta,bold>{}</>...", query));
+    console.info(cformat!("Searching for <magenta,bold>{}</>...", query));
 
     let results = client.search(query, Some(50)).await;
     match results {
@@ -25,7 +25,7 @@ pub(crate) async fn kmkc_search(
                 return 1;
             }
 
-            console.info(&cformat!(
+            console.info(cformat!(
                 "Search results (<magenta,bold>{}</> results):",
                 results.len()
             ));
@@ -35,7 +35,7 @@ pub(crate) async fn kmkc_search(
             0
         }
         Err(e) => {
-            console.error(&cformat!("Unable to connect to KM: {}", e));
+            console.error(cformat!("Unable to connect to KM: {}", e));
             1
         }
     }
@@ -46,7 +46,7 @@ pub(crate) async fn kmkc_search_weekly(
     client: &KMClient,
     console: &crate::term::Terminal,
 ) -> ExitCode {
-    console.info(&cformat!(
+    console.info(cformat!(
         "Getting weekly manga for week <magenta,bold>{}</>...",
         weekday.to_name()
     ));
@@ -76,7 +76,7 @@ pub(crate) async fn kmkc_search_weekly(
                 return 1;
             }
 
-            console.info(&cformat!(
+            console.info(cformat!(
                 "Weekday <bold>{}</> results (<magenta,bold>{}</> results):",
                 weekday.to_name(),
                 titles.len()
@@ -87,7 +87,7 @@ pub(crate) async fn kmkc_search_weekly(
             0
         }
         Err(e) => {
-            console.error(&cformat!("Unable to connect to KM: {}", e));
+            console.error(cformat!("Unable to connect to KM: {}", e));
             1
         }
     }
@@ -125,7 +125,7 @@ pub(crate) async fn kmkc_title_info(
     client: &KMClient,
     console: &crate::term::Terminal,
 ) -> ExitCode {
-    console.info(&cformat!(
+    console.info(cformat!(
         "Fetching info for ID <magenta,bold>{}</>...",
         title_id
     ));
@@ -133,7 +133,7 @@ pub(crate) async fn kmkc_title_info(
 
     match results {
         Err(e) => {
-            console.error(&cformat!("Unable to connect to KM: {}", e));
+            console.error(cformat!("Unable to connect to KM: {}", e));
             1
         }
         Ok(results) => {
@@ -149,7 +149,7 @@ pub(crate) async fn kmkc_title_info(
                 let genre_resp = client.get_genres().await;
                 match genre_resp {
                     Err(e) => {
-                        console.error(&cformat!("Unable to connect to KM: {}", e));
+                        console.error(cformat!("Unable to connect to KM: {}", e));
                         return 1;
                     }
                     Ok(genre_resp) => genre_results.clone_from(&genre_resp.genres),
@@ -158,7 +158,7 @@ pub(crate) async fn kmkc_title_info(
 
             let mut chapters_info = vec![];
             if show_chapters {
-                console.info(&cformat!(
+                console.info(cformat!(
                     "Fetching <magenta,bold>{}</> <bold>{}</bold> chapters information...",
                     &result.title,
                     result.episode_ids.len()
@@ -169,7 +169,7 @@ pub(crate) async fn kmkc_title_info(
 
                     match chap_req {
                         Err(e) => {
-                            console.error(&cformat!("Failed to get chapter information: {}", e));
+                            console.error(cformat!("Failed to get chapter information: {}", e));
                             return 1;
                         }
                         Ok(chap_req) => {
@@ -182,40 +182,40 @@ pub(crate) async fn kmkc_title_info(
             let manga_url = format!("https://{}/title/{}", &*BASE_HOST, title_id);
             let linked = linkify!(&manga_url, &result.title);
 
-            console.info(&cformat!(
+            console.info(cformat!(
                 "Title information for <magenta,bold>{}</>",
                 linked,
             ));
-            console.info(&cformat!("  <s>Author</>: {}", result.author));
+            console.info(cformat!("  <s>Author</>: {}", result.author));
 
             if !genre_results.is_empty() {
-                console.info(&cformat!(
+                console.info(cformat!(
                     "  <s>Genre/Tags</>: {}",
                     format_tags(genre_results)
                 ));
             }
             if result.magazine != MagazineCategory::Undefined {
-                console.info(&cformat!(
+                console.info(cformat!(
                     "  <s>Magazine</>: {}",
                     result.magazine.pretty_name()
                 ));
             }
 
-            console.info(&cformat!("  <s>Summary</>"));
+            console.info(cformat!("  <s>Summary</>"));
             if !result.summary.is_empty() {
-                console.info(&cformat!("   <blue>{}</>", result.summary));
+                console.info(cformat!("   <blue>{}</>", result.summary));
             }
             let split_desc: Vec<&str> = result.description.split('\n').collect();
             for desc in split_desc {
-                console.info(&format!("    {}", desc));
+                console.info(format!("    {}", desc));
             }
 
             if !result.notice.is_empty() {
-                console.warn(&cformat!("  <s>Notice</>: {}", result.notice));
+                console.warn(cformat!("  <s>Notice</>: {}", result.notice));
             }
 
             println!();
-            console.info(&cformat!(
+            console.info(cformat!(
                 "  <s>Chapters</>: {} chapters",
                 result.episode_ids.len()
             ));
@@ -269,13 +269,13 @@ pub(crate) async fn kmkc_title_info(
 
                     console.info(&text_info);
                     let st_fmt = chapter.start_time.format("%b %d, %Y");
-                    console.info(&cformat!("     <s>Published</>: {}", st_fmt));
+                    console.info(cformat!("     <s>Published</>: {}", st_fmt));
                 }
                 println!();
             }
 
             if let Some(next_update) = &result.next_update {
-                console.info(&cformat!("  <s>Next update</>: {}", next_update));
+                console.info(cformat!("  <s>Next update</>: {}", next_update));
             }
 
             0
@@ -293,7 +293,7 @@ pub(crate) async fn kmkc_magazines_list(
 
     match results {
         Err(e) => {
-            console.error(&cformat!("Unable to connect to KM: {}", e));
+            console.error(cformat!("Unable to connect to KM: {}", e));
             1
         }
         Ok(results) => {
@@ -312,21 +312,21 @@ pub(crate) async fn kmkc_magazines_list(
                 let mag = MagazineCategory::from(magazine.id);
 
                 if mag != MagazineCategory::Undefined {
-                    console.info(&cformat!("{} <s>{}</>", mag_text, mag.pretty_name()));
+                    console.info(cformat!("{} <s>{}</>", mag_text, mag.pretty_name()));
 
                     let doc_text = mag.get_doc();
                     if let Ok(doc_text) = doc_text {
                         let first_line = doc_text.split('\n').next().unwrap();
-                        console.info(&cformat!("  <s>{}</s>", first_line));
+                        console.info(cformat!("  <s>{}</s>", first_line));
                     }
                 } else {
-                    console.warn(&cformat!("{} <s>Unknown</>", mag_text));
+                    console.warn(cformat!("{} <s>Unknown</>", mag_text));
                     unknown_ids.push(magazine.id);
                 }
             }
 
             if !unknown_ids.is_empty() {
-                console.warn(&cformat!(
+                console.warn(cformat!(
                     "Found <red,bold>{}</> unknown magazine IDs",
                     unknown_ids.len()
                 ));
@@ -335,7 +335,7 @@ pub(crate) async fn kmkc_magazines_list(
                     .map(|id| id.to_string())
                     .collect::<Vec<String>>()
                     .join(", ");
-                console.warn(&cformat!("  {}", unknown_join));
+                console.warn(cformat!("  {}", unknown_join));
             }
 
             0

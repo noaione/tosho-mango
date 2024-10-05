@@ -15,7 +15,7 @@ pub async fn amap_account_login(
     password: String,
     console: &crate::term::Terminal,
 ) -> ExitCode {
-    console.info(&cformat!(
+    console.info(cformat!(
         "Authenticating with email <m,s>{}</> and password <m,s>{}</>...",
         email,
         password
@@ -49,7 +49,7 @@ pub async fn amap_account_login(
 
     match result {
         Ok(session) => {
-            console.info(&cformat!(
+            console.info(cformat!(
                 "Authenticated as <m,s>{}</> ({})",
                 session.identifier,
                 email
@@ -67,14 +67,14 @@ pub async fn amap_account_login(
                                 .with_email(&email)
                                 .with_account_info(&account.info);
 
-                            console.info(&cformat!("Logged in as <m,s>{}</>", account.info.name));
+                            console.info(cformat!("Logged in as <m,s>{}</>", account.info.name));
 
                             let final_config = match old_id {
                                 Some(old_id) => as_config.with_id(&old_id),
                                 None => as_config,
                             };
 
-                            console.info(&cformat!(
+                            console.info(cformat!(
                                 "Created session ID <m,s>{}</>, saving config...",
                                 final_config.id
                             ));
@@ -84,19 +84,19 @@ pub async fn amap_account_login(
                             0
                         }
                         Err(e) => {
-                            console.error(&format!("Failed to login: {}", e));
+                            console.error(format!("Failed to login: {}", e));
                             1
                         }
                     }
                 }
                 Err(e) => {
-                    console.error(&format!("Failed to create client: {}", e));
+                    console.error(format!("Failed to create client: {}", e));
                     1
                 }
             }
         }
         Err(e) => {
-            console.error(&format!("Failed to authenticate: {}", e));
+            console.error(format!("Failed to authenticate: {}", e));
             1
         }
     }
@@ -112,12 +112,12 @@ pub(crate) fn amap_accounts(console: &crate::term::Terminal) -> ExitCode {
             1
         }
         _ => {
-            console.info(&format!("Found {} accounts:", all_configs.len()));
+            console.info(format!("Found {} accounts:", all_configs.len()));
             for (i, c) in all_configs.iter().enumerate() {
                 match c {
                     crate::config::ConfigImpl::Amap(c) => {
                         let plat_name = c.r#type().to_name();
-                        console.info(&cformat!(
+                        console.info(cformat!(
                             "{:02}. {} — <s>{}</> ({})",
                             i + 1,
                             c.id,
@@ -147,19 +147,19 @@ pub(crate) async fn amap_account_info(
 
             let info = acc_resp.info;
 
-            console.info(&cformat!(
+            console.info(cformat!(
                 "Account info for <magenta,bold>{}</>:",
                 account.id
             ));
 
-            console.info(&cformat!("  <s>ID</>: {}", info.id));
-            console.info(&cformat!("  <s>Email</>: {}", account.email));
-            console.info(&cformat!("  <s>Username</>: {}", info.name));
+            console.info(cformat!("  <s>ID</>: {}", info.id));
+            console.info(cformat!("  <s>Email</>: {}", account.email));
+            console.info(cformat!("  <s>Username</>: {}", info.name));
 
             0
         }
         Err(e) => {
-            console.error(&format!("Failed to fetch account info: {}", e));
+            console.error(format!("Failed to fetch account info: {}", e));
 
             1
         }
@@ -171,7 +171,7 @@ pub(crate) async fn amap_account_balance(
     acc_info: &Config,
     console: &crate::term::Terminal,
 ) -> ExitCode {
-    console.info(&cformat!(
+    console.info(cformat!(
         "Fetching balance for <magenta,bold>{}</>...",
         acc_info.id
     ));
@@ -189,19 +189,19 @@ pub(crate) async fn amap_account_balance(
             let premium = balance.premium.to_formatted_string(&Locale::en);
             let total_point = balance.sum_point().to_formatted_string(&Locale::en);
 
-            console.info(&cformat!(
+            console.info(cformat!(
                 "  - <s>Total</>: <magenta,bold><reverse>{}</>T</magenta,bold>",
                 total_ticket
             ));
-            console.info(&cformat!(
+            console.info(cformat!(
                 "  - <s>Purchased</>: <yellow,bold><reverse>{}</>T</yellow,bold>",
                 purchased
             ));
-            console.info(&cformat!(
+            console.info(cformat!(
                 "  - <s>Premium</>: <green,bold><reverse>{}</>T</green,bold>",
                 premium
             ));
-            console.info(&cformat!(
+            console.info(cformat!(
                 "  - <s>Total point</>: <cyan!,bold><reverse>{}</>p</cyan!,bold>",
                 total_point
             ));
@@ -209,7 +209,7 @@ pub(crate) async fn amap_account_balance(
             0
         }
         Err(e) => {
-            console.error(&format!("Failed to fetch balance: {}", e));
+            console.error(format!("Failed to fetch balance: {}", e));
 
             1
         }
@@ -233,14 +233,14 @@ pub(crate) fn amap_account_revoke(account: &Config, console: &crate::term::Termi
         None,
     ) {
         Ok(_) => {
-            console.info(&cformat!(
+            console.info(cformat!(
                 "Successfully deleted <magenta,bold>{}</>",
                 account.id
             ));
             0
         }
         Err(err) => {
-            console.error(&format!("Failed to delete account: {}", err));
+            console.error(format!("Failed to delete account: {}", err));
             1
         }
     }

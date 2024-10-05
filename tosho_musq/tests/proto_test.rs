@@ -85,7 +85,7 @@ fn test_proto_chapter_view() {
 
             let result = ChapterViewer::decode(proto_bytes.as_slice()).unwrap();
             assert_eq!(result.status(), Status::Success);
-            let user_point = result.user_point.clone().unwrap();
+            let user_point = result.user_point.unwrap();
             assert_eq!(user_point.free, 0);
             assert_eq!(user_point.event, 0);
             assert_eq!(user_point.paid, 480);
@@ -122,7 +122,7 @@ fn test_proto_chapter_viewv2() {
 
             let result = ChapterViewerV2::decode(proto_bytes.as_slice()).unwrap();
             assert_eq!(result.status(), Status::Success);
-            let user_point = result.user_point.clone().unwrap();
+            let user_point = result.user_point.unwrap();
             assert_eq!(user_point.free, 40);
             assert_eq!(user_point.event, 0);
             assert_eq!(user_point.paid, 370);
@@ -159,7 +159,7 @@ fn test_proto_coinhistory() {
             let proto_bytes = hex_to_bytes(&proto_hex);
 
             let result = PointHistoryView::decode(proto_bytes.as_slice()).unwrap();
-            let user_point = result.user_point.clone().unwrap();
+            let user_point = result.user_point.unwrap();
             assert_eq!(user_point.free, 0);
             assert_eq!(user_point.event, 0);
             assert_eq!(user_point.paid, 280);
@@ -317,12 +317,12 @@ fn test_proto_pointshopview() {
             let proto_bytes = hex_to_bytes(&proto_hex);
 
             let result = PointShopView::decode(proto_bytes.as_slice()).unwrap();
-            let user_point = result.user_point.clone().unwrap();
+            let user_point = result.user_point.unwrap();
             assert_eq!(user_point.free, 0);
             assert_eq!(user_point.event, 0);
             assert_eq!(user_point.paid, 480);
 
-            let point_limit = result.point_limit.clone().unwrap();
+            let point_limit = result.point_limit.unwrap();
             assert_eq!(point_limit.free, 40);
             assert_eq!(point_limit.event, 100000);
             assert_eq!(point_limit.paid, 100000);
@@ -348,9 +348,7 @@ fn test_common_reader() {
         Err(err) => {
             assert!(true, "{}", err);
         }
-        Ok(_) => {
-            assert!(true)
-        }
+        Ok(_) => {}
     }
 }
 

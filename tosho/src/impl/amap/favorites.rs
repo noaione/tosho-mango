@@ -9,7 +9,7 @@ pub(crate) async fn amap_my_favorites(
     acc_info: &Config,
     console: &crate::term::Terminal,
 ) -> ExitCode {
-    console.info(&cformat!(
+    console.info(cformat!(
         "Getting favorites list for <magenta,bold>{}</>...",
         acc_info.email
     ));
@@ -23,7 +23,7 @@ pub(crate) async fn amap_my_favorites(
                 return 0;
             }
 
-            console.info(&cformat!(
+            console.info(cformat!(
                 "Your favorites list (<m,s>{}</> results):",
                 results.comics.len()
             ));
@@ -33,7 +33,7 @@ pub(crate) async fn amap_my_favorites(
             0
         }
         Err(err) => {
-            console.error(&format!("Failed to fetch favorites: {}", err));
+            console.error(format!("Failed to fetch favorites: {}", err));
 
             1
         }

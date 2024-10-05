@@ -10,7 +10,7 @@ pub(crate) async fn rbean_read_list(
     account: &super::config::Config,
     console: &crate::term::Terminal,
 ) -> ExitCode {
-    console.info(&cformat!(
+    console.info(cformat!(
         "Getting read list for user <m,s>{}</>",
         account.id
     ));
@@ -19,12 +19,12 @@ pub(crate) async fn rbean_read_list(
 
     match results {
         Err(e) => {
-            console.error(&cformat!("Unable to get read list: {}", e));
+            console.error(cformat!("Unable to get read list: {}", e));
             1
         }
         Ok(results) => {
             save_session_config(client, account);
-            console.info(&cformat!("Reading list for <m,s>{}</>", account.id));
+            console.info(cformat!("Reading list for <m,s>{}</>", account.id));
 
             for result in results.iter() {
                 do_print_single_information(&result.manga, 0, false, None);
@@ -37,7 +37,7 @@ pub(crate) async fn rbean_read_list(
 
                     let linked_url = linkify!(linked_ch, &format!("Chapter {}", chapter.name));
 
-                    console.info(&cformat!("   <s>{}:</> {}", linked_url, linked_ch));
+                    console.info(cformat!("   <s>{}:</> {}", linked_url, linked_ch));
                 }
             }
 

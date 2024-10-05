@@ -17,7 +17,7 @@ pub async fn rbean_account_login(
     platform: DeviceType,
     console: &crate::term::Terminal,
 ) -> ExitCode {
-    console.info(&cformat!(
+    console.info(cformat!(
         "Authenticating with email <m,s>{}</> and password <m,s>{}</>...",
         email,
         password
@@ -59,7 +59,7 @@ pub async fn rbean_account_login(
         Ok(login_result) => {
             let new_config: Config = login_result.into();
 
-            console.info(&cformat!(
+            console.info(cformat!(
                 "Authenticated as <m,s>{}</> ({})...",
                 new_config.username,
                 email
@@ -71,7 +71,7 @@ pub async fn rbean_account_login(
                 new_config
             };
 
-            console.info(&cformat!(
+            console.info(cformat!(
                 "Created session ID <m,s>{}</>, saving config...",
                 new_config.id
             ));
@@ -81,7 +81,7 @@ pub async fn rbean_account_login(
             0
         }
         Err(e) => {
-            console.error(&format!("Failed to authenticate: {}", e));
+            console.error(format!("Failed to authenticate: {}", e));
             1
         }
     }
@@ -97,12 +97,12 @@ pub(crate) fn rbean_accounts(console: &crate::term::Terminal) -> ExitCode {
             1
         }
         _ => {
-            console.info(&format!("Found {} accounts:", all_configs.len()));
+            console.info(format!("Found {} accounts:", all_configs.len()));
             for (i, c) in all_configs.iter().enumerate() {
                 match c {
                     crate::config::ConfigImpl::Rbean(c) => {
                         let plat_name = c.platform().to_name();
-                        console.info(&cformat!(
+                        console.info(cformat!(
                             "{:02}. {} — <s>{}</> ({})",
                             i + 1,
                             c.id,
@@ -130,24 +130,24 @@ pub(crate) async fn rbean_account_info(
         Ok(acc_info) => {
             save_session_config(client, account);
 
-            console.info(&cformat!(
+            console.info(cformat!(
                 "Account info for <magenta,bold>{}</>:",
                 account.id
             ));
 
-            console.info(&cformat!("  <s>ID</>: {}", acc_info.uuid));
-            console.info(&cformat!("  <s>Email</>: {}", acc_info.email));
+            console.info(cformat!("  <s>ID</>: {}", acc_info.uuid));
+            console.info(cformat!("  <s>Email</>: {}", acc_info.email));
             let username = acc_info.username.unwrap_or("[no username]".to_string());
-            console.info(&cformat!("  <s>Username</>: {}", username));
+            console.info(cformat!("  <s>Username</>: {}", username));
 
             if let Some(date_at) = acc_info.premium_expiration_date {
-                console.info(&cformat!("  <s>Premium until</>: {}", date_at));
+                console.info(cformat!("  <s>Premium until</>: {}", date_at));
             }
 
             0
         }
         Err(e) => {
-            console.error(&format!("Failed to get account info: {}", e));
+            console.error(format!("Failed to get account info: {}", e));
             1
         }
     }
@@ -170,14 +170,14 @@ pub(crate) fn rbean_account_revoke(account: &Config, console: &crate::term::Term
         None,
     ) {
         Ok(_) => {
-            console.info(&cformat!(
+            console.info(cformat!(
                 "Successfully deleted <magenta,bold>{}</>",
                 account.id
             ));
             0
         }
         Err(err) => {
-            console.error(&format!("Failed to delete account: {}", err));
+            console.error(format!("Failed to delete account: {}", err));
             1
         }
     }

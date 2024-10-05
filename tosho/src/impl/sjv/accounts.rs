@@ -16,7 +16,7 @@ pub async fn sjv_account_login(
     platform: DeviceType,
     console: &crate::term::Terminal,
 ) -> ExitCode {
-    console.info(&cformat!(
+    console.info(cformat!(
         "Authenticating with email <m,s>{}</> and password <m,s>{}</>...",
         email,
         password
@@ -66,7 +66,7 @@ pub async fn sjv_account_login(
             let config: SJConfig =
                 SJConfig::from_login_response(&account, instance_id, sj_platform);
 
-            console.info(&cformat!(
+            console.info(cformat!(
                 "Authenticated as <m,s>{}</> ({})",
                 account.username,
                 email,
@@ -84,7 +84,7 @@ pub async fn sjv_account_login(
                 new_config
             };
 
-            console.info(&cformat!(
+            console.info(cformat!(
                 "Created session ID <m,s>{}</>, saving config...",
                 new_config.id
             ));
@@ -94,7 +94,7 @@ pub async fn sjv_account_login(
             0
         }
         Err(e) => {
-            console.error(&format!("Failed to authenticate: {}", e));
+            console.error(format!("Failed to authenticate: {}", e));
             1
         }
     }
@@ -110,13 +110,13 @@ pub(crate) fn sjv_accounts(console: &crate::term::Terminal) -> ExitCode {
             1
         }
         _ => {
-            console.info(&format!("Found {} accounts:", all_configs.len()));
+            console.info(format!("Found {} accounts:", all_configs.len()));
             for (i, c) in all_configs.iter().enumerate() {
                 match c {
                     crate::config::ConfigImpl::Sjv(c) => {
                         let plat_name = c.r#type().to_name();
                         let mode_name = c.mode().to_name();
-                        console.info(&cformat!(
+                        console.info(cformat!(
                             "{:02}. {} — <s>{}</> ({} - {})",
                             i + 1,
                             c.id,
@@ -138,14 +138,14 @@ pub(crate) async fn sjv_account_info(
     account: &Config,
     console: &crate::term::Terminal,
 ) -> ExitCode {
-    console.info(&cformat!(
+    console.info(cformat!(
         "Account info for <magenta,bold>{}</>:",
         account.id
     ));
 
-    console.info(&cformat!("  <s>ID</>: {}", account.id));
-    console.info(&cformat!("  <s>Email</>: {}", account.email));
-    console.info(&cformat!("  <s>Username</>: {}", account.username));
+    console.info(cformat!("  <s>ID</>: {}", account.id));
+    console.info(cformat!("  <s>Email</>: {}", account.email));
+    console.info(cformat!("  <s>Username</>: {}", account.username));
 
     0
 }
@@ -155,7 +155,7 @@ pub(crate) async fn sjv_account_subscriptions(
     account: &Config,
     console: &crate::term::Terminal,
 ) -> ExitCode {
-    console.info(&cformat!(
+    console.info(cformat!(
         "Getting subscriptions for <magenta,bold>{}</>...",
         account.id
     ));
@@ -163,7 +163,7 @@ pub(crate) async fn sjv_account_subscriptions(
 
     match subs_resp {
         Ok(subs_resp) => {
-            console.info(&cformat!(
+            console.info(cformat!(
                 "Subscriptions for <magenta,bold>{}</>:",
                 account.id
             ));
@@ -191,13 +191,13 @@ pub(crate) async fn sjv_account_subscriptions(
                 None => "N/A".to_string(),
             };
 
-            console.info(&cformat!("  <s>SJ</>: {}", sj_end_date));
-            console.info(&cformat!("  <s>VM</>: {}", vm_end_date));
+            console.info(cformat!("  <s>SJ</>: {}", sj_end_date));
+            console.info(cformat!("  <s>VM</>: {}", vm_end_date));
 
             0
         }
         Err(e) => {
-            console.error(&format!("Failed to get subscriptions: {}", e));
+            console.error(format!("Failed to get subscriptions: {}", e));
             1
         }
     }
@@ -220,14 +220,14 @@ pub(crate) fn sjv_account_revoke(account: &Config, console: &crate::term::Termin
         None,
     ) {
         Ok(_) => {
-            console.info(&cformat!(
+            console.info(cformat!(
                 "Successfully deleted <magenta,bold>{}</>",
                 account.id
             ));
             0
         }
         Err(err) => {
-            console.error(&format!("Failed to delete account: {}", err));
+            console.error(format!("Failed to delete account: {}", err));
             1
         }
     }

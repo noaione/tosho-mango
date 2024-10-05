@@ -10,7 +10,7 @@ pub(crate) async fn mplus_my_favorites(
     account: &super::config::Config,
     console: &crate::term::Terminal,
 ) -> ExitCode {
-    console.info(&cformat!(
+    console.info(cformat!(
         "Getting favorites list for user <m,s>{}</>",
         account.id
     ));
@@ -23,7 +23,7 @@ pub(crate) async fn mplus_my_favorites(
                 return 0;
             }
 
-            console.info(&cformat!(
+            console.info(cformat!(
                 "Your favorites list (<m,s>{}</> results):",
                 results.titles.len()
             ));
@@ -33,14 +33,14 @@ pub(crate) async fn mplus_my_favorites(
             0
         }
         Ok(tosho_mplus::APIResponse::Error(e)) => {
-            console.error(&format!(
+            console.error(format!(
                 "Failed to get your favorites list: {}",
                 e.as_string()
             ));
             1
         }
         Err(e) => {
-            console.error(&format!("Unable to connect to M+: {}", e));
+            console.error(format!("Unable to connect to M+: {}", e));
             1
         }
     }

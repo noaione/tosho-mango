@@ -20,7 +20,7 @@ pub(crate) async fn sjv_search(
     client: &SJClient,
     console: &crate::term::Terminal,
 ) -> ExitCode {
-    console.info(&cformat!("Searching for <magenta,bold>{}</>...", query));
+    console.info(cformat!("Searching for <magenta,bold>{}</>...", query));
 
     let results = get_cached_store_data(client).await;
 
@@ -38,7 +38,7 @@ pub(crate) async fn sjv_search(
                 return 1;
             }
 
-            console.info(&cformat!(
+            console.info(cformat!(
                 "Search results (<magenta,bold>{}</> results):",
                 filtered.len()
             ));
@@ -48,7 +48,7 @@ pub(crate) async fn sjv_search(
             0
         }
         Err(e) => {
-            console.error(&format!("Failed to fetch cached store: {}", e));
+            console.error(format!("Failed to fetch cached store: {}", e));
 
             1
         }
@@ -61,7 +61,7 @@ pub(crate) async fn sjv_title_info(
     client: &SJClient,
     console: &crate::term::Terminal,
 ) -> ExitCode {
-    console.info(&cformat!(
+    console.info(cformat!(
         "Fetching info for <magenta,bold>{}</>...",
         title_or_slug
     ));
@@ -93,7 +93,7 @@ pub(crate) async fn sjv_title_info(
             let mut chapters_lists = vec![];
             let mut chapter_messages: HashMap<String, ChapterMessage> = HashMap::new();
             if show_chapters && result.total_chapters > 0 {
-                console.info(&cformat!(
+                console.info(cformat!(
                     "Fetching chapters for <magenta,bold>{}</>...",
                     result.title
                 ));
@@ -101,7 +101,7 @@ pub(crate) async fn sjv_title_info(
 
                 match chapters_info {
                     Err(_) => {
-                        console.warn(&cformat!(
+                        console.warn(cformat!(
                             "   <red,s>Error</>: Unable to get chapters information"
                         ));
                         println!();
@@ -133,43 +133,43 @@ pub(crate) async fn sjv_title_info(
                 result.slug
             );
             let linked = linkify!(&manga_url, &result.title);
-            console.info(&cformat!(
+            console.info(cformat!(
                 "Title information for <magenta,bold>{}</>",
                 linked,
             ));
 
             if let Some(author) = &result.author {
-                console.info(&cformat!("  <s>Author</>: {}", author));
+                console.info(cformat!("  <s>Author</>: {}", author));
             }
             if result.imprint != MangaImprint::Undefined {
-                console.info(&cformat!(
+                console.info(cformat!(
                     "  <s>Imprint</>: {}",
                     result.imprint.pretty_name()
                 ));
             }
 
-            console.info(&cformat!("  <s>Rating</>: {}", result.rating.to_name()));
-            console.info(&cformat!("  <s>Copyright</>: {}", result.copyright));
+            console.info(cformat!("  <s>Rating</>: {}", result.rating.to_name()));
+            console.info(cformat!("  <s>Copyright</>: {}", result.copyright));
             let synopsis = result.synopsis.replace("\r\n", "\n");
-            console.info(&cformat!("  <s>Summary</>"));
+            console.info(cformat!("  <s>Summary</>"));
             if let Some(tagline) = &result.tagline {
-                console.info(&cformat!("   <blue>{}</>", tagline));
+                console.info(cformat!("   <blue>{}</>", tagline));
             }
             let synopsis = synopsis.trim();
             if !synopsis.is_empty() {
                 let split_desc = synopsis.split('\n');
                 for desc in split_desc {
-                    console.info(&format!("    {}", desc));
+                    console.info(format!("    {}", desc));
                 }
             }
 
             println!();
-            console.info(&cformat!(
+            console.info(cformat!(
                 "  <s>Chapters</>: {} chapters",
                 result.total_chapters
             ));
             if result.total_volumes > 0 {
-                console.info(&cformat!(
+                console.info(cformat!(
                     "   <s>Volumes</>: {} volumes",
                     result.total_volumes
                 ));
@@ -185,7 +185,7 @@ pub(crate) async fn sjv_title_info(
                     // if chapter number is in offset, print the message
                     let chapter_number = chapter.chapter.clone().unwrap_or_default();
                     if let Some(message) = chapter_messages.get(&chapter_number) {
-                        console.info(&cformat!("    <r!,strong>{}</>", message.message));
+                        console.info(cformat!("    <r!,strong>{}</>", message.message));
                     }
 
                     let episode_url = match chapter.subscription_type {
@@ -219,11 +219,11 @@ pub(crate) async fn sjv_title_info(
                     console.info(&base_txt);
 
                     let created_at = chapter.created_at.format("%b %d, %Y").to_string();
-                    console.info(&cformat!("     <s>Published</>: {}", created_at));
+                    console.info(cformat!("     <s>Published</>: {}", created_at));
                     if let Some(expiry_at) = chapter.expiry_at {
                         let expiry_at =
                             unix_timestamp_to_string(expiry_at).unwrap_or("N/A".to_string());
-                        console.info(&cformat!("      <s>Expires</>: {}", expiry_at));
+                        console.info(cformat!("      <s>Expires</>: {}", expiry_at));
                     }
                 }
             }
@@ -231,7 +231,7 @@ pub(crate) async fn sjv_title_info(
             0
         }
         Err(e) => {
-            console.error(&format!("Failed to fetch cached store: {}", e));
+            console.error(format!("Failed to fetch cached store: {}", e));
 
             1
         }

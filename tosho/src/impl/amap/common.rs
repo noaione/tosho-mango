@@ -58,13 +58,13 @@ pub(super) fn do_print_search_information(
         let pre_space_url = " ".repeat(spacing + add_url_pre);
 
         match with_number {
-            true => term.info(&format!("{}[{:02}] {}", pre_space, idx + 1, text_data)),
-            false => term.info(&format!("{}{}", pre_space, text_data)),
+            true => term.info(format!("{}[{:02}] {}", pre_space, idx + 1, text_data)),
+            false => term.info(format!("{}{}", pre_space, text_data)),
         }
         if let Some(last_upd) = last_upd {
-            term.info(&format!("{}{}", pre_space_lupd, last_upd));
+            term.info(format!("{}{}", pre_space_lupd, last_upd));
         }
-        term.info(&format!("{}{}", pre_space_url, manga_url));
+        term.info(format!("{}{}", pre_space_url, manga_url));
     }
 }
 
@@ -81,10 +81,7 @@ pub(super) async fn common_purchase_select(
     Option<ComicInfo>,
     Option<IAPInfo>,
 ) {
-    console.info(&cformat!(
-        "Fetching for ID <magenta,bold>{}</>...",
-        title_id
-    ));
+    console.info(cformat!("Fetching for ID <magenta,bold>{}</>...", title_id));
 
     let results = client.get_comic(title_id).await;
     match results {
@@ -98,27 +95,27 @@ pub(super) async fn common_purchase_select(
             let total_point = balance.sum_point().to_formatted_string(&Locale::en);
 
             console.info("Your current point balance:");
-            console.info(&cformat!(
+            console.info(cformat!(
                 "  - <s>Total</>: <magenta,bold><reverse>{}</>T</magenta,bold>",
                 total_ticket
             ));
-            console.info(&cformat!(
+            console.info(cformat!(
                 "  - <s>Purchased</>: <yellow,bold><reverse>{}</>T</yellow,bold>",
                 purchased
             ));
-            console.info(&cformat!(
+            console.info(cformat!(
                 "  - <s>Premium</>: <green,bold><reverse>{}</>T</green,bold>",
                 premium
             ));
-            console.info(&cformat!(
+            console.info(cformat!(
                 "  - <s>Total point</>: <cyan!,bold><reverse>{}</>p</cyan!,bold>",
                 total_point
             ));
 
             console.info("Title information:");
-            console.info(&cformat!("  - <s>ID</>: {}", title_id));
-            console.info(&cformat!("  - <s>Title</>: {}", result.info.title));
-            console.info(&cformat!(
+            console.info(cformat!("  - <s>ID</>: {}", title_id));
+            console.info(cformat!("  - <s>Title</>: {}", result.info.title));
+            console.info(cformat!(
                 "  - <s>Chapters</>: {}",
                 result.info.episodes.len()
             ));
@@ -205,7 +202,7 @@ pub(super) async fn common_purchase_select(
             }
         }
         Err(e) => {
-            console.error(&cformat!("Unable to connect to AM: {}", e));
+            console.error(cformat!("Unable to connect to AM: {}", e));
 
             (Err(e), None, None)
         }

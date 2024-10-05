@@ -10,7 +10,7 @@ pub(crate) async fn musq_home_rankings(
     account: &super::config::Config,
     console: &crate::term::Terminal,
 ) -> ExitCode {
-    console.info(&cformat!(
+    console.info(cformat!(
         "Getting rankings list for user <m,s>{}</>",
         account.id
     ));
@@ -19,7 +19,7 @@ pub(crate) async fn musq_home_rankings(
 
     match results {
         Err(e) => {
-            console.error(&cformat!("Unable to connect to MU!: {}", e));
+            console.error(cformat!("Unable to connect to MU!: {}", e));
             1
         }
         Ok(results) => {
@@ -52,7 +52,7 @@ pub(crate) async fn musq_home_rankings(
                             .find(|r| r.name == select.name)
                             .unwrap();
 
-                        console.info(&cformat!(
+                        console.info(cformat!(
                             "Ranking for <m,s>{}</> ({} titles):",
                             ranking.name,
                             ranking.titles.len()

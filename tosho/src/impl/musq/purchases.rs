@@ -36,7 +36,7 @@ pub(crate) async fn musq_purchase(
                 let consume = client.calculate_coin(&user_point, chapter);
 
                 if !consume.is_possible() {
-                    console.warn(&cformat!(
+                    console.warn(cformat!(
                         "Unable to purchase chapter <magenta,bold>{}</> (ID: {}), insufficient point balance!",
                         chapter.title, title_id
                     ));
@@ -53,7 +53,7 @@ pub(crate) async fn musq_purchase(
                     .await
                     .unwrap();
                 if img_chapter.blocks.is_empty() {
-                    console.warn(&cformat!(
+                    console.warn(cformat!(
                         "Unable to purchase chapter <magenta,bold>{}</> (ID: {}), no images found!",
                         chapter.title,
                         title_id
@@ -70,12 +70,12 @@ pub(crate) async fn musq_purchase(
 
             console.stop_status_msg(format!("Purchased {} chapters!", claimed_total));
             if !failed_claimed.is_empty() {
-                console.warn(&format!(
+                console.warn(format!(
                     "We failed to purchase {} chapters, you might want to retry",
                     failed_claimed.len()
                 ));
                 for (chapter, reason) in failed_claimed {
-                    console.warn(&cformat!(
+                    console.warn(cformat!(
                         "  - <bold>{}</> (ID: {}): <red,bold>{}</>",
                         chapter.title,
                         chapter.id,
@@ -111,8 +111,8 @@ pub(crate) async fn musq_purchase_precalculate(
             let ch_count = results.len().to_formatted_string(&Locale::en);
 
             console.info("Precalculated purchase cost:");
-            console.info(&cformat!("  - <s>Total</>: {}", ch_count));
-            console.info(&cformat!("  - <s>Cost</>: {}c", total_coin_fmt));
+            console.info(cformat!("  - <s>Total</>: {}", ch_count));
+            console.info(cformat!("  - <s>Cost</>: {}c", total_coin_fmt));
 
             0
         }

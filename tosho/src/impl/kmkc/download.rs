@@ -92,7 +92,7 @@ async fn kmkc_actual_downloader(
     let writer = tokio::fs::File::create(&img_dl_path).await?;
 
     if console.is_debug() {
-        console.log(&cformat!(
+        console.log(cformat!(
             "   Downloading image <s>{}</> to <s>{}</>...",
             node.image.file_name(),
             image_fn
@@ -106,7 +106,7 @@ async fn kmkc_actual_downloader(
     {
         Ok(_) => {}
         Err(err) => {
-            console.error(&format!("    Failed to download image: {}", err));
+            console.error(format!("    Failed to download image: {}", err));
             // silent delete the file
             tokio::fs::remove_file(&img_dl_path).await?;
         }
@@ -177,7 +177,7 @@ pub(crate) async fn kmkc_download(
 
             let mut wallet_copy = user_point.point.point.clone();
             let mut ticket_entry = user_point.ticket.clone();
-            console.info(&format!("Downloading {} chapters...", results.len()));
+            console.info(format!("Downloading {} chapters...", results.len()));
             let mut download_chapters = vec![];
             // let mut chapters_with_bonus = vec![];
             for chapter in results {
@@ -201,7 +201,7 @@ pub(crate) async fn kmkc_download(
                     if chapter.is_ticketable() && !dl_config.no_ticket {
                         let mut ticket_info = None;
                         if ticket_entry.is_title_available() {
-                            console.info(&cformat!(
+                            console.info(cformat!(
                                 "  Using title ticket to purchase chapter <m,s>{}</> (<s>{}</>)...",
                                 chapter.title,
                                 chapter.id
@@ -211,7 +211,7 @@ pub(crate) async fn kmkc_download(
                             ));
                             ticket_entry.subtract_title();
                         } else if ticket_entry.is_premium_available() {
-                            console.info(&cformat!(
+                            console.info(cformat!(
                                 "  Using premium ticket to purchase chapter <m,s>{}</> (<s>{}</>)...",
                                 chapter.title,
                                 chapter.id
@@ -232,7 +232,7 @@ pub(crate) async fn kmkc_download(
                                     continue;
                                 }
                                 Err(e) => {
-                                    console.error(&format!(
+                                    console.error(format!(
                                         "   Failed to purchase chapter, ignoring: {}",
                                         e
                                     ));
@@ -246,7 +246,7 @@ pub(crate) async fn kmkc_download(
                     }
 
                     if !wallet_copy.can_purchase(chapter.point.try_into().unwrap_or(0)) {
-                        console.warn(&cformat!(
+                        console.warn(cformat!(
                             "   Chapter <m,s>{}</> (<s>{}</>), is not available for purchase, skipping",
                             chapter.title,
                             chapter.id
@@ -259,7 +259,7 @@ pub(crate) async fn kmkc_download(
                         continue;
                     }
 
-                    console.info(&cformat!(
+                    console.info(cformat!(
                         "  Purchasing chapter <m,s>{}</> (<s>{}</>) for {}P...",
                         chapter.title,
                         chapter.id,
@@ -274,7 +274,7 @@ pub(crate) async fn kmkc_download(
                         }
                         Err(e) => {
                             console
-                                .error(&format!("   Failed to purchase chapter, ignoring: {}", e));
+                                .error(format!("   Failed to purchase chapter, ignoring: {}", e));
                         }
                     }
                 }
@@ -296,7 +296,7 @@ pub(crate) async fn kmkc_download(
                 .expect("Failed to dump title info");
 
             for chapter in download_chapters {
-                console.info(&cformat!(
+                console.info(cformat!(
                     "  Downloading chapter <m,s>{}</> ({})...",
                     chapter.title,
                     chapter.id
@@ -305,7 +305,7 @@ pub(crate) async fn kmkc_download(
                 let viewer_info = client.get_episode_viewer(chapter).await;
 
                 if let Err(e) = viewer_info {
-                    console.error(&format!("Failed to get viewer info, ignoring: {}", e));
+                    console.error(format!("Failed to get viewer info, ignoring: {}", e));
                     continue;
                 }
 
@@ -317,7 +317,7 @@ pub(crate) async fn kmkc_download(
                 match &viewer_info {
                     EpisodeViewerResponse::Web(web) => {
                         if web.pages.is_empty() {
-                            console.warn(&cformat!(
+                            console.warn(cformat!(
                                 "   Chapter <m,s>{}</> (<s>{}</>) has no pages, skipping",
                                 chapter.title,
                                 chapter.id
@@ -327,7 +327,7 @@ pub(crate) async fn kmkc_download(
 
                         if let Some(count) = check_downloaded_image_count(&image_dir, "png") {
                             if count >= web.pages.len() {
-                                console.warn(&cformat!(
+                                console.warn(cformat!(
                                     "   Chapter <m,s>{}</> (<s>{}</>) already downloaded, skipping",
                                     chapter.title,
                                     chapter.id
@@ -337,12 +337,12 @@ pub(crate) async fn kmkc_download(
                         }
 
                         if console.is_debug() {
-                            console.log(&format!("    Seed: {}", web.scramble_seed));
+                            console.log(format!("    Seed: {}", web.scramble_seed));
                         }
                     }
                     EpisodeViewerResponse::Mobile(mobile) => {
                         if mobile.pages.is_empty() {
-                            console.warn(&cformat!(
+                            console.warn(cformat!(
                                 "   Chapter <m,s>{}</> (<s>{}</>) has no pages, skipping",
                                 chapter.title,
                                 chapter.id
@@ -352,7 +352,7 @@ pub(crate) async fn kmkc_download(
 
                         if let Some(count) = check_downloaded_image_count(&image_dir, "jpg") {
                             if count >= mobile.pages.len() {
-                                console.warn(&cformat!(
+                                console.warn(cformat!(
                                     "   Chapter <m,s>{}</> (<s>{}</>) already downloaded, skipping",
                                     chapter.title,
                                     chapter.id
@@ -416,7 +416,7 @@ pub(crate) async fn kmkc_download(
                                 {
                                     Ok(_) => {}
                                     Err(e) => {
-                                        cnsl.error(&format!("    Failed to download image: {}", e));
+                                        cnsl.error(format!("    Failed to download image: {}", e));
                                     }
                                 }
                             })
@@ -442,7 +442,7 @@ pub(crate) async fn kmkc_download(
                         {
                             Ok(_) => {}
                             Err(e) => {
-                                console.error(&format!("    Failed to download image: {}", e));
+                                console.error(format!("    Failed to download image: {}", e));
                             }
                         }
                     }

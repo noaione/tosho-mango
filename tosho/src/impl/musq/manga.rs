@@ -14,7 +14,7 @@ pub(crate) async fn musq_search(
     client: &MUClient,
     console: &crate::term::Terminal,
 ) -> ExitCode {
-    console.info(&cformat!("Searching for <magenta,bold>{}</>...", query));
+    console.info(cformat!("Searching for <magenta,bold>{}</>...", query));
 
     let results = client.search(query).await;
     match results {
@@ -31,7 +31,7 @@ pub(crate) async fn musq_search(
                 results.titles
             };
 
-            console.info(&cformat!(
+            console.info(cformat!(
                 "Search results (<magenta,bold>{}</> results):",
                 cutoff_results.len()
             ));
@@ -41,7 +41,7 @@ pub(crate) async fn musq_search(
             0
         }
         Err(e) => {
-            console.error(&cformat!("Unable to connect to MU!: {}", e));
+            console.error(cformat!("Unable to connect to MU!: {}", e));
             1
         }
     }
@@ -52,7 +52,7 @@ pub(crate) async fn musq_search_weekly(
     client: &MUClient,
     console: &crate::term::Terminal,
 ) -> ExitCode {
-    console.info(&cformat!(
+    console.info(cformat!(
         "Getting weekly manga for week <magenta,bold>{}</>...",
         weekday.to_name()
     ));
@@ -65,7 +65,7 @@ pub(crate) async fn musq_search_weekly(
                 return 1;
             }
 
-            console.info(&cformat!(
+            console.info(cformat!(
                 "Weekday <bold>{}</> results (<magenta,bold>{}</> results):",
                 weekday.to_name(),
                 results.titles.len()
@@ -76,7 +76,7 @@ pub(crate) async fn musq_search_weekly(
             0
         }
         Err(e) => {
-            console.error(&cformat!("Unable to connect to MU!: {}", e));
+            console.error(cformat!("Unable to connect to MU!: {}", e));
             1
         }
     }
@@ -103,7 +103,7 @@ pub(crate) async fn musq_title_info(
     client: &MUClient,
     console: &crate::term::Terminal,
 ) -> ExitCode {
-    console.info(&cformat!(
+    console.info(cformat!(
         "Fetching info for ID <magenta,bold>{}</>...",
         title_id
     ));
@@ -112,34 +112,34 @@ pub(crate) async fn musq_title_info(
 
     match result {
         Err(e) => {
-            console.error(&cformat!("Unable to connect to MU!: {}", e));
+            console.error(cformat!("Unable to connect to MU!: {}", e));
             1
         }
         Ok(result) => {
             let manga_url = format!("https://{}/manga/{}", &*BASE_HOST, title_id);
             let linked = linkify!(&manga_url, &result.title);
 
-            console.info(&cformat!(
+            console.info(cformat!(
                 "Title information for <magenta,bold>{}</>",
                 linked,
             ));
 
-            console.info(&cformat!("  <s>Author</>: {}", result.authors));
-            console.info(&cformat!(
+            console.info(cformat!("  <s>Author</>: {}", result.authors));
+            console.info(cformat!(
                 "  <s>Genre/Tags</>: {}",
                 format_tags(result.tags.clone())
             ));
-            console.info(&cformat!("  <s>Summary</>"));
+            console.info(cformat!("  <s>Summary</>"));
             let split_desc = result.description.split('\n');
             for desc in split_desc {
-                console.info(&format!("    {}", desc));
+                console.info(format!("    {}", desc));
             }
 
             if !result.warning().is_empty() {
-                console.warn(&cformat!("  <s>Warning</>: {}", result.warning()));
+                console.warn(cformat!("  <s>Warning</>: {}", result.warning()));
             }
             println!();
-            console.info(&cformat!(
+            console.info(cformat!(
                 "  <s>Chapters</>: {} chapters",
                 result.chapters.len()
             ));
@@ -164,10 +164,10 @@ pub(crate) async fn musq_title_info(
                     console.info(&base_txt);
 
                     if chapter.subtitle.is_some() {
-                        console.info(&cformat!("     <s>{}</>", chapter.subtitle.unwrap()));
+                        console.info(cformat!("     <s>{}</>", chapter.subtitle.unwrap()));
                     }
                     if chapter.published_at.is_some() {
-                        console.info(&cformat!(
+                        console.info(cformat!(
                             "      <s>Published</>: {}",
                             chapter.published_at.unwrap()
                         ));
@@ -177,23 +177,23 @@ pub(crate) async fn musq_title_info(
             }
 
             if !result.next_update().is_empty() {
-                console.info(&cformat!("  <s>Next update</>: {}", result.next_update()));
+                console.info(cformat!("  <s>Next update</>: {}", result.next_update()));
             }
 
             let trim_copyright = result.copyright.trim();
 
             if !trim_copyright.is_empty() {
                 let copyrights: Vec<&str> = trim_copyright.split('\n').collect();
-                console.info(&cformat!("  <s>Copyright</>: {}", copyrights[0]));
+                console.info(cformat!("  <s>Copyright</>: {}", copyrights[0]));
 
                 for copyr in copyrights.iter().skip(1) {
-                    console.info(&format!("             {}", copyr));
+                    console.info(format!("             {}", copyr));
                 }
             }
 
             if show_related && !result.related_manga.is_empty() {
                 println!();
-                console.info(&cformat!(
+                console.info(cformat!(
                     "  <s>Related manga</>: {} titles",
                     result.related_manga.len()
                 ));

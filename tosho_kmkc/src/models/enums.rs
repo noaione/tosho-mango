@@ -382,7 +382,7 @@ mod tests {
         if truthy.into() {
             assert!(true);
         } else {
-            assert!(false);
+            unreachable!();
         }
 
         let falsy = super::IntBool::False;

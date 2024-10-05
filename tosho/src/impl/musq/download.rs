@@ -170,7 +170,7 @@ pub(crate) async fn musq_download(
                 coin_purse.event = 0;
             }
 
-            console.info(&format!("Downloading {} chapters...", results.len()));
+            console.info(format!("Downloading {} chapters...", results.len()));
             let mut download_chapters = vec![];
             for chapter in results {
                 if chapter.is_free() {
@@ -181,12 +181,12 @@ pub(crate) async fn musq_download(
                 let consume = client.calculate_coin(&coin_purse, chapter);
                 if !consume.is_possible() {
                     if !dl_config.no_input {
-                        console.warn(&cformat!(
+                        console.warn(cformat!(
                             "  Chapter <m,s>{}</> (<s>{}</>) is not available for purchase, skipping",
                             chapter.title,
                             chapter.id
                         ));
-                        console.warn(&format!(
+                        console.warn(format!(
                             "   Need {} free coin, {} XP coin, and {} paid coin",
                             consume.get_free(),
                             consume.get_event(),
@@ -209,7 +209,7 @@ pub(crate) async fn musq_download(
                 }
 
                 if should_purchase {
-                    console.info(&cformat!(
+                    console.info(cformat!(
                         "  Purchasing chapter <m,s>{}</> (<s>{}</>) with consumption <s>{:?}</>...",
                         chapter.title,
                         chapter.id,
@@ -226,8 +226,8 @@ pub(crate) async fn musq_download(
 
                     match purchase_result {
                         Err(err) => {
-                            console.error(&format!("   Failed to purchase chapter: {}", err));
-                            console.error(&cformat!(
+                            console.error(format!("   Failed to purchase chapter: {}", err));
+                            console.error(cformat!(
                                 "    Skipping chapter <m,s>{}</> (<s>{}</>)",
                                 chapter.title,
                                 chapter.id
@@ -235,7 +235,7 @@ pub(crate) async fn musq_download(
                         }
                         Ok(ch_view) => {
                             if ch_view.blocks.is_empty() {
-                                console.warn(&cformat!(
+                                console.warn(cformat!(
                                     "   Unable to purchase chapter <m,s>{}</> (<s>{}</>) since image block is empty, skipping",
                                     chapter.title,
                                     chapter.id
@@ -268,7 +268,7 @@ pub(crate) async fn musq_download(
 
             let mut stored_blocks: Vec<tosho_musq::proto::PageBlock> = vec![];
             for chapter in download_chapters {
-                console.info(&cformat!(
+                console.info(cformat!(
                     "  Downloading chapter <m,s>{}</> ({})...",
                     chapter.title,
                     chapter.id
@@ -281,8 +281,8 @@ pub(crate) async fn musq_download(
                             .get_chapter_images(chapter.id, dl_config.quality.clone().into(), None)
                             .await;
                         if let Err(err) = ch_viewer {
-                            console.error(&format!("Failed to download chapter: {}", err));
-                            console.error(&cformat!(
+                            console.error(format!("Failed to download chapter: {}", err));
+                            console.error(cformat!(
                                 "   Skipping chapter <m,s>{}</> (<s>{}</>)",
                                 chapter.title,
                                 chapter.id
@@ -292,7 +292,7 @@ pub(crate) async fn musq_download(
 
                         let ch_images = ch_viewer.unwrap();
                         if ch_images.blocks.is_empty() {
-                            console.warn(&cformat!(
+                            console.warn(cformat!(
                             "   Unable to download chapter <m,s>{}</> (<s>{}</>) since image block is empty, skipping",
                             chapter.title,
                             chapter.id
@@ -310,7 +310,7 @@ pub(crate) async fn musq_download(
                         match img_blocks {
                             Some(img_blocks) => img_blocks.images.clone(),
                             None => {
-                                console.warn(&cformat!(
+                                console.warn(cformat!(
                                     "   Unable to download chapter <m,s>{}</> (<s>{}</>) since we can't find this chapter blocks, skipping",
                                     chapter.title,
                                     chapter.id
@@ -330,7 +330,7 @@ pub(crate) async fn musq_download(
                     .collect();
 
                 if image_blocks.is_empty() {
-                    console.warn(&cformat!(
+                    console.warn(cformat!(
                         "   Chapter <m,s>{}</> (<s>{}</>) has no images, skipping",
                         chapter.title,
                         chapter.id
@@ -341,7 +341,7 @@ pub(crate) async fn musq_download(
                 let ch_dir = get_output_directory(&output_dir, title_id, Some(chapter.id), false);
                 if let Some(count) = check_downloaded_image_count(&ch_dir, "avif") {
                     if count >= image_blocks.len() {
-                        console.warn(&cformat!(
+                        console.warn(cformat!(
                             "   Chapter <m,s>{}</> (<s>{}</>) has been downloaded, skipping",
                             chapter.title,
                             chapter.id
@@ -365,7 +365,7 @@ pub(crate) async fn musq_download(
                         .expect("Failed to create image file");
 
                     if console.is_debug() {
-                        console.log(&cformat!(
+                        console.log(cformat!(
                             "   Downloading image <s>{}</> to <s>{}</>...",
                             image.file_name(),
                             img_fn
@@ -377,7 +377,7 @@ pub(crate) async fn musq_download(
                     match client.stream_download(&image.url, writer).await {
                         Ok(_) => {}
                         Err(err) => {
-                            console.error(&format!("    Failed to download image: {}", err));
+                            console.error(format!("    Failed to download image: {}", err));
                             // silent delete the file
                             tokio::fs::remove_file(&img_dl_path)
                                 .await

@@ -14,7 +14,7 @@ pub(crate) async fn mplus_search(
     client: &MPClient,
     console: &crate::term::Terminal,
 ) -> ExitCode {
-    console.info(&cformat!("Searching for <magenta,bold>{}</>...", query));
+    console.info(cformat!("Searching for <magenta,bold>{}</>...", query));
 
     let results = get_cached_titles_data(client).await;
 
@@ -71,7 +71,7 @@ pub(crate) async fn mplus_title_info(
     client: &MPClient,
     console: &crate::term::Terminal,
 ) -> ExitCode {
-    console.info(&cformat!(
+    console.info(cformat!(
         "Fetching info for ID <magenta,bold>{}</>...",
         title_id
     ));
@@ -84,7 +84,7 @@ pub(crate) async fn mplus_title_info(
             let manga_url = format!("https://{}/titles/{}", &*BASE_HOST, title.id);
             let linked = linkify!(manga_url, &title.title);
 
-            console.info(&cformat!(
+            console.info(cformat!(
                 "Title information for <magenta,bold>{}</>",
                 linked,
             ));
@@ -110,15 +110,15 @@ pub(crate) async fn mplus_title_info(
                 }
             }
 
-            console.info(&cformat!("  {}", merged_labels.join(" ")));
-            console.info(&cformat!("  <s>Author</>: {}", title.author));
+            console.info(cformat!("  {}", merged_labels.join(" ")));
+            console.info(cformat!("  <s>Author</>: {}", title.author));
             if !title_info.tags.is_empty() {
-                console.info(&cformat!(
+                console.info(cformat!(
                     "  <s>Genre/Tags</>: {}",
                     format_tags(&title_info.tags)
                 ));
             }
-            console.info(&cformat!(
+            console.info(cformat!(
                 "  <s>Language</>: {}",
                 title.language().pretty_name()
             ));
@@ -128,20 +128,20 @@ pub(crate) async fn mplus_title_info(
                 .filter_map(|x| if x.id != title.id { Some(*x) } else { None })
                 .collect::<Vec<TitleLanguages>>();
             if !filtered_alt_langs.is_empty() {
-                console.info(&cformat!(
+                console.info(cformat!(
                     "   <s>Alt Languages</>: {}",
                     format_other_languages(&filtered_alt_langs)
                 ));
             }
-            console.info(&cformat!("  <s>Summary</>"));
+            console.info(cformat!("  <s>Summary</>"));
             let split_desc = title_info.overview.split('\n');
             for desc in split_desc {
-                console.info(&format!("    {}", desc));
+                console.info(format!("    {}", desc));
             }
 
             println!();
             let all_chapters = title_info.flat_chapters_group();
-            console.info(&cformat!(
+            console.info(cformat!(
                 "  <s>Chapters</>: {} chapters",
                 all_chapters.len()
             ));
@@ -172,11 +172,11 @@ pub(crate) async fn mplus_title_info(
 
                     console.info(&base_txt);
                     if let Some(subtitle) = &chapter.subtitle {
-                        console.info(&cformat!("     <s>{}</>", subtitle));
+                        console.info(cformat!("     <s>{}</>", subtitle));
                     }
 
                     if let Some(pub_at_fmt) = unix_timestamp_to_string(chapter.published_at) {
-                        console.info(&cformat!("      <s>Published</>: {}", pub_at_fmt));
+                        console.info(cformat!("      <s>Published</>: {}", pub_at_fmt));
                     }
                 }
 
@@ -185,15 +185,15 @@ pub(crate) async fn mplus_title_info(
 
             if let Some(next_upd) = title_info.next_update {
                 if let Some(next_upd_fmt) = unix_timestamp_to_string(next_upd) {
-                    console.info(&cformat!("  <s>Next Update</>: {}", next_upd_fmt));
+                    console.info(cformat!("  <s>Next Update</>: {}", next_upd_fmt));
                 }
             }
 
-            console.info(&cformat!("  <s>Your Plan</>: {}", user_plan.to_name()));
+            console.info(cformat!("  <s>Your Plan</>: {}", user_plan.to_name()));
 
             if show_related && !title_info.recommended_titles.is_empty() {
                 println!();
-                console.info(&cformat!(
+                console.info(cformat!(
                     "  <s>Related titles</>: {} titles",
                     title_info.recommended_titles.len()
                 ));
@@ -204,11 +204,11 @@ pub(crate) async fn mplus_title_info(
             0
         }
         Ok(tosho_mplus::APIResponse::Error(e)) => {
-            console.error(&format!("Failed to get title info: {}", e.as_string()));
+            console.error(format!("Failed to get title info: {}", e.as_string()));
             1
         }
         Err(e) => {
-            console.error(&format!("Unable to connect to M+: {}", e));
+            console.error(format!("Unable to connect to M+: {}", e));
             1
         }
     }

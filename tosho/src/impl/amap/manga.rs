@@ -12,7 +12,7 @@ pub(crate) async fn amap_search(
     acc_info: &Config,
     console: &crate::term::Terminal,
 ) -> ExitCode {
-    console.info(&cformat!("Searching for <magenta,bold>{}</>...", query));
+    console.info(cformat!("Searching for <magenta,bold>{}</>...", query));
     let results = client.search(query, None, None, None, None).await;
 
     match results {
@@ -24,7 +24,7 @@ pub(crate) async fn amap_search(
                 return 1;
             }
 
-            console.info(&cformat!(
+            console.info(cformat!(
                 "Search results (<magenta,bold>{}</> results):",
                 results.comics.len()
             ));
@@ -34,7 +34,7 @@ pub(crate) async fn amap_search(
             0
         }
         Err(e) => {
-            console.error(&format!("Failed to fetch balance: {}", e));
+            console.error(format!("Failed to fetch balance: {}", e));
 
             1
         }
@@ -56,7 +56,7 @@ pub(crate) async fn amap_title_info(
     client: &AMClient,
     console: &crate::term::Terminal,
 ) -> ExitCode {
-    console.info(&cformat!(
+    console.info(cformat!(
         "Fetching info for ID <magenta,bold>{}</>...",
         title_id
     ));
@@ -67,7 +67,7 @@ pub(crate) async fn amap_title_info(
             let manga_url = format!("https://{}/manga/{}", &*BASE_HOST, title_id);
             let linked = linkify!(&manga_url, &results.info.title);
 
-            console.info(&cformat!(
+            console.info(cformat!(
                 "Title information for <magenta,bold>{}</>:",
                 linked
             ));
@@ -79,26 +79,23 @@ pub(crate) async fn amap_title_info(
                 .map(|a| (a.info.kind.clone(), a.info.name.clone()))
                 .collect::<Vec<(String, String)>>();
 
-            console.info(&cformat!("  <s>Authors</>:"));
+            console.info(cformat!("  <s>Authors</>:"));
             for (kind, name) in mapped_authors.iter() {
-                console.info(&cformat!("    - <s>{}</>: {}", kind, name));
+                console.info(cformat!("    - <s>{}</>: {}", kind, name));
             }
 
-            console.info(&cformat!(
-                "  <s>Tags</>: {}",
-                format_tags(results.info.tags)
-            ));
-            console.info(&cformat!(
+            console.info(cformat!("  <s>Tags</>: {}", format_tags(results.info.tags)));
+            console.info(cformat!(
                 "  <s>Status</>: {}",
                 results.info.status.to_name()
             ));
 
-            console.info(&cformat!("  <s>Summary</>"));
-            console.info(&format!("   {}", results.info.description));
+            console.info(cformat!("  <s>Summary</>"));
+            console.info(format!("   {}", results.info.description));
 
             println!();
 
-            console.info(&cformat!(
+            console.info(cformat!(
                 "  <s>Chapters</>: {} chapters",
                 results.info.episodes.len()
             ));
@@ -126,11 +123,11 @@ pub(crate) async fn amap_title_info(
                     if let Some(update_at) =
                         unix_timestamp_to_string(episode.info.update_date as i64)
                     {
-                        console.info(&cformat!("     Published at: <s>{}</>", update_at));
+                        console.info(cformat!("     Published at: <s>{}</>", update_at));
                     }
                     if let Some(expiry_time) = episode.info.expiry_time {
                         if let Some(expiry_time) = unix_timestamp_to_string(expiry_time as i64) {
-                            console.info(&cformat!("      Expires at: <s>{}</>", expiry_time));
+                            console.info(cformat!("      Expires at: <s>{}</>", expiry_time));
                         }
                     }
                 }
@@ -140,9 +137,9 @@ pub(crate) async fn amap_title_info(
 
             let prod_binding = results.info.productions.clone().replace("\r\n", "\n");
             let prod_participants = prod_binding.split('\n');
-            console.info(&cformat!("  <s>Production Participants</>"));
+            console.info(cformat!("  <s>Production Participants</>"));
             for prod in prod_participants {
-                console.info(&format!("    - {}", prod));
+                console.info(format!("    - {}", prod));
             }
 
             if let Some(free_daily) = results.info.free_daily {
@@ -151,20 +148,20 @@ pub(crate) async fn amap_title_info(
                 } else {
                     "No"
                 };
-                console.info(&cformat!("  <s>Free Daily</>: {}", is_free_daily));
-                console.info(&cformat!("    - <s>Term:</> {}", free_daily.term));
+                console.info(cformat!("  <s>Free Daily</>: {}", is_free_daily));
+                console.info(cformat!("    - <s>Term:</> {}", free_daily.term));
                 if let Some(next_reload) = unix_timestamp_to_string(free_daily.next as i64) {
-                    console.info(&cformat!("    - <s>Next Reload:</> {}", next_reload));
+                    console.info(cformat!("    - <s>Next Reload:</> {}", next_reload));
                 }
             }
             if let Some(rental_term) = results.info.rental_term {
-                console.info(&cformat!("  <s>Rental Term</>: {}", rental_term));
+                console.info(cformat!("  <s>Rental Term</>: {}", rental_term));
             }
 
             0
         }
         Err(e) => {
-            console.error(&format!("Failed to fetch title info: {}", e));
+            console.error(format!("Failed to fetch title info: {}", e));
 
             1
         }

@@ -28,16 +28,16 @@ pub(super) fn do_print_search_information(
         let pre_space_url = " ".repeat(spacing + 2);
 
         match with_number {
-            true => term.info(&format!("{}[{:02}] {}", pre_space, idx + 1, text_data)),
-            false => term.info(&format!("{}{}", pre_space, text_data)),
+            true => term.info(format!("{}[{:02}] {}", pre_space, idx + 1, text_data)),
+            false => term.info(format!("{}{}", pre_space, text_data)),
         }
         let updated_at = result.updated_at.format("%Y-%m-%d").to_string();
-        term.info(&cformat!(
+        term.info(cformat!(
             "{}<s>Last update</s>: {}",
             pre_space_lupd,
             updated_at
         ));
-        term.info(&format!("{}{}", pre_space_url, manga_url));
+        term.info(format!("{}{}", pre_space_url, manga_url));
     }
 }
 
@@ -167,7 +167,7 @@ pub(super) async fn get_cached_store_data(client: &SJClient) -> anyhow::Result<W
     }
 
     let cache_store = client.get_store_cache().await.map_err(|e| {
-        term.error(&format!("Failed to get store cache: {}", e));
+        term.error(format!("Failed to get store cache: {}", e));
         anyhow::anyhow!("Failed to get store cache: {}", e)
     })?;
     let wrapped = WrappedStoreCache::from(cache_store);

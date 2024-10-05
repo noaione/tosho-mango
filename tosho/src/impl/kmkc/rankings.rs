@@ -43,13 +43,13 @@ pub(crate) async fn kmkc_home_rankings(
     let rank_tab = match ranking.get_tab() {
         Some(tab) => tab,
         None => {
-            console.error(&format!("Invalid ranking type: {:?}", ranking));
+            console.error(format!("Invalid ranking type: {:?}", ranking));
             return 1;
         }
     };
     let limit = limit.unwrap_or(25);
 
-    console.info(&cformat!(
+    console.info(cformat!(
         "Getting ranking <magenta,bold>{}</>...",
         rank_tab.name
     ));
@@ -60,7 +60,7 @@ pub(crate) async fn kmkc_home_rankings(
 
     match results {
         Err(err) => {
-            console.error(&cformat!("Unable to connect to KMKC!: {}", err));
+            console.error(cformat!("Unable to connect to KMKC!: {}", err));
             1
         }
         Ok(results) => {
@@ -69,7 +69,7 @@ pub(crate) async fn kmkc_home_rankings(
                 return 1;
             }
 
-            console.info(&cformat!(
+            console.info(cformat!(
                 "Fetching <m,s>{}</> titles from <m,s>{}</>",
                 results.titles.len(),
                 rank_tab.name
@@ -81,7 +81,7 @@ pub(crate) async fn kmkc_home_rankings(
 
             match all_titles {
                 Err(err) => {
-                    console.error(&cformat!("Failed when fetching title list: {}", err));
+                    console.error(cformat!("Failed when fetching title list: {}", err));
                     1
                 }
                 Ok(titles) => {
@@ -90,7 +90,7 @@ pub(crate) async fn kmkc_home_rankings(
                         return 1;
                     }
 
-                    console.info(&cformat!(
+                    console.info(cformat!(
                         "Ranking <m,s>{}</> (<s>{}</> results)",
                         rank_tab.name,
                         titles.len()

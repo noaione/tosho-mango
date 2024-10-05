@@ -38,7 +38,7 @@ pub(crate) async fn amap_purchase(
                     ComicPurchase::from_episode_and_comic(&comic, &chapter.info, &mut ticket_purse);
 
                 if consume.is_none() {
-                    console.warn(&cformat!(
+                    console.warn(cformat!(
                         "Unable to purchase chapter <magenta,bold>{}</> ({}), insufficient point balance!",
                         chapter.info.title, chapter.info.id
                     ));
@@ -55,7 +55,7 @@ pub(crate) async fn amap_purchase(
                 match ch_view {
                     Ok(ch_view) => {
                         if ch_view.info.pages.is_empty() {
-                            console.warn(&cformat!(
+                            console.warn(cformat!(
                                 "Unable to purchase chapter <magenta,bold>{}</> ({}), no images found!",
                                 chapter.info.title,
                                 chapter.info.id
@@ -73,7 +73,7 @@ pub(crate) async fn amap_purchase(
                         claimed_total += 1;
                     }
                     Err(err) => {
-                        console.warn(&cformat!(
+                        console.warn(cformat!(
                             "Unable to purchase chapter <magenta,bold>{}</> ({}), error: {}",
                             chapter.info.title,
                             chapter.info.id,
@@ -90,12 +90,12 @@ pub(crate) async fn amap_purchase(
                 claimed_total.to_formatted_string(&Locale::en)
             ));
             if !failed_claimed.is_empty() {
-                console.warn(&format!(
+                console.warn(format!(
                     "We failed to purchase {} chapters, you might want to retry",
                     failed_claimed.len()
                 ));
                 for (chapter, reason) in failed_claimed {
-                    console.warn(&cformat!(
+                    console.warn(cformat!(
                         "  - <bold>{}</> (ID: {}): <red,bold>{}</>",
                         chapter.title,
                         chapter.id,
@@ -132,8 +132,8 @@ pub(crate) async fn amap_purchase_precalculate(
             let ch_count = results.len().to_formatted_string(&Locale::en);
 
             console.info("Precalculated purchase cost:");
-            console.info(&cformat!("  - <s>Total</>: {}", ch_count));
-            console.info(&cformat!("  - <s>Cost</>: {}T", price_ticket_fmt));
+            console.info(cformat!("  - <s>Total</>: {}", ch_count));
+            console.info(cformat!("  - <s>Cost</>: {}T", price_ticket_fmt));
 
             0
         }

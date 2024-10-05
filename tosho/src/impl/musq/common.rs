@@ -49,11 +49,11 @@ pub(super) fn do_print_search_information(
         let pre_space_url = " ".repeat(spacing + 1);
 
         if with_number {
-            term.info(&format!("{}[{:02}] {}", pre_space, idx + 1, text_data));
+            term.info(format!("{}[{:02}] {}", pre_space, idx + 1, text_data));
         } else {
-            term.info(&format!("{}{}", pre_space, text_data));
+            term.info(format!("{}{}", pre_space, text_data));
         }
-        term.info(&format!("{}{}", pre_space_url, manga_url));
+        term.info(format!("{}{}", pre_space_url, manga_url));
     }
 }
 
@@ -69,10 +69,7 @@ pub(super) async fn common_purchase_select(
     Option<MangaDetailV2>,
     Option<UserPoint>,
 ) {
-    console.info(&cformat!(
-        "Fetching for ID <magenta,bold>{}</>...",
-        title_id
-    ));
+    console.info(cformat!("Fetching for ID <magenta,bold>{}</>...", title_id));
 
     let results = client.get_manga(title_id).await;
     match results {
@@ -84,15 +81,15 @@ pub(super) async fn common_purchase_select(
             let free_point = user_bal.free.to_formatted_string(&Locale::en);
 
             console.info("Your current point balance:");
-            console.info(&cformat!("  - <s>Total</>: {}", total_bal));
-            console.info(&cformat!("  - <s>Paid point</>: {}c", paid_point));
-            console.info(&cformat!("  - <s>Event/XP point</>: {}c", xp_point));
-            console.info(&cformat!("  - <s>Free point</>: {}c", free_point));
+            console.info(cformat!("  - <s>Total</>: {}", total_bal));
+            console.info(cformat!("  - <s>Paid point</>: {}c", paid_point));
+            console.info(cformat!("  - <s>Event/XP point</>: {}c", xp_point));
+            console.info(cformat!("  - <s>Free point</>: {}c", free_point));
 
             console.info("Title information:");
-            console.info(&cformat!("  - <s>ID</>: {}", title_id));
-            console.info(&cformat!("  - <s>Title</>: {}", result.title));
-            console.info(&cformat!("  - <s>Chapters</>: {}", result.chapters.len()));
+            console.info(cformat!("  - <s>ID</>: {}", title_id));
+            console.info(cformat!("  - <s>Title</>: {}", result.title));
+            console.info(cformat!("  - <s>Chapters</>: {}", result.chapters.len()));
 
             if no_input {
                 return (
@@ -170,7 +167,7 @@ pub(super) async fn common_purchase_select(
             }
         }
         Err(e) => {
-            console.error(&cformat!("Unable to connect to MU!: {}", e));
+            console.error(cformat!("Unable to connect to MU!: {}", e));
 
             (Err(e), None, None)
         }

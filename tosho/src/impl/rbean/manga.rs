@@ -72,7 +72,7 @@ pub(crate) async fn rbean_search(
     account: &Config,
     console: &crate::term::Terminal,
 ) -> ExitCode {
-    console.info(&cformat!("Searching for <magenta,bold>{}</>...", query));
+    console.info(cformat!("Searching for <magenta,bold>{}</>...", query));
 
     let results = client
         .search(query, Some(0), limit, sort_options.map(SortOption::from))
@@ -87,7 +87,7 @@ pub(crate) async fn rbean_search(
                 return 0;
             }
 
-            console.info(&cformat!(
+            console.info(cformat!(
                 "Search results (<magenta,bold>{}</> results):",
                 results.results.len()
             ));
@@ -97,7 +97,7 @@ pub(crate) async fn rbean_search(
             0
         }
         Err(e) => {
-            console.error(&format!("Failed to search: {}", e));
+            console.error(format!("Failed to search: {}", e));
 
             1
         }
@@ -132,7 +132,7 @@ pub(crate) async fn rbean_title_info(
     account: &Config,
     console: &crate::term::Terminal,
 ) -> ExitCode {
-    console.info(&cformat!(
+    console.info(cformat!(
         "Fetching info for ID <magenta,bold>{}</>...",
         uuid
     ));
@@ -140,7 +140,7 @@ pub(crate) async fn rbean_title_info(
     let result = client.get_manga(uuid).await;
 
     if let Err(e) = result {
-        console.error(&format!("Failed to fetch manga: {}", e));
+        console.error(format!("Failed to fetch manga: {}", e));
         return 1;
     }
 
@@ -150,7 +150,7 @@ pub(crate) async fn rbean_title_info(
     let mut chapter_meta: Option<tosho_rbean::models::ChapterListResponse> = None;
 
     if show_chapters {
-        console.info(&cformat!(
+        console.info(cformat!(
             "Fetching chapters for <magenta,bold>{}</>...",
             result.title
         ));
@@ -158,7 +158,7 @@ pub(crate) async fn rbean_title_info(
         let fetch_chapters = client.get_chapter_list(uuid).await;
 
         if let Err(e) = fetch_chapters {
-            console.error(&format!("Failed to fetch chapters: {}", e));
+            console.error(format!("Failed to fetch chapters: {}", e));
             return 1;
         }
 
@@ -169,14 +169,14 @@ pub(crate) async fn rbean_title_info(
     let manga_url = format!("https://{}/series/{}", &*BASE_HOST, result.slug);
     let linked = linkify!(&manga_url, &result.title);
 
-    console.info(&cformat!(
+    console.info(cformat!(
         "Title information for <magenta,bold>{}</>:",
         linked
     ));
 
     let creators: Vec<String> = result.creators.iter().map(|c| c.name.clone()).collect();
 
-    console.info(&cformat!("  <s>Authors</>: {}", format_named_vec(creators)));
+    console.info(cformat!("  <s>Authors</>: {}", format_named_vec(creators)));
     let genres: Vec<String> = result
         .genres
         .iter()
@@ -186,7 +186,7 @@ pub(crate) async fn rbean_title_info(
         })
         .collect();
     if !genres.is_empty() {
-        console.info(&cformat!("  <s>Genres</>: {}", format_named_vec(genres)));
+        console.info(cformat!("  <s>Genres</>: {}", format_named_vec(genres)));
     }
 
     let publish_url = format!(
@@ -194,18 +194,18 @@ pub(crate) async fn rbean_title_info(
         &*BASE_HOST, result.publisher.slug
     );
     let linked_pub = linkify!(&publish_url, &result.publisher.name);
-    console.info(&cformat!("  <s>Publisher</>: {}", linked_pub));
+    console.info(cformat!("  <s>Publisher</>: {}", linked_pub));
 
     if let Some(release_schedule) = &result.release_schedule {
-        console.info(&cformat!("  <s>Release schedule</>: {}", release_schedule));
+        console.info(cformat!("  <s>Release schedule</>: {}", release_schedule));
     }
 
-    console.info(&cformat!("  <s>Summary</>"));
-    console.info(&format!("   {}", result.description));
+    console.info(cformat!("  <s>Summary</>"));
+    console.info(format!("   {}", result.description));
 
     println!();
 
-    console.info(&cformat!("  <s>Chapters</>: {} chapters", result.chapters));
+    console.info(cformat!("  <s>Chapters</>: {} chapters", result.chapters));
 
     if let Some(chapter_meta) = chapter_meta {
         let mut index_to_separator = HashMap::new();
@@ -230,13 +230,13 @@ pub(crate) async fn rbean_title_info(
             if let Some(ref separator) = separator {
                 match &separator {
                     Separator::PremiumNotice(sep) => {
-                        console.info(&cformat!(
+                        console.info(cformat!(
                             "    <m>Unlock the first {} chapters by <s>upgrading to Premium</></>",
                             sep.data.count
                         ));
                     }
                     Separator::ChapterGap(sep) => {
-                        console.info(&cformat!(
+                        console.info(cformat!(
                             "    <b>Chapters <s>{}-{}</> is currently on backlog!</>",
                             sep.data.range.start,
                             sep.data.range.end
@@ -281,7 +281,7 @@ pub(crate) async fn rbean_title_info(
                     volume_chapters.entry(volume_uuid).or_default().push(ch_num);
                 }
 
-                console.info(&cformat!(
+                console.info(cformat!(
                     "    <b!>Unlock more chapters by <s>buying volumes</></>",
                 ));
 
@@ -306,7 +306,7 @@ pub(crate) async fn rbean_title_info(
                         let vol_url_link = format!("{}/volumes", manga_url);
                         let vol_url_linked = linkify!(&vol_url_link, &volume.short_title);
 
-                        console.info(&cformat!("     <s>{}</>: {}", vol_url_linked, first_last));
+                        console.info(cformat!("     <s>{}</>: {}", vol_url_linked, first_last));
                     }
                 }
             } else if chapter.upcoming {
@@ -317,12 +317,12 @@ pub(crate) async fn rbean_title_info(
                     merged_string.push_str(&cformat!(" <s>({})</>", publish_at));
                 }
 
-                console.info(&cformat!("    <s,m>Upcoming</>: {}", merged_string));
+                console.info(cformat!("    <s,m>Upcoming</>: {}", merged_string));
             } else {
                 console.info(&banner_title);
                 if let Some(publish_at) = chapter.published {
                     let publish_at = publish_at.format("%b %d, %Y").to_string();
-                    console.info(&cformat!("     <s>Published</>: {}", publish_at));
+                    console.info(cformat!("     <s>Published</>: {}", publish_at));
                 }
             }
         }
@@ -333,12 +333,12 @@ pub(crate) async fn rbean_title_info(
     if let Some(credits) = &result.credits {
         let split_credits = credits.split('\n').collect::<Vec<&str>>();
         if split_credits.len() > 1 {
-            console.info(&cformat!("  <s>Credits</>:"));
+            console.info(cformat!("  <s>Credits</>:"));
             for credit in split_credits {
-                console.info(&cformat!("    {}", credit));
+                console.info(cformat!("    {}", credit));
             }
         } else {
-            console.info(&cformat!("  <s>Credits</>: {}", credits));
+            console.info(cformat!("  <s>Credits</>: {}", credits));
         }
     }
 

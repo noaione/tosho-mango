@@ -73,7 +73,7 @@ pub(crate) async fn mplus_home_rankings(
                 .map(|title| title.titles.first().unwrap().clone())
                 .collect();
 
-            console.info(&cformat!(
+            console.info(cformat!(
                 "Ranking for <m,s>{}</> ({} titles):",
                 kind.to_name(),
                 all_titles.len()
@@ -83,11 +83,11 @@ pub(crate) async fn mplus_home_rankings(
             0
         }
         Ok(tosho_mplus::APIResponse::Error(e)) => {
-            console.error(&format!("Failed to get rankings list: {}", e.as_string()));
+            console.error(format!("Failed to get rankings list: {}", e.as_string()));
             1
         }
         Err(e) => {
-            console.error(&format!("Unable to connect to M+: {}", e));
+            console.error(format!("Unable to connect to M+: {}", e));
             1
         }
     }

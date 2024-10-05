@@ -129,9 +129,9 @@ fn do_chapter_select(
     let title_info = result.title.clone().unwrap();
     let flat_chapters = result.flat_chapters_group();
     console.info("Title information:");
-    console.info(&cformat!("  - <bold>ID:</> {}", title_info.id));
-    console.info(&cformat!("  - <bold>Title:</> {}", title_info.title));
-    console.info(&cformat!(
+    console.info(cformat!("  - <bold>ID:</> {}", title_info.id));
+    console.info(cformat!("  - <bold>Title:</> {}", title_info.title));
+    console.info(cformat!(
         "  - <bold>Chapters:</> {} chapters",
         flat_chapters.len()
     ));
@@ -203,7 +203,7 @@ async fn mplus_actual_downloader(
     let writer = tokio::fs::File::create(&img_dl_path).await?;
 
     if console.is_debug() {
-        console.log(&cformat!(
+        console.log(cformat!(
             "   Downloading image <s>{}</> to <s>{}</>...",
             node.image.file_name(),
             image_fn
@@ -213,7 +213,7 @@ async fn mplus_actual_downloader(
     match node.client.stream_download(&node.image.url, writer).await {
         Ok(_) => {}
         Err(err) => {
-            console.error(&format!("    Failed to download image: {}", err));
+            console.error(format!("    Failed to download image: {}", err));
             // silent delete the file
             tokio::fs::remove_file(&img_dl_path).await?;
         }
@@ -238,7 +238,7 @@ pub(crate) async fn mplus_download(
         }
     }
 
-    console.info(&cformat!(
+    console.info(cformat!(
         "Fetching info for ID <magenta,bold>{}</>...",
         title_id
     ));
@@ -299,7 +299,7 @@ pub(crate) async fn mplus_download(
                 .expect("Failed to dump title info");
 
             for chapter in download_chapters {
-                console.info(&cformat!(
+                console.info(cformat!(
                     "  Downloading chapter <m,s>{}</> ({})...",
                     chapter.as_chapter_title(),
                     chapter.chapter_id
@@ -310,14 +310,14 @@ pub(crate) async fn mplus_download(
                     .await;
 
                 if let Err(e) = view_req {
-                    console.error(&format!("Failed to get viewer info: {}", e));
+                    console.error(format!("Failed to get viewer info: {}", e));
                     return 1;
                 }
 
                 let viewer = view_req.unwrap();
 
                 if let APIResponse::Error(e) = viewer {
-                    console.error(&format!("Failed to get viewer info: {}", e.as_string()));
+                    console.error(format!("Failed to get viewer info: {}", e.as_string()));
                     return 1;
                 }
 
@@ -334,7 +334,7 @@ pub(crate) async fn mplus_download(
 
                 if let Some(count) = check_downloaded_image_count(&image_dir, "webp") {
                     if count >= chapter_images.len() {
-                        console.warn(&cformat!(
+                        console.warn(cformat!(
                             "   Chapter <m,s>{}</> (<s>{}</>) has been downloaded, skipping",
                             chapter.as_chapter_title(),
                             chapter.chapter_id
@@ -377,7 +377,7 @@ pub(crate) async fn mplus_download(
                                 {
                                     Ok(_) => {}
                                     Err(e) => {
-                                        cnsl.error(&format!("    Failed to download image: {}", e));
+                                        cnsl.error(format!("    Failed to download image: {}", e));
                                     }
                                 }
                             })
@@ -402,7 +402,7 @@ pub(crate) async fn mplus_download(
                         {
                             Ok(_) => {}
                             Err(e) => {
-                                console.error(&format!("    Failed to download image: {}", e));
+                                console.error(format!("    Failed to download image: {}", e));
                             }
                         }
                     }
@@ -414,11 +414,11 @@ pub(crate) async fn mplus_download(
             0
         }
         Ok(tosho_mplus::APIResponse::Error(e)) => {
-            console.error(&format!("Failed to get title info: {}", e.as_string()));
+            console.error(format!("Failed to get title info: {}", e.as_string()));
             1
         }
         Err(e) => {
-            console.error(&format!("Unable to connect to M+: {}", e));
+            console.error(format!("Unable to connect to M+: {}", e));
             1
         }
     }
