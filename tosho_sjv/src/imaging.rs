@@ -14,7 +14,7 @@
 use std::io::Cursor;
 
 use image::{GenericImage, GenericImageView, ImageEncoder};
-use tosho_common::{bail_on_error, make_error, ToshoResult};
+use tosho_common::{make_error, ToshoResult};
 
 const CUT_WIDTH: u32 = 90;
 const CUT_HEIGHT: u32 = 140;
@@ -50,12 +50,17 @@ fn draw_image(
             target.dest_height,
             image::imageops::FilterType::CatmullRom,
         );
-    let result = dest.copy_from(&src_rect, target.dest_x, target.dest_y);
-    if result.is_err() {
-        bail_on_error!("Failed to copy from source image to canvas. source_x: {}, source_y: {}, dest_x: {}, dest_y: {}", target.src_x, target.src_y, target.dest_x, target.dest_y);
+    match dest.copy_from(&src_rect, target.dest_x, target.dest_y) {
+        Ok(_) => {
+            Ok(())
+        }
+        Err(e) => {
+            Err(tosho_common::ToshoImageError::ImageError(tosho_common::ToshoDetailedImageError::new(
+                e,
+                format!("Failed to copy from source image to canvas. source_x: {}, source_y: {}, dest_x: {}, dest_y: {}", target.src_x, target.src_y, target.dest_x, target.dest_y)
+            )).into())
+        }
     }
-
-    Ok(())
 }
 
 /// Descramble image bytes, and return descrambled image bytes.

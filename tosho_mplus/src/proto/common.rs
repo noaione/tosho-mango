@@ -241,14 +241,15 @@ pub struct Languages {
 impl Languages {
     /// Get the current active content language.
     pub fn content_languages(&self) -> Language {
-        if self.content_language_tertiary.is_some() {
-            self.content_language_tertiary()
-        } else if self.content_language_secondary.is_some() {
-            self.content_language_secondary()
-        } else if self.content_language.is_some() {
-            self.content_language()
-        } else {
-            Language::English
+        match (
+            self.content_language_tertiary,
+            self.content_language_secondary,
+            self.content_language,
+        ) {
+            (Some(_), _, _) => self.content_language_tertiary(),
+            (_, Some(_), _) => self.content_language_secondary(),
+            (_, _, Some(_)) => self.content_language(),
+            _ => Language::English,
         }
     }
 }
