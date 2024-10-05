@@ -764,6 +764,7 @@ impl KMClient {
                 let mut stream = res.bytes_stream();
                 while let Some(bytes) = stream.try_next().await? {
                     writer.write_all(&bytes).await?;
+                    writer.flush().await?;
                 }
 
                 Ok(())
@@ -779,13 +780,10 @@ impl KMClient {
                 match descrambled {
                     Ok(descram_bytes) => {
                         writer.write_all(&descram_bytes).await?;
+                        Ok(())
                     }
-                    Err(e) => {
-                        return Err(e);
-                    }
+                    Err(e) => Err(e),
                 }
-
-                Ok(())
             }
             (KMConfig::Web(_), None) => {
                 bail_on_error!("Cannot descramble image without scramble seed")

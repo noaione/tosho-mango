@@ -427,6 +427,7 @@ impl RBClient {
                 };
 
                 writer.write_all(&dedrmed).await?;
+                writer.flush().await?;
             }
 
             Ok(())
@@ -645,6 +646,8 @@ pub struct RBLoginResponse {
 /// # Arguments
 /// * `data` - The image data to decrypt
 pub fn decrypt_image(data: &[u8]) -> Vec<u8> {
-    let image_data = data.to_vec();
-    image_data.iter().map(|x| PATTERN[0] ^ x).collect()
+    let mut internal: Vec<u8> = Vec::with_capacity(data.len());
+    internal.extend_from_slice(&data);
+    internal.iter_mut().for_each(|v| *v ^= PATTERN[0]);
+    internal
 }

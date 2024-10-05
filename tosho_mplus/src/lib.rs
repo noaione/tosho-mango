@@ -561,6 +561,7 @@ impl MPClient {
             let mut stream = res.bytes_stream();
             while let Some(item) = stream.try_next().await? {
                 writer.write_all(&item).await?;
+                writer.flush().await?;
             }
 
             Ok(())

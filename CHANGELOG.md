@@ -15,6 +15,8 @@ This should give more consistent error handling across all sources.
 - `MU`: Bump constants version
 - `KM`: Fix precalculation of point usages
 - `MU`, `KM`, and `AM`: Cleanup `precalculate` command output a bit more
+- All source: flush bytes stream on each loop iteration
+- `RB`: Possibly faster image decryption
 
 ### Build
 - Update `reqwest`, and `serde-*`
