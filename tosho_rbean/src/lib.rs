@@ -544,14 +544,8 @@ impl RBClient {
         let goog_user = acc_info_resp
             .users
             .iter()
-            .find(|user| user.local_id == verify_resp.local_id);
-
-        if goog_user.is_none() {
-            return Err(ToshoAuthError::UnknownSession.into());
-        }
-
-        // Guaranteed to be Some
-        let goog_user = goog_user.unwrap().clone();
+            .find(|user| user.local_id == verify_resp.local_id)
+            .ok_or(ToshoAuthError::UnknownSession)?;
 
         // Step 3: Refresh token
         let json_data = json!({
@@ -614,7 +608,7 @@ impl RBClient {
             refresh_token: secure_token_resp.refresh_token,
             platform,
             user: user_resp,
-            google_account: goog_user,
+            google_account: goog_user.clone(),
             expiry: expiry_at,
         })
     }

@@ -93,25 +93,41 @@ impl TryFrom<&str> for KMConfigWebKV {
     }
 }
 
-fn i64_to_cookie_time(time: i64) -> ::time::OffsetDateTime {
-    ::time::OffsetDateTime::from_unix_timestamp(time).unwrap()
+fn i64_to_cookie_time(time: i64) -> Result<::time::OffsetDateTime, ::time::error::ComponentRange> {
+    ::time::OffsetDateTime::from_unix_timestamp(time)
 }
 
 impl KMConfigWebKV {
-    fn to_cookie(&self, name: String) -> RawCookie<'_> {
+    fn try_to_cookie(&self, name: impl Into<String>) -> ToshoResult<RawCookie<'_>> {
         // test if the value is a number
         let binding = match KMConfigWebKV64::try_from(self) {
-            Ok(parsed) => encode(&serde_json::to_string(&parsed).unwrap()).to_string(),
-            Err(_) => encode(&serde_json::to_string(&self).unwrap()).to_string(),
+            Ok(parsed) => encode(
+                &serde_json::to_string(&parsed)
+                    .map_err(|e| make_error!("Failed to serialize cookie as JSON: {}", e))?,
+            )
+            .to_string(),
+            Err(_) => encode(
+                &serde_json::to_string(&self)
+                    .map_err(|e| make_error!("Failed to serialize cookie as JSON: {}", e))?,
+            )
+            .to_string(),
         };
 
-        RawCookie::build((name, binding))
+        let name: String = name.into();
+
+        Ok(RawCookie::build((name.clone(), binding))
             .domain(&*BASE_HOST)
             .secure(true)
             .http_only(false)
             .path("/")
-            .expires(i64_to_cookie_time(self.expires))
-            .build()
+            .expires(i64_to_cookie_time(self.expires).map_err(|e| {
+                make_error!(
+                    "Failed to convert expiry time to cookie time for `{}`: {}",
+                    &name,
+                    e
+                )
+            })?)
+            .build())
     }
 }
 
@@ -178,11 +194,9 @@ impl TryFrom<KMConfigWeb> for reqwest_cookie_store::CookieStore {
         let base_host_url = Url::parse(&format!("https://{}", &*BASE_HOST))
             .map_err(|e| make_error!("Failed to parse base host url of {}: {}", &*BASE_HOST, e))?;
 
-        let birthday_cookie = value.birthday.to_cookie("birthday".to_string());
-        let tos_adult_cookie = value
-            .tos_adult
-            .to_cookie("terms_of_service_adult".to_string());
-        let privacy_cookie = value.privacy.to_cookie("privacy_policy".to_string());
+        let birthday_cookie = value.birthday.try_to_cookie("birthday")?;
+        let tos_adult_cookie = value.tos_adult.try_to_cookie("terms_of_service_adult")?;
+        let privacy_cookie = value.privacy.try_to_cookie("privacy_policy")?;
 
         store
             .insert_raw(&birthday_cookie, &base_host_url)
@@ -221,7 +235,12 @@ impl TryFrom<KMConfigWeb> for reqwest_cookie_store::CookieStore {
                 .secure(true)
                 .http_only(true)
                 .path("/")
-                .expires(i64_to_cookie_time(value.birthday.expires))
+                .expires(i64_to_cookie_time(value.birthday.expires).map_err(|e| {
+                    make_error!(
+                        "Failed to convert expiry time to cookie time for `uwt`: {}",
+                        e
+                    )
+                })?)
                 .build();
             store.insert_raw(&uwt, &base_host_url).map_err(|e| {
                 make_error!(
@@ -389,7 +408,7 @@ mod tests {
             expires: 123,
         };
 
-        let cookie = kv.to_cookie("test".into());
+        let cookie = kv.try_to_cookie("test").unwrap();
         let decoded_cookie = decode(cookie.value()).unwrap();
         assert_eq!(decoded_cookie, "{\"value\":123,\"expires\":123}");
     }

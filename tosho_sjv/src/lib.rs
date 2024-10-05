@@ -276,14 +276,16 @@ impl SJClient {
         let mut data = common_data_hashmap(self.constants, &self.mode, Some(&self.config));
         data.insert("manga_id".to_string(), id.to_string());
 
-        if !metadata && page.is_none() {
-            bail_on_error!("You must set either metadata or page!");
-        }
-
-        if metadata {
-            data.insert("metadata".to_string(), "1".to_string());
-        } else if !metadata && page.is_some() {
-            data.insert("page".to_string(), page.unwrap().to_string());
+        match (metadata, page) {
+            (true, _) => {
+                data.insert("metadata".to_string(), "1".to_string());
+            }
+            (false, Some(page)) => {
+                data.insert("page".to_string(), page.to_string());
+            }
+            (false, None) => {
+                bail_on_error!("You must set either metadata or page!");
+            }
         }
 
         match &self.config.platform {
