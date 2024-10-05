@@ -17,6 +17,7 @@ This should give more consistent error handling across all sources.
 - `MU`, `KM`, and `AM`: Cleanup `precalculate` command output a bit more
 - All source: flush bytes stream on each loop iteration
 - `RB`: Possibly faster image decryption
+- Adjust exit code handling on CLI
 
 ### Build
 - Update `tokio`, `serde-*`, `prost`, `reqwest`, and some other CLI related dependencies

@@ -54,7 +54,7 @@
 use std::path::PathBuf;
 
 use clap::Parser;
-use cli::ToshoCommands;
+use cli::{ExitCode, ToshoCommands};
 use r#impl::amap::download::AMDownloadCliConfig;
 use r#impl::amap::AMAPCommands;
 use r#impl::client::select_single_account;
@@ -90,10 +90,17 @@ fn get_default_download_dir() -> PathBuf {
 async fn main() {
     // For some god know what reason, `clap` + rustc_lint will show this as unreachable code.
     let _cli = ToshoCli::parse();
-    entrypoint(_cli).await.unwrap();
+
+    match entrypoint(_cli).await {
+        Ok(exit_code) => std::process::exit(exit_code.try_into().unwrap_or(1_i32)),
+        Err(e) => {
+            eprintln!("Error: {}", e);
+            std::process::exit(1);
+        }
+    }
 }
 
-async fn entrypoint(cli: ToshoCli) -> anyhow::Result<()> {
+async fn entrypoint(cli: ToshoCli) -> anyhow::Result<ExitCode> {
     let t = term::get_console(cli.verbose);
     let mut t_mut = term::get_console(cli.verbose);
 
@@ -102,7 +109,7 @@ async fn entrypoint(cli: ToshoCli) -> anyhow::Result<()> {
             Ok(proxy) => Some(proxy),
             Err(e) => {
                 t.warn(&format!("Unable to parse proxy: {}", e));
-                std::process::exit(1);
+                return Ok(1);
             }
         },
         None => None,
@@ -127,7 +134,7 @@ async fn entrypoint(cli: ToshoCli) -> anyhow::Result<()> {
 
             // early exit
             if let Some(early_exit) = early_exit {
-                std::process::exit(early_exit as i32);
+                return Ok(early_exit);
             }
 
             let config = select_single_account(account_id.as_deref(), Implementations::Musq, &t);
@@ -138,7 +145,7 @@ async fn entrypoint(cli: ToshoCli) -> anyhow::Result<()> {
                 },
                 None => {
                     t.warn("Aborted!");
-                    std::process::exit(1);
+                    return Ok(1);
                 }
             };
 
@@ -259,7 +266,7 @@ async fn entrypoint(cli: ToshoCli) -> anyhow::Result<()> {
                 }
             };
 
-            std::process::exit(exit_code as i32)
+            Ok(exit_code)
         }
         ToshoCommands::Kmkc {
             account_id,
@@ -295,7 +302,7 @@ async fn entrypoint(cli: ToshoCli) -> anyhow::Result<()> {
 
             // exit early
             if let Some(exit_code) = early_exit {
-                std::process::exit(exit_code as i32);
+                return Ok(exit_code);
             }
 
             let config = select_single_account(account_id.as_deref(), Implementations::Kmkc, &t);
@@ -306,7 +313,7 @@ async fn entrypoint(cli: ToshoCli) -> anyhow::Result<()> {
                 },
                 None => {
                     t.warn("Aborted!");
-                    std::process::exit(1);
+                    return Ok(1);
                 }
             };
 
@@ -437,7 +444,7 @@ async fn entrypoint(cli: ToshoCli) -> anyhow::Result<()> {
                 }
             };
 
-            std::process::exit(exit_code as i32)
+            Ok(exit_code)
         }
         ToshoCommands::Amap {
             account_id,
@@ -453,7 +460,7 @@ async fn entrypoint(cli: ToshoCli) -> anyhow::Result<()> {
 
             // early exit
             if let Some(early_exit) = early_exit {
-                std::process::exit(early_exit as i32);
+                return Ok(early_exit);
             }
 
             let config = select_single_account(account_id.as_deref(), Implementations::Amap, &t);
@@ -464,7 +471,7 @@ async fn entrypoint(cli: ToshoCli) -> anyhow::Result<()> {
                 },
                 None => {
                     t.warn("Aborted!");
-                    std::process::exit(1);
+                    return Ok(1);
                 }
             };
 
@@ -568,7 +575,7 @@ async fn entrypoint(cli: ToshoCli) -> anyhow::Result<()> {
                 }
             };
 
-            std::process::exit(exit_code as i32);
+            Ok(exit_code)
         }
         ToshoCommands::Sjv {
             account_id,
@@ -590,7 +597,7 @@ async fn entrypoint(cli: ToshoCli) -> anyhow::Result<()> {
 
             // early exit
             if let Some(early_exit) = early_exit {
-                std::process::exit(early_exit as i32);
+                return Ok(early_exit);
             }
 
             let config = select_single_account(account_id.as_deref(), Implementations::Sjv, &t);
@@ -601,7 +608,7 @@ async fn entrypoint(cli: ToshoCli) -> anyhow::Result<()> {
                 },
                 None => {
                     t.warn("Aborted!");
-                    std::process::exit(1);
+                    return Ok(1);
                 }
             };
 
@@ -682,7 +689,7 @@ async fn entrypoint(cli: ToshoCli) -> anyhow::Result<()> {
                 }
             };
 
-            std::process::exit(exit_code as i32);
+            Ok(exit_code)
         }
         ToshoCommands::Rbean {
             subcommand,
@@ -703,7 +710,7 @@ async fn entrypoint(cli: ToshoCli) -> anyhow::Result<()> {
 
             // early exit
             if let Some(early_exit) = early_exit {
-                std::process::exit(early_exit as i32);
+                return Ok(early_exit);
             }
 
             let config = select_single_account(account_id.as_deref(), Implementations::Rbean, &t);
@@ -714,7 +721,7 @@ async fn entrypoint(cli: ToshoCli) -> anyhow::Result<()> {
                 },
                 None => {
                     t.warn("Aborted!");
-                    std::process::exit(1);
+                    return Ok(1);
                 }
             };
 
@@ -819,7 +826,7 @@ async fn entrypoint(cli: ToshoCli) -> anyhow::Result<()> {
                 }
             };
 
-            std::process::exit(exit_code as i32);
+            Ok(exit_code)
         }
         ToshoCommands::Mplus {
             account_id,
@@ -837,7 +844,7 @@ async fn entrypoint(cli: ToshoCli) -> anyhow::Result<()> {
 
             // early exit
             if let Some(early_exit) = early_exit {
-                std::process::exit(early_exit as i32);
+                return Ok(early_exit);
             }
 
             let config = select_single_account(account_id.as_deref(), Implementations::Mplus, &t);
@@ -848,7 +855,7 @@ async fn entrypoint(cli: ToshoCli) -> anyhow::Result<()> {
                 },
                 None => {
                     t.warn("Aborted!");
-                    std::process::exit(1);
+                    return Ok(1);
                 }
             };
 
@@ -943,7 +950,7 @@ async fn entrypoint(cli: ToshoCli) -> anyhow::Result<()> {
                 }
             };
 
-            std::process::exit(exit_code as i32);
+            Ok(exit_code)
         }
         ToshoCommands::Tools { subcommand } => {
             let exit_code = match subcommand {
@@ -976,15 +983,15 @@ async fn entrypoint(cli: ToshoCli) -> anyhow::Result<()> {
                         .await
                 }
             };
-            std::process::exit(exit_code as i32)
-        }
-        ToshoCommands::Update => {
-            updater::perform_update(&t).await.unwrap_or_else(|e| {
-                t.error(&format!("Failed to update: {}", e));
-                std::process::exit(1);
-            });
 
-            std::process::exit(0)
+            Ok(exit_code)
         }
-    };
+        ToshoCommands::Update => match updater::perform_update(&t).await {
+            Ok(_) => Ok(0),
+            Err(e) => {
+                t.error(&format!("Failed to update: {}", e));
+                Ok(1)
+            }
+        },
+    }
 }
