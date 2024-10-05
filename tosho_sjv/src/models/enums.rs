@@ -278,16 +278,14 @@ mod tests {
     fn test_int_bool_if() {
         let truthy = super::IntBool::True;
 
-        if truthy.into() {
-            assert!(true);
-        } else {
+        let truthy_bool: bool = truthy.into();
+
+        if !truthy_bool {
             unreachable!();
         }
 
         let falsy = super::IntBool::False;
         if falsy.into() {
-            assert!(false);
-        } else {
             unreachable!();
         }
     }
