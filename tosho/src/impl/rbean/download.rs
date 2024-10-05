@@ -531,7 +531,7 @@ pub(crate) async fn rbean_download(
                 })
                 .collect();
 
-            futures::future::join_all(tasks).await;
+            futures_util::future::join_all(tasks).await;
         } else {
             for (idx, page) in pages_data.iter().enumerate() {
                 let node = DownloadNode {

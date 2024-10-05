@@ -25,7 +25,6 @@ reqwest_cookie_store.workspace = true
 
 base64.workspace = true
 chrono.workspace = true
-time.workspace = true
 sha2.workspace = true
 
 tosho-macros = { path = "../tosho_macros", version = "0.3" }

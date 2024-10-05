@@ -423,7 +423,7 @@ pub(crate) async fn kmkc_download(
                         })
                         .collect();
 
-                    futures::future::join_all(tasks).await;
+                    futures_util::future::join_all(tasks).await;
                 } else {
                     for (idx, image) in image_blocks.iter().enumerate() {
                         match kmkc_actual_downloader(

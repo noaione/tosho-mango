@@ -19,8 +19,10 @@ This should give more consistent error handling across all sources.
 - `RB`: Possibly faster image decryption
 
 ### Build
-- Update `reqwest`, and `serde-*`
-- Remove `anyhow` as direct dependency
+- Update `tokio`, `serde-*`, `prost`, `reqwest`, and some other CLI related dependencies
+- Remove `anyhow` as direct dependency for library crates
+- Remove `time` as dependency for `tosho-amap`
+- Replace `futures` with `futures-util` in `tosho`
 
 ### Docs
 - Use `README.md` on each source crate as the docs instead of duplicating the content in `lib.rs`

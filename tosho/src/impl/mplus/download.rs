@@ -393,7 +393,7 @@ pub(crate) async fn mplus_download(
                         })
                         .collect();
 
-                    futures::future::join_all(tasks).await;
+                    futures_util::future::join_all(tasks).await;
                 } else {
                     for (idx, image) in chapter_images.iter().enumerate() {
                         match mplus_actual_downloader(

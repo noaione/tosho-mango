@@ -12,7 +12,6 @@
 
 use reqwest::Url;
 use reqwest_cookie_store::{CookieStoreMutex, RawCookie};
-use time::OffsetDateTime;
 use tosho_common::{bail_on_error, make_error, ToshoAuthError, ToshoError, ToshoResult};
 use tosho_macros::{EnumName, EnumU32};
 use urlencoding::{decode, encode};
@@ -72,7 +71,7 @@ impl TryFrom<&str> for KMConfigWebKV64 {
 
 impl Default for KMConfigWebKV {
     fn default() -> Self {
-        let current_utc = OffsetDateTime::now_utc().unix_timestamp();
+        let current_utc = chrono::Utc::now().timestamp();
 
         KMConfigWebKV {
             value: "".into(),
@@ -94,8 +93,8 @@ impl TryFrom<&str> for KMConfigWebKV {
     }
 }
 
-fn i64_to_cookie_time(time: i64) -> OffsetDateTime {
-    OffsetDateTime::from_unix_timestamp(time).unwrap()
+fn i64_to_cookie_time(time: i64) -> ::time::OffsetDateTime {
+    ::time::OffsetDateTime::from_unix_timestamp(time).unwrap()
 }
 
 impl KMConfigWebKV {

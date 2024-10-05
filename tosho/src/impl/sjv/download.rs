@@ -413,7 +413,7 @@ pub(crate) async fn sjv_download(
                         })
                         .collect();
 
-                    futures::future::join_all(tasks).await;
+                    futures_util::future::join_all(tasks).await;
                 } else {
                     for page in 0..total_image_count {
                         match sjv_actual_downloader(
