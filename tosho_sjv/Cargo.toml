@@ -19,14 +19,18 @@ exclude = [
 
 [dependencies]
 tokio.workspace = true
-reqwest = { workspace = true, features = ["json"] }
 futures-util.workspace = true
+
 serde.workspace = true
 serde_json.workspace = true
+
+reqwest = { workspace = true, features = ["json"] }
+
 base64.workspace = true
 chrono.workspace = true
+
 image.workspace = true
-kamadak-exif = "0.5.5"
+kamadak-exif.workspace = true
 
 tosho-macros = { path = "../tosho_macros", version = "0.3" }
 tosho-common = { path = "../tosho_common", version = "=0.1.0", features = ["serde", "image", "id-gen"] }

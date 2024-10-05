@@ -17,10 +17,13 @@ exclude = [
 
 [dependencies]
 reqwest.workspace = true
+
 serde = { workspace = true, optional = true }
 serde_json = { workspace = true, optional = true }
 prost = { workspace = true, optional = true }
+
 image = { workspace = true, optional = true }
+
 rand = { workspace = true, optional = true }
 
 [features]
