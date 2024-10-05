@@ -7,7 +7,7 @@ use tosho_sjv::{
     SJClient, SJPlatform,
 };
 
-use crate::r#impl::common::{check_downloaded_image_count, create_progress_bar};
+use crate::r#impl::common::check_downloaded_image_count;
 use crate::{
     cli::ExitCode,
     r#impl::{
@@ -376,7 +376,8 @@ pub(crate) async fn sjv_download(
                 let start_page = chapter.start_page;
                 let total_image_count = chapter.pages + start_page;
 
-                let progress = create_progress_bar(total_image_count.into());
+                let progress =
+                    console.make_progress_arc(total_image_count as u64, Some("Downloading"));
 
                 if dl_config.parallel {
                     let tasks: Vec<_> = (0..total_image_count)

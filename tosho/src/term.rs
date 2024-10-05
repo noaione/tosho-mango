@@ -1,4 +1,7 @@
-use std::{sync::LazyLock, time::Duration};
+use std::{
+    sync::{Arc, LazyLock},
+    time::Duration,
+};
 
 use anstream::println;
 use color_print::cformat;
@@ -56,29 +59,35 @@ impl Terminal {
     }
 
     /// Log info to terminal
-    pub fn info(&self, msg: &str) {
-        println!("{}", cformat!(" [<cyan,strong>INFO</cyan,strong>] {}", msg))
+    pub fn info(&self, msg: impl Into<String>) {
+        println!(
+            "{}",
+            cformat!(" [<cyan,strong>INFO</cyan,strong>] {}", msg.into())
+        )
     }
 
     /// Log warning to terminal
-    pub fn warn(&self, msg: &str) {
+    pub fn warn(&self, msg: impl Into<String>) {
         println!(
             "{}",
-            cformat!(" [<yellow,strong>WARN</yellow,strong>] {}", msg)
+            cformat!(" [<yellow,strong>WARN</yellow,strong>] {}", msg.into())
         )
     }
 
     /// Log error to terminal
-    pub fn error(&self, msg: &str) {
-        println!("{}", cformat!("[<red,strong>ERROR</red,strong>] {}", msg))
+    pub fn error(&self, msg: impl Into<String>) {
+        println!(
+            "{}",
+            cformat!("[<red,strong>ERROR</red,strong>] {}", msg.into())
+        )
     }
 
     /// Log to terminal
-    pub fn log(&self, msg: &str) {
+    pub fn log(&self, msg: impl Into<String>) {
         if self.debug >= 1 {
             println!(
                 "{}",
-                cformat!("  [<magenta,strong>LOG</magenta,strong>] {}", msg)
+                cformat!("  [<magenta,strong>LOG</magenta,strong>] {}", msg.into())
             )
         }
     }
@@ -169,20 +178,40 @@ impl Terminal {
         }
     }
 
-    fn make_progress(&self, len: u64, message: Option<String>) -> indicatif::ProgressBar {
+    /// Make a new progress bar
+    pub fn make_progress(
+        &self,
+        len: u64,
+        message: Option<impl Into<String>>,
+    ) -> indicatif::ProgressBar {
         let progress = indicatif::ProgressBar::new(len);
-        progress.enable_steady_tick(Duration::from_millis(120));
+        progress.enable_steady_tick(std::time::Duration::from_millis(120));
         progress.set_style(
-            ProgressStyle::with_template(
+            indicatif::ProgressStyle::with_template(
                 "{spinner:.blue} {msg} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos}/{len}",
             )
             .unwrap()
             .progress_chars("#>-")
             .tick_strings(&["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏", " "]),
         );
+        let message: Option<String> = message.map(|m| m.into());
         let message = message.unwrap_or("Processing".to_string());
         progress.set_message(message);
         progress
+    }
+
+    /// Make a new progress bar
+    ///
+    /// Similar to [`make_progress`] but returns an [`Arc`] of the
+    /// progress bar so it can be shared across threads without
+    /// recreating the progress bar again.
+    pub fn make_progress_arc(
+        &self,
+        len: u64,
+        message: Option<impl Into<String>>,
+    ) -> Arc<indicatif::ProgressBar> {
+        let progress = self.make_progress(len, message);
+        Arc::new(progress)
     }
 
     /// Do a progress bar

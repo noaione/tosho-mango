@@ -346,17 +346,8 @@ pub(crate) async fn mplus_download(
                 // create chapter dir
                 std::fs::create_dir_all(&image_dir).unwrap();
 
-                let progress = Arc::new(indicatif::ProgressBar::new(chapter_images.len() as u64));
-                progress.enable_steady_tick(std::time::Duration::from_millis(120));
-                progress.set_style(
-                    indicatif::ProgressStyle::with_template(
-                        "{spinner:.blue} {msg} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos}/{len}",
-                    )
-                    .unwrap()
-                    .progress_chars("#>-")
-                    .tick_strings(&["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏", " "]),
-                );
-                progress.set_message("Downloading");
+                let progress =
+                    console.make_progress_arc(chapter_images.len() as u64, Some("Downloading"));
 
                 if dl_config.parallel {
                     let tasks: Vec<_> = chapter_images

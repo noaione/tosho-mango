@@ -15,7 +15,7 @@ use crate::{
     cli::ExitCode,
     r#impl::{
         clean_filename,
-        common::{check_downloaded_image_count, create_progress_bar},
+        common::check_downloaded_image_count,
         models::{ChapterDetailDump, MangaDetailDump},
     },
     term::{ConsoleChoice, Terminal},
@@ -492,7 +492,7 @@ pub(crate) async fn rbean_download(
             _ => false,
         };
 
-        let progress = create_progress_bar(total_img_count);
+        let progress = console.make_progress_arc(total_img_count, Some("Downloading"));
 
         if dl_config.parallel {
             let tasks: Vec<_> = pages_data

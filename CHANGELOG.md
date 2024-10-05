@@ -18,6 +18,7 @@ This should give more consistent error handling across all sources.
 - All source: flush bytes stream on each loop iteration
 - `RB`: Possibly faster image decryption
 - Adjust exit code handling on CLI
+- Simplify progress bar handling
 
 ### Build
 - Update `tokio`, `serde-*`, `prost`, `reqwest`, and some other CLI related dependencies
