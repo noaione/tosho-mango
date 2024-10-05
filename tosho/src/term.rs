@@ -103,20 +103,14 @@ impl Terminal {
     pub fn choice(&self, prompt: &str, choices: Vec<ConsoleChoice>) -> Option<ConsoleChoice> {
         let choice = Select::new(prompt, choices).prompt_skippable();
 
-        match choice {
-            Ok(choice) => choice,
-            Err(_) => None,
-        }
+        choice.unwrap_or_default()
     }
 
     /// Do a multiple choice prompt
     pub fn select(&self, prompt: &str, choices: Vec<ConsoleChoice>) -> Option<Vec<ConsoleChoice>> {
         let choice = MultiSelect::new(prompt, choices).prompt_skippable();
 
-        match choice {
-            Ok(choice) => choice,
-            Err(_) => None,
-        }
+        choice.unwrap_or_default()
     }
 
     fn make_spinner(&self) -> indicatif::ProgressBar {

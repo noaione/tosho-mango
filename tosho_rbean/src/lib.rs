@@ -581,7 +581,7 @@ impl RBClient {
 
         // Step 4: Auth with 小豆
         let request = client
-            .get(&format!("{}/user/v0", &*BASE_API))
+            .get(format!("{}/user/v0", &*BASE_API))
             .headers({
                 let mut headers = reqwest::header::HeaderMap::new();
                 headers.insert(
@@ -647,7 +647,7 @@ pub struct RBLoginResponse {
 /// * `data` - The image data to decrypt
 pub fn decrypt_image(data: &[u8]) -> Vec<u8> {
     let mut internal: Vec<u8> = Vec::with_capacity(data.len());
-    internal.extend_from_slice(&data);
+    internal.extend_from_slice(data);
     internal.iter_mut().for_each(|v| *v ^= PATTERN[0]);
     internal
 }

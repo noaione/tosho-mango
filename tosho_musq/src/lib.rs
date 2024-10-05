@@ -168,11 +168,7 @@ impl MUClient {
                 }
 
                 let need = (need - paid as i64).max(0);
-                let mut paid_diff = chapter
-                    .price
-                    .saturating_sub(free)
-                    .saturating_sub(event)
-                    .max(0);
+                let mut paid_diff = chapter.price.saturating_sub(free).saturating_sub(event);
                 if need > 0 {
                     paid_diff = paid;
                 }
@@ -190,7 +186,7 @@ impl MUClient {
                 }
 
                 let need = (need - paid as i64).max(0);
-                let mut paid_diff = chapter.price.saturating_sub(event).max(0);
+                let mut paid_diff = chapter.price.saturating_sub(event);
                 if need > 0 {
                     paid_diff = paid;
                 }

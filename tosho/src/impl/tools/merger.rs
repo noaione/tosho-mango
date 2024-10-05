@@ -411,23 +411,14 @@ fn is_image(path: &PathBuf) -> bool {
 async fn read_manual_info_json(input_folder: &Path) -> MangaManualMergeDetail {
     let info_json = input_folder.join("_info_manual_merge.json");
 
-    if !info_json.exists() {
-        return MangaManualMergeDetail::default();
-    }
-
-    let info_json = match tokio::fs::read_to_string(info_json).await {
-        Ok(info_json) => info_json,
-        Err(_) => {
-            return MangaManualMergeDetail::default();
+    if info_json.exists() {
+        match tokio::fs::read_to_string(info_json).await {
+            Ok(info_json) => serde_json::from_str(&info_json).unwrap_or_default(),
+            Err(_) => MangaManualMergeDetail::default(),
         }
-    };
-
-    let info_json: MangaManualMergeDetail = match serde_json::from_str(&info_json) {
-        Ok(info_json) => info_json,
-        Err(_) => MangaManualMergeDetail::default(),
-    };
-
-    info_json
+    } else {
+        MangaManualMergeDetail::default()
+    }
 }
 
 pub(crate) async fn tools_split_merge(
