@@ -2,7 +2,6 @@
 
 use std::str::FromStr;
 
-use serde::{Deserialize, Serialize};
 use tosho_macros::{
     enum_error, DeserializeEnum, DeserializeEnum32, DeserializeEnum32Fallback, EnumName,
     EnumU32Fallback, SerializeEnum, SerializeEnum32,

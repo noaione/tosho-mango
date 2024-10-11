@@ -5,7 +5,6 @@
 //! Especially for [`MagazineCategory`] enum as it needs to be manually documented/updated.
 
 use documented::DocumentedFields;
-use serde::{Deserialize, Serialize};
 use tosho_macros::{
     DeserializeEnum32, DeserializeEnum32Fallback, EnumCount, EnumName, EnumU32Fallback,
     SerializeEnum32,

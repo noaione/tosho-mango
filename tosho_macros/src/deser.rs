@@ -67,7 +67,7 @@ pub(crate) fn impl_serenum32_derive(ast: &syn::DeriveInput) -> TokenStream {
     }
 
     let tokens = quote::quote! {
-        impl Serialize for #name {
+        impl serde::Serialize for #name {
             fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
             where
                 S: serde::Serializer,
@@ -119,7 +119,7 @@ pub(crate) fn impl_deserenum32_derive(ast: &syn::DeriveInput, with_default: bool
     }
 
     let tokens = quote::quote! {
-        impl<'de> Deserialize<'de> for #name {
+        impl<'de> serde::Deserialize<'de> for #name {
             fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
             where
                 D: serde::Deserializer<'de>,
