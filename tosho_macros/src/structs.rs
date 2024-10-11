@@ -110,13 +110,12 @@ pub(crate) fn impl_autogetter(ast: &syn::DeriveInput) -> TokenStream {
     for field in fields.named.iter() {
         let field_name = field.ident.as_ref().unwrap();
         let field_ty = &field.ty;
-        let field_ty_name = field_ty.clone().into_token_stream().to_string();
 
         if field_has_ident(field, "skip_field") {
             continue;
         }
 
-        let field = if field_ty_name.starts_with("Option") {
+        let field = if has_inner_type_with_x(field_ty, "Option") {
             expand_option_field(field, field_name, attrs_config)
         } else {
             expand_regular_field(field, field_name, attrs_config)
@@ -280,6 +279,23 @@ fn get_inner_type_of_option(ty: &syn::Type) -> Option<&syn::Type> {
 
 fn get_inner_type_of_vec(ty: &syn::Type) -> Option<&syn::Type> {
     get_inner_type_of_x(ty, "Vec")
+}
+
+fn has_inner_type_with_x(ty: &syn::Type, x: &str) -> bool {
+    if let syn::Type::Path(type_path) = ty {
+        // Check if it's a path type, and the first segment of the path is "x"
+        for segment in &type_path.path.segments {
+            // If we found "x", ensure that the argument is "AngleBracketed"
+            if segment.ident == x {
+                if let syn::PathArguments::AngleBracketed(angle_bracketed) = &segment.arguments {
+                    if let Some(syn::GenericArgument::Type(_)) = angle_bracketed.args.first() {
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+    false
 }
 
 fn field_has_ident(field: &syn::Field, ident: &str) -> bool {
