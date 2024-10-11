@@ -223,16 +223,20 @@ pub fn enum_error(item: TokenStream) -> TokenStream {
 ///     #[copyable]
 ///     id: i64,
 ///     username: String,
+///     #[skip_field]
+///     pos: u32,
 /// }
 ///
 /// # fn main() {
-/// let data = Data { id: 1, username: "test".to_string() };
+/// let data = Data { id: 1, username: "test".to_string(), pos: 0 };
 ///
 /// assert_eq!(data.id(), 1);
 /// assert_eq!(data.username(), "test");
+/// // "pos" field doesn't have getter
+/// assert_eq!(data.pos, 0);
 /// # }
 /// ```
-#[proc_macro_derive(AutoGetter, attributes(auto_getters, copyable))]
+#[proc_macro_derive(AutoGetter, attributes(auto_getters, copyable, skip_field))]
 pub fn autogetter_derive(input: TokenStream) -> TokenStream {
     // Parse the input tokens into a syntax tree
     let input = syn::parse_macro_input!(input as syn::DeriveInput);

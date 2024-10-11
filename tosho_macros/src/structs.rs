@@ -6,6 +6,11 @@ use proc_macro::TokenStream;
 use quote::ToTokens;
 use syn::{punctuated::Punctuated, Attribute, Expr, Lit, Meta, Token};
 
+static KNOWN_COPYABLE_FIELD: &[&str; 16] = &[
+    "u8", "u16", "u32", "u64", "u128", "i8", "i16", "i32", "i64", "i128", "f32", "f64", "f128",
+    "bool", "char", "usize",
+];
+
 #[derive(Default, Clone, Copy)]
 struct AutoGetterAttr {
     unref: bool,
@@ -107,6 +112,10 @@ pub(crate) fn impl_autogetter(ast: &syn::DeriveInput) -> TokenStream {
         let field_ty = &field.ty;
         let field_ty_name = field_ty.clone().into_token_stream().to_string();
 
+        if field_has_ident(field, "skip_field") {
+            continue;
+        }
+
         let field = if field_ty_name.starts_with("Option") {
             expand_option_field(field, field_name, attrs_config)
         } else {
@@ -158,9 +167,9 @@ fn expand_option_field(
     } else {
         // Modify the field type to be a reference
         let main_type = get_inner_type_of_option(field_ty).unwrap();
-        let copyable = has_copyable_ident(field);
+        let is_copyable = field_has_ident(field, "copyable") || is_copy_able_field(main_type);
 
-        let get_field = if copyable || attrs_config.unref {
+        let get_field = if is_copyable || attrs_config.unref {
             quote::quote! {
                 #[doc = #doc_get]
                 pub fn #field_name(&self) -> Option<#main_type> {
@@ -213,9 +222,9 @@ fn expand_regular_field(
 
         getter
     } else {
-        let event_copy = has_copyable_ident(field);
+        let is_copyable = field_has_ident(field, "copyable") || is_copy_able_field(field_ty);
 
-        let get_field = if event_copy || attrs_config.unref {
+        let get_field = if is_copyable || attrs_config.unref {
             quote::quote! {
                 #[doc = #doc_get]
                 pub fn #field_name(&self) -> #field_ty {
@@ -249,11 +258,10 @@ fn expand_regular_field(
 fn get_inner_type_of_x<'a>(ty: &'a syn::Type, x: &'a str) -> Option<&'a syn::Type> {
     if let syn::Type::Path(type_path) = ty {
         // Check if it's a path type, and the first segment of the path is "x"
-        if let Some(segment) = type_path.path.segments.first() {
+        for segment in &type_path.path.segments {
+            // If we found "x", ensure that the argument is "AngleBracketed"
             if segment.ident == x {
-                // Check if the segment has generic arguments (i.e., x<T>)
                 if let syn::PathArguments::AngleBracketed(angle_bracketed) = &segment.arguments {
-                    // Get the first generic argument (T in x<T>)
                     if let Some(syn::GenericArgument::Type(inner_type)) =
                         angle_bracketed.args.first()
                     {
@@ -274,11 +282,13 @@ fn get_inner_type_of_vec(ty: &syn::Type) -> Option<&syn::Type> {
     get_inner_type_of_x(ty, "Vec")
 }
 
-fn has_copyable_ident(field: &syn::Field) -> bool {
-    field
-        .attrs
-        .iter()
-        .any(|attr| attr.path().is_ident("copyable"))
+fn field_has_ident(field: &syn::Field, ident: &str) -> bool {
+    field.attrs.iter().any(|attr| attr.path().is_ident(ident))
+}
+
+fn is_copy_able_field(ty: &syn::Type) -> bool {
+    let ty_str = ty.clone().into_token_stream().to_string();
+    KNOWN_COPYABLE_FIELD.contains(&ty_str.as_str())
 }
 
 /// Generate field comment
