@@ -129,8 +129,11 @@ pub(crate) fn impl_autogetter(ast: &syn::DeriveInput) -> TokenStream {
         getters.push(field);
     }
 
+    let generics = &ast.generics;
+    let (impl_gen, ty_gen, where_cl) = generics.split_for_impl();
+
     let expanded = quote::quote! {
-        impl #name {
+        impl #impl_gen #name #ty_gen #where_cl {
             #(#getters)*
         }
     };
