@@ -144,7 +144,7 @@ fn expand_option_field(
     inner_type: &syn::Type,
     attrs_config: AutoGetterAttr,
 ) -> proc_macro2::TokenStream {
-    let doc_get = make_field_comment(field_name, true);
+    let doc_get = make_field_comment(field, true);
 
     // If string, we can use as_deref
     if is_string_field(inner_type) {
@@ -207,8 +207,7 @@ fn expand_regular_field(
     attrs_config: AutoGetterAttr,
 ) -> proc_macro2::TokenStream {
     let field_ty = &field.ty;
-
-    let doc_get = make_field_comment(field_name, false);
+    let doc_get = make_field_comment(field, false);
 
     // If string, we can use as_deref
     if is_string_field(field_ty) {
@@ -329,12 +328,44 @@ fn is_string_field(ty: &syn::Type) -> bool {
     }
 }
 
-/// Generate field comment
+/// Generate or get field comment
 ///
 /// If `option_mode` use the "if it exists" comment
-fn make_field_comment(field: &syn::Ident, option_mode: bool) -> String {
-    let if_it_exists = if option_mode { " if it exists" } else { "" };
-    let doc_get = format!("Get the value of `{}`{}", field, if_it_exists);
+fn make_field_comment(field: &syn::Field, option_mode: bool) -> String {
+    // Check if field has doc-comment
+    let field_comment: Vec<String> = field
+        .attrs
+        .iter()
+        .filter_map(|attr| {
+            if attr.path().is_ident("doc") {
+                if let syn::Meta::NameValue(name_val) = &attr.meta {
+                    if let syn::Expr::Lit(doc_lit) = &name_val.value {
+                        if let syn::Lit::Str(doc_str) = &doc_lit.lit {
+                            let doc_val = doc_str.value();
 
-    doc_get
+                            let doc_val_fix = if doc_val.trim() == "" {
+                                "\n\n".to_string()
+                            } else {
+                                doc_val
+                            };
+
+                            return Some(doc_val_fix);
+                        }
+                    }
+                }
+            }
+            None
+        })
+        .collect();
+
+    let ident = field.ident.as_ref().unwrap();
+    let joined_cmt = field_comment.join("").trim().to_string();
+
+    if joined_cmt.is_empty() {
+        let if_it_exists = if option_mode { " if it exists" } else { "" };
+
+        format!("Get the value of `{}`{}", ident, if_it_exists)
+    } else {
+        joined_cmt
+    }
 }
