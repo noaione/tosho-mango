@@ -10,14 +10,14 @@ use proc_macro::TokenStream;
 
 mod deser;
 mod enums;
+mod structs;
 
 /// Derives [`serde::Serialize`](https://docs.rs/serde/latest/serde/trait.Serialize.html) for an enum using [`std::fmt::Display`]
 ///
 /// # Example
 /// ```
-/// use serde::Serialize;
-/// use tosho_macros::SerializeEnum;
-///
+/// # use tosho_macros::SerializeEnum;
+/// #
 /// #[derive(SerializeEnum)]
 /// enum TestEnum {
 ///     Create,
@@ -46,9 +46,8 @@ pub fn serializenum_derive(input: TokenStream) -> TokenStream {
 ///
 /// # Example
 /// ```
-/// use serde::Deserialize;
-/// use tosho_macros::DeserializeEnum;
-///
+/// # use tosho_macros::DeserializeEnum;
+/// #
 /// #[derive(DeserializeEnum, PartialEq, Eq, Debug)]
 /// enum TestEnum {
 ///     Create,
@@ -84,9 +83,8 @@ pub fn deserializeenum_derive(input: TokenStream) -> TokenStream {
 ///
 /// # Example
 /// ```
-/// use serde::Serialize;
-/// use tosho_macros::SerializeEnum32;
-///
+/// # use tosho_macros::SerializeEnum32;
+/// #
 /// #[derive(SerializeEnum32)]
 /// enum TestEnum {
 ///     Create = 0,
@@ -103,9 +101,8 @@ pub fn serializenum32_derive(input: TokenStream) -> TokenStream {
 ///
 /// # Example
 /// ```
-/// use serde::Deserialize;
-/// use tosho_macros::DeserializeEnum32;
-///
+/// # use tosho_macros::DeserializeEnum32;
+/// #
 /// #[derive(DeserializeEnum32)]
 /// enum TestEnum {
 ///     Create = 0,
@@ -122,9 +119,8 @@ pub fn deserializeenum32_derive(input: TokenStream) -> TokenStream {
 ///
 /// # Example
 /// ```
-/// use serde::Deserialize;
-/// use tosho_macros::DeserializeEnum32Fallback;
-///
+/// # use tosho_macros::DeserializeEnum32Fallback;
+/// #
 /// #[derive(DeserializeEnum32Fallback, Default)]
 /// enum TestEnum {
 ///     #[default]
@@ -143,8 +139,8 @@ pub fn deserializeenum32fallback_derive(input: TokenStream) -> TokenStream {
 ///
 /// # Example
 /// ```
-/// use tosho_macros::EnumName;
-///
+/// # use tosho_macros::EnumName;
+/// #
 /// #[derive(EnumName, Clone, Debug)]
 /// enum TestEnum {
 ///     Create,
@@ -164,8 +160,8 @@ pub fn enumname_derive(input: TokenStream) -> TokenStream {
 ///
 /// # Example
 /// ```
-/// use tosho_macros::EnumCount;
-///
+/// # use tosho_macros::EnumCount;
+/// #
 /// #[derive(EnumCount, Clone, Debug)]
 /// enum TestEnum {
 ///     Create,
@@ -212,4 +208,35 @@ pub fn enumu32fallback_derive(input: TokenStream) -> TokenStream {
 pub fn enum_error(item: TokenStream) -> TokenStream {
     let input = syn::parse_macro_input!(item as enums::EnumErrorMacroInput);
     enums::impl_enum_error(&input)
+}
+
+/// Derive the `AutoGetter` macro for a struct
+///
+/// Automatically expand each field into their own getter function for all private field.
+///
+/// # Examples
+/// ```rust
+/// # use tosho_macros::AutoGetter;
+/// #
+/// #[derive(AutoGetter)]
+/// pub struct Data {
+///     #[copyable]
+///     id: i64,
+///     username: String,
+/// }
+///
+/// # fn main() {
+/// let data = Data { id: 1, username: "test".to_string() };
+///
+/// assert_eq!(data.id(), 1);
+/// assert_eq!(data.username(), "test");
+/// # }
+/// ```
+#[proc_macro_derive(AutoGetter, attributes(auto_getters, copyable))]
+pub fn autogetter_derive(input: TokenStream) -> TokenStream {
+    // Parse the input tokens into a syntax tree
+    let input = syn::parse_macro_input!(input as syn::DeriveInput);
+
+    // Generate the implementation of the trait
+    structs::impl_autogetter(&input)
 }

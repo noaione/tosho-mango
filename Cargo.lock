@@ -2451,6 +2451,7 @@ dependencies = [
 name = "tosho-macros"
 version = "0.3.2"
 dependencies = [
+ "proc-macro2",
  "quote",
  "serde",
  "syn",
