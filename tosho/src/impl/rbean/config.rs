@@ -85,13 +85,13 @@ impl From<RBLoginResponse> for Config {
             RBPlatform::Web => DeviceType::Web,
         };
 
-        let username = value.user.username.unwrap_or("[no username]".to_string());
+        let username = value.user.username().unwrap_or("[no username]").to_string();
 
         Self {
             id,
             username,
-            user_id: value.user.uuid,
-            email: value.user.email,
+            user_id: value.user.uuid().to_string(),
+            email: value.user.email().to_string(),
             access_token: value.token,
             refresh_token: value.refresh_token,
             expiry: value.expiry,

@@ -30,56 +30,57 @@ pub(crate) async fn rbean_home_page(
             save_session_config(client, account);
             console.info(cformat!("Home page for <m,s>{}</>", account.id));
 
-            if let Some(hero_manga) = results.hero.manga {
-                let manga_url = format!("https://{}/series/{}", &*BASE_HOST, hero_manga.slug);
-                let linked_url = linkify!(manga_url, &hero_manga.title);
+            if let Some(hero_manga) = results.hero().manga() {
+                let manga_url = format!("https://{}/series/{}", &*BASE_HOST, hero_manga.slug());
+                let linked_url = linkify!(manga_url, hero_manga.title());
                 console.info(cformat!(">> <m,s>{}</> <<", linked_url));
                 console.info(&manga_url);
-                if !results.hero.title.is_empty() {
-                    console.info(cformat!("<m,s>{}</>", results.hero.title));
+                if !results.hero().title().is_empty() {
+                    console.info(cformat!("<m,s>{}</>", results.hero().title()));
                 }
-                if !results.hero.subtitle.is_empty() {
-                    console.info(cformat!(" <s>{}</>", results.hero.subtitle));
+                if !results.hero().subtitle().is_empty() {
+                    console.info(cformat!(" <s>{}</>", results.hero().subtitle()));
                 }
-                if !results.hero.alt_text.is_empty() {
-                    console.info(format!(" {}", results.hero.alt_text));
+                if !results.hero().alt_text().is_empty() {
+                    console.info(format!(" {}", results.hero().alt_text()));
                 }
 
                 println!();
             }
 
-            if !results.featured.is_empty() {
+            if !results.featured().is_empty() {
                 console.info(cformat!("<s>Featured manga:</>"));
             }
 
-            for featured in results.featured.iter() {
-                let manga_url = format!("https://{}/series/{}", &*BASE_HOST, featured.manga.slug);
-                let linked_url = linkify!(manga_url, &featured.manga.title);
+            for featured in results.featured().iter() {
+                let manga_url =
+                    format!("https://{}/series/{}", &*BASE_HOST, featured.manga().slug());
+                let linked_url = linkify!(manga_url, &featured.manga().title());
                 console.info(cformat!(
                     " <m,s>{}</>: <s>{}</>",
-                    featured.title,
+                    featured.title(),
                     linked_url
                 ));
-                console.info(format!("  {}", featured.description));
+                console.info(format!("  {}", featured.description()));
                 console.info(format!("   {}", manga_url));
             }
 
             loop {
                 let rank_choices = results
-                    .carousels
+                    .carousels()
                     .iter()
                     .map(|r| match r {
                         Carousel::ContinueReading(c) => ConsoleChoice {
-                            name: c.title.clone(),
-                            value: c.title.clone(),
+                            name: c.title().to_string(),
+                            value: c.title().to_string(),
                         },
                         Carousel::MangaList(c) => ConsoleChoice {
-                            name: c.title.clone(),
-                            value: c.title.clone(),
+                            name: c.title().to_string(),
+                            value: c.title().to_string(),
                         },
                         Carousel::MangaWithChapters(c) => ConsoleChoice {
-                            name: c.title.clone(),
-                            value: c.title.clone(),
+                            name: c.title().to_string(),
+                            value: c.title().to_string(),
                         },
                     })
                     .collect::<Vec<ConsoleChoice>>();
@@ -93,27 +94,27 @@ pub(crate) async fn rbean_home_page(
                     }
                     Some(select) => {
                         let ranking = results
-                            .carousels
+                            .carousels()
                             .iter()
                             .find(|&r| match r {
-                                Carousel::ContinueReading(c) => c.title == select.name,
-                                Carousel::MangaList(c) => c.title == select.name,
-                                Carousel::MangaWithChapters(c) => c.title == select.name,
+                                Carousel::ContinueReading(c) => c.title() == select.name,
+                                Carousel::MangaList(c) => c.title() == select.name,
+                                Carousel::MangaWithChapters(c) => c.title() == select.name,
                             })
                             .unwrap();
 
                         let title = match ranking {
-                            Carousel::ContinueReading(c) => c.title.clone(),
-                            Carousel::MangaList(c) => c.title.clone(),
-                            Carousel::MangaWithChapters(c) => c.title.clone(),
+                            Carousel::ContinueReading(c) => c.title().to_string(),
+                            Carousel::MangaList(c) => c.title().to_string(),
+                            Carousel::MangaWithChapters(c) => c.title().to_string(),
                         };
 
                         let manga_list: Vec<MangaNode> = match ranking {
                             Carousel::ContinueReading(c) => {
-                                c.items.iter().map(|i| i.manga.clone()).collect()
+                                c.items().iter().map(|i| i.manga().clone()).collect()
                             }
-                            Carousel::MangaList(c) => c.items.to_vec(),
-                            Carousel::MangaWithChapters(c) => c.items.to_vec(),
+                            Carousel::MangaList(c) => c.items().to_vec(),
+                            Carousel::MangaWithChapters(c) => c.items().to_vec(),
                         };
 
                         console.info(cformat!(

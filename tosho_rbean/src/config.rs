@@ -45,8 +45,8 @@ impl RBConfig {
     /// Convert [`SecureTokenResponse`] to [`RBConfig`].
     pub fn from_secure_token(value: &SecureTokenResponse, platform: RBPlatform) -> Self {
         RBConfig {
-            token: value.access_token.clone(),
-            refresh_token: value.refresh_token.clone(),
+            token: value.access_token().to_string(),
+            refresh_token: value.refresh_token().to_string(),
             platform,
         }
     }
@@ -57,8 +57,8 @@ impl RBConfig {
         platform: RBPlatform,
     ) -> Self {
         RBConfig {
-            token: value.id_token.clone(),
-            refresh_token: value.refresh_token.clone(),
+            token: value.id_token().to_string(),
+            refresh_token: value.refresh_token().to_string(),
             platform,
         }
     }

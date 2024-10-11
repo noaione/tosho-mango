@@ -3,134 +3,135 @@
 //! If something is missing, please [open an issue](https://github.com/noaione/tosho-mango/issues/new/choose) or a [pull request](https://github.com/noaione/tosho-mango/compare).
 
 use serde::{Deserialize, Serialize};
+use tosho_macros::AutoGetter;
 
 use super::Image;
 
 /// Creator or author of a manga.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
 pub struct Creator {
     /// The name of the creator.
-    pub name: String,
+    name: String,
     /// The UUID of the creator.
-    pub uuid: String,
+    uuid: String,
 }
 
 /// Publisher of a manga.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
 pub struct Publisher {
     /// The name of the publisher.
-    pub name: String,
+    name: String,
     /// The UUID of the publisher.
-    pub uuid: String,
+    uuid: String,
     /// The URL slug of the publisher.
-    pub slug: String,
+    slug: String,
 }
 
 /// A label of a manga with UUID.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
 pub struct Label {
     /// The name of the label.
     #[serde(rename = "label")]
-    pub name: String,
+    name: String,
     /// The UUID of the label.
-    pub uuid: String,
+    uuid: String,
 }
 
 /// A sort options filters for searching.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
 pub struct SortOptions {
     /// The sort type.
-    pub r#type: String,
+    r#type: String,
     /// The sort name.
-    pub name: String,
+    name: String,
 }
 
 /// Tags available for searching.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
 pub struct Tag {
     /// The name of the tag.
-    pub name: String,
+    name: String,
     /// The slug of the tag.
-    pub slug: String,
+    slug: String,
 }
 
 /// Genres available from [`crate::models::HomeResponse`].
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
 pub struct HomeGenre {
     /// The name of the genre.
-    pub name: String,
+    name: String,
     /// The tag of the genre.
-    pub tag: String,
+    tag: String,
 }
 
 /// A collection of manga filters.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
 pub struct MangaFilters {
     /// The sort options.
-    pub sort_options: Vec<SortOptions>,
+    sort_options: Vec<SortOptions>,
     /// The available tags.
-    pub tags: Vec<Tag>,
+    tags: Vec<Tag>,
     /// The available options that can be toggled.
-    pub bool_options: Vec<String>,
+    bool_options: Vec<String>,
     /// The available publishers that can be used.
-    pub publishers: Vec<Publisher>,
+    publishers: Vec<Publisher>,
 }
 
 /// A manga product.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
 pub struct Product {
     /// The UUID of the product.
-    pub uuid: String,
+    uuid: String,
     /// The type of the item
     #[serde(rename = "item_type")]
-    pub r#type: String,
+    r#type: String,
     /// The retail price of the product.
-    pub retail_price: String,
+    retail_price: String,
     /// The sale price of the product.
-    pub sale_price: String,
+    sale_price: String,
 }
 
 /// A chapter range.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize, PartialEq)]
 pub struct ChapterRange {
     /// The start of the chapter range.
-    pub start: String,
+    start: String,
     /// The end of the chapter range.
-    pub end: String,
+    end: String,
 }
 
 /// A chapter gap.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize, PartialEq)]
 pub struct ChapterGap {
     /// The range of the gap.
-    pub range: ChapterRange,
+    range: ChapterRange,
 }
 
 /// A chapter explainer, commonly used in separator.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Copy, AutoGetter, Serialize, Deserialize, PartialEq)]
 pub struct ChapterExplainer {
     #[serde(rename = "num_chapters")]
-    pub count: i32,
+    count: i32,
 }
 
 /// A separator for some common chapter explainer.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Copy, AutoGetter, Serialize, Deserialize, PartialEq)]
 pub struct SeparatorChapterExplainer {
     /// The index of the separator.
     #[serde(rename = "list_index")]
-    pub index: i32,
+    index: i32,
     /// The data of the separator.
-    pub data: ChapterExplainer,
+    data: ChapterExplainer,
 }
 
 /// A separator for chapter gap.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize, PartialEq)]
 pub struct SeparatorChapterGap {
     /// The index of the separator.
     #[serde(rename = "list_index")]
-    pub index: i32,
+    index: i32,
     /// The data of the separator.
-    pub data: ChapterGap,
+    data: ChapterGap,
 }
 
 /// A separator for chapters.
@@ -152,36 +153,36 @@ pub enum Separator {
 }
 
 /// A volume release product.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
 pub struct Volume {
     /// The UUID of the volume.
-    pub uuid: String,
+    uuid: String,
     /// The manga UUID of the volume.
     #[serde(rename = "manga_uuid")]
-    pub manga: String,
+    manga: String,
     /// The ISBN of the volume.
-    pub isbn: Option<String>,
+    isbn: Option<String>,
     /// The cover image of the volume.
     #[serde(rename = "image")]
-    pub cover: Image,
+    cover: Image,
     /// The title of the volume.
     #[serde(rename = "full_name")]
-    pub title: String,
+    title: String,
     /// The short title of the volume.
     #[serde(rename = "short_name")]
-    pub short_title: String,
+    short_title: String,
     /// The volume number of the volume.
     #[serde(rename = "label")]
-    pub volume: String,
+    volume: String,
     /// Is DRM free
     #[serde(rename = "is_drm_free")]
-    pub drm_free: bool,
+    drm_free: bool,
     /// The retail/product info of the volume.
     #[serde(rename = "product", default)]
-    pub retail: Option<Product>,
+    retail: Option<Product>,
     /// The order of the volume.
     #[serde(rename = "order_number")]
-    pub order: i32,
+    order: i32,
 }
 
 #[cfg(test)]

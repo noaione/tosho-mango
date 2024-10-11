@@ -135,12 +135,12 @@ pub(crate) async fn rbean_account_info(
                 account.id
             ));
 
-            console.info(cformat!("  <s>ID</>: {}", acc_info.uuid));
-            console.info(cformat!("  <s>Email</>: {}", acc_info.email));
-            let username = acc_info.username.unwrap_or("[no username]".to_string());
+            console.info(cformat!("  <s>ID</>: {}", acc_info.uuid()));
+            console.info(cformat!("  <s>Email</>: {}", acc_info.email()));
+            let username = acc_info.username().unwrap_or("[no username]");
             console.info(cformat!("  <s>Username</>: {}", username));
 
-            if let Some(date_at) = acc_info.premium_expiration_date {
+            if let Some(date_at) = acc_info.premium_expiration_date() {
                 console.info(cformat!("  <s>Premium until</>: {}", date_at));
             }
 

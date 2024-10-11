@@ -180,14 +180,14 @@ impl From<MangaChapterDetail> for ChapterDetailDump {
     }
 }
 
-impl From<Chapter> for ChapterDetailDump {
+impl From<&Chapter> for ChapterDetailDump {
     /// Convert from [`tosho_rbean::models::Chapter`] into [`ChapterDetailDump`]
     /// `_info.json` format.
-    fn from(value: Chapter) -> Self {
+    fn from(value: &Chapter) -> Self {
         Self {
-            id: value.uuid.clone().into(),
+            id: value.uuid().to_string().into(),
             main_name: value.formatted_title(),
-            timestamp: value.published.map(|d| d.timestamp()),
+            timestamp: value.published().map(|d| d.timestamp()),
             sub_name: None,
         }
     }

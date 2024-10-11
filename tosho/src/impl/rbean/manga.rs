@@ -82,17 +82,17 @@ pub(crate) async fn rbean_search(
         Ok(results) => {
             super::common::save_session_config(client, account);
 
-            if results.results.is_empty() {
+            if results.results().is_empty() {
                 console.warn("No results found!");
                 return 0;
             }
 
             console.info(cformat!(
                 "Search results (<magenta,bold>{}</> results):",
-                results.results.len()
+                results.results().len()
             ));
 
-            do_print_search_information(&results.results, false, None);
+            do_print_search_information(results.results(), false, None);
 
             0
         }
@@ -152,7 +152,7 @@ pub(crate) async fn rbean_title_info(
     if show_chapters {
         console.info(cformat!(
             "Fetching chapters for <magenta,bold>{}</>...",
-            result.title
+            result.title()
         ));
 
         let fetch_chapters = client.get_chapter_list(uuid).await;
@@ -166,23 +166,27 @@ pub(crate) async fn rbean_title_info(
         save_session_config(client, account);
     }
 
-    let manga_url = format!("https://{}/series/{}", &*BASE_HOST, result.slug);
-    let linked = linkify!(&manga_url, &result.title);
+    let manga_url = format!("https://{}/series/{}", &*BASE_HOST, result.slug());
+    let linked = linkify!(&manga_url, result.title());
 
     console.info(cformat!(
         "Title information for <magenta,bold>{}</>:",
         linked
     ));
 
-    let creators: Vec<String> = result.creators.iter().map(|c| c.name.clone()).collect();
+    let creators: Vec<String> = result
+        .creators()
+        .iter()
+        .map(|c| c.name().to_string())
+        .collect();
 
     console.info(cformat!("  <s>Authors</>: {}", format_named_vec(creators)));
     let genres: Vec<String> = result
-        .genres
+        .genres()
         .iter()
         .map(|g| {
-            let genre_url = format!("https://{}/series?tags={}", &*BASE_HOST, g.slug);
-            linkify!(&genre_url, &g.name)
+            let genre_url = format!("https://{}/series?tags={}", &*BASE_HOST, g.slug());
+            linkify!(&genre_url, g.name())
         })
         .collect();
     if !genres.is_empty() {
@@ -191,93 +195,94 @@ pub(crate) async fn rbean_title_info(
 
     let publish_url = format!(
         "https://{}/publishers/{}",
-        &*BASE_HOST, result.publisher.slug
+        &*BASE_HOST,
+        result.publisher().slug()
     );
-    let linked_pub = linkify!(&publish_url, &result.publisher.name);
+    let linked_pub = linkify!(&publish_url, result.publisher().name());
     console.info(cformat!("  <s>Publisher</>: {}", linked_pub));
 
-    if let Some(release_schedule) = &result.release_schedule {
+    if let Some(release_schedule) = result.release_schedule() {
         console.info(cformat!("  <s>Release schedule</>: {}", release_schedule));
     }
 
     console.info(cformat!("  <s>Summary</>"));
-    console.info(format!("   {}", result.description));
+    console.info(format!("   {}", result.description()));
 
     println!();
 
-    console.info(cformat!("  <s>Chapters</>: {} chapters", result.chapters));
+    console.info(cformat!("  <s>Chapters</>: {} chapters", result.chapters()));
 
     if let Some(chapter_meta) = chapter_meta {
         let mut index_to_separator = HashMap::new();
-        for separator in chapter_meta.separators.iter() {
+        for separator in chapter_meta.separators().iter() {
             match separator {
                 Separator::AlaCarteNotice(purchase) => {
-                    index_to_separator.insert(purchase.index, separator.clone());
+                    index_to_separator.insert(purchase.index(), separator.clone());
                 }
                 Separator::ChapterGap(volume) => {
-                    index_to_separator.insert(volume.index, separator.clone());
+                    index_to_separator.insert(volume.index(), separator.clone());
                 }
                 Separator::PremiumNotice(volume) => {
-                    index_to_separator.insert(volume.index, separator.clone());
+                    index_to_separator.insert(volume.index(), separator.clone());
                 }
                 _ => {}
             }
         }
 
-        let mut ignored_uuid = vec![];
-        for (idx, chapter) in chapter_meta.chapters.iter().enumerate() {
+        let mut ignored_uuid: Vec<&str> = vec![];
+        for (idx, chapter) in chapter_meta.chapters().iter().enumerate() {
             let separator = index_to_separator.remove(&(idx as i32));
             if let Some(ref separator) = separator {
                 match &separator {
                     Separator::PremiumNotice(sep) => {
                         console.info(cformat!(
                             "    <m>Unlock the first {} chapters by <s>upgrading to Premium</></>",
-                            sep.data.count
+                            sep.data().count()
                         ));
                     }
                     Separator::ChapterGap(sep) => {
                         console.info(cformat!(
                             "    <b>Chapters <s>{}-{}</> is currently on backlog!</>",
-                            sep.data.range.start,
-                            sep.data.range.end
+                            sep.data().range().start(),
+                            sep.data().range().end()
                         ));
                     }
                     _ => {}
                 }
             }
 
-            if ignored_uuid.contains(&chapter.uuid) {
+            if ignored_uuid.contains(&chapter.uuid()) {
                 continue;
             }
 
             let ch_title = chapter.formatted_title();
-            let ch_url = format!("{}/read/{}", manga_url, chapter.uuid);
+            let ch_url = format!("{}/read/{}", manga_url, chapter.uuid());
 
             let linked_ch = linkify!(&ch_url, &ch_title);
-            let mut banner_title = cformat!("    <s>{}</> ({})", linked_ch, chapter.uuid);
+            let mut banner_title = cformat!("    <s>{}</> ({})", linked_ch, chapter.uuid());
 
-            if !chapter.premium {
+            if !chapter.premium() {
                 banner_title.push_str(&cformat!(" <green,bold>[<rev>FREE</>]</>"));
             }
 
-            if chapter.new {
+            if chapter.new() {
                 banner_title.push_str(&cformat!(" <yellow,bold>[<rev>NEW</>]</>"));
             }
 
             if let Some(Separator::AlaCarteNotice(volume)) = separator {
-                let total_chapters_next = volume.data.count;
+                let total_chapters_next = volume.data().count();
                 let mut volume_chapters: HashMap<String, Vec<String>> = HashMap::new();
 
                 for ch in chapter_meta
-                    .chapters
+                    .chapters()
                     .iter()
                     .skip(idx + 1)
                     .take(total_chapters_next as usize)
                 {
                     // insert ch.volume_uuid -> [ch.chapter]
-                    let volume_uuid = ch.volume_uuid.clone().unwrap_or_else(|| "".to_string());
-                    let ch_num = ch.chapter.clone();
-                    ignored_uuid.push(ch.uuid.clone());
+                    let volume_uuid = ch.volume_uuid().unwrap_or("").to_string();
+                    let ch_num = ch.chapter().to_string();
+                    ignored_uuid.push(ch.uuid());
                     volume_chapters.entry(volume_uuid).or_default().push(ch_num);
                 }
 
@@ -287,14 +292,14 @@ pub(crate) async fn rbean_title_info(
 
                 // we have an ordering of volumes from chapter_meta.volume_order which is a Vec<String>
                 let mut sorted_volume_chapters = vec![];
-                for volume_uuid in chapter_meta.volume_order.iter() {
+                for volume_uuid in chapter_meta.volume_order().iter() {
                     if let Some(chapters) = volume_chapters.get(volume_uuid) {
                         sorted_volume_chapters.push((volume_uuid, chapters.clone()));
                     }
                 }
 
                 for (volume_uuid, chapters) in sorted_volume_chapters {
-                    let volume = chapter_meta.volumes.get(volume_uuid);
+                    let volume = chapter_meta.volumes().get(volume_uuid);
 
                     if let Some(volume) = volume {
                         let first_last = format!(
@@ -304,15 +309,15 @@ pub(crate) async fn rbean_title_info(
                         );
 
                         let vol_url_link = format!("{}/volumes", manga_url);
-                        let vol_url_linked = linkify!(&vol_url_link, &volume.short_title);
+                        let vol_url_linked = linkify!(&vol_url_link, volume.short_title());
 
                         console.info(cformat!("     <s>{}</>: {}", vol_url_linked, first_last));
                     }
                 }
-            } else if chapter.upcoming {
+            } else if chapter.upcoming() {
                 let mut merged_string = ch_title.to_string();
 
-                if let Some(publish_at) = chapter.published {
+                if let Some(publish_at) = chapter.published() {
                     let publish_at = publish_at.format("%b %d, %Y").to_string();
                     merged_string.push_str(&cformat!(" <s>({})</>", publish_at));
                 }
@@ -320,7 +325,7 @@ pub(crate) async fn rbean_title_info(
                 console.info(cformat!("    <s,m>Upcoming</>: {}", merged_string));
             } else {
                 console.info(&banner_title);
-                if let Some(publish_at) = chapter.published {
+                if let Some(publish_at) = chapter.published() {
                     let publish_at = publish_at.format("%b %d, %Y").to_string();
                     console.info(cformat!("     <s>Published</>: {}", publish_at));
                 }
@@ -330,7 +335,7 @@ pub(crate) async fn rbean_title_info(
         println!();
     }
 
-    if let Some(credits) = &result.credits {
+    if let Some(credits) = result.credits() {
         let split_credits = credits.split('\n').collect::<Vec<&str>>();
         if split_credits.len() > 1 {
             console.info(cformat!("  <s>Credits</>:"));

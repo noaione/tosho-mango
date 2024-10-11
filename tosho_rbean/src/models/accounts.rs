@@ -3,107 +3,109 @@
 //! If something is missing, please [open an issue](https://github.com/noaione/tosho-mango/issues/new/choose) or a [pull request](https://github.com/noaione/tosho-mango/compare).
 
 use serde::{Deserialize, Serialize};
+use tosho_macros::AutoGetter;
 
 use super::{Image, Label, MangaNode};
 
 /// User account information
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
 pub struct UserAccount {
     /// The UUID of the user.
-    pub uuid: String,
+    uuid: String,
     /// The username or handle of the user.
     #[serde(rename = "handle")]
-    pub username: Option<String>,
+    username: Option<String>,
     /// The email address of the user.
     #[serde(rename = "email_address")]
-    pub email: String,
+    email: String,
     /// The image or avatar of the user.
-    pub image: Option<Image>,
+    image: Option<Image>,
     /// Does the account has premium?
-    pub is_premium: bool,
+    is_premium: bool,
     /// The date when the premium expires.
     ///
     /// If [`None`] then the account does not have premium.
-    pub premium_expiration_date: Option<String>,
+    premium_expiration_date: Option<String>,
 }
 
 /// User reading list history
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
 pub struct ReadingListItem {
     /// The manga being read.
-    pub manga: MangaNode,
+    manga: MangaNode,
     /// The specific chapter being read.
-    pub chapter: Option<Label>,
+    chapter: Option<Label>,
 }
 
 pub mod google {
     use serde::{Deserialize, Serialize};
+    use tosho_macros::AutoGetter;
 
     /// Object representing the response of the verification of user entered password.
-    #[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
     pub struct IdentityToolkitVerifyPasswordResponse {
-        pub kind: String,
+        kind: String,
         #[serde(rename = "localId")]
-        pub local_id: String,
-        pub email: String,
+        local_id: String,
+        email: String,
         #[serde(rename = "displayName")]
-        pub display_name: String,
+        display_name: String,
         #[serde(rename = "idToken")]
-        pub id_token: String,
+        id_token: String,
         #[serde(rename = "registered")]
-        pub registered: bool,
+        registered: bool,
         #[serde(rename = "refreshToken")]
-        pub refresh_token: String,
+        refresh_token: String,
         #[serde(rename = "expiresIn")]
-        pub expires_in: String,
+        expires_in: String,
     }
 
     /// Object of each provider's information.
-    #[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
     pub struct IdentityToolkitAccountProviderInfo {
         #[serde(rename = "providerId")]
-        pub provider_id: String,
+        provider_id: String,
         #[serde(rename = "federatedId")]
-        pub federated_id: String,
-        pub email: String,
+        federated_id: String,
+        email: String,
     }
 
     /// Object of each user's information from single token.
-    #[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
     pub struct IdentityToolkitAccountInfo {
         #[serde(rename = "localId")]
-        pub local_id: String,
-        pub email: String,
+        local_id: String,
+        email: String,
         #[serde(rename = "passwordHash")]
-        pub password_hash: String,
+        password_hash: String,
         #[serde(rename = "emailVerified")]
-        pub email_verified: bool,
+        email_verified: bool,
         #[serde(rename = "validSince")]
-        pub valid_since: String,
+        valid_since: String,
         #[serde(rename = "lastLoginAt")]
-        pub last_login_at: String,
+        last_login_at: String,
         #[serde(rename = "createdAt")]
-        pub created_at: String,
+        created_at: String,
         #[serde(rename = "providerUserInfo")]
-        pub provider_user_info: Vec<IdentityToolkitAccountProviderInfo>,
+        provider_user_info: Vec<IdentityToolkitAccountProviderInfo>,
     }
 
     /// Object representing the response of the registered user's information.
-    #[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
     pub struct IdentityToolkitAccountInfoResponse {
-        pub kind: String,
-        pub users: Vec<IdentityToolkitAccountInfo>,
+        kind: String,
+        users: Vec<IdentityToolkitAccountInfo>,
     }
 
     /// Object representing the response of the token exchange.
-    #[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
     pub struct SecureTokenResponse {
-        pub access_token: String,
-        pub expires_in: String,
-        pub token_type: String,
-        pub refresh_token: String,
-        pub id_token: String,
-        pub user_id: String,
-        pub project_id: String,
+        access_token: String,
+        expires_in: String,
+        token_type: String,
+        refresh_token: String,
+        id_token: String,
+        user_id: String,
+        project_id: String,
     }
 }
