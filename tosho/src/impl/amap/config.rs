@@ -72,7 +72,7 @@ impl Config {
     /// Apply the account info response to the new config.
     pub fn with_account_info(self, info: &AccountUserInfo) -> Self {
         Self {
-            user_id: info.id,
+            user_id: info.id(),
             ..self
         }
     }

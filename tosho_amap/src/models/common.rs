@@ -4,34 +4,35 @@
 
 use serde::{Deserialize, Serialize};
 use tosho_common::FailableResponse;
+use tosho_macros::AutoGetter;
 
 use super::AMAPIError;
 
 /// The header of each request result.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize, PartialEq)]
 pub struct ResultHeader {
     /// The result of the request.
-    pub result: bool,
+    result: bool,
     /// Error message.
-    pub message: Option<String>,
+    message: Option<String>,
 }
 
 /// The body which contains error message.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
 pub struct ErrorBody {
     #[serde(rename = "error_code")]
-    pub code: i32,
+    code: i32,
     #[serde(rename = "error_message_list")]
-    pub messages: Vec<String>,
+    messages: Vec<String>,
 }
 
 /// Wrapper for [`ResultHeader`]
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
 pub struct StatusResult {
     /// The result of the request.
-    pub header: ResultHeader,
+    header: ResultHeader,
     #[serde(default)]
-    pub body: Option<serde_json::Value>,
+    body: Option<serde_json::Value>,
 }
 
 impl FailableResponse for StatusResult {
@@ -47,32 +48,6 @@ impl FailableResponse for StatusResult {
     }
 
     /// Raise/return an error if the response code is not 0.
-    ///
-    /// # Examples
-    /// ```
-    /// use tosho_common::FailableResponse;
-    /// use tosho_amap::models::{ResultHeader, StatusResult};
-    ///
-    /// let response = StatusResult {
-    ///     header: ResultHeader {
-    ///         result: true,
-    ///         message: None,
-    ///     },
-    ///     body: None,
-    /// };
-    ///
-    /// assert!(response.raise_for_status().is_ok());
-    ///
-    /// let response = StatusResult {
-    ///     header: ResultHeader {
-    ///         result: false,
-    ///         message: Some("An error occurred".to_string()),
-    ///     },
-    ///     body: None,
-    /// };
-    ///
-    /// assert!(response.raise_for_status().is_err());
-    /// ```
     fn raise_for_status(&self) -> Result<(), tosho_common::ToshoError> {
         if !self.header.result {
             let message = self
@@ -89,29 +64,29 @@ impl FailableResponse for StatusResult {
 }
 
 /// The result of the request.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
 pub struct AMResult<R> {
     /// The result of the request.
-    pub header: ResultHeader,
+    header: ResultHeader,
     /// The content of the request.
     #[serde(bound(
         deserialize = "R: Deserialize<'de>, R: Clone",
         serialize = "R: Serialize, R: Clone"
     ))]
-    pub body: Option<R>,
+    body: Option<R>,
 }
 
 /// The result of the request.
 ///
 /// Wrapper for [`AMResult`]
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
 pub struct APIResult<R> {
     /// The content of the request.
     #[serde(bound(
         deserialize = "R: Deserialize<'de>, R: Clone",
         serialize = "R: Serialize, R: Clone"
     ))]
-    pub result: AMResult<R>,
+    result: AMResult<R>,
 }
 
 #[cfg(test)]

@@ -90,8 +90,8 @@ pub(super) async fn common_purchase_select(
 
             let balance = &result.account;
             let total_ticket = balance.sum().to_formatted_string(&Locale::en);
-            let purchased = balance.purchased.to_formatted_string(&Locale::en);
-            let premium = balance.premium.to_formatted_string(&Locale::en);
+            let purchased = balance.purchased().to_formatted_string(&Locale::en);
+            let premium = balance.premium().to_formatted_string(&Locale::en);
             let total_point = balance.sum_point().to_formatted_string(&Locale::en);
 
             console.info("Your current point balance:");

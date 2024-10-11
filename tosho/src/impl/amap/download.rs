@@ -129,11 +129,11 @@ pub(crate) async fn amap_download(
             let mut ticket_purse = coin_purse.clone();
 
             if dl_config.no_premium {
-                ticket_purse.premium = 0;
+                ticket_purse.set_premium(0);
             }
 
             if dl_config.no_purchased {
-                ticket_purse.purchased = 0;
+                ticket_purse.set_purchased(0);
             }
 
             console.info(format!("Downloading {} chapters...", results.len()));
@@ -202,9 +202,9 @@ pub(crate) async fn amap_download(
                                 ));
                             } else {
                                 download_chapters.push(chapter);
-                                ticket_purse.bonus -= consume.bonus;
-                                ticket_purse.purchased -= consume.purchased;
-                                ticket_purse.premium -= consume.premium;
+                                ticket_purse.subtract_bonus(consume.bonus);
+                                ticket_purse.subtract_premium(consume.purchased);
+                                ticket_purse.subtract_premium(consume.premium);
                                 super::common::save_session_config(client, account);
                             }
                         }

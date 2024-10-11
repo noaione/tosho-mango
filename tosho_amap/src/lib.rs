@@ -177,7 +177,11 @@ impl AMClient {
             )
             .await?;
 
-        results.result.body.ok_or_else(ToshoParseError::empty)
+        results
+            .result()
+            .body()
+            .ok_or_else(ToshoParseError::empty)
+            .cloned()
     }
 
     /// Get a single comic information by ID.
@@ -204,7 +208,11 @@ impl AMClient {
             )
             .await?;
 
-        results.result.body.ok_or_else(ToshoParseError::empty)
+        results
+            .result()
+            .body()
+            .ok_or_else(ToshoParseError::empty)
+            .cloned()
     }
 
     /// Get reader/viewer for an episode.
@@ -268,7 +276,11 @@ impl AMClient {
             )
             .await?;
 
-        results.result.body.ok_or_else(ToshoParseError::empty)
+        results
+            .result()
+            .body()
+            .ok_or_else(ToshoParseError::empty)
+            .cloned()
     }
 
     /// Get the account for the current session.
@@ -284,7 +296,11 @@ impl AMClient {
             )
             .await?;
 
-        results.result.body.ok_or_else(ToshoParseError::empty)
+        results
+            .result()
+            .body()
+            .ok_or_else(ToshoParseError::empty)
+            .cloned()
     }
 
     /// Get account favorites.
@@ -297,7 +313,11 @@ impl AMClient {
             )
             .await?;
 
-        results.result.body.ok_or_else(ToshoParseError::empty)
+        results
+            .result()
+            .body()
+            .ok_or_else(ToshoParseError::empty)
+            .cloned()
     }
 
     /// Search for comics.
@@ -352,7 +372,11 @@ impl AMClient {
             )
             .await?;
 
-        results.result.body.ok_or_else(ToshoParseError::empty)
+        results
+            .result()
+            .body()
+            .ok_or_else(ToshoParseError::empty)
+            .cloned()
     }
 
     /// Get home discovery.
@@ -361,7 +385,11 @@ impl AMClient {
             .request::<ComicDiscovery>(reqwest::Method::POST, "/manga/discover.json", None)
             .await?;
 
-        results.result.body.ok_or_else(ToshoParseError::empty)
+        results
+            .result()
+            .body()
+            .ok_or_else(ToshoParseError::empty)
+            .cloned()
     }
 
     /// Stream download the image from the given URL.
@@ -465,7 +493,7 @@ impl AMClient {
         let results =
             parse_json_response_failable::<APIResult<models::IAPRemainder>, BasicWrapStatus>(req)
                 .await?;
-        let result = results.clone().result.body.ok_or_else(|| {
+        let result = results.result().body().ok_or_else(|| {
             make_error!(
                 "Failed to get remainder, got empty response: {:#?}",
                 results
@@ -490,7 +518,7 @@ impl AMClient {
 
         let temp_config = AMConfig {
             token: secret_token.clone(),
-            identifier: result.info.guest_id,
+            identifier: result.info().guest_id().to_string(),
             session_v2: "".to_string(),
         };
 
@@ -505,10 +533,10 @@ impl AMClient {
             .await?;
 
         let results = parse_json_response::<APIResult<models::LoginResult>>(req).await?;
-        let result =
-            results.clone().result.body.ok_or_else(|| {
-                ToshoAuthError::InvalidCredentials("Got empty response".to_string())
-            })?;
+        let result = results
+            .result()
+            .body()
+            .ok_or_else(|| ToshoAuthError::InvalidCredentials("Got empty response".to_string()))?;
 
         // final step: get session_v2
         let mut json_body_session = HashMap::new();
@@ -525,7 +553,7 @@ impl AMClient {
 
         let temp_config = AMConfig {
             token: secret_token.clone(),
-            identifier: result.info.guest_id.clone(),
+            identifier: result.info().guest_id().to_string(),
             session_v2: "".to_string(),
         };
 
@@ -559,7 +587,7 @@ impl AMClient {
 
         Ok(AMConfig {
             token: secret_token,
-            identifier: result.info.guest_id,
+            identifier: result.info().guest_id().to_string(),
             session_v2,
         })
     }

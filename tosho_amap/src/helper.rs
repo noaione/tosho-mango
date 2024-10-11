@@ -37,10 +37,10 @@ impl ComicPurchase {
 
         let price = episode.price;
 
-        let bonus = account.bonus;
-        let purchased = account.purchased;
-        let premium = account.premium;
-        let point = account.point;
+        let bonus = account.bonus();
+        let purchased = account.purchased();
+        let premium = account.premium();
+        let point = account.point();
 
         let is_free_daily = episode.is_free_daily;
 

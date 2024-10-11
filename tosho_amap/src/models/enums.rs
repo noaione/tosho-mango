@@ -5,7 +5,7 @@
 use tosho_macros::{DeserializeEnum32, EnumName, SerializeEnum32};
 
 /// A status of a comic.
-#[derive(Debug, Clone, SerializeEnum32, DeserializeEnum32, PartialEq, EnumName)]
+#[derive(Debug, Clone, Copy, SerializeEnum32, DeserializeEnum32, PartialEq, EnumName)]
 pub enum ComicStatus {
     /// The comic is completed.
     Complete = 1,
