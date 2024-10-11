@@ -62,31 +62,6 @@ pub struct Chapter {
 
 impl Chapter {
     /// Whether or not this chapter is free.
-    ///
-    /// # Examples
-    /// ```
-    /// use tosho_musq::proto::Chapter;
-    ///
-    /// let mut chapter = Chapter {
-    ///     id: 1,
-    ///     title: "Test".to_string(),
-    ///     subtitle: Some("Subtitle".to_string()),
-    ///     thumbnail_url: "https://example.com".to_string(),
-    ///     consumption: 1,
-    ///     price: 0,
-    ///     end_of_rental_period: Some(0),
-    ///     comments: Some(0),
-    ///     published_at: Some("2021-01-01T00:00:00Z".to_string()),
-    ///     badge: 0,
-    ///     first_page_url: "https://example.com".to_string(),
-    /// };
-    ///
-    /// assert!(chapter.is_free());
-    ///
-    /// chapter.price = 10;
-    ///
-    /// assert!(!chapter.is_free());
-    /// ```
     pub fn is_free(&self) -> bool {
         self.price == 0
     }
@@ -94,31 +69,6 @@ impl Chapter {
     /// Format the chapter title and subtitle into a single string.
     ///
     /// If the subtitle is [`None`], the title will be returned as is.
-    ///
-    /// # Examples
-    /// ```
-    /// use tosho_musq::proto::Chapter;
-    ///
-    /// let mut chapter = Chapter {
-    ///     id: 1,
-    ///     title: "Test".to_string(),
-    ///     subtitle: Some("Subtitle".to_string()),
-    ///     thumbnail_url: "https://example.com".to_string(),
-    ///     consumption: 1,
-    ///     price: 0,
-    ///     end_of_rental_period: Some(0),
-    ///     comments: Some(0),
-    ///     published_at: Some("2021-01-01T00:00:00Z".to_string()),
-    ///     badge: 0,
-    ///     first_page_url: "https://example.com".to_string(),
-    /// };
-    ///
-    /// assert_eq!(chapter.as_chapter_title(), "Test — Subtitle");
-    ///
-    /// chapter.subtitle = None;
-    ///
-    /// assert_eq!(chapter.as_chapter_title(), "Test");
-    /// ```
     pub fn as_chapter_title(&self) -> String {
         let base_title = self.title.clone();
         if let Some(subtitle) = self.subtitle.clone() {
@@ -197,34 +147,6 @@ pub struct ChapterV2 {
 
 impl ChapterV2 {
     /// Whether or not this chapter is free.
-    ///
-    /// # Examples
-    /// ```
-    /// use tosho_musq::proto::ChapterV2;
-    ///
-    /// let mut chapter = ChapterV2 {
-    ///     id: 1,
-    ///     title: "Test".to_string(),
-    ///     subtitle: Some("Subtitle".to_string()),
-    ///     thumbnail_url: "https://example.com".to_string(),
-    ///     consumption: 1,
-    ///     price: 0,
-    ///     end_of_rental_period: Some(0),
-    ///     comments: Some(0),
-    ///     published_at: Some("2021-01-01T00:00:00Z".to_string()),
-    ///     badge: 0,
-    ///     first_page_url: "https://example.com".to_string(),
-    ///     final_chapter: false,
-    ///     page_count: 2,
-    ///     read_count: 0,
-    /// };
-    ///
-    /// assert!(chapter.is_free());
-    ///
-    /// chapter.price = 10;
-    ///
-    /// assert!(!chapter.is_free());
-    /// ```
     pub fn is_free(&self) -> bool {
         self.price == 0
     }
@@ -232,34 +154,6 @@ impl ChapterV2 {
     /// Format the chapter title and subtitle into a single string.
     ///
     /// If the subtitle is [`None`], the title will be returned as is.
-    ///
-    /// # Examples
-    /// ```
-    /// use tosho_musq::proto::ChapterV2;
-    ///
-    /// let mut chapter = ChapterV2 {
-    ///     id: 1,
-    ///     title: "Test".to_string(),
-    ///     subtitle: Some("Subtitle".to_string()),
-    ///     thumbnail_url: "https://example.com".to_string(),
-    ///     consumption: 1,
-    ///     price: 0,
-    ///     end_of_rental_period: Some(0),
-    ///     comments: Some(0),
-    ///     published_at: Some("2021-01-01T00:00:00Z".to_string()),
-    ///     badge: 0,
-    ///     first_page_url: "https://example.com".to_string(),
-    ///     final_chapter: false,
-    ///     page_count: 2,
-    ///     read_count: 0,
-    /// };
-    ///
-    /// assert_eq!(chapter.as_chapter_title(), "Test — Subtitle");
-    ///
-    /// chapter.subtitle = None;
-    ///
-    /// assert_eq!(chapter.as_chapter_title(), "Test");
-    /// ```
     pub fn as_chapter_title(&self) -> String {
         let base_title = self.title.clone();
         if let Some(subtitle) = self.subtitle.clone() {
@@ -316,19 +210,8 @@ pub struct ChapterPage {
 impl ChapterPage {
     /// The file name of the image.
     ///
-    /// # Examples
-    /// ```
-    /// use tosho_musq::proto::ChapterPage;
-    ///
-    /// let page = ChapterPage {
-    ///     url: "/path/to/image.avif".to_string(),
-    ///     video_url: None,
-    ///     intent_url: None,
-    ///     extra_id: None,
-    /// };
-    ///
-    /// assert_eq!(page.file_name(), "image.avif");
-    /// ```
+    /// When you have the URL of `/path/to/image.avif`, the filename
+    /// would become `image.avif` including the extension.
     pub fn file_name(&self) -> String {
         let url = self.url.clone();
         // split at the last slash
@@ -340,19 +223,9 @@ impl ChapterPage {
 
     /// The file extension of the image.
     ///
-    /// # Examples
-    /// ```
-    /// use tosho_musq::proto::ChapterPage;
-    ///
-    /// let page = ChapterPage {
-    ///     url: "/path/to/image.avif".to_string(),
-    ///     video_url: None,
-    ///     intent_url: None,
-    ///     extra_id: None,
-    /// };
-    ///
-    /// assert_eq!(page.extension(), "avif");
-    /// ```
+    /// When you have the URL of `/path/to/image.avif`,
+    /// the extension would become `avif`, when there
+    /// is no extension it would return an empty string.
     pub fn extension(&self) -> String {
         let file_name = self.file_name();
         // split at the last dot
@@ -367,19 +240,8 @@ impl ChapterPage {
 
     /// The file stem of the image.
     ///
-    /// # Examples
-    /// ```
-    /// use tosho_musq::proto::ChapterPage;
-    ///
-    /// let page = ChapterPage {
-    ///     url: "/path/to/image.avif".to_string(),
-    ///     video_url: None,
-    ///     intent_url: None,
-    ///     extra_id: None,
-    /// };
-    ///
-    /// assert_eq!(page.file_stem(), "image");
-    /// ```
+    /// When you have the URL of `/path/to/image.avif`,
+    /// the file stem would become `image`.
     pub fn file_stem(&self) -> String {
         let file_name = self.file_name();
         // split at the last dot

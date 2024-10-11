@@ -31,11 +31,10 @@ impl UserPoint {
     /// ```
     /// # use tosho_musq::proto::UserPoint;
     /// #
-    /// let points = UserPoint {
-    ///    free: 100,
-    ///    event: 200,
-    ///    paid: 300,
-    /// };
+    /// let mut points = UserPoint::default();
+    /// points.add_free(100);
+    /// points.add_event(200);
+    /// points.add_paid(300);
     ///
     /// assert_eq!(points.sum(), 600);
     /// ```

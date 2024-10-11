@@ -54,7 +54,8 @@ fn get_autogetter_attr(attrs: Vec<Attribute>) -> Result<AutoGetterAttr, syn::Err
 /// The main function to expand the `AutoGetter` derive macro
 ///
 /// # Examples
-/// ```
+/// ```rust
+/// # use tosho_macros::AutoGetter;
 /// #[derive(AutoGetter)]
 /// pub struct Model {
 ///     id: String,
@@ -65,7 +66,11 @@ fn get_autogetter_attr(attrs: Vec<Attribute>) -> Result<AutoGetterAttr, syn::Err
 /// Will generate
 ///
 /// ```rust
-/// impl AutoGetter {
+/// # struct Model {
+/// #     id: String,
+/// #     username: String,
+/// # }
+/// impl Model {
 ///     pub fn id(&self) -> &str {
 ///        &self.id
 ///     }

@@ -134,11 +134,11 @@ impl MUClient {
     /// #[tokio::main]
     /// async fn main() {
     ///     let client = MUClient::new("1234", tosho_musq::constants::get_constants(1)).unwrap();
-    ///    
+    ///
     ///     let user_point = client.get_user_point().await.unwrap();
     ///     let manga = client.get_manga(240).await.unwrap();
-    ///     let first_ch = &manga.chapters[0];
-    ///    
+    ///     let first_ch = &manga.chapters()[0];
+    ///
     ///     let coins = client.calculate_coin(&user_point, first_ch);
     ///     assert!(coins.is_possible());
     /// }
