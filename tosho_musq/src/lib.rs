@@ -44,7 +44,7 @@ impl MUClient {
     /// # Parameters
     /// * `secret` - The secret key to use for the client.
     /// * `constants` - The constants to use for the client.
-    pub fn new(secret: &str, constants: &'static Constants) -> ToshoResult<Self> {
+    pub fn new(secret: impl Into<String>, constants: &'static Constants) -> ToshoResult<Self> {
         Self::make_client(secret, constants, None)
     }
 
@@ -59,7 +59,7 @@ impl MUClient {
     }
 
     fn make_client(
-        secret: &str,
+        secret: impl Into<String>,
         constants: &'static Constants,
         proxy: Option<reqwest::Proxy>,
     ) -> ToshoResult<Self> {
@@ -87,7 +87,7 @@ impl MUClient {
 
         Ok(Self {
             inner: client,
-            secret: secret.to_string(),
+            secret: secret.into(),
             constants,
         })
     }
@@ -322,9 +322,9 @@ impl MUClient {
     ///
     /// # Parameters
     /// * `query` - The query to search for.
-    pub async fn search(&self, query: &str) -> ToshoResult<MangaResults> {
+    pub async fn search(&self, query: impl Into<String>) -> ToshoResult<MangaResults> {
         let mut params: HashMap<String, String> = HashMap::new();
-        params.insert("word".to_string(), query.to_string());
+        params.insert("word".to_string(), query.into());
 
         self.build_params(&mut params);
 
