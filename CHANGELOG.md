@@ -25,6 +25,7 @@ This should give more consistent error handling across all sources.
 - Remove `anyhow` as direct dependency for library crates
 - Remove `time` as dependency for `tosho-amap`
 - Replace `futures` with `futures-util` in `tosho`
+- Remove `rayon` feature from `image` since it's unused
 
 ### Docs
 - Use `README.md` on each source crate as the docs instead of duplicating the content in `lib.rs`

@@ -43,7 +43,7 @@ reqwest = { version = "0.12.8", features = ["rustls-tls", "socks", "stream"] }
 reqwest_cookie_store = "0.8.0"
 
 # Image
-image = { version = "0.25.2", default-features = false, features = ["jpeg", "png", "rayon"] }
+image = { version = "0.25.2", default-features = false, features = ["jpeg", "png"] }
 kamadak-exif = "0.5.5"
 
 # CI-PROFILE-MARK
