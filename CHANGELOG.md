@@ -9,6 +9,8 @@ This should give more consistent error handling across all sources.
 - `KM`: Replace all `From` instance that is failable into `TryFrom` instead.
 - All sources: Client initialization now returns `Result<Self, Error>` format instead of `Self`.
   - `Error` is the new error type that is used across all sources.
+- All sources: Make all fields private on models, you can now use getter function instead.
+  - Example: `data.name` now become `data.name()`
 
 ### Changes
 - `MU`: Proto changes for subscription in manga detail
@@ -17,6 +19,7 @@ This should give more consistent error handling across all sources.
 - `MU`, `KM`, and `AM`: Cleanup `precalculate` command output a bit more
 - All source: flush bytes stream on each loop iteration
 - `RB`: Possibly faster image decryption
+- All sources: Replace `String` or `&str` input on client with `impl Into<String>` instead
 - Adjust exit code handling on CLI
 - Simplify progress bar handling
 
