@@ -1,3 +1,5 @@
+//! A implementation collection of some ser/de stuff
+
 use proc_macro::TokenStream;
 
 pub(crate) fn impl_serenum_derive(ast: &syn::DeriveInput) -> TokenStream {
@@ -8,7 +10,7 @@ pub(crate) fn impl_serenum_derive(ast: &syn::DeriveInput) -> TokenStream {
     };
 
     let tokens = quote::quote! {
-        impl Serialize for #name {
+        impl serde::Serialize for #name {
             fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
             where
                 S: serde::Serializer,
@@ -28,7 +30,7 @@ pub(crate) fn impl_deserenum_derive(ast: &syn::DeriveInput) -> TokenStream {
     };
 
     let tokens = quote::quote! {
-        impl<'de> Deserialize<'de> for #name {
+        impl<'de> serde::Deserialize<'de> for #name {
             fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
             where
                 D: serde::Deserializer<'de>,

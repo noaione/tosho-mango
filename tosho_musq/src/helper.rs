@@ -13,7 +13,6 @@
 use std::str::FromStr;
 
 use chrono::Datelike;
-use serde::{Deserialize, Serialize};
 
 /// Weekly code for manga updates.
 ///

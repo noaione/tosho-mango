@@ -8,8 +8,6 @@
 
 use std::str::FromStr;
 
-use serde::{Deserialize, Serialize};
-
 /// The image quality to be downloaded.
 #[derive(
     Debug, Clone, Copy, PartialEq, tosho_macros::SerializeEnum, tosho_macros::DeserializeEnum,

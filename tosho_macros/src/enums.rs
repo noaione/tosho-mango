@@ -1,3 +1,5 @@
+//! A implementation collection of Enum related derive and expansion
+
 use proc_macro::TokenStream;
 
 pub(crate) fn impl_enumname_derive(ast: &syn::DeriveInput) -> TokenStream {
