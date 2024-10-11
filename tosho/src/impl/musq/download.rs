@@ -85,11 +85,15 @@ pub(crate) struct MUDownloadCliConfig {
 
 fn create_chapters_info(manga_detail: MangaDetailV2) -> MangaDetailDump {
     let mut chapters: Vec<ChapterDetailDump> = vec![];
-    for chapter in manga_detail.chapters {
+    for chapter in manga_detail.chapters() {
         chapters.push(ChapterDetailDump::from(chapter));
     }
 
-    MangaDetailDump::new(manga_detail.title, manga_detail.authors, chapters)
+    MangaDetailDump::new(
+        manga_detail.title().to_string(),
+        manga_detail.authors().to_string(),
+        chapters,
+    )
 }
 
 fn get_output_directory(
@@ -139,20 +143,20 @@ pub(crate) async fn musq_download(
                         match (dl_config.start_from, dl_config.end_at) {
                             (Some(start), Some(end)) => {
                                 // between start and end
-                                ch.id >= start && ch.id <= end
+                                ch.id() >= start && ch.id() <= end
                             }
                             (Some(start), None) => {
-                                ch.id >= start // start to end
+                                ch.id() >= start // start to end
                             }
                             (None, Some(end)) => {
-                                ch.id <= end // 0 to end
+                                ch.id() <= end // 0 to end
                             }
                             _ => true,
                         }
                     } else {
                         // allow if chapter_ids is empty or chapter id is in chapter_ids
                         dl_config.chapter_ids.is_empty()
-                            || dl_config.chapter_ids.contains(&(ch.id as usize))
+                            || dl_config.chapter_ids.contains(&(ch.id() as usize))
                     }
                 })
                 .collect();
@@ -164,10 +168,10 @@ pub(crate) async fn musq_download(
             let mut coin_purse = coin_purse;
 
             if dl_config.no_paid_point {
-                coin_purse.paid = 0;
+                coin_purse.set_paid(0);
             }
             if dl_config.no_xp_point {
-                coin_purse.event = 0;
+                coin_purse.set_event(0);
             }
 
             console.info(format!("Downloading {} chapters...", results.len()));
@@ -183,8 +187,8 @@ pub(crate) async fn musq_download(
                     if !dl_config.no_input {
                         console.warn(cformat!(
                             "  Chapter <m,s>{}</> (<s>{}</>) is not available for purchase, skipping",
-                            chapter.title,
-                            chapter.id
+                            chapter.title(),
+                            chapter.id()
                         ));
                         console.warn(format!(
                             "   Need {} free coin, {} XP coin, and {} paid coin",
@@ -201,8 +205,8 @@ pub(crate) async fn musq_download(
                 if !dl_config.auto_purchase && !dl_config.no_input {
                     let prompt = cformat!(
                         "Chapter <m,s>{}</> (<s>{}</>) need to be purchased for {:?}, continue?",
-                        chapter.title,
-                        chapter.id,
+                        chapter.title(),
+                        chapter.id(),
                         consume
                     );
                     should_purchase = console.confirm(Some(&prompt));
@@ -211,14 +215,14 @@ pub(crate) async fn musq_download(
                 if should_purchase {
                     console.info(cformat!(
                         "  Purchasing chapter <m,s>{}</> (<s>{}</>) with consumption <s>{:?}</>...",
-                        chapter.title,
-                        chapter.id,
+                        chapter.title(),
+                        chapter.id(),
                         consume
                     ));
 
                     let purchase_result = client
                         .get_chapter_images(
-                            chapter.id,
+                            chapter.id(),
                             dl_config.quality.clone().into(),
                             Some(consume.clone()),
                         )
@@ -229,22 +233,22 @@ pub(crate) async fn musq_download(
                             console.error(format!("   Failed to purchase chapter: {}", err));
                             console.error(cformat!(
                                 "    Skipping chapter <m,s>{}</> (<s>{}</>)",
-                                chapter.title,
-                                chapter.id
+                                chapter.title(),
+                                chapter.id()
                             ));
                         }
                         Ok(ch_view) => {
-                            if ch_view.blocks.is_empty() {
+                            if ch_view.blocks().is_empty() {
                                 console.warn(cformat!(
                                     "   Unable to purchase chapter <m,s>{}</> (<s>{}</>) since image block is empty, skipping",
-                                    chapter.title,
-                                    chapter.id
+                                    chapter.title(),
+                                    chapter.id()
                                 ));
                             } else {
                                 download_chapters.push(chapter);
-                                coin_purse.free -= consume.get_free();
-                                coin_purse.event -= consume.get_event();
-                                coin_purse.paid -= consume.get_paid();
+                                coin_purse.subtract_free(consume.get_free());
+                                coin_purse.subtract_event(consume.get_event());
+                                coin_purse.subtract_paid(consume.get_paid());
                             }
                         }
                     }
@@ -256,7 +260,7 @@ pub(crate) async fn musq_download(
                 return 1;
             }
 
-            download_chapters.sort_by(|&a, &b| a.id.cmp(&b.id));
+            download_chapters.sort_by(|&a, &b| a.id().cmp(&b.id()));
 
             let title_dir = get_output_directory(&output_dir, title_id, None, true);
             let dump_info = create_chapters_info(manga_detail);
@@ -270,50 +274,55 @@ pub(crate) async fn musq_download(
             for chapter in download_chapters {
                 console.info(cformat!(
                     "  Downloading chapter <m,s>{}</> ({})...",
-                    chapter.title,
-                    chapter.id
+                    chapter.title(),
+                    chapter.id()
                 ));
 
-                let image_blocks = match stored_blocks.iter().find(|&b| b.id == chapter.id) {
-                    Some(img_blocks) => img_blocks.images.clone(),
+                let image_blocks = match stored_blocks.iter().find(|&b| b.id() == chapter.id()) {
+                    Some(img_blocks) => img_blocks.images().to_vec(),
                     None => {
                         let ch_viewer = client
-                            .get_chapter_images(chapter.id, dl_config.quality.clone().into(), None)
+                            .get_chapter_images(
+                                chapter.id(),
+                                dl_config.quality.clone().into(),
+                                None,
+                            )
                             .await;
                         if let Err(err) = ch_viewer {
                             console.error(format!("Failed to download chapter: {}", err));
                             console.error(cformat!(
                                 "   Skipping chapter <m,s>{}</> (<s>{}</>)",
-                                chapter.title,
-                                chapter.id
+                                chapter.title(),
+                                chapter.id()
                             ));
                             continue;
                         }
 
                         let ch_images = ch_viewer.unwrap();
-                        if ch_images.blocks.is_empty() {
+                        if ch_images.blocks().is_empty() {
                             console.warn(cformat!(
                             "   Unable to download chapter <m,s>{}</> (<s>{}</>) since image block is empty, skipping",
-                            chapter.title,
-                            chapter.id
+                            chapter.title(),
+                            chapter.id()
                         ));
                             continue;
                         }
 
                         // push to stored blocks
-                        ch_images.blocks.iter().for_each(|block| {
+                        ch_images.blocks().iter().for_each(|block| {
                             stored_blocks.push(block.clone());
                         });
 
-                        let img_blocks = ch_images.blocks.iter().find(|&b| b.id == chapter.id);
+                        let img_blocks =
+                            ch_images.blocks().iter().find(|&b| b.id() == chapter.id());
 
                         match img_blocks {
-                            Some(img_blocks) => img_blocks.images.clone(),
+                            Some(img_blocks) => img_blocks.images().to_vec(),
                             None => {
                                 console.warn(cformat!(
                                     "   Unable to download chapter <m,s>{}</> (<s>{}</>) since we can't find this chapter blocks, skipping",
-                                    chapter.title,
-                                    chapter.id
+                                    chapter.title(),
+                                    chapter.id()
                                 ));
                                 continue;
                             }
@@ -325,26 +334,26 @@ pub(crate) async fn musq_download(
                     .iter()
                     .filter(|&x| {
                         // only allow url with /page/ or /page_high/ in it
-                        x.url.contains("/page/") || x.url.contains("/page_high/")
+                        x.url().contains("/page/") || x.url().contains("/page_high/")
                     })
                     .collect();
 
                 if image_blocks.is_empty() {
                     console.warn(cformat!(
                         "   Chapter <m,s>{}</> (<s>{}</>) has no images, skipping",
-                        chapter.title,
-                        chapter.id
+                        chapter.title(),
+                        chapter.id()
                     ));
                     continue;
                 }
 
-                let ch_dir = get_output_directory(&output_dir, title_id, Some(chapter.id), false);
+                let ch_dir = get_output_directory(&output_dir, title_id, Some(chapter.id()), false);
                 if let Some(count) = check_downloaded_image_count(&ch_dir, "avif") {
                     if count >= image_blocks.len() {
                         console.warn(cformat!(
                             "   Chapter <m,s>{}</> (<s>{}</>) has been downloaded, skipping",
-                            chapter.title,
-                            chapter.id
+                            chapter.title(),
+                            chapter.id()
                         ));
                         continue;
                     }
@@ -374,7 +383,7 @@ pub(crate) async fn musq_download(
                         console.progress(total_image_count, 1, Some("Downloading".to_string()));
                     }
 
-                    match client.stream_download(&image.url, writer).await {
+                    match client.stream_download(image.url(), writer).await {
                         Ok(_) => {}
                         Err(err) => {
                             console.error(format!("    Failed to download image: {}", err));

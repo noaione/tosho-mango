@@ -85,23 +85,23 @@ fn test_proto_chapter_view() {
 
             let result = ChapterViewer::decode(proto_bytes.as_slice()).unwrap();
             assert_eq!(result.status(), Status::Success);
-            let user_point = result.user_point.unwrap();
-            assert_eq!(user_point.free, 0);
-            assert_eq!(user_point.event, 0);
-            assert_eq!(user_point.paid, 480);
+            let user_point = result.user_point().unwrap_or_default();
+            assert_eq!(user_point.free(), 0);
+            assert_eq!(user_point.event(), 0);
+            assert_eq!(user_point.paid(), 480);
             assert_eq!(user_point.sum(), 480);
 
-            assert!(result.previous_chapter.is_none());
-            assert!(result.next_chapter.is_some());
-            assert_eq!(result.images.len(), 11);
+            assert!(result.previous_chapter().is_none());
+            assert!(result.next_chapter().is_some());
+            assert_eq!(result.images().len(), 11);
 
-            let image = result.images.first().unwrap();
+            let image = result.images().first().unwrap();
             assert_eq!(image.file_name(), "1.avif");
             assert_eq!(image.file_stem(), "1");
             assert_eq!(image.extension(), "avif");
 
-            let mut image2 = result.images.get(1).unwrap().clone();
-            image2.url = "/data/1/noextension".to_owned();
+            let mut image2 = result.images().get(1).unwrap().clone();
+            image2.set_url("/data/1/noextension");
             assert_eq!(image2.file_name(), "noextension");
             assert_eq!(image2.file_stem(), "noextension");
             assert_eq!(image2.extension(), "");
@@ -122,24 +122,24 @@ fn test_proto_chapter_viewv2() {
 
             let result = ChapterViewerV2::decode(proto_bytes.as_slice()).unwrap();
             assert_eq!(result.status(), Status::Success);
-            let user_point = result.user_point.unwrap();
-            assert_eq!(user_point.free, 40);
-            assert_eq!(user_point.event, 0);
-            assert_eq!(user_point.paid, 370);
+            let user_point = result.user_point().unwrap();
+            assert_eq!(user_point.free(), 40);
+            assert_eq!(user_point.event(), 0);
+            assert_eq!(user_point.paid(), 370);
             assert_eq!(user_point.sum(), 410);
 
-            assert_eq!(result.blocks.len(), 1);
-            assert!(result.next_chapter.is_some());
+            assert_eq!(result.blocks().len(), 1);
+            assert!(result.next_chapter().is_some());
 
-            let block = result.blocks.first().unwrap();
-            assert_eq!(block.title, "Chapter 10.1");
-            let image = block.images.first().unwrap();
+            let block = result.blocks().first().unwrap();
+            assert_eq!(block.title(), "Chapter 10.1");
+            let image = block.images().first().unwrap();
             assert_eq!(image.file_name(), "1.avif");
             assert_eq!(image.file_stem(), "1");
             assert_eq!(image.extension(), "avif");
 
-            let mut image2 = block.images.get(1).unwrap().clone();
-            image2.url = "/data/1/noextension".to_owned();
+            let mut image2 = block.images().get(1).unwrap().clone();
+            image2.set_url("/data/1/noextension");
             assert_eq!(image2.file_name(), "noextension");
             assert_eq!(image2.file_stem(), "noextension");
             assert_eq!(image2.extension(), "");
@@ -160,9 +160,9 @@ fn test_proto_coinhistory() {
 
             let result = PointHistoryView::decode(proto_bytes.as_slice()).unwrap();
             let user_point = result.user_point.unwrap();
-            assert_eq!(user_point.free, 0);
-            assert_eq!(user_point.event, 0);
-            assert_eq!(user_point.paid, 280);
+            assert_eq!(user_point.free(), 0);
+            assert_eq!(user_point.event(), 0);
+            assert_eq!(user_point.paid(), 280);
             assert_eq!(user_point.sum(), 280);
 
             assert!(!result.logs.is_empty());
@@ -182,19 +182,19 @@ fn test_proto_homev2() {
             let proto_bytes = hex_to_bytes(&proto_hex);
 
             let result = HomeViewV2::decode(proto_bytes.as_slice()).unwrap();
-            assert!(!result.top_banners.is_empty());
-            assert!(!result.top_sub_banners.is_empty());
-            assert!(result.tutorial_banner.is_none());
-            assert_eq!(result.updated_section_name, "Updates for you");
-            assert!(!result.updated_titles.is_empty());
-            assert_eq!(result.tags.len(), 8);
-            assert!(result.featured.is_some());
-            assert_eq!(result.new_section_name, "New Series");
-            assert!(!result.new_titles.is_empty());
-            assert_eq!(result.ranking_section_name, "Ranking");
-            assert_eq!(result.rankings.len(), 4);
-            assert_ne!(result.ranking_description, "");
-            assert_ne!(result.recommended_banner_image_url, "");
+            assert!(!result.top_banners().is_empty());
+            assert!(!result.top_sub_banners().is_empty());
+            assert!(result.tutorial_banner().is_none());
+            assert_eq!(result.updated_section_name(), "Updates for you");
+            assert!(!result.updated_titles().is_empty());
+            assert_eq!(result.tags().len(), 8);
+            assert!(result.featured().is_some());
+            assert_eq!(result.new_section_name(), "New Series");
+            assert!(!result.new_titles().is_empty());
+            assert_eq!(result.ranking_section_name(), "Ranking");
+            assert_eq!(result.rankings().len(), 4);
+            assert_ne!(result.ranking_description(), "");
+            assert_ne!(result.recommended_banner_image_url(), "");
         }
     }
 }
@@ -214,31 +214,31 @@ fn test_proto_mangadetail() {
             assert_eq!(result.status(), Status::Success);
 
             assert_eq!(
-                result.title,
+                result.title(),
                 "The Diary of a Middle-Aged Teacher's Carefree Life in Another World"
             );
             assert_eq!(
-                result.authors,
+                result.authors(),
                 "Kotobuki Yasukiyo, Maneki, Ryu Nishin, Johndee"
             );
-            assert!(!result.copyright.is_empty());
+            assert!(!result.copyright().is_empty());
 
-            assert!(result.next_update.is_none());
-            assert!(result.warning.is_none());
-            assert!(!result.description.is_empty());
-            assert!(!result.display_description);
-            assert_eq!(result.tags.len(), 1);
-            assert!(result.video_url.is_none());
+            assert!(result.next_update().is_empty());
+            assert!(result.warning().is_empty());
+            assert!(!result.description().is_empty());
+            assert!(!result.display_description());
+            assert_eq!(result.tags().len(), 1);
+            assert!(result.video_url().is_empty());
 
-            assert!(!result.chapters.is_empty());
+            assert!(!result.chapters().is_empty());
 
-            let first_ch = result.chapters.last().unwrap();
-            let mut last_ch = result.chapters.first().unwrap().clone();
-            assert_eq!(first_ch.title, "Chapter 1.1");
-            assert_eq!(last_ch.title, "Chapter 44.2");
+            let first_ch = result.chapters().last().unwrap();
+            let mut last_ch = result.chapters().first().unwrap().clone();
+            assert_eq!(first_ch.title(), "Chapter 1.1");
+            assert_eq!(last_ch.title(), "Chapter 44.2");
             assert!(first_ch.is_free());
             assert!(!last_ch.is_free());
-            last_ch.subtitle = Some("Test".to_owned());
+            last_ch.set_subtitle("Test");
             assert_eq!(first_ch.as_chapter_title(), "Chapter 1.1");
             assert_eq!(last_ch.as_chapter_title(), "Chapter 44.2 — Test");
         }
@@ -259,30 +259,33 @@ fn test_proto_mangadetailv2() {
             let result = MangaDetailV2::decode(proto_bytes.as_slice()).unwrap();
             assert_eq!(result.status(), Status::Success);
 
-            assert_eq!(result.title, "The Angel Next Door Spoils Me Rotten");
-            assert_eq!(result.authors, "Saekisan, Hanekoto, Wan Shibata, Suzu Yuki");
-            assert!(!result.copyright.is_empty());
+            assert_eq!(result.title(), "The Angel Next Door Spoils Me Rotten");
+            assert_eq!(
+                result.authors(),
+                "Saekisan, Hanekoto, Wan Shibata, Suzu Yuki"
+            );
+            assert!(!result.copyright().is_empty());
 
-            assert!(result.next_update.is_none());
-            assert!(result.warning.is_none());
-            assert!(!result.description.is_empty());
-            assert!(!result.display_description);
-            assert_eq!(result.tags.len(), 3);
-            assert!(result.video_url.is_none());
+            assert!(result.next_update().is_empty());
+            assert!(result.warning().is_empty());
+            assert!(!result.description().is_empty());
+            assert!(!result.display_description());
+            assert_eq!(result.tags().len(), 3);
+            assert!(result.video_url().is_empty());
 
-            assert!(!result.chapters.is_empty());
+            assert!(!result.chapters().is_empty());
 
-            let first_ch = result.chapters.last().unwrap();
-            let mut last_ch = result.chapters.first().unwrap().clone();
-            assert_eq!(first_ch.title, "Chapter 1.1");
-            assert_eq!(last_ch.title, "Chapter 10.3");
+            let first_ch = result.chapters().last().unwrap();
+            let mut last_ch = result.chapters().first().unwrap().clone();
+            assert_eq!(first_ch.title(), "Chapter 1.1");
+            assert_eq!(last_ch.title(), "Chapter 10.3");
             assert!(first_ch.is_free());
             assert!(last_ch.is_free());
-            last_ch.subtitle = Some("Test".to_owned());
+            last_ch.set_subtitle("Test");
             assert_eq!(first_ch.as_chapter_title(), "Chapter 1.1");
             assert_eq!(last_ch.as_chapter_title(), "Chapter 10.3 — Test");
 
-            assert!(result.hidden_chapters.is_none());
+            assert!(result.hidden_chapters().is_none());
         }
     }
 }
@@ -299,8 +302,8 @@ fn test_proto_mypage() {
             let proto_bytes = hex_to_bytes(&proto_hex);
 
             let result = MyPageView::decode(proto_bytes.as_slice()).unwrap();
-            assert!(!result.favorites.is_empty());
-            assert!(!result.history.is_empty());
+            assert!(!result.favorites().is_empty());
+            assert!(!result.history().is_empty());
         }
     }
 }
@@ -317,22 +320,22 @@ fn test_proto_pointshopview() {
             let proto_bytes = hex_to_bytes(&proto_hex);
 
             let result = PointShopView::decode(proto_bytes.as_slice()).unwrap();
-            let user_point = result.user_point.unwrap();
-            assert_eq!(user_point.free, 0);
-            assert_eq!(user_point.event, 0);
-            assert_eq!(user_point.paid, 480);
+            let user_point = result.user_point().unwrap();
+            assert_eq!(user_point.free(), 0);
+            assert_eq!(user_point.event(), 0);
+            assert_eq!(user_point.paid(), 480);
 
-            let point_limit = result.point_limit.unwrap();
-            assert_eq!(point_limit.free, 40);
-            assert_eq!(point_limit.event, 100000);
-            assert_eq!(point_limit.paid, 100000);
+            let point_limit = result.point_limit().unwrap();
+            assert_eq!(point_limit.free(), 40);
+            assert_eq!(point_limit.event(), 100000);
+            assert_eq!(point_limit.paid(), 100000);
 
-            assert_eq!(result.next_recovery, 1674604800);
-            assert_eq!(result.subscriptions.len(), 0);
-            assert_eq!(result.billings.len(), 9);
-            assert_eq!(result.default_select, 0);
+            assert_eq!(result.next_recovery(), 1674604800);
+            assert_eq!(result.subscriptions().len(), 0);
+            assert_eq!(result.billings().len(), 9);
+            assert_eq!(result.default_select(), 0);
 
-            let billing = result.billings.get(8).unwrap();
+            let billing = result.billings().get(8).unwrap();
             assert_eq!(billing.event_point, 8040);
             assert_eq!(billing.paid_point, 26800);
             assert_eq!(billing.total_point(), 34840);

@@ -13,7 +13,7 @@ use crate::{
 };
 
 pub(super) fn do_print_search_information(
-    results: Vec<MangaResultNode>,
+    results: &[MangaResultNode],
     with_number: bool,
     spacing: Option<usize>,
 ) {
@@ -21,10 +21,9 @@ pub(super) fn do_print_search_information(
     let spacing = spacing.unwrap_or(2);
 
     for (idx, result) in results.iter().enumerate() {
-        let id = result.id;
-        let manga_url = format!("https://{}/manga/{}", &*BASE_HOST, result.id);
-        let linked = linkify!(&manga_url, &result.title);
-        let mut text_data = color_print::cformat!("<s>{}</s> ({})", linked, id);
+        let manga_url = format!("https://{}/manga/{}", &*BASE_HOST, result.id());
+        let linked = linkify!(&manga_url, result.title());
+        let mut text_data = color_print::cformat!("<s>{}</s> ({})", linked, result.id());
 
         text_data = match result.badge() {
             BadgeManga::New => cformat!("{} <c!,rev,strong>[NEW]</c!,rev,strong>", text_data),
@@ -74,11 +73,11 @@ pub(super) async fn common_purchase_select(
     let results = client.get_manga(title_id).await;
     match results {
         Ok(result) => {
-            let user_bal = result.user_point.unwrap();
+            let user_bal = result.user_point().unwrap_or_default();
             let total_bal = user_bal.sum().to_formatted_string(&Locale::en);
-            let paid_point = user_bal.paid.to_formatted_string(&Locale::en);
-            let xp_point = user_bal.event.to_formatted_string(&Locale::en);
-            let free_point = user_bal.free.to_formatted_string(&Locale::en);
+            let paid_point = user_bal.paid().to_formatted_string(&Locale::en);
+            let xp_point = user_bal.event().to_formatted_string(&Locale::en);
+            let free_point = user_bal.free().to_formatted_string(&Locale::en);
 
             console.info("Your current point balance:");
             console.info(cformat!("  - <s>Total</>: {}", total_bal));
@@ -88,31 +87,31 @@ pub(super) async fn common_purchase_select(
 
             console.info("Title information:");
             console.info(cformat!("  - <s>ID</>: {}", title_id));
-            console.info(cformat!("  - <s>Title</>: {}", result.title));
-            console.info(cformat!("  - <s>Chapters</>: {}", result.chapters.len()));
+            console.info(cformat!("  - <s>Title</>: {}", result.title()));
+            console.info(cformat!("  - <s>Chapters</>: {}", result.chapters().len()));
 
             if no_input {
                 return (
-                    Ok(result.chapters.clone()),
+                    Ok(result.chapters().to_vec()),
                     Some(result.clone()),
                     Some(user_bal),
                 );
             }
 
             let select_choices: Vec<ConsoleChoice> = result
-                .chapters
+                .chapters()
                 .iter()
                 .filter_map(|ch| {
                     if download_mode && !show_all && !ch.is_free() {
                         None
                     } else {
                         let value = if ch.is_free() {
-                            ch.title.clone()
+                            ch.title().to_string()
                         } else {
-                            format!("{} ({}c)", ch.title, ch.price)
+                            format!("{} ({}c)", ch.title(), ch.price())
                         };
                         Some(ConsoleChoice {
-                            name: ch.id.to_string(),
+                            name: ch.id().to_string(),
                             value,
                         })
                     }
@@ -145,9 +144,9 @@ pub(super) async fn common_purchase_select(
                     for chapter in selected {
                         let ch_id = chapter.name.parse::<u64>().unwrap();
                         let ch = result
-                            .chapters
+                            .chapters()
                             .iter()
-                            .find(|ch| ch.id == ch_id)
+                            .find(|ch| ch.id() == ch_id)
                             .unwrap()
                             .clone();
 

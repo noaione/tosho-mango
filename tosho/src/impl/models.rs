@@ -95,32 +95,38 @@ impl MangaDetailDump {
     }
 }
 
-impl From<ChapterV2> for ChapterDetailDump {
+impl From<&ChapterV2> for ChapterDetailDump {
     /// Convert from [`tosho_musq::proto::ChapterV2`] into [`ChapterDetailDump`]
     /// `_info.json` format.
-    fn from(value: ChapterV2) -> Self {
-        let pub_at = match value.published_at {
-            Some(published) => {
-                // assume JST
-                let published = chrono::NaiveDate::parse_from_str(&published, "%b %d, %Y")
-                    .map(|d| d.and_hms_opt(0, 0, 0).unwrap())
-                    .map(|d| d.and_local_timezone(chrono::FixedOffset::east_opt(9 * 3600).unwrap()))
-                    .unwrap_or_else(|_| {
-                        panic!("Failed to parse published date to JST TZ: {}", published)
-                    })
-                    .unwrap();
+    fn from(value: &ChapterV2) -> Self {
+        let pub_at = if !value.published_at().is_empty() {
+            // assume JST
+            let published = chrono::NaiveDate::parse_from_str(value.published_at(), "%b %d, %Y")
+                .map(|d| d.and_hms_opt(0, 0, 0).unwrap())
+                .map(|d| d.and_local_timezone(chrono::FixedOffset::east_opt(9 * 3600).unwrap()))
+                .unwrap_or_else(|_| {
+                    panic!(
+                        "Failed to parse published date to JST TZ: {}",
+                        value.published_at()
+                    )
+                })
+                .unwrap();
 
-                // to timestamp
-                Some(published.timestamp())
-            }
-            None => None,
+            // to timestamp
+            Some(published.timestamp())
+        } else {
+            None
         };
 
         Self {
-            id: value.id.into(),
-            main_name: value.title,
+            id: value.id().into(),
+            main_name: value.title().to_string(),
             timestamp: pub_at,
-            sub_name: value.subtitle,
+            sub_name: if value.subtitle().is_empty() {
+                None
+            } else {
+                Some(value.subtitle().to_string())
+            },
         }
     }
 }

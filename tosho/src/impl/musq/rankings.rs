@@ -23,18 +23,18 @@ pub(crate) async fn musq_home_rankings(
             1
         }
         Ok(results) => {
-            if results.rankings.is_empty() {
+            if results.rankings().is_empty() {
                 console.error("There are no rankings available for some reason.");
                 return 1;
             }
 
             loop {
                 let rank_choices = results
-                    .rankings
+                    .rankings()
                     .iter()
                     .map(|r| ConsoleChoice {
-                        name: r.name.clone(),
-                        value: r.name.clone(),
+                        name: r.name().to_string(),
+                        value: r.name().to_string(),
                     })
                     .collect::<Vec<ConsoleChoice>>();
 
@@ -47,18 +47,18 @@ pub(crate) async fn musq_home_rankings(
                     }
                     Some(select) => {
                         let ranking = results
-                            .rankings
+                            .rankings()
                             .iter()
-                            .find(|r| r.name == select.name)
+                            .find(|&r| r.name() == select.name)
                             .unwrap();
 
                         console.info(cformat!(
                             "Ranking for <m,s>{}</> ({} titles):",
-                            ranking.name,
-                            ranking.titles.len()
+                            ranking.name(),
+                            ranking.titles().len()
                         ));
 
-                        do_print_search_information(ranking.titles.clone(), true, None);
+                        do_print_search_information(ranking.titles(), true, None);
                         println!();
                     }
                 }

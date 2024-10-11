@@ -19,16 +19,16 @@ pub(crate) async fn musq_search(
     let results = client.search(query).await;
     match results {
         Ok(results) => {
-            if results.titles.is_empty() {
+            if results.titles().is_empty() {
                 console.warn("No results found");
                 return 1;
             }
 
             // Cut to first 25 results
-            let cutoff_results = if results.titles.len() > 25 {
-                results.titles[..25].to_vec()
+            let cutoff_results = if results.titles().len() > 25 {
+                &results.titles()[..25]
             } else {
-                results.titles
+                results.titles()
             };
 
             console.info(cformat!(
@@ -60,7 +60,7 @@ pub(crate) async fn musq_search_weekly(
     let results = client.get_weekly_titles(weekday).await;
     match results {
         Ok(results) => {
-            if results.titles.is_empty() {
+            if results.titles().is_empty() {
                 console.warn("No results found");
                 return 1;
             }
@@ -68,10 +68,10 @@ pub(crate) async fn musq_search_weekly(
             console.info(cformat!(
                 "Weekday <bold>{}</> results (<magenta,bold>{}</> results):",
                 weekday.to_name(),
-                results.titles.len()
+                results.titles().len()
             ));
 
-            do_print_search_information(results.titles, false, None);
+            do_print_search_information(results.titles(), false, None);
 
             0
         }
@@ -82,12 +82,12 @@ pub(crate) async fn musq_search_weekly(
     }
 }
 
-fn format_tags(tags: Vec<Tag>) -> String {
+fn format_tags(tags: &[Tag]) -> String {
     let parsed_tags = tags
         .iter()
         .map(|tag| {
-            let tag_url = format!("https://{}/genre/{}", &*BASE_HOST, tag.id);
-            let linked = linkify!(&tag_url, &tag.name);
+            let tag_url = format!("https://{}/genre/{}", &*BASE_HOST, tag.id());
+            let linked = linkify!(&tag_url, &tag.name());
 
             cformat!("<p(244),reverse,bold>{}</>", linked)
         })
@@ -117,20 +117,20 @@ pub(crate) async fn musq_title_info(
         }
         Ok(result) => {
             let manga_url = format!("https://{}/manga/{}", &*BASE_HOST, title_id);
-            let linked = linkify!(&manga_url, &result.title);
+            let linked = linkify!(&manga_url, &result.title());
 
             console.info(cformat!(
                 "Title information for <magenta,bold>{}</>",
                 linked,
             ));
 
-            console.info(cformat!("  <s>Author</>: {}", result.authors));
+            console.info(cformat!("  <s>Author</>: {}", result.authors()));
             console.info(cformat!(
                 "  <s>Genre/Tags</>: {}",
-                format_tags(result.tags.clone())
+                format_tags(result.tags())
             ));
             console.info(cformat!("  <s>Summary</>"));
-            let split_desc = result.description.split('\n');
+            let split_desc = result.description().split('\n');
             for desc in split_desc {
                 console.info(format!("    {}", desc));
             }
@@ -141,12 +141,12 @@ pub(crate) async fn musq_title_info(
             println!();
             console.info(cformat!(
                 "  <s>Chapters</>: {} chapters",
-                result.chapters.len()
+                result.chapters().len()
             ));
 
             if show_chapters {
-                for chapter in result.chapters.clone() {
-                    let mut base_txt = cformat!("    <s>{}</> ({})", chapter.title, chapter.id);
+                for chapter in result.chapters() {
+                    let mut base_txt = cformat!("    <s>{}</> ({})", chapter.title(), chapter.id());
                     if chapter.is_free() {
                         match chapter.consumption() {
                             ConsumptionType::Subscription => {
@@ -159,17 +159,17 @@ pub(crate) async fn musq_title_info(
                             _ => {}
                         }
                     } else {
-                        base_txt = cformat!("{} [<y,strong>{}</>c]", base_txt, chapter.price);
+                        base_txt = cformat!("{} [<y,strong>{}</>c]", base_txt, chapter.price());
                     }
                     console.info(&base_txt);
 
-                    if chapter.subtitle.is_some() {
-                        console.info(cformat!("     <s>{}</>", chapter.subtitle.unwrap()));
+                    if !chapter.subtitle().is_empty() {
+                        console.info(cformat!("     <s>{}</>", chapter.subtitle()));
                     }
-                    if chapter.published_at.is_some() {
+                    if !chapter.published_at().is_empty() {
                         console.info(cformat!(
                             "      <s>Published</>: {}",
-                            chapter.published_at.unwrap()
+                            chapter.published_at()
                         ));
                     }
                 }
@@ -180,7 +180,7 @@ pub(crate) async fn musq_title_info(
                 console.info(cformat!("  <s>Next update</>: {}", result.next_update()));
             }
 
-            let trim_copyright = result.copyright.trim();
+            let trim_copyright = result.copyright().trim();
 
             if !trim_copyright.is_empty() {
                 let copyrights: Vec<&str> = trim_copyright.split('\n').collect();
@@ -191,14 +191,14 @@ pub(crate) async fn musq_title_info(
                 }
             }
 
-            if show_related && !result.related_manga.is_empty() {
+            if show_related && !result.related_manga().is_empty() {
                 println!();
                 console.info(cformat!(
                     "  <s>Related manga</>: {} titles",
-                    result.related_manga.len()
+                    result.related_manga().len()
                 ));
 
-                do_print_search_information(result.related_manga, false, Some(3));
+                do_print_search_information(result.related_manga(), false, Some(3));
             }
 
             0

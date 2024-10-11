@@ -4,22 +4,24 @@
 
 #![allow(clippy::derive_partial_eq_without_eq)]
 
+use tosho_macros::AutoGetter;
+
 use super::{SubscriptionKind, SubscriptionStatus};
 
 /// The user point information.
 ///
 /// This will be available on almost each request.
-#[derive(Clone, PartialEq, Copy, ::prost::Message)]
+#[derive(Clone, PartialEq, Copy, AutoGetter, ::prost::Message)]
 pub struct UserPoint {
     /// Free/daily coins that you have.
     #[prost(uint64, tag = "1")]
-    pub free: u64,
+    free: u64,
     /// Event/XP coins that you have.
     #[prost(uint64, tag = "2")]
-    pub event: u64,
+    event: u64,
     /// Paid coins that you have.
     #[prost(uint64, tag = "3")]
-    pub paid: u64,
+    paid: u64,
 }
 
 impl UserPoint {
@@ -27,8 +29,8 @@ impl UserPoint {
     ///
     /// # Examples
     /// ```
-    /// use tosho_musq::proto::UserPoint;
-    ///
+    /// # use tosho_musq::proto::UserPoint;
+    /// #
     /// let points = UserPoint {
     ///    free: 100,
     ///    event: 200,
@@ -40,44 +42,94 @@ impl UserPoint {
     pub fn sum(&self) -> u64 {
         self.free + self.event + self.paid
     }
+
+    /// Subtract points from free slot
+    pub fn subtract_free(&mut self, amount: u64) {
+        self.free = self.free.saturating_sub(amount);
+    }
+
+    /// Subtract points from event slot
+    pub fn subtract_event(&mut self, amount: u64) {
+        self.event = self.event.saturating_sub(amount);
+    }
+
+    /// Subtract points from paid slot
+    pub fn subtract_paid(&mut self, amount: u64) {
+        self.paid = self.paid.saturating_sub(amount);
+    }
+
+    /// Add points to free slot
+    pub fn add_free(&mut self, amount: u64) {
+        self.free = self.free.saturating_add(amount);
+    }
+
+    /// Add points to event slot
+    pub fn add_event(&mut self, amount: u64) {
+        self.event = self.event.saturating_add(amount);
+    }
+
+    /// Add points to paid slot
+    pub fn add_paid(&mut self, amount: u64) {
+        self.paid = self.paid.saturating_add(amount);
+    }
+
+    /// Set points of free slot
+    pub fn set_free(&mut self, amount: u64) {
+        self.free = amount;
+    }
+
+    /// Set points of event slot
+    pub fn set_event(&mut self, amount: u64) {
+        self.event = amount;
+    }
+
+    /// Set points of paid slot
+    pub fn set_paid(&mut self, amount: u64) {
+        self.paid = amount;
+    }
 }
 
 /// The user subscription information.
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[derive(Clone, PartialEq, AutoGetter, ::prost::Message)]
 pub struct Subscription {
     /// The monthly subscription ID.
     #[prost(string, tag = "1")]
-    pub monthly_id: ::prost::alloc::string::String,
+    monthly_id: ::prost::alloc::string::String,
     /// The yearly subscription ID.
     #[prost(string, tag = "2")]
-    pub yearly_id: ::prost::alloc::string::String,
+    yearly_id: ::prost::alloc::string::String,
     /// The subscription kind of this subscription.
     #[prost(enumeration = "SubscriptionKind", tag = "3")]
-    pub status: i32,
+    #[skip_field]
+    status: i32,
     /// The unix timestamp of the end of the subscription.
     #[prost(int64, tag = "4")]
-    pub end: i64,
+    end: i64,
     /// The event point that we will get from the subscription.
     #[prost(uint64, tag = "5")]
-    pub event_point: u64,
+    event_point: u64,
     /// The subscription name.
     #[prost(string, tag = "6")]
-    pub name: ::prost::alloc::string::String,
+    name: ::prost::alloc::string::String,
     /// The seasonally (tri-annual) subscription ID.
     #[prost(string, optional, tag = "7")]
-    pub seasonally_id: ::core::option::Option<::prost::alloc::string::String>,
+    #[skip_field]
+    seasonally_id: ::core::option::Option<::prost::alloc::string::String>,
     /// The half yearly subscription ID.
     #[prost(string, optional, tag = "8")]
-    pub half_yearly_id: ::core::option::Option<::prost::alloc::string::String>,
+    #[skip_field]
+    half_yearly_id: ::core::option::Option<::prost::alloc::string::String>,
     /// The subscription banner URL.
     #[prost(string, optional, tag = "9")]
-    pub banner: ::core::option::Option<::prost::alloc::string::String>,
+    #[skip_field]
+    banner: ::core::option::Option<::prost::alloc::string::String>,
     /// The subscription series URL scheme.
     #[prost(string, optional, tag = "10")]
-    pub series_url_scheme: ::core::option::Option<::prost::alloc::string::String>,
+    #[skip_field]
+    series_url_scheme: ::core::option::Option<::prost::alloc::string::String>,
     /// The monthly subscription descriptions.
     #[prost(string, repeated, tag = "11")]
-    pub monthly_descriptions: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+    monthly_descriptions: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
 }
 
 /// The billing or the coin purchase information.
@@ -121,62 +173,67 @@ impl Billing {
 /// Represents the point shop view responses.
 ///
 /// The ``Shop`` section in the actual app.
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[derive(Clone, PartialEq, AutoGetter, ::prost::Message)]
 pub struct PointShopView {
     /// The user purse or point.
     #[prost(message, tag = "1")]
-    pub user_point: ::core::option::Option<UserPoint>,
+    #[copyable]
+    user_point: ::core::option::Option<UserPoint>,
     /// The user point limit.
     #[prost(message, tag = "2")]
-    pub point_limit: ::core::option::Option<UserPoint>,
+    #[copyable]
+    point_limit: ::core::option::Option<UserPoint>,
     /// The next free point recovery time in seconds.
     #[prost(uint64, tag = "3")]
-    pub next_recovery: u64,
+    next_recovery: u64,
     /// The subscription list.
     #[prost(message, repeated, tag = "4")]
-    pub subscriptions: ::prost::alloc::vec::Vec<Subscription>,
+    subscriptions: ::prost::alloc::vec::Vec<Subscription>,
     /// The billing or purchase list.
     #[prost(message, repeated, tag = "5")]
-    pub billings: ::prost::alloc::vec::Vec<Billing>,
+    billings: ::prost::alloc::vec::Vec<Billing>,
     /// The default selected billing index(?).
     #[prost(uint64, tag = "6")]
-    pub default_select: u64,
+    default_select: u64,
     /// The user subscription status.
     #[prost(enumeration = "SubscriptionStatus", tag = "7")]
-    pub subscription_status: i32,
+    #[skip_field]
+    subscription_status: i32,
     /// The subscription terms and billing information.
     #[prost(string, optional, tag = "8")]
-    pub subscription_terms: ::core::option::Option<::prost::alloc::string::String>,
+    #[skip_field]
+    subscription_terms: ::core::option::Option<::prost::alloc::string::String>,
 }
 
 /// The node of each point purchase history.
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[derive(Clone, PartialEq, AutoGetter, ::prost::Message)]
 pub struct PointHistory {
     /// The displayed/title text.
     #[prost(string, tag = "1")]
-    pub displayed_text: ::prost::alloc::string::String,
+    displayed_text: ::prost::alloc::string::String,
     /// The free point that we use/get from the purchase.
     #[prost(uint64, tag = "2")]
-    pub free_point: u64,
+    free_point: u64,
     /// The event point that we use/get from the purchase.
     #[prost(uint64, tag = "3")]
-    pub event_point: u64,
+    event_point: u64,
     /// The paid point that we use/get from the purchase.
     #[prost(uint64, tag = "4")]
-    pub paid_point: u64,
+    paid_point: u64,
     /// The unix timestamp of the purchase/acquisition.
     #[prost(uint64, tag = "5")]
-    pub created_at: u64,
+    created_at: u64,
 }
 
 /// Represents the point history view responses.
 ///
 /// The ``Shop`` -> ``Acquisition History`` section in the actual app.
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[derive(Clone, PartialEq, AutoGetter, ::prost::Message)]
 pub struct PointHistoryView {
     /// The user purse or point.
     #[prost(message, tag = "1")]
-    pub user_point: ::core::option::Option<super::UserPoint>,
+    #[copyable]
+    pub user_point: ::core::option::Option<UserPoint>,
     /// The point history list.
     #[prost(message, repeated, tag = "2")]
     pub logs: ::prost::alloc::vec::Vec<PointHistory>,

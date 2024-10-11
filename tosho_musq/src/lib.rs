@@ -151,61 +151,61 @@ impl MUClient {
         match chapter.consumption() {
             ConsumptionType::Any => {
                 // Prioritization: Free > Event > Paid
-                let free = user_point.free;
-                let event = user_point.event;
-                let paid = user_point.paid;
+                let free = user_point.free();
+                let event = user_point.event();
+                let paid = user_point.paid();
 
-                let need = ((chapter.price - free) as i64).max(0);
+                let need = ((chapter.price() - free) as i64).max(0);
                 if need <= 0 {
-                    return self.build_coin(chapter.price, chapter.price, Some(0), Some(0));
+                    return self.build_coin(chapter.price(), chapter.price(), Some(0), Some(0));
                 }
 
                 let need = (need - event as i64).max(0);
                 if need <= 0 {
-                    let event_diff = chapter.price.saturating_sub(free);
+                    let event_diff = chapter.price().saturating_sub(free);
 
-                    return self.build_coin(chapter.price, free, Some(event_diff), Some(0));
+                    return self.build_coin(chapter.price(), free, Some(event_diff), Some(0));
                 }
 
                 let need = (need - paid as i64).max(0);
-                let mut paid_diff = chapter.price.saturating_sub(free).saturating_sub(event);
+                let mut paid_diff = chapter.price().saturating_sub(free).saturating_sub(event);
                 if need > 0 {
                     paid_diff = paid;
                 }
 
-                self.build_coin(chapter.price, free, Some(event), Some(paid_diff))
+                self.build_coin(chapter.price(), free, Some(event), Some(paid_diff))
             }
             ConsumptionType::EventOrPaid => {
                 // Prioritization: Event > Paid
-                let event = user_point.event;
-                let paid = user_point.paid;
+                let event = user_point.event();
+                let paid = user_point.paid();
 
-                let need = ((chapter.price - event) as i64).max(0);
+                let need = ((chapter.price() - event) as i64).max(0);
                 if need <= 0 {
-                    return self.build_coin(chapter.price, chapter.price, Some(0), Some(0));
+                    return self.build_coin(chapter.price(), chapter.price(), Some(0), Some(0));
                 }
 
                 let need = (need - paid as i64).max(0);
-                let mut paid_diff = chapter.price.saturating_sub(event);
+                let mut paid_diff = chapter.price().saturating_sub(event);
                 if need > 0 {
                     paid_diff = paid;
                 }
 
-                self.build_coin(chapter.price, event, Some(paid_diff), Some(0))
+                self.build_coin(chapter.price(), event, Some(paid_diff), Some(0))
             }
             ConsumptionType::Paid => {
-                let paid_left: i64 = user_point.paid as i64 - chapter.price as i64;
+                let paid_left: i64 = user_point.paid() as i64 - chapter.price() as i64;
 
                 if paid_left < 0 {
-                    return self.build_coin(chapter.price, 0, Some(0), Some(0));
+                    return self.build_coin(chapter.price(), 0, Some(0), Some(0));
                 }
 
-                self.build_coin(chapter.price, 0, Some(0), Some(chapter.price))
+                self.build_coin(chapter.price(), 0, Some(0), Some(chapter.price()))
             }
             ConsumptionType::Free
             | ConsumptionType::Rental
             | ConsumptionType::Purchased
-            | ConsumptionType::Subscription => self.build_coin(chapter.price, 0, None, None),
+            | ConsumptionType::Subscription => self.build_coin(chapter.price(), 0, None, None),
             _ => {
                 panic!("Unknown consumption type: {:?}", chapter.consumption());
             }
@@ -248,7 +248,7 @@ impl MUClient {
     pub async fn get_user_point(&self) -> ToshoResult<UserPoint> {
         // Guarantee that the user point is always available
         let point = self.get_point_shop().await?;
-        match point.user_point {
+        match point.user_point() {
             Some(point) => Ok(point),
             None => Err(ToshoParseError::expect("user point")),
         }
@@ -473,8 +473,9 @@ impl MUClient {
     /// Sometimes the API would return a URL with cloudfront host,
     /// which can't be accessed directly but need to use the "mirror" host
     /// provided by the client.
-    fn replace_image_host(&self, url: &str) -> ToshoResult<::reqwest::Url> {
-        match ::reqwest::Url::parse(url) {
+    fn replace_image_host(&self, url: impl Into<String>) -> ToshoResult<::reqwest::Url> {
+        let url: String = url.into();
+        match ::reqwest::Url::parse(&url) {
             Ok(mut parsed_url) => {
                 let valid_host = ::reqwest::Url::parse(
                     format!("https://{}", &*IMAGE_HOST).as_str(),
@@ -514,7 +515,7 @@ impl MUClient {
     /// * `writer` - The writer to write the image to.
     pub async fn stream_download(
         &self,
-        url: &str,
+        url: impl Into<String>,
         mut writer: impl io::AsyncWrite + Unpin,
     ) -> ToshoResult<()> {
         let actual_url = self.replace_image_host(url)?;
