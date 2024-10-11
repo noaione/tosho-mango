@@ -120,8 +120,8 @@ pub(crate) fn impl_autogetter(ast: &syn::DeriveInput) -> TokenStream {
             continue;
         }
 
-        let field = if has_inner_type_with_x(field_ty, "Option") {
-            expand_option_field(field, field_name, attrs_config)
+        let field = if let Some(inner_ty) = get_inner_type_of_option(field_ty) {
+            expand_option_field(field, field_name, inner_ty, attrs_config)
         } else {
             expand_regular_field(field, field_name, attrs_config)
         };
@@ -141,17 +141,14 @@ pub(crate) fn impl_autogetter(ast: &syn::DeriveInput) -> TokenStream {
 fn expand_option_field(
     field: &syn::Field,
     field_name: &syn::Ident,
+    inner_type: &syn::Type,
     attrs_config: AutoGetterAttr,
 ) -> proc_macro2::TokenStream {
-    let field_ty = &field.ty;
-    let field_ty_name = field_ty.clone().into_token_stream().to_string();
-
     let doc_get = make_field_comment(field_name, true);
 
     // If string, we can use as_deref
-    if field_ty_name.contains("String") {
-        let inner_ty = get_inner_type_of_option(field_ty).unwrap();
-        let has_vec = get_inner_type_of_vec(inner_ty).is_some();
+    if is_string_field(inner_type) {
+        let has_vec = has_inner_type_with_x(inner_type, "Vec");
 
         if has_vec {
             quote::quote! {
@@ -170,17 +167,16 @@ fn expand_option_field(
         }
     } else {
         // Modify the field type to be a reference
-        let main_type = get_inner_type_of_option(field_ty).unwrap();
-        let is_copyable = field_has_ident(field, "copyable") || is_copy_able_field(main_type);
+        let is_copyable = field_has_ident(field, "copyable") || is_copy_able_field(inner_type);
 
         let get_field = if is_copyable || attrs_config.unref {
             quote::quote! {
                 #[doc = #doc_get]
-                pub fn #field_name(&self) -> Option<#main_type> {
+                pub fn #field_name(&self) -> Option<#inner_type> {
                     self.#field_name
                 }
             }
-        } else if let Some(inner_ty) = get_inner_type_of_vec(main_type) {
+        } else if let Some(inner_ty) = get_inner_type_of_vec(inner_type) {
             quote::quote! {
                 #[doc = #doc_get]
                 pub fn #field_name(&self) -> Option<&[#inner_ty]> {
@@ -190,7 +186,7 @@ fn expand_option_field(
         } else {
             quote::quote! {
                 #[doc = #doc_get]
-                pub fn #field_name(&self) -> Option<&#main_type> {
+                pub fn #field_name(&self) -> Option<&#inner_type> {
                     self.#field_name.as_ref()
                 }
             }
@@ -211,12 +207,11 @@ fn expand_regular_field(
     attrs_config: AutoGetterAttr,
 ) -> proc_macro2::TokenStream {
     let field_ty = &field.ty;
-    let field_ty_name = field_ty.clone().into_token_stream().to_string();
 
     let doc_get = make_field_comment(field_name, false);
 
     // If string, we can use as_deref
-    if field_ty_name.contains("String") {
+    if is_string_field(field_ty) {
         let has_vec = has_inner_type_with_x(field_ty, "Vec");
 
         if has_vec {
@@ -319,6 +314,19 @@ fn field_has_ident(field: &syn::Field, ident: &str) -> bool {
 fn is_copy_able_field(ty: &syn::Type) -> bool {
     let ty_str = ty.clone().into_token_stream().to_string();
     KNOWN_COPYABLE_FIELD.contains(&ty_str.as_str())
+}
+
+fn is_string_field(ty: &syn::Type) -> bool {
+    // If Path, get the last segment and check if the Ident is "String"
+    if let syn::Type::Path(type_path) = ty {
+        if let Some(last_segment) = type_path.path.segments.last() {
+            last_segment.ident == "String"
+        } else {
+            false
+        }
+    } else {
+        false
+    }
 }
 
 /// Generate field comment
