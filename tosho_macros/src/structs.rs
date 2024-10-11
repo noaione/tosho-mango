@@ -212,14 +212,23 @@ fn expand_regular_field(
 
     // If string, we can use as_deref
     if field_ty_name.contains("String") {
-        let getter = quote::quote! {
-            #[doc = #doc_get]
-            pub fn #field_name(&self) -> &str {
-                &self.#field_name
-            }
-        };
+        let has_vec = has_inner_type_with_x(field_ty, "Vec");
 
-        getter
+        if has_vec {
+            quote::quote! {
+                #[doc = #doc_get]
+                pub fn #field_name(&self) -> &[String] {
+                    &self.#field_name
+                }
+            }
+        } else {
+            quote::quote! {
+                #[doc = #doc_get]
+                pub fn #field_name(&self) -> &str {
+                    &self.#field_name
+                }
+            }
+        }
     } else {
         let is_copyable = field_has_ident(field, "copyable") || is_copy_able_field(field_ty);
 
