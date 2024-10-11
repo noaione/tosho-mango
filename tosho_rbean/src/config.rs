@@ -14,7 +14,7 @@ use crate::models::accounts::google::{IdentityToolkitVerifyPasswordResponse, Sec
 
 /// Represents the platform for the client.
 ///
-/// ```
+/// ```rust
 /// use tosho_rbean::RBPlatform;
 ///
 /// let platform = RBPlatform::Android;

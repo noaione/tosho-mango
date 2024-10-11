@@ -196,9 +196,9 @@ pub static RANKING_TABS: LazyLock<Vec<RankingTab>> = LazyLock::new(|| {
 /// Panics if the device type is invalid.
 ///
 /// # Examples
-/// ```
-/// use tosho_kmkc::constants::get_constants;
-///
+/// ```rust
+/// # use tosho_kmkc::constants::get_constants;
+/// #
 /// let _ = get_constants(2); // Android
 /// let _ = get_constants(3); // Web
 /// ```

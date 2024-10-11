@@ -167,7 +167,7 @@ impl ChapterPage {
     /// The file name of the image.
     ///
     /// # Examples
-    /// ```
+    /// ```rust
     /// use tosho_mplus::proto::ChapterPage;
     ///
     /// let page = ChapterPage {
@@ -192,7 +192,7 @@ impl ChapterPage {
     /// The file extension of the image.
     ///
     /// # Examples
-    /// ```
+    /// ```rust
     /// use tosho_mplus::proto::ChapterPage;
     ///
     /// let page = ChapterPage {
@@ -220,7 +220,7 @@ impl ChapterPage {
     /// The file stem of the image.
     ///
     /// # Examples
-    /// ```
+    /// ```rust
     /// use tosho_mplus::proto::ChapterPage;
     ///
     /// let page = ChapterPage {

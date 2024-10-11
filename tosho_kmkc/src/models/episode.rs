@@ -78,7 +78,7 @@ impl ImagePageNode {
     /// The file name of the image.
     ///
     /// # Examples
-    /// ```
+    /// ```rust
     /// use tosho_kmkc::models::ImagePageNode;
     ///
     /// let page = ImagePageNode {
@@ -107,7 +107,7 @@ impl ImagePageNode {
     /// The file extension of the image.
     ///
     /// # Examples
-    /// ```
+    /// ```rust
     /// use tosho_kmkc::models::ImagePageNode;
     ///
     /// let page = ImagePageNode {
@@ -131,7 +131,7 @@ impl ImagePageNode {
     /// The file stem of the image.
     ///
     /// # Examples
-    /// ```
+    /// ```rust
     /// use tosho_kmkc::models::ImagePageNode;
     ///
     /// let page = ImagePageNode {
@@ -183,7 +183,7 @@ impl ImagePageNodeStr {
     /// The file name of the image.
     ///
     /// # Examples
-    /// ```
+    /// ```rust
     /// use tosho_kmkc::models::ImagePageNodeStr;
     ///
     /// let page = ImagePageNodeStr("https://example.com/image.jpg?test=ignore".to_string());
@@ -198,7 +198,7 @@ impl ImagePageNodeStr {
     /// The file extension of the image.
     ///
     /// # Examples
-    /// ```
+    /// ```rust
     /// use tosho_kmkc::models::ImagePageNodeStr;
     ///
     /// let page = ImagePageNodeStr("https://example.com/image.jpg?test=ignore".to_string());
@@ -213,7 +213,7 @@ impl ImagePageNodeStr {
     /// The file stem of the image.
     ///
     /// # Examples
-    /// ```
+    /// ```rust
     /// use tosho_kmkc::models::ImagePageNodeStr;
     ///
     /// let page = ImagePageNodeStr("https://example.com/image.jpg?test=ignore".to_string());

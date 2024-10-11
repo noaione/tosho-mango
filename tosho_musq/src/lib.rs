@@ -128,7 +128,7 @@ impl MUClient {
     /// * `chapter` - The chapter you want to check with.
     ///
     /// # Example
-    /// ```no_run
+    /// ```rust,no_run
     /// use tosho_musq::MUClient;
     ///
     /// #[tokio::main]

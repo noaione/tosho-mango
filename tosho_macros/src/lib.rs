@@ -15,7 +15,7 @@ mod structs;
 /// Derives [`serde::Serialize`](https://docs.rs/serde/latest/serde/trait.Serialize.html) for an enum using [`std::fmt::Display`]
 ///
 /// # Example
-/// ```
+/// ```rust
 /// # use tosho_macros::SerializeEnum;
 /// #
 /// #[derive(SerializeEnum)]
@@ -45,7 +45,7 @@ pub fn serializenum_derive(input: TokenStream) -> TokenStream {
 /// Derives [`serde::Deserialize`](https://docs.rs/serde/latest/serde/trait.Deserialize.html) for an enum using [`std::str::FromStr`]
 ///
 /// # Example
-/// ```
+/// ```rust
 /// # use tosho_macros::DeserializeEnum;
 /// #
 /// #[derive(DeserializeEnum, PartialEq, Eq, Debug)]
@@ -82,7 +82,7 @@ pub fn deserializeenum_derive(input: TokenStream) -> TokenStream {
 /// Derives [`serde::Serialize`](https://docs.rs/serde/latest/serde/trait.Serialize.html) for an enum in i32 mode.
 ///
 /// # Example
-/// ```
+/// ```rust
 /// # use tosho_macros::SerializeEnum32;
 /// #
 /// #[derive(SerializeEnum32)]
@@ -100,7 +100,7 @@ pub fn serializenum32_derive(input: TokenStream) -> TokenStream {
 /// Derives [`serde::Deserialize`](https://docs.rs/serde/latest/serde/trait.Deserialize.html) for an enum in i32 mode.
 ///
 /// # Example
-/// ```
+/// ```rust
 /// # use tosho_macros::DeserializeEnum32;
 /// #
 /// #[derive(DeserializeEnum32)]
@@ -118,7 +118,7 @@ pub fn deserializeenum32_derive(input: TokenStream) -> TokenStream {
 /// Derives [`serde::Deserialize`](https://docs.rs/serde/latest/serde/trait.Deserialize.html) for an enum in i32 mode with fallback to [`std::default::Default`].
 ///
 /// # Example
-/// ```
+/// ```rust
 /// # use tosho_macros::DeserializeEnum32Fallback;
 /// #
 /// #[derive(DeserializeEnum32Fallback, Default)]
@@ -138,7 +138,7 @@ pub fn deserializeenum32fallback_derive(input: TokenStream) -> TokenStream {
 /// Derives an enum that would implement `.to_name()`
 ///
 /// # Example
-/// ```
+/// ```rust
 /// # use tosho_macros::EnumName;
 /// #
 /// #[derive(EnumName, Clone, Debug)]
@@ -159,7 +159,7 @@ pub fn enumname_derive(input: TokenStream) -> TokenStream {
 /// Derives an enum that would implement `::count()` to return the number of variants
 ///
 /// # Example
-/// ```
+/// ```rust
 /// # use tosho_macros::EnumCount;
 /// #
 /// #[derive(EnumCount, Clone, Debug)]
@@ -194,7 +194,7 @@ pub fn enumu32fallback_derive(input: TokenStream) -> TokenStream {
 /// when using other macros to derive [`std::str::FromStr`] for an enum.
 ///
 /// # Example
-/// ```
+/// ```rust
 /// # use tosho_macros::enum_error;
 /// #
 /// enum TestEnum {

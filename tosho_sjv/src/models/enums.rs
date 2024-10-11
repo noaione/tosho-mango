@@ -67,7 +67,7 @@ impl From<IntBool> for bool {
 
 /// The subscription type
 ///
-/// ```
+/// ```rust
 /// use tosho_sjv::models::SubscriptionType;
 ///
 /// let st = SubscriptionType::VM;
@@ -112,7 +112,7 @@ impl std::fmt::Display for SubscriptionType {
 
 /// The manga rating
 ///
-/// ```
+/// ```rust
 /// use tosho_sjv::models::MangaRating;
 ///
 /// let st = MangaRating::AllAges;
@@ -215,7 +215,7 @@ impl MangaImprint {
     /// Get the pretty name of the imprint category.
     ///
     /// # Examples
-    /// ```
+    /// ```rust
     /// use tosho_sjv::models::MangaImprint;
     ///
     /// let ssunday = MangaImprint::ShonenSunday;

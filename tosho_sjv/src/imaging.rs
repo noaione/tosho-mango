@@ -69,7 +69,7 @@ fn draw_image(
 /// * `img_bytes` - Image bytes to descramble.
 ///
 /// # Example
-/// ```no_run
+/// ```rust,no_run
 /// use tosho_sjv::imaging::descramble_image;
 ///
 /// let img_bytes = [0_u8; 100];

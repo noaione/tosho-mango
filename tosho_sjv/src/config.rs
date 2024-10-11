@@ -17,7 +17,7 @@ use crate::models::AccountLoginResponse;
 ///
 /// Since the original has two separate application.
 ///
-/// ```
+/// ```rust
 /// use tosho_sjv::SJMode;
 ///
 /// let mode = SJMode::SJ;
@@ -33,7 +33,7 @@ pub enum SJMode {
 
 /// The platform to use.
 ///
-/// ```
+/// ```rust
 /// use tosho_sjv::SJPlatform;
 ///
 /// let platform = SJPlatform::Android;
@@ -51,7 +51,7 @@ pub enum SJPlatform {
 
 /// The configuration for the client.
 ///
-/// ```
+/// ```rust
 /// use tosho_sjv::{SJConfig, SJPlatform};
 ///
 /// let config = SJConfig {
@@ -97,7 +97,7 @@ impl SJConfig {
     /// * `response` - The login response.
     /// * `instance` - The instance ID.
     ///
-    /// ```no_run
+    /// ```rust,no_run
     /// use tosho_sjv::{SJClient, SJConfig, SJMode, SJPlatform};
     ///
     /// #[tokio::main]

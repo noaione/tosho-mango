@@ -62,7 +62,7 @@ impl UserPoint {
     /// Check if the user can purchase a chapter.
     ///
     /// # Examples
-    /// ```
+    /// ```rust
     /// use tosho_kmkc::models::UserPoint;
     ///
     /// let user_point = UserPoint::new(0, 0);
@@ -79,7 +79,7 @@ impl UserPoint {
     /// Mutate the [`UserPoint`] to subtract the owned point by the price.
     ///
     /// # Examples
-    /// ```
+    /// ```rust
     /// use tosho_kmkc::models::UserPoint;
     ///
     /// let mut user_point = UserPoint::new(10, 10);
@@ -110,7 +110,7 @@ impl UserPoint {
     /// Mutate the [`UserPoint`] to add a bonus point got from a chapter.
     ///
     /// # Examples
-    /// ```
+    /// ```rust
     /// use tosho_kmkc::models::UserPoint;
     ///
     /// let mut user_point = UserPoint::new(0, 0);

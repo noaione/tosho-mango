@@ -240,7 +240,7 @@ impl MagazineCategory {
     /// Get the pretty name of the magazine category.
     ///
     /// # Examples
-    /// ```
+    /// ```rust
     /// use tosho_kmkc::models::MagazineCategory;
     ///
     /// let e_young = MagazineCategory::eYoungMagazine;

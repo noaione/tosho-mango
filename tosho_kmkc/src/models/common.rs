@@ -29,7 +29,7 @@ impl FailableResponse for StatusResponse {
     /// Raise/return an error if the response code is not 0.
     ///
     /// # Examples
-    /// ```
+    /// ```rust
     /// use tosho_kmkc::models::StatusResponse;
     /// use tosho_common::FailableResponse;
     ///
