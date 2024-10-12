@@ -37,6 +37,7 @@ pub struct ReadingListItem {
     chapter: Option<Label>,
 }
 
+/// Google related identity toolkit models
 pub mod google {
     use serde::{Deserialize, Serialize};
     use tosho_macros::AutoGetter;

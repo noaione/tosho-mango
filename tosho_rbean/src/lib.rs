@@ -1,3 +1,9 @@
+#![warn(
+    missing_docs,
+    clippy::empty_docs,
+    rustdoc::broken_intra_doc_links,
+    clippy::missing_docs_in_private_items
+)]
 #![doc = include_str!("../README.md")]
 
 use futures_util::TryStreamExt;
@@ -117,6 +123,9 @@ impl RBClient {
         })
     }
 
+    /// Set the expiry at of the token manually
+    ///
+    /// Not really recommended to use.
     pub fn set_expiry_at(&mut self, expiry_at: Option<i64>) {
         self.expiry_at = expiry_at;
     }

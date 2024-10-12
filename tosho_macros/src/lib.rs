@@ -1,10 +1,5 @@
-//! # tosho-macros
-//!
-//! A collection of macros used by [`tosho`](https://github.com/noaione/tosho-mango) and the other sources crates.
-//!
-//! ## License
-//!
-//! This project is licensed with MIT License ([LICENSE](https://github.com/noaione/tosho-mango/blob/master/LICENSE) or <http://opensource.org/licenses/MIT>)
+#![warn(missing_docs, clippy::empty_docs, rustdoc::broken_intra_doc_links)]
+#![doc = include_str!("../README.md")]
 
 use proc_macro::TokenStream;
 

@@ -87,6 +87,7 @@ pub struct TitleListResponse {
     pub titles: Vec<TitleNode>,
 }
 
+/// Represents a search response results
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SearchResponse {
     /// The list of titles.

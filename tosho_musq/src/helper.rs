@@ -202,6 +202,7 @@ pub struct ConsumeCoin {
 }
 
 impl ConsumeCoin {
+    /// Create a new instance of coin consumption
     pub fn new(free: u64, event: u64, paid: u64, need: u64) -> Self {
         Self {
             free,
