@@ -51,7 +51,7 @@ pub async fn amap_account_login(
         Ok(session) => {
             console.info(cformat!(
                 "Authenticated as <m,s>{}</> ({})",
-                session.identifier,
+                session.identifier(),
                 email
             ));
 

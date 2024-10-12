@@ -17,11 +17,7 @@ use crate::{
 
 impl From<super::config::Config> for tosho_amap::AMConfig {
     fn from(config: super::config::Config) -> Self {
-        tosho_amap::AMConfig {
-            token: config.token,
-            identifier: config.identifier,
-            session_v2: config.session,
-        }
+        tosho_amap::AMConfig::new(&config.token, &config.identifier, &config.session)
     }
 }
 

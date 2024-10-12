@@ -41,12 +41,7 @@ const SCREEN_INCH: f64 = 61.1918658356194;
 ///
 /// #[tokio::main]
 /// async fn main() {
-///     let config = AMConfig {
-///         token: "123".to_string(),
-///         identifier: "abcxyz".to_string(),
-///         session_v2: "xyz987abc".to_string(),
-///     };
-///
+///     let config = AMConfig::new("123", "abcxyz", "xyz987abc");
 ///     let client = AMClient::new(config).unwrap();
 ///     let manga = client.get_comic(48000051).await.unwrap();
 ///     println!("{:?}", manga);
@@ -167,7 +162,7 @@ impl AMClient {
         let mut json_body = HashMap::new();
         json_body.insert(
             "i_token".to_string(),
-            serde_json::Value::String(self.config.token.clone()),
+            serde_json::Value::String(self.config.token().to_string()),
         );
         json_body.insert(
             "iap_product_version".to_string(),
@@ -202,7 +197,7 @@ impl AMClient {
         );
         json_body.insert(
             "i_token".to_string(),
-            serde_json::Value::String(self.config.token.clone()),
+            serde_json::Value::String(self.config.token().to_string()),
         );
         json_body.insert("app_login".to_string(), serde_json::Value::Bool(true));
 
@@ -270,7 +265,7 @@ impl AMClient {
         );
         json_body.insert(
             "i_token".to_string(),
-            serde_json::Value::String(self.config.token.clone()),
+            serde_json::Value::String(self.config.token().to_string()),
         );
         json_body.insert("app_login".to_string(), serde_json::Value::Bool(true));
 
@@ -471,11 +466,7 @@ impl AMClient {
             .map_err(ToshoClientError::BuildError)?;
 
         let secret_token = tosho_common::generate_random_token(16);
-        let temp_config = AMConfig {
-            token: secret_token.clone(),
-            identifier: "".to_string(),
-            session_v2: "".to_string(),
-        };
+        let temp_config = AMConfig::new(&secret_token, "", "");
         let android_c = get_constants(1);
 
         let mut json_body = HashMap::new();
@@ -523,11 +514,7 @@ impl AMClient {
         );
         json_with_common(&mut json_body_login, android_c)?;
 
-        let temp_config = AMConfig {
-            token: secret_token.clone(),
-            identifier: result.info().guest_id().to_string(),
-            session_v2: "".to_string(),
-        };
+        let temp_config = AMConfig::new(&secret_token, result.info().guest_id(), "");
 
         let req = session
             .request(
@@ -558,11 +545,7 @@ impl AMClient {
         json_body_session.insert("app_login".to_string(), serde_json::Value::Bool(true));
         json_with_common(&mut json_body_session, android_c)?;
 
-        let temp_config = AMConfig {
-            token: secret_token.clone(),
-            identifier: result.info().guest_id().to_string(),
-            session_v2: "".to_string(),
-        };
+        let temp_config = AMConfig::new(&secret_token, result.info().guest_id(), "");
 
         let req = session
             .request(
@@ -592,11 +575,11 @@ impl AMClient {
             return Err(ToshoAuthError::UnknownSession.into());
         }
 
-        Ok(AMConfig {
-            token: secret_token,
-            identifier: result.info().guest_id().to_string(),
-            session_v2,
-        })
+        Ok(AMConfig::new(
+            &secret_token,
+            result.info().guest_id(),
+            &session_v2,
+        ))
     }
 }
 
@@ -624,7 +607,7 @@ fn make_header(
 
     let current_unix = chrono::Utc::now().timestamp();
     let av = format!("{}/{}", &*APP_NAME, constants.version);
-    let formulae = format!("{}{}{}", config.token, current_unix, av);
+    let formulae = format!("{}{}{}", config.token(), current_unix, av);
 
     let formulae_hashed = <Sha256 as Digest>::digest(formulae.as_bytes());
     let formulae_hashed = format!("{:x}", formulae_hashed);
@@ -635,11 +618,11 @@ fn make_header(
             .parse()
             .map_err(|e| make_error!("Failed to parse custom hash into header value: {}", e))?,
     );
-    if !config.identifier.is_empty() {
+    if !config.identifier().is_empty() {
         req_headers.insert(
             HEADER_NAMES.i.as_str(),
             config
-                .identifier
+                .identifier()
                 .parse()
                 .map_err(|e| make_error!("Failed to parse identifier into header value: {}", e))?,
         );
@@ -656,7 +639,7 @@ fn make_header(
     req_headers.insert(
         HEADER_NAMES.t.as_str(),
         config
-            .token
+            .token()
             .parse()
             .map_err(|e| make_error!("Failed to parse token into header value: {}", e))?,
     );
