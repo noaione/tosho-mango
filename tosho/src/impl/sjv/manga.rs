@@ -77,9 +77,9 @@ pub(crate) async fn sjv_title_info(
 
             let title = results.series.iter().find(|x| {
                 if let NumberOrString::Number(n) = title_or_slug {
-                    x.id == n as u32
+                    x.id() == n as u32
                 } else {
-                    x.slug == title_or_slug.to_string()
+                    x.slug() == title_or_slug.to_string()
                 }
             });
 
@@ -92,12 +92,12 @@ pub(crate) async fn sjv_title_info(
 
             let mut chapters_lists = vec![];
             let mut chapter_messages: HashMap<String, ChapterMessage> = HashMap::new();
-            if show_chapters && result.total_chapters > 0 {
+            if show_chapters && result.total_chapters() > 0 {
                 console.info(cformat!(
                     "Fetching chapters for <magenta,bold>{}</>...",
-                    result.title
+                    result.title()
                 ));
-                let chapters_info = client.get_chapters(result.id).await;
+                let chapters_info = client.get_chapters(result.id()).await;
 
                 match chapters_info {
                     Err(_) => {
@@ -109,18 +109,18 @@ pub(crate) async fn sjv_title_info(
                     Ok(series_response) => {
                         let mut chapters_info: Vec<tosho_sjv::models::MangaChapterDetail> =
                             series_response
-                                .chapters
+                                .chapters()
                                 .iter()
-                                .map(|ch| ch.chapter.clone())
+                                .map(|ch| ch.chapter().clone())
                                 .collect();
                         sort_chapters(&mut chapters_info, true);
                         chapters_lists.clone_from(&chapters_info);
 
-                        for message in series_response.notices {
+                        for message in series_response.notices() {
                             if message.is_active() {
                                 // format the ofsset into string (include the comma)
-                                let offset_str = format!("{:?}", message.offset);
-                                chapter_messages.insert(offset_str, message);
+                                let offset_str = format!("{:?}", message.offset());
+                                chapter_messages.insert(offset_str, message.clone());
                             }
                         }
                     }
@@ -130,29 +130,29 @@ pub(crate) async fn sjv_title_info(
             let manga_url = format!(
                 "https://{}/{}",
                 &*tosho_sjv::constants::BASE_HOST,
-                result.slug
+                result.slug()
             );
-            let linked = linkify!(&manga_url, &result.title);
+            let linked = linkify!(&manga_url, result.title());
             console.info(cformat!(
                 "Title information for <magenta,bold>{}</>",
                 linked,
             ));
 
-            if let Some(author) = &result.author {
+            if let Some(author) = result.author() {
                 console.info(cformat!("  <s>Author</>: {}", author));
             }
-            if result.imprint != MangaImprint::Undefined {
+            if result.imprint() != MangaImprint::Undefined {
                 console.info(cformat!(
                     "  <s>Imprint</>: {}",
-                    result.imprint.pretty_name()
+                    result.imprint().pretty_name()
                 ));
             }
 
-            console.info(cformat!("  <s>Rating</>: {}", result.rating.to_name()));
-            console.info(cformat!("  <s>Copyright</>: {}", result.copyright));
-            let synopsis = result.synopsis.replace("\r\n", "\n");
+            console.info(cformat!("  <s>Rating</>: {}", result.rating().to_name()));
+            console.info(cformat!("  <s>Copyright</>: {}", result.copyright()));
+            let synopsis = result.synopsis().replace("\r\n", "\n");
             console.info(cformat!("  <s>Summary</>"));
-            if let Some(tagline) = &result.tagline {
+            if let Some(tagline) = result.tagline() {
                 console.info(cformat!("   <blue>{}</>", tagline));
             }
             let synopsis = synopsis.trim();
@@ -166,36 +166,36 @@ pub(crate) async fn sjv_title_info(
             println!();
             console.info(cformat!(
                 "  <s>Chapters</>: {} chapters",
-                result.total_chapters
+                result.total_chapters()
             ));
-            if result.total_volumes > 0 {
+            if result.total_volumes() > 0 {
                 console.info(cformat!(
                     "   <s>Volumes</>: {} volumes",
-                    result.total_volumes
+                    result.total_volumes()
                 ));
             }
 
             if !chapters_lists.is_empty() {
                 for chapter in chapters_lists {
                     // Skip for now
-                    if chapter.chapter.is_none() {
+                    if chapter.chapter().is_none() {
                         continue;
                     }
 
                     // if chapter number is in offset, print the message
-                    let chapter_number = chapter.chapter.clone().unwrap_or_default();
-                    if let Some(message) = chapter_messages.get(&chapter_number) {
-                        console.info(cformat!("    <r!,strong>{}</>", message.message));
+                    let chapter_number = chapter.chapter().unwrap_or_default();
+                    if let Some(message) = chapter_messages.get(chapter_number) {
+                        console.info(cformat!("    <r!,strong>{}</>", message.message()));
                     }
 
-                    let episode_url = match chapter.subscription_type {
+                    let episode_url = match chapter.subscription_type() {
                         Some(tosho_sjv::models::SubscriptionType::SJ) => {
                             format!(
                                 "https://{}/{}/{}/chapter/{}?action=read",
                                 &*tosho_sjv::constants::BASE_HOST,
                                 &*EXPAND_SJ_NAME,
-                                result.slug,
-                                chapter.id
+                                result.slug(),
+                                chapter.id()
                             )
                         }
                         Some(tosho_sjv::models::SubscriptionType::VM) => {
@@ -203,24 +203,24 @@ pub(crate) async fn sjv_title_info(
                                 "https://{}/{}/{}/chapter/{}?action=read",
                                 &*tosho_sjv::constants::BASE_HOST,
                                 &*EXPAND_VM_NAME,
-                                result.slug,
-                                chapter.id
+                                result.slug(),
+                                chapter.id()
                             )
                         }
                         None => linked.clone(),
                     };
 
                     let ep_linked = linkify!(&episode_url, &chapter.pretty_title());
-                    let mut base_txt = cformat!("    <s>{}</> ({})", ep_linked, chapter.id);
+                    let mut base_txt = cformat!("    <s>{}</> ({})", ep_linked, chapter.id());
                     if chapter.is_available() {
                         base_txt =
                             cformat!("{} <g!,strong>[<rev>Free</rev>]</g!,strong>", base_txt);
                     }
                     console.info(&base_txt);
 
-                    let created_at = chapter.created_at.format("%b %d, %Y").to_string();
+                    let created_at = chapter.created_at().format("%b %d, %Y").to_string();
                     console.info(cformat!("     <s>Published</>: {}", created_at));
-                    if let Some(expiry_at) = chapter.expiry_at {
+                    if let Some(expiry_at) = chapter.expiry_at() {
                         let expiry_at =
                             unix_timestamp_to_string(expiry_at).unwrap_or("N/A".to_string());
                         console.info(cformat!("      <s>Expires</>: {}", expiry_at));

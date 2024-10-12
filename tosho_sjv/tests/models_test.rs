@@ -107,25 +107,25 @@ fn test_store_cached_models() {
 
             let mut has_777 = false;
             let mut has_829_chapter = false;
-            for store_data in store_cached.contents {
+            for store_data in store_cached.contents() {
                 match &store_data {
                     tosho_sjv::models::MangaStoreInfo::Chapter(chapter) => {
-                        assert!(chapter.pages > 0);
+                        assert!(chapter.pages() > 0);
 
-                        if chapter.series_id == 829 {
-                            assert_eq!(chapter.series_slug, "aliens-area");
-                            assert_eq!(chapter.subscription_type, Some(SubscriptionType::SJ));
-                            assert_eq!(chapter.rating, MangaRating::Teen);
+                        if chapter.series_id() == 829 {
+                            assert_eq!(chapter.series_slug(), "aliens-area");
+                            assert_eq!(chapter.subscription_type(), Some(SubscriptionType::SJ));
+                            assert_eq!(chapter.rating(), MangaRating::Teen);
                             has_829_chapter = true;
                         }
                     }
                     tosho_sjv::models::MangaStoreInfo::Manga(manga) => {
-                        if manga.id == 777 {
-                            assert_eq!(manga.title, "Frieren: Beyond Journey’s End");
-                            assert_eq!(manga.slug, "frieren-the-journeys-end");
-                            assert_eq!(manga.subscription_type, Some(SubscriptionType::VM));
-                            assert_eq!(manga.imprint, MangaImprint::Undefined);
-                            assert_eq!(manga.rating, MangaRating::TeenPlus);
+                        if manga.id() == 777 {
+                            assert_eq!(manga.title(), "Frieren: Beyond Journey’s End");
+                            assert_eq!(manga.slug(), "frieren-the-journeys-end");
+                            assert_eq!(manga.subscription_type(), Some(SubscriptionType::VM));
+                            assert_eq!(manga.imprint(), MangaImprint::Undefined);
+                            assert_eq!(manga.rating(), MangaRating::TeenPlus);
                             has_777 = true;
                         }
                     }
@@ -173,7 +173,7 @@ fn test_store_cached_alt_models_loaded() {
                     );
                 }
             };
-            assert!(!store_cached.contents.is_empty())
+            assert!(!store_cached.contents().is_empty())
         }
     }
 }
@@ -211,9 +211,9 @@ fn test_manga_detail() {
                 }
             };
 
-            assert_eq!(manga_detail.notices[0].offset, 88.0);
-            let first_ch = &manga_detail.chapters[0].chapter;
-            assert_eq!(first_ch.chapter, Some("100.0".to_string()));
+            assert_eq!(manga_detail.notices()[0].offset(), 88.0);
+            let first_ch = manga_detail.chapters()[0].chapter();
+            assert_eq!(first_ch.chapter(), Some("100.0"));
         }
     }
 }

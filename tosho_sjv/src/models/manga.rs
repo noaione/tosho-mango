@@ -4,74 +4,80 @@
 
 use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Deserializer, Serialize};
+use tosho_macros::AutoGetter;
 
 use super::{MangaImprint, MangaRating, SimpleResponse, SubscriptionType};
 
 /// A node of a single chapter information.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
 pub struct MangaChapterDetail {
     /// Chapter ID
-    pub id: u32,
+    id: u32,
     /// Chapter number, if [`None`] then it's not a chapter
-    pub chapter: Option<String>,
+    chapter: Option<String>,
     /// Volume number, if [`None`] then it's not a volume
-    pub volume: Option<u32>,
+    volume: Option<u32>,
     /// Chapter title
-    pub title: Option<String>,
+    title: Option<String>,
     /// Published date
     #[serde(
         rename = "publication_date",
         deserialize_with = "super::datetime::deserialize_opt",
         serialize_with = "super::datetime::serialize_opt"
     )]
-    pub published_at: Option<DateTime<FixedOffset>>,
+    #[copyable]
+    published_at: Option<DateTime<FixedOffset>>,
     /// Author of the chapter
-    pub author: String,
+    author: String,
     /// Thumbnail URL
     #[serde(rename = "thumburl")]
-    pub thumbnail: Option<String>,
+    thumbnail: Option<String>,
     /// Description of the chapter
-    pub description: String,
+    description: String,
     /// Associated series ID
     #[serde(rename = "manga_series_common_id")]
-    pub series_id: u32,
+    series_id: u32,
     /// Associated series title
-    pub series_title: String,
+    series_title: String,
     /// Associated series URL slug
     #[serde(rename = "series_vanityurl")]
-    pub series_slug: String,
+    series_slug: String,
     /// Associated series sort title
-    pub series_title_sort: String,
+    series_title_sort: String,
     /// Subscription type of the series
     ///
     /// If [`None`], the only way to read/download is to purchase it
-    pub subscription_type: Option<SubscriptionType>,
+    #[copyable]
+    subscription_type: Option<SubscriptionType>,
     /// Rating of the series
-    pub rating: MangaRating,
+    #[copyable]
+    rating: MangaRating,
     /// Total pages of the chapter
     #[serde(rename = "numpages")]
-    pub pages: u32,
+    pages: u32,
     /// Date of creation or added to the API
     #[serde(with = "super::datetime")]
-    pub created_at: DateTime<FixedOffset>,
+    #[copyable]
+    created_at: DateTime<FixedOffset>,
     /// Date of last update
     #[serde(
         deserialize_with = "super::datetime::deserialize_opt",
         serialize_with = "super::datetime::serialize_opt"
     )]
-    pub updated_at: Option<DateTime<FixedOffset>>,
+    #[copyable]
+    updated_at: Option<DateTime<FixedOffset>>,
     /// Date of read or download expiry
     #[serde(rename = "epoch_exp_date")]
-    pub expiry_at: Option<i64>,
+    expiry_at: Option<i64>,
     /// Is this a new chapter
-    pub new: bool,
+    new: bool,
     /// Is this chapter free
-    pub free: bool,
+    free: bool,
     /// Is this chapter featured
-    pub featured: bool,
+    featured: bool,
     /// Start page of the chapter
     #[serde(rename = "contents_start_page")]
-    pub start_page: u32,
+    start_page: u32,
 }
 
 impl MangaChapterDetail {
@@ -112,54 +118,58 @@ impl MangaChapterDetail {
 }
 
 /// A node of a single series information.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
 pub struct MangaDetail {
     /// Series ID
-    pub id: u32,
+    id: u32,
     /// Series title
-    pub title: String,
+    title: String,
     /// Series tagline
-    pub tagline: Option<String>,
+    tagline: Option<String>,
     /// Series synopsis
-    pub synopsis: String,
+    synopsis: String,
     /// Series URL slug
     #[serde(rename = "vanityurl")]
-    pub slug: String,
+    slug: String,
     /// Series copyright info
-    pub copyright: String,
+    copyright: String,
     /// Series rating
-    pub rating: MangaRating,
+    #[copyable]
+    rating: MangaRating,
     /// Series thumbnail URL
     #[serde(rename = "link_img_url")]
-    pub thumbnail: String,
+    thumbnail: String,
     /// Series banner URL
     #[serde(rename = "keyart_url")]
-    pub keyart: Option<String>,
+    keyart: Option<String>,
     /// Series author
     #[serde(rename = "latest_author")]
-    pub author: Option<String>,
+    author: Option<String>,
     /// Series title sort
-    pub title_sort: String,
+    title_sort: String,
     /// Last updated date
     #[serde(with = "super::datetime")]
-    pub updated_at: DateTime<FixedOffset>,
+    #[copyable]
+    updated_at: DateTime<FixedOffset>,
     /// Subscription type of the series
     ///
     /// If [`None`], the only way to read/download is to purchase it
-    pub subscription_type: Option<SubscriptionType>,
+    #[copyable]
+    subscription_type: Option<SubscriptionType>,
     /// Imprint of the series
     #[serde(
         rename = "imprint_id",
         deserialize_with = "parse_imprint_extra",
         default
     )]
-    pub imprint: MangaImprint,
+    #[copyable]
+    imprint: MangaImprint,
     /// Total chapters of the series
     #[serde(rename = "num_chapters")]
-    pub total_chapters: u64,
+    total_chapters: u64,
     /// Total volumes of the series
     #[serde(rename = "num_gns")]
-    pub total_volumes: u64,
+    total_volumes: u64,
 }
 
 fn parse_imprint_extra<'de, D>(d: D) -> Result<MangaImprint, D::Error>
@@ -170,27 +180,29 @@ where
 }
 
 /// A node of a chapter notice information.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
 pub struct ChapterMessage {
     /// The message/notification
     #[serde(rename = "msg")]
-    pub message: String,
+    message: String,
     /// Starting chapter offset
-    pub offset: f64,
+    offset: f64,
     /// When the message will be shown
     #[serde(
         default,
         deserialize_with = "super::datetime::deserialize_opt",
         serialize_with = "super::datetime::serialize_opt"
     )]
-    pub show_from: Option<DateTime<FixedOffset>>,
+    #[copyable]
+    show_from: Option<DateTime<FixedOffset>>,
     /// When the message will stop being shown
     #[serde(
         default,
         deserialize_with = "super::datetime::deserialize_opt",
         serialize_with = "super::datetime::serialize_opt"
     )]
-    pub show_to: Option<DateTime<FixedOffset>>,
+    #[copyable]
+    show_to: Option<DateTime<FixedOffset>>,
 }
 
 impl ChapterMessage {
@@ -215,22 +227,22 @@ impl ChapterMessage {
 }
 
 /// A wrapper for [`MangaChapterDetail`]
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
 pub struct MangaChapterNode {
     /// The chapter information
     #[serde(rename = "manga")]
-    pub chapter: MangaChapterDetail,
+    chapter: MangaChapterDetail,
 }
 
 /// A response for requesting manga detail or chapter list
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
 pub struct MangaSeriesResponse {
     /// The notices for the chapter
     #[serde(rename = "chpt_msgs")]
-    pub notices: Vec<ChapterMessage>,
+    notices: Vec<ChapterMessage>,
     /// The data of the response
     #[serde(rename = "data")]
-    pub chapters: Vec<MangaChapterNode>,
+    chapters: Vec<MangaChapterNode>,
 }
 
 /// A wrapper for both MangaNode and MangaChapterNode
@@ -269,49 +281,49 @@ pub enum MangaStoreInfo {
 }
 
 /// A response for requesting cached manga list and featured data
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
 pub struct MangaStoreResponse {
     /// The data of the response
     #[serde(rename = "data")]
-    pub contents: Vec<MangaStoreInfo>,
+    contents: Vec<MangaStoreInfo>,
 }
 
 /// A response for verifying manga chapter ownership
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
 pub struct MangaAuthResponse {
     /// The data of the response
     #[serde(rename = "archive_info")]
-    pub info: SimpleResponse,
+    info: SimpleResponse,
 }
 
 /// A response for getting URL of a manga
 ///
 /// `url` will be [`None`] if you request for metadata and vice-versa
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
 pub struct MangaUrlResponse {
     /// The URL of the requested page
     #[serde(rename = "data", default)]
-    pub url: Option<String>,
+    url: Option<String>,
     /// The URL of the requested metadata
     #[serde(default)]
-    pub metadata: Option<String>,
+    metadata: Option<String>,
 }
 
 /// A response containing metadata of a chapter for reading
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
 pub struct MangaReadMetadataResponse {
     /// The chapter title
-    pub title: String,
+    title: String,
     /// The chapter image height
-    pub height: u32,
+    height: u32,
     /// The chapter image width
-    pub width: u32,
+    width: u32,
     /// The chapter image height for HD quality
     #[serde(default, rename = "hdwidth")]
-    pub hd_width: Option<u32>,
+    hd_width: Option<u32>,
     /// The chapter image width for HD quality
     #[serde(default, rename = "hdheight")]
-    pub hd_height: Option<u32>,
+    hd_height: Option<u32>,
     // pages: Vec<_>,
     // spreads: Vec<_>,
 }

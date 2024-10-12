@@ -167,14 +167,14 @@ impl From<&ComicEpisodeInfo> for ChapterDetailDump {
     }
 }
 
-impl From<MangaChapterDetail> for ChapterDetailDump {
+impl From<&MangaChapterDetail> for ChapterDetailDump {
     /// Convert from [`tosho_sjv::models::MangaChapterDetail`] into [`ChapterDetailDump`]
     /// `_info.json` format.
-    fn from(value: MangaChapterDetail) -> Self {
+    fn from(value: &MangaChapterDetail) -> Self {
         Self {
             main_name: value.pretty_title(),
-            id: (value.id as u64).into(),
-            timestamp: value.published_at.map(|d| d.timestamp()),
+            id: (value.id() as u64).into(),
+            timestamp: value.published_at().map(|d| d.timestamp()),
             sub_name: None,
         }
     }

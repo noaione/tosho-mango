@@ -68,14 +68,14 @@ pub async fn sjv_account_login(
 
             console.info(cformat!(
                 "Authenticated as <m,s>{}</> ({})",
-                account.username,
+                account.username(),
                 email,
             ));
 
             let new_config: Config = config.into();
             let new_config = new_config
                 .with_email(&email)
-                .with_username(&account.username)
+                .with_username(account.username())
                 .with_mode(mode);
 
             let new_config = if let Some(old_id) = old_id {
@@ -168,9 +168,9 @@ pub(crate) async fn sjv_account_subscriptions(
                 account.id
             ));
 
-            let subs_data = &subs_resp.subscriptions;
+            let subs_data = subs_resp.subscriptions();
 
-            let sj_end_date = match subs_data.sj_valid_to {
+            let sj_end_date = match subs_data.sj_valid_to() {
                 Some(date) => {
                     if let Some(unix_parse) = unix_timestamp_to_string(date) {
                         unix_parse
@@ -180,7 +180,7 @@ pub(crate) async fn sjv_account_subscriptions(
                 }
                 None => "N/A".to_string(),
             };
-            let vm_end_date = match subs_data.vm_valid_to {
+            let vm_end_date = match subs_data.vm_valid_to() {
                 Some(date) => {
                     if let Some(unix_parse) = unix_timestamp_to_string(date) {
                         unix_parse

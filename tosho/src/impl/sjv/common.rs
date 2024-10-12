@@ -18,9 +18,9 @@ pub(super) fn do_print_search_information(
     let spacing = spacing.unwrap_or(2);
 
     for (idx, result) in results.iter().enumerate() {
-        let id = result.id;
-        let manga_url = format!("https://{}/{}", &*BASE_HOST, result.slug);
-        let linked = linkify!(&manga_url, &result.title);
+        let id = result.id();
+        let manga_url = format!("https://{}/{}", &*BASE_HOST, result.slug());
+        let linked = linkify!(&manga_url, result.title());
         let text_data = cformat!("<s>{}</s> ({})", linked, id);
 
         let pre_space = " ".repeat(spacing);
@@ -31,7 +31,7 @@ pub(super) fn do_print_search_information(
             true => term.info(format!("{}[{:02}] {}", pre_space, idx + 1, text_data)),
             false => term.info(format!("{}{}", pre_space, text_data)),
         }
-        let updated_at = result.updated_at.format("%Y-%m-%d").to_string();
+        let updated_at = result.updated_at().format("%Y-%m-%d").to_string();
         term.info(cformat!(
             "{}<s>Last update</s>: {}",
             pre_space_lupd,
@@ -60,7 +60,7 @@ pub(super) fn search_manga_by_text(contents: &[MangaDetail], target: &str) -> Ve
         .iter()
         .filter_map(|content| {
             // Remove diacritics and lower case the title
-            let cleaned_title = secular::lower_lay_string(&content.title);
+            let cleaned_title = secular::lower_lay_string(content.title());
             let matches: Vec<aho_corasick::Match> = ac.find_iter(&cleaned_title).collect();
 
             if matches.is_empty() {
@@ -106,7 +106,7 @@ pub(super) struct WrappedStoreCache {
 impl From<MangaStoreResponse> for WrappedStoreCache {
     fn from(value: MangaStoreResponse) -> Self {
         let series = value
-            .contents
+            .contents()
             .iter()
             .filter_map(|x| match x {
                 MangaStoreInfo::Manga(m) => Some(m.clone()),
@@ -115,7 +115,7 @@ impl From<MangaStoreResponse> for WrappedStoreCache {
             .collect();
 
         let chapters = value
-            .contents
+            .contents()
             .iter()
             .filter_map(|x| match x {
                 MangaStoreInfo::Chapter(c) => Some(c.clone()),
@@ -182,16 +182,21 @@ pub(super) fn sort_chapters(chapters: &mut [MangaChapterDetail], reverse: bool) 
     // sort by "chapter" (which is a string of float)
     // then if "chapter" is None, sort by id
     // default to ascending; if reverse is true, reverse the order
-
     chapters.sort_by(|a, b| {
-        let an = a.chapter.as_ref().map(|x| x.parse::<f64>().unwrap_or(0.0));
-        let bn = b.chapter.as_ref().map(|x| x.parse::<f64>().unwrap_or(0.0));
+        let an = a
+            .chapter()
+            .as_ref()
+            .map(|x| x.parse::<f64>().unwrap_or(0.0));
+        let bn = b
+            .chapter()
+            .as_ref()
+            .map(|x| x.parse::<f64>().unwrap_or(0.0));
 
         match (an, bn) {
             (Some(an), Some(bn)) => an.partial_cmp(&bn).unwrap(),
             (Some(_), None) => std::cmp::Ordering::Less,
             (None, Some(_)) => std::cmp::Ordering::Greater,
-            (None, None) => a.id.cmp(&b.id),
+            (None, None) => a.id().cmp(&b.id()),
         }
     });
     if reverse {

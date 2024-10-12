@@ -39,15 +39,15 @@ pub(crate) struct SJDownloadCliConfig {
     pub(crate) end_at: Option<u32>,
 }
 
-fn create_chapters_info(title: &MangaDetail, chapters: Vec<MangaChapterDetail>) -> MangaDetailDump {
+fn create_chapters_info(title: &MangaDetail, chapters: &[MangaChapterDetail]) -> MangaDetailDump {
     let mut dumped_chapters: Vec<ChapterDetailDump> = vec![];
     for chapter in chapters {
         dumped_chapters.push(ChapterDetailDump::from(chapter));
     }
 
     MangaDetailDump::new(
-        title.title.clone(),
-        title.author.clone().unwrap_or("Unknown Author".to_string()),
+        title.title().to_string(),
+        title.author().unwrap_or("Unknown Author").to_string(),
         dumped_chapters,
     )
 }
@@ -79,14 +79,14 @@ fn do_chapter_select(
     console: &mut crate::term::Terminal,
 ) -> Vec<MangaChapterDetail> {
     console.info("Title information:");
-    console.info(cformat!("  - <bold>ID:</> {}", result.id));
-    console.info(cformat!("  - <bold>Title:</> {}", result.title));
+    console.info(cformat!("  - <bold>ID:</> {}", result.id()));
+    console.info(cformat!("  - <bold>Title:</> {}", result.title()));
     console.info(cformat!(
         "  - <bold>Chapters:</> {} chapters",
         chapters_entry.len()
     ));
 
-    let has_subs = match result.subscription_type {
+    let has_subs = match result.subscription_type() {
         None => false,
         Some(subs) => match subs {
             SubscriptionType::SJ => subs_info.is_sj_active(),
@@ -98,7 +98,7 @@ fn do_chapter_select(
         .iter()
         .filter(|&ch| {
             // Hide future chapters because we're not time traveler
-            if let Some(pub_at) = ch.published_at {
+            if let Some(pub_at) = ch.published_at() {
                 pub_at.timestamp() <= chrono::Utc::now().timestamp()
             } else {
                 true
@@ -107,7 +107,7 @@ fn do_chapter_select(
         .filter_map(|ch| {
             if ch.is_available() || has_subs {
                 Some(ConsoleChoice {
-                    name: ch.id.to_string(),
+                    name: ch.id().to_string(),
                     value: ch.pretty_title(),
                 })
             } else {
@@ -125,7 +125,7 @@ fn do_chapter_select(
                     let ch_id = x.name.parse::<u32>().unwrap();
                     let ch = chapters_entry
                         .iter()
-                        .find(|ch| ch.id == ch_id)
+                        .find(|ch| ch.id() == ch_id)
                         .unwrap()
                         .clone();
 
@@ -221,9 +221,9 @@ pub(crate) async fn sjv_download(
     let results = results.unwrap();
     let title = results.series.iter().find(|x| {
         if let NumberOrString::Number(n) = title_or_slug {
-            x.id == n as u32
+            x.id() == n as u32
         } else {
-            x.slug == title_or_slug.to_string()
+            x.slug() == title_or_slug.to_string()
         }
     });
     if title.is_none() {
@@ -243,19 +243,19 @@ pub(crate) async fn sjv_download(
     let title = title.unwrap();
     console.info(cformat!(
         "Fetching chapters for <magenta,bold>{}</>...",
-        title.title
+        title.title()
     ));
 
-    let chapters_resp = client.get_chapters(title.id).await;
+    let chapters_resp = client.get_chapters(title.id()).await;
 
     match chapters_resp {
         Ok(chapters_resp) => {
             let chapters: Vec<MangaChapterDetail> = chapters_resp
-                .chapters
+                .chapters()
                 .iter()
                 .filter_map(|ch| {
-                    if ch.chapter.chapter.is_some() {
-                        Some(ch.chapter.clone())
+                    if ch.chapter().chapter().is_some() {
+                        Some(ch.chapter().clone())
                     } else {
                         None
                     }
@@ -270,14 +270,14 @@ pub(crate) async fn sjv_download(
             let select_chapters = if dl_config.no_input {
                 chapters.clone()
             } else {
-                do_chapter_select(chapters.clone(), title, &subs_resp.subscriptions, console)
+                do_chapter_select(chapters.clone(), title, subs_resp.subscriptions(), console)
             };
 
-            let has_subs = match title.subscription_type {
+            let has_subs = match title.subscription_type() {
                 None => false,
                 Some(subs) => match subs {
-                    SubscriptionType::SJ => subs_resp.subscriptions.is_sj_active(),
-                    SubscriptionType::VM => subs_resp.subscriptions.is_vm_active(),
+                    SubscriptionType::SJ => subs_resp.subscriptions().is_sj_active(),
+                    SubscriptionType::VM => subs_resp.subscriptions().is_vm_active(),
                 },
             };
 
@@ -289,25 +289,25 @@ pub(crate) async fn sjv_download(
                         match (dl_config.start_from, dl_config.end_at) {
                             (Some(start), Some(end)) => {
                                 // between start and end
-                                ch.id >= start && ch.id <= end
+                                ch.id() >= start && ch.id() <= end
                             }
                             (Some(start), None) => {
-                                ch.id >= start // start to end
+                                ch.id() >= start // start to end
                             }
                             (None, Some(end)) => {
-                                ch.id <= end // 0 to end
+                                ch.id() <= end // 0 to end
                             }
                             _ => true,
                         }
                     } else {
                         dl_config.chapter_ids.is_empty()
-                            || dl_config.chapter_ids.contains(&(ch.id as usize))
+                            || dl_config.chapter_ids.contains(&(ch.id() as usize))
                     }
                 })
                 .filter(|&ch| ch.is_available() || has_subs)
                 .filter(|&ch| {
                     // Hide future chapters because we're not time traveler
-                    if let Some(pub_at) = ch.published_at {
+                    if let Some(pub_at) = ch.published_at() {
                         pub_at.timestamp() <= chrono::Utc::now().timestamp()
                     } else {
                         true
@@ -320,10 +320,10 @@ pub(crate) async fn sjv_download(
                 return 1;
             }
 
-            download_chapters.sort_by(|&a, &b| a.id.cmp(&b.id));
+            download_chapters.sort_by(|&a, &b| a.id().cmp(&b.id()));
 
-            let title_dir = get_output_directory(&output_dir, title.id, None, true);
-            let dump_info = create_chapters_info(title, chapters);
+            let title_dir = get_output_directory(&output_dir, title.id(), None, true);
+            let dump_info = create_chapters_info(title, &chapters);
 
             let title_dump_path = title_dir.join("_info.json");
             dump_info
@@ -334,34 +334,34 @@ pub(crate) async fn sjv_download(
                 console.info(cformat!(
                     "  Downloading chapter <m,s>{}</> ({})...",
                     chapter.pretty_title(),
-                    chapter.id
+                    chapter.id()
                 ));
 
                 let image_dir =
-                    get_output_directory(&output_dir, title.id, Some(chapter.id), false);
+                    get_output_directory(&output_dir, title.id(), Some(chapter.id()), false);
                 let image_ext = match client.get_platform() {
                     SJPlatform::Web => "png",
                     _ => "jpg",
                 };
 
                 if let Some(count) = check_downloaded_image_count(&image_dir, image_ext) {
-                    if count >= chapter.pages as usize {
+                    if count >= chapter.pages() as usize {
                         console.warn(cformat!(
                             "   Chapter <m,s>{}</> (<s>{}</>) has been downloaded, skipping",
                             chapter.pretty_title(),
-                            chapter.id
+                            chapter.id()
                         ));
                         continue;
                     }
                 }
 
-                let view_req = client.verify_chapter(chapter.id).await;
+                let view_req = client.verify_chapter(chapter.id()).await;
                 if let Err(e) = view_req {
                     console.error(format!("Failed to verify chapter: {}", e));
                     continue;
                 }
 
-                let ch_metadata = client.get_chapter_metadata(chapter.id).await;
+                let ch_metadata = client.get_chapter_metadata(chapter.id()).await;
                 if let Err(e) = ch_metadata {
                     console.error(format!("Failed to fetch chapter metadata: {}", e));
                     continue;
@@ -373,8 +373,8 @@ pub(crate) async fn sjv_download(
                 // Determine total image count, if we start at 0
                 // then the total image count is the same as the chapter.pages
                 // If above 0, then we need to add that amount to the total image count
-                let start_page = chapter.start_page;
-                let total_image_count = chapter.pages + start_page;
+                let start_page = chapter.start_page();
+                let total_image_count = chapter.pages() + start_page;
 
                 let progress =
                     console.make_progress_arc(total_image_count as u64, Some("Downloading"));
@@ -387,7 +387,7 @@ pub(crate) async fn sjv_download(
                             let image_dir = image_dir.clone();
                             let cnsl = console.clone();
                             let progress = Arc::clone(&progress);
-                            let chapter_id = chapter.id;
+                            let chapter_id = chapter.id();
                             tokio::spawn(async move {
                                 match sjv_actual_downloader(
                                     DownloadNode {
@@ -420,7 +420,7 @@ pub(crate) async fn sjv_download(
                         match sjv_actual_downloader(
                             DownloadNode {
                                 client: client.clone(),
-                                id: chapter.id,
+                                id: chapter.id(),
                                 page,
                                 extension: image_ext.to_string(),
                             },

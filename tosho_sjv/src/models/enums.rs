@@ -8,7 +8,7 @@ use tosho_macros::{
 };
 
 /// A boolean type used by the API represented as an integer.
-#[derive(Debug, Clone, SerializeEnum32, DeserializeEnum32, EnumName)]
+#[derive(Debug, Clone, Copy, SerializeEnum32, DeserializeEnum32, EnumName)]
 pub enum IntBool {
     /// Property is false
     False = 0,
@@ -178,6 +178,7 @@ impl std::fmt::Display for MangaRating {
 #[derive(
     Debug,
     Clone,
+    Copy,
     SerializeEnum32,
     DeserializeEnum32Fallback,
     PartialEq,

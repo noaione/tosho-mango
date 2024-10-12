@@ -20,6 +20,7 @@ This should give more consistent error handling across all sources.
 - All source: flush bytes stream on each loop iteration
 - `RB`: Possibly faster image decryption
 - All sources: Replace `String` or `&str` input on client with `impl Into<String>` instead
+- All sources: Add `Copy` to some `Copy`-able struct
 - Adjust exit code handling on CLI
 - Simplify progress bar handling
 

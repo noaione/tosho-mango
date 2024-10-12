@@ -13,12 +13,14 @@ pub use account::*;
 pub use enums::*;
 pub use manga::*;
 use tosho_common::FailableResponse;
+use tosho_macros::AutoGetter;
 
 /// A simple response to check if request successful or not
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
 pub struct SimpleResponse {
-    pub ok: IntBool,
-    pub error: Option<String>,
+    #[copyable]
+    ok: IntBool,
+    error: Option<String>,
 }
 
 impl FailableResponse for SimpleResponse {

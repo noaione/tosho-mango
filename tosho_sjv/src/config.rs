@@ -118,8 +118,8 @@ impl SJConfig {
         platform: SJPlatform,
     ) -> Self {
         Self {
-            user_id: response.id,
-            token: response.token.clone(),
+            user_id: response.id(),
+            token: response.token().to_string(),
             instance,
             platform,
         }

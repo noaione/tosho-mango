@@ -206,18 +206,17 @@ impl SJClient {
         let response = self.get_store_cache().await?;
 
         let manga_lists: Vec<MangaDetail> = response
-            .contents
+            .contents()
             .iter()
             .filter_map(|info| match info {
-                MangaStoreInfo::Manga(manga) => Some(manga),
-                _ => None,
-            })
-            .filter_map(|manga| {
-                if manga_ids.contains(&manga.id) {
-                    Some(manga.clone())
-                } else {
-                    None
+                MangaStoreInfo::Manga(manga) => {
+                    if manga_ids.contains(&manga.id()) {
+                        Some(manga.clone())
+                    } else {
+                        None
+                    }
                 }
+                _ => None,
             })
             .collect();
 
@@ -315,10 +314,10 @@ impl SJClient {
                     )
                     .await?;
 
-                if let Some(url) = resp.url {
-                    Ok(url)
-                } else if let Some(url) = resp.metadata {
-                    Ok(url)
+                if let Some(url) = resp.url() {
+                    Ok(url.to_string())
+                } else if let Some(url) = resp.metadata() {
+                    Ok(url.to_string())
                 } else {
                     bail_on_error!("No URL or metadata found")
                 }
@@ -382,10 +381,11 @@ impl SJClient {
     /// * `writer` - The writer to write the image to.
     pub async fn stream_download(
         &self,
-        url: &str,
+        url: impl Into<String>,
         mut writer: impl io::AsyncWrite + Unpin,
     ) -> ToshoResult<()> {
-        let url_parse = reqwest::Url::parse(url)
+        let url: String = url.into();
+        let url_parse = reqwest::Url::parse(&url)
             .map_err(|e| make_error!("Failed to parse URL: {} ({})", url, e))?;
         let host = url_parse
             .host_str()
@@ -446,8 +446,8 @@ impl SJClient {
     /// * `password` - The password of the user.
     /// * `mode` - The mode to use for the login.
     pub async fn login(
-        email: &str,
-        password: &str,
+        email: impl Into<String>,
+        password: impl Into<String>,
         mode: SJMode,
         platform: SJPlatform,
     ) -> ToshoResult<(AccountLoginResponse, String)> {
@@ -492,8 +492,8 @@ impl SJClient {
             .map_err(ToshoClientError::BuildError)?;
 
         let mut data = common_data_hashmap(constants, &mode, None);
-        data.insert("login".to_string(), email.to_string());
-        data.insert("pass".to_string(), password.to_string());
+        data.insert("login".to_string(), email.into());
+        data.insert("pass".to_string(), password.into());
 
         let instance_id = match data.get("instance_id") {
             Some(instance) => instance.clone(),
