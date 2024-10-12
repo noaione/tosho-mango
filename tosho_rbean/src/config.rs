@@ -3,11 +3,7 @@
 //! ```rust
 //! use tosho_rbean::{RBConfig, RBPlatform};
 //!
-//! let config = RBConfig {
-//!     token: "123".to_string(),
-//!     refresh_token: "abcxyz".to_string(),
-//!     platform: RBPlatform::Android,
-//! };
+//! let config = RBConfig::new("123", "abcxyz", RBPlatform::Android);
 //! ```
 
 use tosho_macros::AutoGetter;

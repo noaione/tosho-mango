@@ -32,13 +32,7 @@ pub use config::*;
 ///
 /// #[tokio::main]
 /// async fn main() {
-///     let config = SJConfig {
-///         user_id: 123,
-///         token: "xyz987abc".to_string(),
-///         instance: "abcxyz".to_string(),
-///         platform: SJPlatform::Android,
-///     };
-///
+///     let config = SJConfig::new(123, "xyz987abc", "abcxyz", SJPlatform::Android);
 ///     let client = SJClient::new(config, SJMode::VM).unwrap();
 ///     let manga = client.get_manga(vec![777]).await.unwrap();
 ///     println!("{:?}", manga);
@@ -77,7 +71,7 @@ impl SJClient {
         mode: SJMode,
         proxy: Option<reqwest::Proxy>,
     ) -> ToshoResult<Self> {
-        let constants = crate::constants::get_constants(config.platform as u8);
+        let constants = crate::constants::get_constants(config.platform() as u8);
         let mut headers = reqwest::header::HeaderMap::new();
         headers.insert(
             reqwest::header::USER_AGENT,
@@ -126,13 +120,13 @@ impl SJClient {
     }
 
     /// Return the mode of the client.
-    pub fn get_mode(&self) -> &SJMode {
-        &self.mode
+    pub fn get_mode(&self) -> SJMode {
+        self.mode
     }
 
     /// Return the platform of the client.
-    pub fn get_platform(&self) -> &SJPlatform {
-        &self.config.platform
+    pub fn get_platform(&self) -> SJPlatform {
+        self.config.platform()
     }
 
     /// Make an authenticated request to the API.
@@ -288,7 +282,7 @@ impl SJClient {
             }
         }
 
-        match &self.config.platform {
+        match self.config.platform() {
             SJPlatform::Web => {
                 // web didn't return JSON response but direct URL
                 let response = self
@@ -407,7 +401,7 @@ impl SJClient {
         if !res.status().is_success() {
             Err(ToshoError::from(res.status()))
         } else {
-            match &self.config.platform {
+            match self.config.platform() {
                 SJPlatform::Web => {
                     let image_bytes = res.bytes().await?;
                     let descrambled = tokio::task::spawn_blocking(move || {
@@ -533,10 +527,10 @@ fn common_data_hashmap(
         SJMode::SJ => SJ_APP_ID,
     };
     if let Some(config) = config {
-        data.insert("trust_user_jwt".to_string(), config.token.clone());
-        data.insert("user_id".to_string(), config.user_id.to_string());
-        data.insert("instance_id".to_string(), config.instance.clone());
-        data.insert("device_token".to_string(), config.instance.clone());
+        data.insert("trust_user_jwt".to_string(), config.token().to_string());
+        data.insert("user_id".to_string(), config.user_id().to_string());
+        data.insert("instance_id".to_string(), config.instance().to_string());
+        data.insert("device_token".to_string(), config.instance().to_string());
     } else {
         data.insert(
             "instance_id".to_string(),

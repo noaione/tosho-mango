@@ -11,7 +11,7 @@ This should give more consistent error handling across all sources.
   - `Error` is the new error type that is used across all sources.
 - All sources: Make all fields private on models, you can now use getter function instead.
   - Example: `data.name` now become `data.name()`
-- `KM`, `RB`, `AM`: Privatize config fields
+- `KM`, `RB`, `AM`, and `SJ/V`: Privatize config fields
   - Please use the getter function and the *new* `new` function to create a new config.
 
 ### Changes

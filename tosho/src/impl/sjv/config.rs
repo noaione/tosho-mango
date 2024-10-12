@@ -135,7 +135,7 @@ pub struct Config {
 impl From<SJConfig> for Config {
     fn from(value: SJConfig) -> Self {
         let new_uuid = uuid::Uuid::new_v4().to_string();
-        let platform = match value.platform {
+        let platform = match value.platform() {
             SJPlatform::Android => DeviceType::Android,
             SJPlatform::Apple => DeviceType::Apple,
             SJPlatform::Web => DeviceType::Web,
@@ -144,9 +144,9 @@ impl From<SJConfig> for Config {
             id: new_uuid.clone(),
             email: format!("{}@sjv.xyz", new_uuid),
             username: "sjv_temp".to_string(),
-            user_id: value.user_id,
-            token: value.token,
-            instance: value.instance,
+            user_id: value.user_id(),
+            token: value.token().to_string(),
+            instance: value.instance().to_string(),
             r#type: platform as i32,
             mode: SJDeviceMode::SJ as i32,
         }
@@ -155,16 +155,16 @@ impl From<SJConfig> for Config {
 
 impl From<Config> for SJConfig {
     fn from(value: Config) -> Self {
-        Self {
-            user_id: value.user_id,
-            token: value.token.clone(),
-            instance: value.instance.clone(),
-            platform: match value.r#type() {
+        Self::new(
+            value.user_id,
+            &value.token,
+            &value.instance,
+            match value.r#type() {
                 DeviceType::Android => SJPlatform::Android,
                 DeviceType::Apple => SJPlatform::Apple,
                 DeviceType::Web => SJPlatform::Web,
             },
-        }
+        )
     }
 }
 

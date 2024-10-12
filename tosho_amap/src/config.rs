@@ -3,11 +3,7 @@
 //! ```rust
 //! use tosho_amap::AMConfig;
 //!
-//! let config = AMConfig {
-//!     token: "123".to_string(),
-//!     identifier: "abcxyz".to_string(),
-//!     session_v2: "xyz987abc".to_string(),
-//! };
+//! let config = AMConfig::new("123", "abcxyz", "xyz987abc");
 //! ```
 
 use std::sync::LazyLock;

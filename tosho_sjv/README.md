@@ -15,13 +15,7 @@ use tosho_sjv::{SJClient, SJConfig, SJMode, SJPlatform};
 
 #[tokio::main]
 async fn main() {
-    let config = SJConfig {
-        user_id: 123,
-        token: "xyz987abc".to_string(),
-        instance: "abcxyz".to_string(),
-        platform: SJPlatform::Android,
-    };
-
+    let config = SJConfig::new(123, "xyz987abc", "abcxyz", SJPlatform::Android);
     let client = SJClient::new(config, SJMode::VM).unwrap();
     let manga = client.get_manga(vec![777]).await.unwrap();
     println!("{:?}", manga);
