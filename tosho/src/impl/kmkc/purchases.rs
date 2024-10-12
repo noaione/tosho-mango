@@ -25,7 +25,7 @@ pub(crate) async fn kmkc_purchase(
                 return 1;
             }
 
-            let mut wallet_copy = user_point.point.point.clone();
+            let mut wallet_copy = user_point.point.point().clone();
             let mut ticket_entry = user_point.ticket.clone();
 
             let mut chapter_point_claim: Vec<EpisodeNode> = vec![];
@@ -116,7 +116,7 @@ pub(crate) async fn kmkc_purchase(
                 let temp_chapter_claim: Vec<&EpisodeNode> =
                     chapter_point_claim.iter().collect::<Vec<&EpisodeNode>>();
 
-                let mut mutable_point = user_point.point.point.clone();
+                let mut mutable_point = user_point.point.point().clone();
 
                 let result = client
                     .claim_episodes(temp_chapter_claim, &mut mutable_point)

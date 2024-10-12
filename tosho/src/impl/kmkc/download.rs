@@ -175,7 +175,7 @@ pub(crate) async fn kmkc_download(
                 return 1;
             }
 
-            let mut wallet_copy = user_point.point.point.clone();
+            let mut wallet_copy = user_point.point.point().clone();
             let mut ticket_entry = user_point.ticket.clone();
             console.info(format!("Downloading {} chapters...", results.len()));
             let mut download_chapters = vec![];

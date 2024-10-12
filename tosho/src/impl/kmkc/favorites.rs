@@ -38,7 +38,7 @@ pub(crate) async fn kmkc_my_favorites(
                 mapped_favorites.len()
             ));
 
-            do_print_search_information(mapped_favorites, false, None);
+            do_print_search_information(&mapped_favorites, false, None);
 
             0
         }

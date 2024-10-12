@@ -64,19 +64,19 @@ pub(crate) async fn kmkc_home_rankings(
             1
         }
         Ok(results) => {
-            if results.titles.is_empty() {
+            if results.titles().is_empty() {
                 console.error("There are no rankings available for some reason.");
                 return 1;
             }
 
             console.info(cformat!(
                 "Fetching <m,s>{}</> titles from <m,s>{}</>",
-                results.titles.len(),
+                results.titles().len(),
                 rank_tab.name
             ));
 
             let all_titles = client
-                .get_titles(results.titles.iter().map(|t| t.id).collect())
+                .get_titles(results.titles().iter().map(|t| t.id()).collect())
                 .await;
 
             match all_titles {
@@ -95,7 +95,7 @@ pub(crate) async fn kmkc_home_rankings(
                         rank_tab.name,
                         titles.len()
                     ));
-                    do_print_search_information(titles, true, None);
+                    do_print_search_information(&titles, true, None);
                     0
                 }
             }

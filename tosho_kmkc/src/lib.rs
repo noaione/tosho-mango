@@ -32,15 +32,19 @@ use tosho_common::{
     bail_on_error, make_error, parse_json_response, parse_json_response_failable, ToshoAuthError,
     ToshoClientError, ToshoResult,
 };
+use tosho_macros::AutoGetter;
 
 /// Login result for the API.
 ///
 /// This will return either a [`KMConfig::Web`] or [`KMConfig::Mobile`] depending on the login type.
 ///
 /// And will also include the current account info.
+#[derive(Clone, AutoGetter)]
 pub struct KMLoginResult {
-    pub config: KMConfig,
-    pub account: UserAccount,
+    /// Config data
+    config: KMConfig,
+    /// The user account itself
+    account: UserAccount,
 }
 
 /// Main client for interacting with the SQ MU!
@@ -51,12 +55,7 @@ pub struct KMLoginResult {
 ///
 /// #[tokio::main]
 /// async fn main() {
-///     let config = KMConfigMobile {
-///         user_id: "123".to_string(),
-///         hash_key: "abcxyz".to_string(),
-///         platform: KMConfigMobilePlatform::Android,
-///     };
-///
+///     let config = KMConfigMobile::new("123", "abcxyz", KMConfigMobilePlatform::Android);
 ///     let client = KMClient::new(KMConfig::Mobile(config)).unwrap();
 ///
 ///     let manga = client.get_titles(vec![10007]).await.unwrap();
@@ -134,7 +133,7 @@ impl KMClient {
                 })
             }
             KMConfig::Mobile(mobile) => {
-                let consts = get_constants(mobile.platform.clone() as u8);
+                let consts = get_constants(mobile.platform() as u8);
                 headers.insert(
                     reqwest::header::USER_AGENT,
                     reqwest::header::HeaderValue::from_static(&consts.ua),
@@ -173,7 +172,7 @@ impl KMClient {
         query_params.insert("platform".to_string(), platform.to_string());
         query_params.insert("version".to_string(), version.to_string());
         if let KMConfig::Mobile(mobile) = &self.config {
-            query_params.insert("user_id".to_string(), mobile.user_id.to_string());
+            query_params.insert("user_id".to_string(), mobile.user_id().to_string());
         }
         if let Some(disp_ver) = self.constants.display_version {
             query_params.insert("disp_version".to_string(), disp_ver.to_string());
@@ -616,7 +615,7 @@ impl KMClient {
             .request::<AccountResponse>(reqwest::Method::GET, "/account", None, None, None)
             .await?;
 
-        Ok(response.account)
+        Ok(response.account().clone())
     }
 
     /// Get a user information
@@ -874,10 +873,11 @@ impl KMClient {
 
         let login_status = parse_json_response::<StatusResponse>(response).await?;
 
-        if login_status.response_code != 0 {
-            return Err(
-                ToshoAuthError::InvalidCredentials(login_status.error_message.clone()).into(),
-            );
+        if login_status.response_code() != 0 {
+            return Err(ToshoAuthError::InvalidCredentials(
+                login_status.error_message().to_string(),
+            )
+            .into());
         }
 
         let unparse_web = KMConfigWeb::try_from(cookie_store.lock().unwrap().clone())?;
@@ -888,15 +888,14 @@ impl KMClient {
         match mobile_platform {
             Some(platform) => {
                 // Authenticate as mobile
-                let user_info = km_client.get_user(account.user_id).await?;
+                let user_info = km_client.get_user(account.user_id()).await?;
 
                 Ok(KMLoginResult {
-                    config: KMConfig::Mobile(KMConfigMobile {
-                        user_id: user_info.id.to_string(),
-                        hash_key: user_info.hash_key.clone(),
-                        // Guaranteed to be Some because we checked it above
+                    config: KMConfig::Mobile(KMConfigMobile::new(
+                        user_info.id().to_string(),
+                        user_info.hash_key(),
                         platform,
-                    }),
+                    )),
                     account,
                 })
             }
@@ -918,9 +917,8 @@ fn create_request_hash(
 ) -> ToshoResult<String> {
     match config {
         KMConfig::Web(web) => {
-            let birthday = &web.birthday.value;
-
-            let expires = web.birthday.expires.to_string();
+            let birthday = web.birthday().value();
+            let expires = web.birthday().expires().to_string();
 
             let mut keys = query_params.keys().collect::<Vec<&String>>();
             keys.sort();
@@ -946,10 +944,8 @@ fn create_request_hash(
         KMConfig::Mobile(mobile) => {
             let mut hasher = <Sha256 as Digest>::new();
 
-            let hash_key = &mobile.hash_key;
-
             let mut query_params = query_params.clone();
-            query_params.insert("hash_key".to_string(), hash_key.to_string());
+            query_params.insert("hash_key".to_string(), mobile.hash_key().to_string());
 
             // iterate sorted keys
             let mut keys = query_params.keys().collect::<Vec<&String>>();

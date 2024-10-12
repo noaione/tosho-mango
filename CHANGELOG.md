@@ -11,6 +11,7 @@ This should give more consistent error handling across all sources.
   - `Error` is the new error type that is used across all sources.
 - All sources: Make all fields private on models, you can now use getter function instead.
   - Example: `data.name` now become `data.name()`
+  - For `KM`, use the *new* `new` function that will help create the config.
 
 ### Changes
 - `MU`: Proto changes for subscription in manga detail

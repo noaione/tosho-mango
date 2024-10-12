@@ -17,7 +17,7 @@ use crate::{
 use super::config::Config;
 
 pub(super) fn do_print_search_information(
-    results: Vec<TitleNode>,
+    results: &[TitleNode],
     with_number: bool,
     spacing: Option<usize>,
 ) {
@@ -165,12 +165,21 @@ pub(super) async fn common_purchase_select(
 
     console.info("Your current point balance:");
     let total_bal = user_point
-        .point
+        .point()
         .total_point()
         .to_formatted_string(&Locale::en);
-    let paid_point = user_point.point.paid_point.to_formatted_string(&Locale::en);
-    let free_point = user_point.point.free_point.to_formatted_string(&Locale::en);
-    let premium_ticket = user_point.ticket.total_num.to_formatted_string(&Locale::en);
+    let paid_point = user_point
+        .point()
+        .paid_point()
+        .to_formatted_string(&Locale::en);
+    let free_point = user_point
+        .point()
+        .free_point()
+        .to_formatted_string(&Locale::en);
+    let premium_ticket = user_point
+        .ticket()
+        .total_num()
+        .to_formatted_string(&Locale::en);
     console.info(cformat!(
         "  - <bold>Total:</> <cyan!,bold><reverse>{}</>c</cyan!,bold>",
         total_bal

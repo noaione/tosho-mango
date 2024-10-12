@@ -69,7 +69,9 @@ pub struct EpisodesListResponse {
 /// The node of a single image page.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ImagePageNode {
+    /// Image index
     pub index: i32,
+    /// Image URL
     #[serde(rename = "image_url")]
     pub url: String,
 }
@@ -315,6 +317,7 @@ pub struct EpisodeViewerFinishResponse {
     /// The bonus point of the episode.
     #[serde(rename = "view_finish_episode_count")]
     pub view_count: u64,
+    /// Episode or title SNS sharing information
     #[serde(rename = "title_share_ret")]
     pub share: TitleShare,
 }
