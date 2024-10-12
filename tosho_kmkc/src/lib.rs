@@ -572,11 +572,15 @@ impl KMClient {
     /// # Arguments
     /// * `query` - The query to search for
     /// * `limit` - The limit of results to return
-    pub async fn search(&self, query: &str, limit: Option<u32>) -> ToshoResult<Vec<TitleNode>> {
+    pub async fn search(
+        &self,
+        query: impl Into<String>,
+        limit: Option<u32>,
+    ) -> ToshoResult<Vec<TitleNode>> {
         let mut params = HashMap::new();
-        params.insert("keyword".to_owned(), query.to_owned());
+        params.insert("keyword".to_string(), query.into());
         let limit = limit.unwrap_or(99_999);
-        params.insert("limit".to_owned(), limit.to_string());
+        params.insert("limit".to_string(), limit.to_string());
 
         let response = self
             .request::<SearchResponse>(
@@ -737,10 +741,11 @@ impl KMClient {
     /// * `writer` - The writer to write the image to
     pub async fn stream_download(
         &self,
-        url: &str,
+        url: impl Into<String>,
         scramble_seed: Option<u32>,
         mut writer: impl tokio::io::AsyncWrite + std::marker::Unpin,
     ) -> ToshoResult<()> {
+        let url: String = url.into();
         let res = self
             .inner
             .get(url)
@@ -801,8 +806,8 @@ impl KMClient {
     /// * `password` - The password to login with
     /// * `mobile` - Whether to login as mobile or not
     pub async fn login(
-        email: &str,
-        password: &str,
+        email: impl Into<String>,
+        password: impl Into<String>,
         mobile_platform: Option<KMConfigMobilePlatform>,
     ) -> ToshoResult<KMLoginResult> {
         // Create a new client
@@ -835,8 +840,8 @@ impl KMClient {
 
         // Perform web login
         let mut req_data = HashMap::new();
-        req_data.insert("email".to_string(), email.to_string());
-        req_data.insert("password".to_string(), password.to_string());
+        req_data.insert("email".to_string(), email.into());
+        req_data.insert("password".to_string(), password.into());
         req_data.insert("platform".to_string(), WEB_CONSTANTS.platform.to_string());
         req_data.insert("version".to_string(), WEB_CONSTANTS.version.to_string());
 

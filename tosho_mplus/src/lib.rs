@@ -53,7 +53,7 @@ impl MPClient {
     /// * `language` - The language to use for the client.
     /// * `constants` - The constants to use for the client.
     pub fn new(
-        secret: &str,
+        secret: impl Into<String>,
         language: Language,
         constants: &'static Constants,
     ) -> ToshoResult<Self> {
@@ -83,7 +83,7 @@ impl MPClient {
     }
 
     fn make_client(
-        secret: &str,
+        secret: impl Into<String>,
         language: Language,
         constants: &'static Constants,
         proxy: Option<reqwest::Proxy>,
@@ -111,7 +111,7 @@ impl MPClient {
 
         Ok(Self {
             inner: client,
-            secret: secret.to_string(),
+            secret: secret.into(),
             language,
             constants,
             app_ver: None,
@@ -529,9 +529,10 @@ impl MPClient {
     /// * `writer` - The writer to write the image to.
     pub async fn stream_download(
         &self,
-        url: &str,
+        url: impl Into<String>,
         mut writer: impl io::AsyncWrite + Unpin,
     ) -> ToshoResult<()> {
+        let url: String = url.into();
         let res = self
             .inner
             .get(url)
