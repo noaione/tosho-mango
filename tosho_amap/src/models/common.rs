@@ -20,8 +20,10 @@ pub struct ResultHeader {
 /// The body which contains error message.
 #[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
 pub struct ErrorBody {
+    /// The error response code
     #[serde(rename = "error_code")]
     code: i32,
+    /// The list of error messages
     #[serde(rename = "error_message_list")]
     messages: Vec<String>,
 }
@@ -31,6 +33,7 @@ pub struct ErrorBody {
 pub struct StatusResult {
     /// The result of the request.
     header: ResultHeader,
+    /// The content of the response, this is just a stub
     #[serde(default)]
     body: Option<serde_json::Value>,
 }

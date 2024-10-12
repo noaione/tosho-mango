@@ -159,6 +159,7 @@ pub struct ComicEpisodeInfoNode {
     /// The episode expiry time in UNIX timestamp
     #[serde(rename = "i_expire_time")]
     expiry_time: Option<u64>,
+    #[allow(clippy::missing_docs_in_private_items)]
     close_time: Option<u64>, // ???
     /// The volume that includes the episode
     #[serde(rename = "included_volume")]
@@ -342,6 +343,7 @@ pub struct ComicReadInfo {
     likes: String,
     /// My likes on the episode
     my_likes: u64,
+    #[allow(clippy::missing_docs_in_private_items)]
     post_remain: u64, // ???
     /// The episode pages list
     #[serde(rename = "iap_url_list")]

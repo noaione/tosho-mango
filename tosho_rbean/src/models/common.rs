@@ -110,6 +110,7 @@ pub struct ChapterGap {
 /// A chapter explainer, commonly used in separator.
 #[derive(Debug, Clone, Copy, AutoGetter, Serialize, Deserialize, PartialEq)]
 pub struct ChapterExplainer {
+    /// The number of chapters specified on the separator.
     #[serde(rename = "num_chapters")]
     count: i32,
 }

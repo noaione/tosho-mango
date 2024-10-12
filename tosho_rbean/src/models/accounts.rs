@@ -39,6 +39,8 @@ pub struct ReadingListItem {
 
 /// Google related identity toolkit models
 pub mod google {
+    #![allow(clippy::missing_docs_in_private_items)]
+
     use serde::{Deserialize, Serialize};
     use tosho_macros::AutoGetter;
 

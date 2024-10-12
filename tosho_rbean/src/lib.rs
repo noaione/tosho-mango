@@ -1,9 +1,4 @@
-#![warn(
-    missing_docs,
-    clippy::empty_docs,
-    rustdoc::broken_intra_doc_links,
-    clippy::missing_docs_in_private_items
-)]
+#![warn(missing_docs, clippy::empty_docs, rustdoc::broken_intra_doc_links)]
 #![doc = include_str!("../README.md")]
 
 use futures_util::TryStreamExt;
@@ -73,6 +68,7 @@ impl RBClient {
         Self::make_client(self.config.clone(), Some(proxy))
     }
 
+    /// Internal function to make the client
     fn make_client(config: RBConfig, proxy: Option<reqwest::Proxy>) -> ToshoResult<Self> {
         let constants = crate::constants::get_constants(config.platform() as u8);
         let mut headers = reqwest::header::HeaderMap::new();
@@ -188,6 +184,7 @@ impl RBClient {
 
     // <-- Common Helper
 
+    /// Request to the API with the given method and url.
     async fn request<T>(
         &mut self,
         method: reqwest::Method,

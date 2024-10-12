@@ -2,6 +2,8 @@
 //!
 //! If something is missing, please [open an issue](https://github.com/noaione/tosho-mango/issues/new/choose) or a [pull request](https://github.com/noaione/tosho-mango/compare).
 
+#![warn(clippy::missing_docs_in_private_items)]
+
 use serde::{Deserialize, Serialize};
 
 pub mod account;
@@ -18,8 +20,10 @@ use tosho_macros::AutoGetter;
 /// A simple response to check if request successful or not
 #[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
 pub struct SimpleResponse {
+    /// Is the request succeed or not
     #[copyable]
     ok: IntBool,
+    /// The error message
     error: Option<String>,
 }
 

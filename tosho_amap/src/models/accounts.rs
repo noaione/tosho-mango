@@ -22,12 +22,16 @@ pub struct IAPInfo {
     new_bonus: u64,
     /// The request payload
     payload: String,
+    /// The next point reset in second
     #[serde(rename = "next_pp_second")]
     next_point_second: u64,
+    /// The next point in UNIX timestamp
     #[serde(rename = "next_pp_time")]
     next_point_time: u64,
+    /// The next point
     #[serde(rename = "next_pp")]
     next_point: u64,
+    #[allow(clippy::missing_docs_in_private_items)]
     available_wall: bool,
     /// The account identifier for the user
     ///

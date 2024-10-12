@@ -2,6 +2,8 @@
 //!
 //! If something is missing, please [open an issue](https://github.com/noaione/tosho-mango/issues/new/choose) or a [pull request](https://github.com/noaione/tosho-mango/compare).
 
+#![warn(clippy::missing_docs_in_private_items)]
+
 pub mod accounts;
 pub mod comic;
 pub mod common;

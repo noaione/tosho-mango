@@ -1,9 +1,4 @@
-#![warn(
-    missing_docs,
-    clippy::empty_docs,
-    rustdoc::broken_intra_doc_links,
-    clippy::missing_docs_in_private_items
-)]
+#![warn(missing_docs, clippy::empty_docs, rustdoc::broken_intra_doc_links)]
 #![doc = include_str!("../README.md")]
 
 pub mod constants;
@@ -39,8 +34,11 @@ use tosho_common::{
 /// ```
 #[derive(Debug)]
 pub struct MUClient {
+    /// The inner client
     inner: reqwest::Client,
+    /// Current secret used
     secret: String,
+    /// The constants used
     constants: &'static Constants,
 }
 
@@ -64,6 +62,7 @@ impl MUClient {
         Self::make_client(&self.secret, self.constants, Some(proxy))
     }
 
+    /// Internal function to make the new client
     fn make_client(
         secret: impl Into<String>,
         constants: &'static Constants,
@@ -106,6 +105,7 @@ impl MUClient {
         params.insert("lang".to_string(), "en".to_string());
     }
 
+    /// Create a custom cosume coin object.
     fn build_coin(
         &self,
         need_coin: u64,
@@ -218,6 +218,7 @@ impl MUClient {
         }
     }
 
+    /// Build and merge URL into a full API url
     fn build_url(&self, path: &str) -> String {
         if path.starts_with('/') {
             return format!("{}{}", &*BASE_API, path);
@@ -226,6 +227,7 @@ impl MUClient {
         format!("{}/{}", &*BASE_API, path)
     }
 
+    /// Create an empty params
     fn empty_params(&self) -> HashMap<String, String> {
         let mut params: HashMap<String, String> = HashMap::new();
 
