@@ -34,19 +34,19 @@ pub(super) fn do_print_search_information(
     let spacing = spacing.unwrap_or(2);
 
     for (idx, result) in results.iter().enumerate() {
-        let result = &result.info;
-        let id = result.id;
-        let manga_url = format!("https://{}/manga/{}", &*BASE_HOST, result.id);
-        let linked = linkify!(&manga_url, &result.title);
+        let result = result.info();
+        let id = result.id();
+        let manga_url = format!("https://{}/manga/{}", &*BASE_HOST, id);
+        let linked = linkify!(&manga_url, result.title());
         let mut text_data = cformat!("<s>{}</s> ({})", linked, id);
 
-        if result.new_update {
+        if result.new_update() {
             text_data = cformat!("{} [<b,s>NEW</b,s>]", text_data);
         }
 
         let mut add_url_pre = 1;
         let mut last_upd: Option<String> = None;
-        if let Some(last_update) = result.update_date {
+        if let Some(last_update) = result.update_date() {
             if let Some(last_update) = unix_timestamp_to_string(last_update as i64) {
                 last_upd = Some(cformat!("Last update: <s>{}</>", last_update));
                 add_url_pre += 1;
@@ -88,7 +88,7 @@ pub(super) async fn common_purchase_select(
         Ok(result) => {
             save_session_config(client, account);
 
-            let balance = &result.account;
+            let balance = result.account();
             let total_ticket = balance.sum().to_formatted_string(&Locale::en);
             let purchased = balance.purchased().to_formatted_string(&Locale::en);
             let premium = balance.premium().to_formatted_string(&Locale::en);
@@ -114,35 +114,35 @@ pub(super) async fn common_purchase_select(
 
             console.info("Title information:");
             console.info(cformat!("  - <s>ID</>: {}", title_id));
-            console.info(cformat!("  - <s>Title</>: {}", result.info.title));
+            console.info(cformat!("  - <s>Title</>: {}", result.info().title()));
             console.info(cformat!(
                 "  - <s>Chapters</>: {}",
-                result.info.episodes.len()
+                result.info().episodes().len()
             ));
 
             if no_input {
                 return (
-                    Ok(result.info.episodes.clone()),
-                    Some(result.info.clone()),
+                    Ok(result.info().episodes().to_vec()),
+                    Some(result.info().clone()),
                     Some(balance.clone()),
                 );
             }
 
             let select_choices: Vec<ConsoleChoice> = result
-                .info
-                .episodes
+                .info()
+                .episodes()
                 .iter()
                 .filter_map(|ch| {
-                    if download_mode && !show_all && !ch.info.is_available() {
+                    if download_mode && !show_all && !ch.info().is_available() {
                         None
                     } else {
-                        let value = if ch.info.is_available() {
-                            ch.info.title.clone()
+                        let value = if ch.info().is_available() {
+                            ch.info().title().to_string()
                         } else {
-                            format!("{} ({}T)", ch.info.title, ch.info.price)
+                            format!("{} ({}T)", ch.info().title(), ch.info().price())
                         };
                         Some(ConsoleChoice {
-                            name: ch.info.id.to_string(),
+                            name: ch.info().id().to_string(),
                             value,
                         })
                     }
@@ -175,10 +175,10 @@ pub(super) async fn common_purchase_select(
                     for chapter in selected {
                         let ch_id = chapter.name.parse::<u64>().unwrap();
                         let ch = result
-                            .info
-                            .episodes
+                            .info()
+                            .episodes()
                             .iter()
-                            .find(|&ch| ch.info.id == ch_id)
+                            .find(|&ch| ch.info().id() == ch_id)
                             .unwrap()
                             .clone();
 
@@ -187,7 +187,7 @@ pub(super) async fn common_purchase_select(
 
                     (
                         Ok(selected_chapters),
-                        Some(result.info),
+                        Some(result.info().clone()),
                         Some(balance.clone()),
                     )
                 }
@@ -195,8 +195,8 @@ pub(super) async fn common_purchase_select(
                     console.warn("Aborted");
                     (
                         Err(make_error!("Aborted by user")),
-                        Some(result.info.clone()),
-                        Some(result.account.clone()),
+                        Some(result.info().clone()),
+                        Some(result.account().clone()),
                     )
                 }
             }

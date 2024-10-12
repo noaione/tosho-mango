@@ -328,7 +328,7 @@ impl AMClient {
     /// * `limit` - The limit of results per page. (default to 30)
     pub async fn search(
         &self,
-        query: &str,
+        query: impl Into<String>,
         status: Option<ComicStatus>,
         tag_id: Option<u64>,
         page: Option<u64>,
@@ -339,7 +339,7 @@ impl AMClient {
         let mut conditions = serde_json::Map::new();
         conditions.insert(
             "free_word".to_string(),
-            serde_json::Value::String(query.to_string()),
+            serde_json::Value::String(query.into()),
         );
         conditions.insert(
             "tag_id".to_string(),
@@ -399,7 +399,7 @@ impl AMClient {
     /// * `writer` - The writer to write the image to.
     pub async fn stream_download(
         &self,
-        url: &str,
+        url: impl Into<String>,
         mut writer: impl tokio::io::AsyncWrite + Unpin,
     ) -> ToshoResult<()> {
         let mut headers = make_header(&self.config, self.constants)?;
@@ -411,6 +411,7 @@ impl AMClient {
             "User-Agent",
             reqwest::header::HeaderValue::from_static(&self.constants.image_ua),
         );
+        let url: String = url.into();
 
         let res = self.inner.get(url).headers(headers).send().await?;
 
@@ -433,7 +434,10 @@ impl AMClient {
     /// # Arguments
     /// * `email` - The email of the user.
     /// * `password` - The password of the user.
-    pub async fn login(email: &str, password: &str) -> ToshoResult<AMConfig> {
+    pub async fn login(
+        email: impl Into<String>,
+        password: impl Into<String>,
+    ) -> ToshoResult<AMConfig> {
         let cookie_store = CookieStoreMutex::default();
         let cookie_store = std::sync::Arc::new(cookie_store);
 
@@ -502,13 +506,10 @@ impl AMClient {
 
         // Step 2: Perform login
         let mut json_body_login = HashMap::new();
-        json_body_login.insert(
-            "email".to_string(),
-            serde_json::Value::String(email.to_string()),
-        );
+        json_body_login.insert("email".to_string(), serde_json::Value::String(email.into()));
         json_body_login.insert(
             "citi_pass".to_string(),
-            serde_json::Value::String(password.to_string()),
+            serde_json::Value::String(password.into()),
         );
         json_body_login.insert(
             "iap_token".to_string(),

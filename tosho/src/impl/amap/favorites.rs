@@ -18,17 +18,17 @@ pub(crate) async fn amap_my_favorites(
 
     match results {
         Ok(results) => {
-            if results.comics.is_empty() {
+            if results.comics().is_empty() {
                 console.error("You don't have any favorites.");
                 return 0;
             }
 
             console.info(cformat!(
                 "Your favorites list (<m,s>{}</> results):",
-                results.comics.len()
+                results.comics().len()
             ));
 
-            do_print_search_information(&results.comics, false, None);
+            do_print_search_information(results.comics(), false, None);
 
             0
         }

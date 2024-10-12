@@ -146,24 +146,24 @@ impl From<EpisodeNode> for ChapterDetailDump {
     }
 }
 
-impl From<ComicEpisodeInfoNode> for ChapterDetailDump {
+impl From<&ComicEpisodeInfoNode> for ChapterDetailDump {
     /// Convert from [`tosho_amap::models::ComicEpisodeInfoNode`] into [`ChapterDetailDump`]
     /// `_info.json` format.
-    fn from(value: ComicEpisodeInfoNode) -> Self {
+    fn from(value: &ComicEpisodeInfoNode) -> Self {
         Self {
-            main_name: value.title,
-            id: value.id.into(),
-            timestamp: Some(value.update_date as i64),
+            main_name: value.title().to_string(),
+            id: value.id().into(),
+            timestamp: Some(value.update_date() as i64),
             sub_name: None,
         }
     }
 }
 
-impl From<ComicEpisodeInfo> for ChapterDetailDump {
+impl From<&ComicEpisodeInfo> for ChapterDetailDump {
     /// Convert from [`tosho_amap::models::ComicEpisodeInfo`] into [`ChapterDetailDump`]
     /// `_info.json` format.
-    fn from(value: ComicEpisodeInfo) -> Self {
-        Self::from(value.info)
+    fn from(value: &ComicEpisodeInfo) -> Self {
+        Self::from(value.info())
     }
 }
 
