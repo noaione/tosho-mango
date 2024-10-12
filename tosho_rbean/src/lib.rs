@@ -37,12 +37,7 @@ const PATTERN: [u8; 1] = [174];
 ///
 /// #[tokio::main]
 /// async fn main() {
-///     let config = RBConfig {
-///         token: "123".to_string(),
-///         refresh_token: "abcxyz".to_string(),
-///         platform: RBPlatform::Android,
-///     };
-///
+///     let config = RBConfig::new("123", "abcxyz", RBPlatform::Android);
 ///     let mut client = RBClient::new(config).unwrap();
 ///     // Refresh token
 ///     client.refresh_token().await.unwrap();
@@ -79,7 +74,7 @@ impl RBClient {
     }
 
     fn make_client(config: RBConfig, proxy: Option<reqwest::Proxy>) -> ToshoResult<Self> {
-        let constants = crate::constants::get_constants(config.platform as u8);
+        let constants = crate::constants::get_constants(config.platform() as u8);
         let mut headers = reqwest::header::HeaderMap::new();
 
         headers.insert(
@@ -96,8 +91,8 @@ impl RBClient {
         );
         headers.insert(
             "x-user-token",
-            config.token.parse().map_err(|_| {
-                ToshoClientError::HeaderParseError(format!("x-user-token for {}", config.token))
+            config.token().parse().map_err(|_| {
+                ToshoClientError::HeaderParseError(format!("x-user-token for {}", config.token()))
             })?,
         );
 
@@ -118,7 +113,7 @@ impl RBClient {
             inner: client,
             config: config.clone(),
             constants,
-            token: config.token.clone(),
+            token: config.token().to_string(),
             expiry_at: None,
         })
     }
@@ -146,7 +141,7 @@ impl RBClient {
 
         let json_data = json!({
             "grantType": "refresh_token",
-            "refreshToken": self.config.refresh_token,
+            "refreshToken": self.config.refresh_token(),
         });
 
         let client = reqwest::Client::builder()
@@ -167,7 +162,7 @@ impl RBClient {
             .await?;
 
         self.token.clone_from(&response.access_token().to_string());
-        self.config.token = response.access_token().to_string();
+        self.config.set_token(response.access_token());
         let expiry_in = response.expires_in().parse::<i64>().map_err(|e| {
             make_error!(
                 "Failed to parse expiry time: {}, error: {}",

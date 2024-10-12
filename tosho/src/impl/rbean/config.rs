@@ -102,15 +102,15 @@ impl From<RBLoginResponse> for Config {
 
 impl From<Config> for RBConfig {
     fn from(value: Config) -> Self {
-        Self {
-            token: value.access_token.clone(),
-            refresh_token: value.refresh_token.clone(),
-            platform: match value.platform() {
+        Self::new(
+            &value.access_token,
+            &value.refresh_token,
+            match value.platform() {
                 DeviceType::Android => RBPlatform::Android,
                 DeviceType::Apple => RBPlatform::Apple,
                 DeviceType::Web => RBPlatform::Web,
             },
-        }
+        )
     }
 }
 

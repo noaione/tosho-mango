@@ -15,11 +15,7 @@ use tosho_rbean::{RBClient, RBConfig, RBPlatform};
 
 #[tokio::main]
 async fn main() {
-    let config = RBConfig {
-        token: "123".to_string(),
-        refresh_token: "abcxyz".to_string(),
-        platform: RBPlatform::Android,
-    };
+    let config = RBConfig::new("123", "abcxyz", RBPlatform::Android);
     let mut client = RBClient::new(config).unwrap();
     // Refresh token
     client.refresh_token().await.unwrap();
