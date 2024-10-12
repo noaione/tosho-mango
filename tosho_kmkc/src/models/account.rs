@@ -88,13 +88,13 @@ impl UserPoint {
     ///
     /// user_point.subtract(5);
     ///
-    /// assert_eq!(user_point.paid_point, 10);
-    /// assert_eq!(user_point.free_point, 5);
+    /// assert_eq!(user_point.paid_point(), 10);
+    /// assert_eq!(user_point.free_point(), 5);
     ///
     /// user_point.subtract(10);
     ///
-    /// assert_eq!(user_point.free_point, 0);
-    /// assert_eq!(user_point.paid_point, 5);
+    /// assert_eq!(user_point.free_point(), 0);
+    /// assert_eq!(user_point.paid_point(), 5);
     /// ```
     pub fn subtract(&mut self, price: u64) {
         if !self.can_purchase(price) {
@@ -119,8 +119,8 @@ impl UserPoint {
     ///
     /// user_point.add(10);
     ///
-    /// assert_eq!(user_point.free_point, 10);
-    /// assert_eq!(user_point.paid_point, 0);
+    /// assert_eq!(user_point.free_point(), 10);
+    /// assert_eq!(user_point.paid_point(), 0);
     /// ```
     pub fn add(&mut self, bonus: u64) {
         self.free_point += bonus;
