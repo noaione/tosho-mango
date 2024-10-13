@@ -46,4 +46,9 @@ reqwest_cookie_store = "0.8.0"
 image = { version = "0.25.2", default-features = false, features = ["jpeg", "png"] }
 kamadak-exif = "0.5.5"
 
-# CI-PROFILE-MARK
+# CI build profile, very optimized
+[profile.ci]
+inherits = "release"
+opt-level = "z"
+lto = true
+codegen-units = 1
