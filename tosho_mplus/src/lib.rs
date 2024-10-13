@@ -404,22 +404,25 @@ impl MPClient {
             SuccessOrError::Success(data) => match data.title_detail() {
                 Some(inner_data) => {
                     let mut cloned_data = inner_data.clone();
-                    cloned_data.chapter_groups.iter_mut().for_each(|group| {
-                        group
-                            .first_chapters
-                            .iter_mut()
-                            .for_each(|ch| ch.set_position(proto::ChapterPosition::First));
+                    cloned_data
+                        .chapter_groups_mut()
+                        .iter_mut()
+                        .for_each(|group| {
+                            group
+                                .first_chapters_mut()
+                                .iter_mut()
+                                .for_each(|ch| ch.set_position(proto::ChapterPosition::First));
 
-                        group
-                            .last_chapters
-                            .iter_mut()
-                            .for_each(|ch| ch.set_position(proto::ChapterPosition::Last));
+                            group
+                                .last_chapters_mut()
+                                .iter_mut()
+                                .for_each(|ch| ch.set_position(proto::ChapterPosition::Last));
 
-                        group
-                            .mid_chapters
-                            .iter_mut()
-                            .for_each(|ch| ch.set_position(proto::ChapterPosition::Middle));
-                    });
+                            group
+                                .mid_chapters_mut()
+                                .iter_mut()
+                                .for_each(|ch| ch.set_position(proto::ChapterPosition::Middle));
+                        });
 
                     Ok(APIResponse::Success(Box::new(cloned_data)))
                 }
@@ -444,13 +447,16 @@ impl MPClient {
         split: bool,
     ) -> ToshoResult<APIResponse<proto::ChapterViewer>> {
         let mut query_params = vec![];
-        query_params.push(("chapter_id".to_string(), chapter.chapter_id.to_string()));
+        query_params.push(("chapter_id".to_string(), chapter.chapter_id().to_string()));
         query_params.push((
             "split".to_string(),
             if split { "yes" } else { "no" }.to_string(),
         ));
         query_params.push(("img_quality".to_string(), quality.to_string()));
-        query_params.push(("viewer_mode".to_string(), chapter.default_view_mode()));
+        query_params.push((
+            "viewer_mode".to_string(),
+            chapter.default_view_mode().to_string(),
+        ));
         // Determine the way to read the chapter
         if chapter.is_free() {
             query_params.push(("free_reading".to_string(), "yes".to_string()));
@@ -461,8 +467,8 @@ impl MPClient {
             query_params.push(("free_reading".to_string(), "no".to_string()));
             query_params.push(("subscription_reading".to_string(), "no".to_string()));
         } else {
-            let user_sub = title.user_subscription.clone().unwrap_or_default();
-            let title_labels = title.title_labels.clone().unwrap_or_default();
+            let user_sub = title.user_subscription().cloned().unwrap_or_default();
+            let title_labels = title.title_labels().cloned().unwrap_or_default();
             if user_sub.plan() >= title_labels.plan_type() {
                 query_params.push(("subscription_reading".to_string(), "yes".to_string()));
                 query_params.push(("ticket_reading".to_string(), "no".to_string()));

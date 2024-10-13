@@ -193,15 +193,19 @@ impl From<&Chapter> for ChapterDetailDump {
     }
 }
 
-impl From<MPChapter> for ChapterDetailDump {
+impl From<&MPChapter> for ChapterDetailDump {
     /// Convert from [`tosho_mplus::proto::Chapter`] into [`ChapterDetailDump`]
     /// `_info.json` format.
-    fn from(value: MPChapter) -> Self {
+    fn from(value: &MPChapter) -> Self {
         Self {
-            id: value.chapter_id.into(),
-            main_name: value.title,
-            timestamp: Some(value.published_at),
-            sub_name: value.subtitle,
+            id: value.chapter_id().into(),
+            main_name: value.title().to_string(),
+            timestamp: Some(value.published_at()),
+            sub_name: if value.subtitle().is_empty() {
+                None
+            } else {
+                Some(value.subtitle().to_string())
+            },
         }
     }
 }

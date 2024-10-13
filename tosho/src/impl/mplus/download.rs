@@ -89,14 +89,14 @@ fn create_chapters_info(title: &TitleDetail) -> MangaDetailDump {
     let dumped_chapters: Vec<ChapterDetailDump> = title
         .flat_chapters_group()
         .iter()
-        .map(|ch| ChapterDetailDump::from(ch.clone()))
+        .map(ChapterDetailDump::from)
         .collect();
 
-    let act_title = title.title.clone().unwrap();
+    let act_title = title.title().unwrap();
 
     MangaDetailDump::new(
-        act_title.title.clone(),
-        act_title.author.clone(),
+        act_title.title().to_string(),
+        act_title.author().to_string(),
         dumped_chapters,
     )
 }
@@ -126,26 +126,31 @@ fn do_chapter_select(
     show_all: bool,
     console: &mut crate::term::Terminal,
 ) -> Vec<Chapter> {
-    let title_info = result.title.clone().unwrap();
+    let title_info = result.title().unwrap();
     let flat_chapters = result.flat_chapters_group();
     console.info("Title information:");
-    console.info(cformat!("  - <bold>ID:</> {}", title_info.id));
-    console.info(cformat!("  - <bold>Title:</> {}", title_info.title));
+    console.info(cformat!("  - <bold>ID:</> {}", title_info.id()));
+    console.info(cformat!("  - <bold>Title:</> {}", title_info.title()));
     console.info(cformat!(
         "  - <bold>Chapters:</> {} chapters",
         flat_chapters.len()
     ));
 
-    let title_labels = result.title_labels.clone().unwrap_or_default();
-    let user_subs = result.user_subscription.clone().unwrap_or_default();
-    let has_min_subs = user_subs.plan() >= title_labels.plan_type();
+    let title_labels_subs = result
+        .title_labels()
+        .map(|x| x.plan_type())
+        .unwrap_or(tosho_mplus::helper::SubscriptionPlan::Basic);
+    let user_subs = result
+        .user_subscription()
+        .map(|x| x.plan())
+        .unwrap_or(tosho_mplus::helper::SubscriptionPlan::Basic);
 
     let select_choices: Vec<ConsoleChoice> = flat_chapters
         .iter()
         .filter_map(|ch| {
-            if ch.is_free() || ch.is_ticketed() || has_min_subs || show_all {
+            if ch.is_free() || ch.is_ticketed() || user_subs >= title_labels_subs || show_all {
                 Some(ConsoleChoice {
-                    name: ch.chapter_id.to_string(),
+                    name: ch.chapter_id().to_string(),
                     value: ch.as_chapter_title(),
                 })
             } else {
@@ -163,7 +168,7 @@ fn do_chapter_select(
                     let ch_id = x.name.parse::<u64>().unwrap();
                     let ch = flat_chapters
                         .iter()
-                        .find(|&ch| ch.chapter_id == ch_id)
+                        .find(|&ch| ch.chapter_id() == ch_id)
                         .unwrap()
                         .clone();
 
@@ -210,7 +215,7 @@ async fn mplus_actual_downloader(
         ));
     }
 
-    match node.client.stream_download(&node.image.url, writer).await {
+    match node.client.stream_download(node.image.url(), writer).await {
         Ok(_) => {}
         Err(err) => {
             console.error(format!("    Failed to download image: {}", err));
@@ -253,9 +258,14 @@ pub(crate) async fn mplus_download(
                 do_chapter_select(&results, dl_config.show_all, console)
             };
 
-            let title_labels = results.title_labels.clone().unwrap_or_default();
-            let user_subs = results.user_subscription.clone().unwrap_or_default();
-            let has_min_subs = user_subs.plan() >= title_labels.plan_type();
+            let title_labels_subs = results
+                .title_labels()
+                .map(|x| x.plan_type())
+                .unwrap_or(tosho_mplus::helper::SubscriptionPlan::Basic);
+            let user_subs = results
+                .user_subscription()
+                .map(|x| x.plan())
+                .unwrap_or(tosho_mplus::helper::SubscriptionPlan::Basic);
 
             let mut download_chapters: Vec<&Chapter> = select_chapters
                 .iter()
@@ -265,22 +275,22 @@ pub(crate) async fn mplus_download(
                         match (dl_config.start_from, dl_config.end_at) {
                             (Some(start), Some(end)) => {
                                 // between start and end
-                                ch.chapter_id >= start && ch.chapter_id <= end
+                                ch.chapter_id() >= start && ch.chapter_id() <= end
                             }
                             (Some(start), None) => {
-                                ch.chapter_id >= start // start to end
+                                ch.chapter_id() >= start // start to end
                             }
                             (None, Some(end)) => {
-                                ch.chapter_id <= end // 0 to end
+                                ch.chapter_id() <= end // 0 to end
                             }
                             _ => true,
                         }
                     } else {
                         dl_config.chapter_ids.is_empty()
-                            || dl_config.chapter_ids.contains(&(ch.chapter_id as usize))
+                            || dl_config.chapter_ids.contains(&(ch.chapter_id() as usize))
                     }
                 })
-                .filter(|&ch| ch.is_free() || ch.is_ticketed() || has_min_subs)
+                .filter(|&ch| ch.is_free() || ch.is_ticketed() || user_subs >= title_labels_subs)
                 .collect();
 
             if download_chapters.is_empty() {
@@ -288,7 +298,7 @@ pub(crate) async fn mplus_download(
                 return 1;
             }
 
-            download_chapters.sort_by(|&a, &b| a.published_at.cmp(&b.published_at));
+            download_chapters.sort_by(|&a, &b| a.published_at().cmp(&b.published_at()));
 
             let title_dir = get_output_directory(&output_dir, title_id, None, true);
             let dump_info = create_chapters_info(&results);
@@ -302,7 +312,7 @@ pub(crate) async fn mplus_download(
                 console.info(cformat!(
                     "  Downloading chapter <m,s>{}</> ({})...",
                     chapter.as_chapter_title(),
-                    chapter.chapter_id
+                    chapter.chapter_id()
                 ));
 
                 let view_req = client
@@ -324,20 +334,20 @@ pub(crate) async fn mplus_download(
                 let viewer = viewer.unwrap();
 
                 let chapter_images: Vec<tosho_mplus::proto::ChapterPage> = viewer
-                    .pages
+                    .pages()
                     .iter()
-                    .filter_map(|page| page.page.clone())
+                    .filter_map(|page| page.page().cloned())
                     .collect();
 
                 let image_dir =
-                    get_output_directory(&output_dir, title_id, Some(chapter.chapter_id), false);
+                    get_output_directory(&output_dir, title_id, Some(chapter.chapter_id()), false);
 
                 if let Some(count) = check_downloaded_image_count(&image_dir, "webp") {
                     if count >= chapter_images.len() {
                         console.warn(cformat!(
                             "   Chapter <m,s>{}</> (<s>{}</>) has been downloaded, skipping",
                             chapter.as_chapter_title(),
-                            chapter.chapter_id
+                            chapter.chapter_id()
                         ));
                         continue;
                     }
