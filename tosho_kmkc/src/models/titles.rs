@@ -271,6 +271,7 @@ pub struct TitleShare {
 
 /// Favorite title node
 #[derive(Debug, Clone, Copy, AutoGetter, Serialize, Deserialize)]
+#[auto_getters(unref = true)]
 pub struct TitleFavoriteNode {
     /// The title ID.
     #[serde(rename = "title_id")]
@@ -281,7 +282,6 @@ pub struct TitleFavoriteNode {
         serialize_with = "super::datetime::serialize_opt",
         deserialize_with = "super::datetime::deserialize_opt"
     )]
-    #[copyable]
     update_cycle: Option<DateTime<Utc>>,
     /// The update cycle for when new free episodes are released.
     #[serde(
@@ -289,7 +289,6 @@ pub struct TitleFavoriteNode {
         serialize_with = "super::datetime::serialize_opt",
         deserialize_with = "super::datetime::deserialize_opt"
     )]
-    #[copyable]
     free_update_cycle: Option<DateTime<Utc>>,
     /// The title purchase status.
     purchase_status: i32,
@@ -298,7 +297,6 @@ pub struct TitleFavoriteNode {
         serialize_with = "super::datetime::serialize_opt",
         deserialize_with = "super::datetime::deserialize_opt"
     )]
-    #[copyable]
     ticket_recover_time: Option<DateTime<Utc>>,
 }
 

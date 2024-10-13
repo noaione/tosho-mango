@@ -94,12 +94,11 @@ impl AccountSubscription {
 /// This is a minimal representation of the subscription info.
 /// Some field are discarded for simplicity.
 #[derive(Debug, Clone, Copy, AutoGetter, Serialize, Deserialize)]
+#[auto_getters(unref = true)]
 pub struct AccountArchive {
     /// Is the request successful
-    #[copyable]
     ok: IntBool,
     /// The current subscription of the user
-    #[copyable]
     subscription_type: SubscriptionType,
     /// Read limit
     #[serde(rename = "archive_limit")]
