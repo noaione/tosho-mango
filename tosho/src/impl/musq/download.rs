@@ -84,10 +84,11 @@ pub(crate) struct MUDownloadCliConfig {
 }
 
 fn create_chapters_info(manga_detail: MangaDetailV2) -> MangaDetailDump {
-    let mut chapters: Vec<ChapterDetailDump> = vec![];
-    for chapter in manga_detail.chapters() {
-        chapters.push(ChapterDetailDump::from(chapter));
-    }
+    let chapters: Vec<ChapterDetailDump> = manga_detail
+        .chapters()
+        .iter()
+        .map(ChapterDetailDump::from)
+        .collect();
 
     MangaDetailDump::new(
         manga_detail.title().to_string(),

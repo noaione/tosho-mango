@@ -40,10 +40,8 @@ pub(crate) struct SJDownloadCliConfig {
 }
 
 fn create_chapters_info(title: &MangaDetail, chapters: &[MangaChapterDetail]) -> MangaDetailDump {
-    let mut dumped_chapters: Vec<ChapterDetailDump> = vec![];
-    for chapter in chapters {
-        dumped_chapters.push(ChapterDetailDump::from(chapter));
-    }
+    let dumped_chapters: Vec<ChapterDetailDump> =
+        chapters.iter().map(ChapterDetailDump::from).collect();
 
     MangaDetailDump::new(
         title.title().to_string(),

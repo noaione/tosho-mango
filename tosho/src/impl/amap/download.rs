@@ -40,10 +40,11 @@ pub(crate) struct AMDownloadCliConfig {
 }
 
 fn create_chapters_info(manga_detail: &ComicInfo) -> MangaDetailDump {
-    let mut chapters: Vec<ChapterDetailDump> = vec![];
-    for chapter in manga_detail.episodes() {
-        chapters.push(ChapterDetailDump::from(chapter));
-    }
+    let chapters: Vec<ChapterDetailDump> = manga_detail
+        .episodes()
+        .iter()
+        .map(ChapterDetailDump::from)
+        .collect();
 
     let merged_authors = manga_detail
         .authors()

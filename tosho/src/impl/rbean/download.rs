@@ -124,10 +124,8 @@ pub(crate) struct RBDownloadConfigCli {
 }
 
 fn create_chapters_info(title: &Manga, chapters: &[Chapter]) -> MangaDetailDump {
-    let mut dumped_chapters: Vec<ChapterDetailDump> = vec![];
-    for chapter in chapters {
-        dumped_chapters.push(ChapterDetailDump::from(chapter));
-    }
+    let dumped_chapters: Vec<ChapterDetailDump> =
+        chapters.iter().map(ChapterDetailDump::from).collect();
 
     let creators = title
         .creators()
