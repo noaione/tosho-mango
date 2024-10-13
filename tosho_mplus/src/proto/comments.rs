@@ -54,5 +54,6 @@ pub struct CommentList {
     #[prost(message, repeated, tag = "1")]
     pub comments: ::prost::alloc::vec::Vec<Comment>,
     #[prost(bool, tag = "2")]
+    #[allow(missing_docs)]
     pub set_user_name: bool,
 }

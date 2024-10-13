@@ -1,3 +1,4 @@
+#![warn(missing_docs, clippy::empty_docs, rustdoc::broken_intra_doc_links)]
 #![doc = include_str!("../README.md")]
 
 pub mod constants;
@@ -172,7 +173,7 @@ impl MPClient {
 
         match response {
             SuccessOrError::Success(data) => match data.initial_view_v2 {
-                Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
+                Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data.clone()))),
                 None => Err(ToshoParseError::expect("initial view")),
             },
             SuccessOrError::Error(error) => Ok(APIResponse::Error(error)),
@@ -574,7 +575,9 @@ impl MPClient {
 ///
 /// It either returns the specified success response or an error.
 pub enum APIResponse<T: ::prost::Message + Clone> {
+    /// A [`Box`]-ed [`ErrorResponse`]
     Error(Box<ErrorResponse>),
+    /// Successfull response, also [`Box`]-ed and depends on the API call
     Success(Box<T>),
 }
 
