@@ -14,10 +14,12 @@ static KNOWN_COPYABLE_FIELD: &[&str; 16] = &[
 #[derive(Default, Clone, Copy)]
 struct AutoGetterAttr {
     unref: bool,
+    cloned: bool,
 }
 
 fn get_autogetter_attr(attrs: Vec<Attribute>) -> Result<AutoGetterAttr, syn::Error> {
     let mut unref = false;
+    let mut cloned = false;
 
     for attr in &attrs {
         if attr.path().is_ident("auto_getters") {
@@ -42,13 +44,20 @@ fn get_autogetter_attr(attrs: Vec<Attribute>) -> Result<AutoGetterAttr, syn::Err
                                 "Expected a boolean value for `unref`",
                             ));
                         }
+                    } else if nameval.path.is_ident("cloned") {
+                        cloned = true;
+                    } else {
+                        return Err(syn::Error::new_spanned(
+                            nameval.path,
+                            "Unknown attribute for `auto_getters`",
+                        ));
                     }
                 }
             }
         }
     }
 
-    Ok(AutoGetterAttr { unref })
+    Ok(AutoGetterAttr { unref, cloned })
 }
 
 /// The main function to expand the `AutoGetter` derive macro
@@ -148,6 +157,16 @@ fn expand_option_field(
     attrs_config: AutoGetterAttr,
 ) -> proc_macro2::TokenStream {
     let doc_get = make_field_comment(field, true);
+    let is_cloned = field_has_ident(field, "deref_clone") || attrs_config.cloned;
+
+    if is_cloned {
+        return quote::quote! {
+            #[doc = #doc_get]
+            pub fn #field_name(self) -> Option<#inner_type> {
+                self.#field_name
+            }
+        };
+    }
 
     // If string, we can use as_deref
     if is_string_field(inner_type) {
@@ -211,6 +230,16 @@ fn expand_regular_field(
 ) -> proc_macro2::TokenStream {
     let field_ty = &field.ty;
     let doc_get = make_field_comment(field, false);
+    let is_cloned = field_has_ident(field, "deref_clone") || attrs_config.cloned;
+
+    if is_cloned {
+        return quote::quote! {
+            #[doc = #doc_get]
+            pub fn #field_name(self) -> #field_ty {
+                self.#field_name
+            }
+        };
+    }
 
     // If string, we can use as_deref
     if is_string_field(field_ty) {

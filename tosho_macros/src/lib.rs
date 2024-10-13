@@ -231,7 +231,10 @@ pub fn enum_error(item: TokenStream) -> TokenStream {
 /// assert_eq!(data.pos, 0);
 /// # }
 /// ```
-#[proc_macro_derive(AutoGetter, attributes(auto_getters, copyable, skip_field))]
+#[proc_macro_derive(
+    AutoGetter,
+    attributes(auto_getters, copyable, skip_field, deref_clone)
+)]
 pub fn autogetter_derive(input: TokenStream) -> TokenStream {
     // Parse the input tokens into a syntax tree
     let input = syn::parse_macro_input!(input as syn::DeriveInput);
