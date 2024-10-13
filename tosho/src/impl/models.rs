@@ -131,15 +131,15 @@ impl From<&ChapterV2> for ChapterDetailDump {
     }
 }
 
-impl From<EpisodeNode> for ChapterDetailDump {
+impl From<&EpisodeNode> for ChapterDetailDump {
     /// Convert from [`tosho_kmkc::models::EpisodeNode`] into [`ChapterDetailDump`]
     /// `_info.json` format.
-    fn from(value: EpisodeNode) -> Self {
-        let start_time_ts = value.start_time.timestamp();
+    fn from(value: &EpisodeNode) -> Self {
+        let start_time_ts = value.start_time().timestamp();
 
         Self {
-            main_name: value.title,
-            id: (value.id as u64).into(),
+            main_name: value.title().to_string(),
+            id: (value.id() as u64).into(),
             timestamp: Some(start_time_ts),
             sub_name: None,
         }

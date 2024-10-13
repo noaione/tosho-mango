@@ -43,13 +43,15 @@ pub(crate) struct KMDownloadCliConfig {
     pub(crate) no_point: bool,
 }
 
-fn create_chapters_info(title: &TitleNode, chapters: Vec<EpisodeNode>) -> MangaDetailDump {
-    let mut dumped_chapters: Vec<ChapterDetailDump> = vec![];
-    for chapter in chapters {
-        dumped_chapters.push(ChapterDetailDump::from(chapter));
-    }
+fn create_chapters_info(title: &TitleNode, chapters: &[EpisodeNode]) -> MangaDetailDump {
+    let dumped_chapters: Vec<ChapterDetailDump> =
+        chapters.iter().map(ChapterDetailDump::from).collect();
 
-    MangaDetailDump::new(title.title.clone(), title.author.clone(), dumped_chapters)
+    MangaDetailDump::new(
+        title.title().to_string(),
+        title.author().to_string(),
+        dumped_chapters,
+    )
 }
 
 fn get_output_directory(
@@ -101,7 +103,7 @@ async fn kmkc_actual_downloader(
 
     match node
         .client
-        .stream_download(&node.image.url, node.seed, writer)
+        .stream_download(node.image.url(), node.seed, writer)
         .await
     {
         Ok(_) => {}
@@ -153,19 +155,19 @@ pub(crate) async fn kmkc_download(
                         match (dl_config.start_from, dl_config.end_at) {
                             (Some(start), Some(end)) => {
                                 // between start and end
-                                ch.id >= start && ch.id <= end
+                                ch.id() >= start && ch.id() <= end
                             }
                             (Some(start), None) => {
-                                ch.id >= start // start to end
+                                ch.id() >= start // start to end
                             }
                             (None, Some(end)) => {
-                                ch.id <= end // 0 to end
+                                ch.id() <= end // 0 to end
                             }
                             _ => true,
                         }
                     } else {
                         dl_config.chapter_ids.is_empty()
-                            || dl_config.chapter_ids.contains(&(ch.id as usize))
+                            || dl_config.chapter_ids.contains(&(ch.id() as usize))
                     }
                 })
                 .collect();
@@ -190,9 +192,9 @@ pub(crate) async fn kmkc_download(
                 if !dl_config.auto_purchase && !dl_config.no_input {
                     let prompt = cformat!(
                         "Chapter <m,s>{}</> (<s>{}</>) need to be purchased for {}P, continue?",
-                        chapter.title,
-                        chapter.id,
-                        chapter.point
+                        chapter.title(),
+                        chapter.id(),
+                        chapter.point()
                     );
                     should_purchase = console.confirm(Some(&prompt));
                 }
@@ -203,27 +205,29 @@ pub(crate) async fn kmkc_download(
                         if ticket_entry.is_title_available() {
                             console.info(cformat!(
                                 "  Using title ticket to purchase chapter <m,s>{}</> (<s>{}</>)...",
-                                chapter.title,
-                                chapter.id
+                                chapter.title(),
+                                chapter.id()
                             ));
-                            ticket_info = Some(TicketInfoType::Title(
-                                ticket_entry.info.title.clone().unwrap(),
-                            ));
+                            ticket_info =
+                                Some(TicketInfoType::Title(ticket_entry.info().title().unwrap()));
                             ticket_entry.subtract_title();
                         } else if ticket_entry.is_premium_available() {
                             console.info(cformat!(
                                 "  Using premium ticket to purchase chapter <m,s>{}</> (<s>{}</>)...",
-                                chapter.title,
-                                chapter.id
+                                chapter.title(),
+                                chapter.id()
                             ));
                             ticket_info = Some(TicketInfoType::Premium(
-                                ticket_entry.info.premium.clone().unwrap(),
+                                ticket_entry.info().premium().unwrap(),
                             ));
                             ticket_entry.subtract_premium();
                         }
 
                         if let Some(ticket) = ticket_info {
-                            match client.claim_episode_with_ticket(chapter.id, &ticket).await {
+                            match client
+                                .claim_episode_with_ticket(chapter.id(), &ticket)
+                                .await
+                            {
                                 Ok(_) => {
                                     download_chapters.push(chapter);
                                     // if chapter.bonus_point > 0 {
@@ -245,13 +249,13 @@ pub(crate) async fn kmkc_download(
                         continue;
                     }
 
-                    if !wallet_copy.can_purchase(chapter.point.try_into().unwrap_or(0)) {
+                    if !wallet_copy.can_purchase(chapter.point().try_into().unwrap_or(0)) {
                         console.warn(cformat!(
                             "   Chapter <m,s>{}</> (<s>{}</>), is not available for purchase, skipping",
-                            chapter.title,
-                            chapter.id
+                            chapter.title(),
+                            chapter.id()
                         ));
-                        let mut warn_info = format!("    Need {} point", chapter.point);
+                        let mut warn_info = format!("    Need {} point", chapter.point());
                         if chapter.is_ticketable() {
                             warn_info += " or ticket";
                         }
@@ -261,9 +265,9 @@ pub(crate) async fn kmkc_download(
 
                     console.info(cformat!(
                         "  Purchasing chapter <m,s>{}</> (<s>{}</>) for {}P...",
-                        chapter.title,
-                        chapter.id,
-                        chapter.point
+                        chapter.title(),
+                        chapter.id(),
+                        chapter.point()
                     ));
                     match client.claim_episode(chapter, &mut wallet_copy).await {
                         Ok(_) => {
@@ -285,10 +289,10 @@ pub(crate) async fn kmkc_download(
                 return 1;
             }
 
-            download_chapters.sort_by(|&a, &b| a.id.cmp(&b.id));
+            download_chapters.sort_by(|&a, &b| a.id().cmp(&b.id()));
 
             let title_dir = get_output_directory(&output_dir, title_id, None, true);
-            let dump_info = create_chapters_info(&title_detail, all_chapters);
+            let dump_info = create_chapters_info(&title_detail, &all_chapters);
 
             let title_dump_path = title_dir.join("_info.json");
             dump_info
@@ -298,8 +302,8 @@ pub(crate) async fn kmkc_download(
             for chapter in download_chapters {
                 console.info(cformat!(
                     "  Downloading chapter <m,s>{}</> ({})...",
-                    chapter.title,
-                    chapter.id
+                    chapter.title(),
+                    chapter.id()
                 ));
 
                 let viewer_info = client.get_episode_viewer(chapter).await;
@@ -311,51 +315,51 @@ pub(crate) async fn kmkc_download(
 
                 let viewer_info = viewer_info.unwrap();
                 let image_dir =
-                    get_output_directory(&output_dir, title_id, Some(chapter.id), false);
+                    get_output_directory(&output_dir, title_id, Some(chapter.id()), false);
 
                 // precheck
                 match &viewer_info {
                     EpisodeViewerResponse::Web(web) => {
-                        if web.pages.is_empty() {
+                        if web.pages().is_empty() {
                             console.warn(cformat!(
                                 "   Chapter <m,s>{}</> (<s>{}</>) has no pages, skipping",
-                                chapter.title,
-                                chapter.id
+                                chapter.title(),
+                                chapter.id()
                             ));
                             continue;
                         }
 
                         if let Some(count) = check_downloaded_image_count(&image_dir, "png") {
-                            if count >= web.pages.len() {
+                            if count >= web.pages().len() {
                                 console.warn(cformat!(
                                     "   Chapter <m,s>{}</> (<s>{}</>) already downloaded, skipping",
-                                    chapter.title,
-                                    chapter.id
+                                    chapter.title(),
+                                    chapter.id()
                                 ));
                                 continue;
                             }
                         }
 
                         if console.is_debug() {
-                            console.log(format!("    Seed: {}", web.scramble_seed));
+                            console.log(format!("    Seed: {}", web.scramble_seed()));
                         }
                     }
                     EpisodeViewerResponse::Mobile(mobile) => {
-                        if mobile.pages.is_empty() {
+                        if mobile.pages().is_empty() {
                             console.warn(cformat!(
                                 "   Chapter <m,s>{}</> (<s>{}</>) has no pages, skipping",
-                                chapter.title,
-                                chapter.id
+                                chapter.title(),
+                                chapter.id()
                             ));
                             continue;
                         }
 
                         if let Some(count) = check_downloaded_image_count(&image_dir, "jpg") {
-                            if count >= mobile.pages.len() {
+                            if count >= mobile.pages().len() {
                                 console.warn(cformat!(
                                     "   Chapter <m,s>{}</> (<s>{}</>) already downloaded, skipping",
-                                    chapter.title,
-                                    chapter.id
+                                    chapter.title(),
+                                    chapter.id()
                                 ));
                                 continue;
                             }
@@ -366,17 +370,16 @@ pub(crate) async fn kmkc_download(
                 // create dir
                 std::fs::create_dir_all(&image_dir).unwrap();
                 let image_blocks: Vec<tosho_kmkc::models::ImagePageNode> = match &viewer_info {
-                    EpisodeViewerResponse::Mobile(mobile) => mobile.pages.clone(),
-                    EpisodeViewerResponse::Web(web) => {
-                        web.pages
-                            .iter()
-                            .map(|p| p.clone().into())
-                            .collect::<Vec<tosho_kmkc::models::ImagePageNode>>()
-                    }
+                    EpisodeViewerResponse::Mobile(mobile) => mobile.pages().to_vec(),
+                    EpisodeViewerResponse::Web(web) => web
+                        .pages()
+                        .iter()
+                        .map(|p| p.into())
+                        .collect::<Vec<tosho_kmkc::models::ImagePageNode>>(),
                 };
                 let scramble_seed = match &viewer_info {
                     EpisodeViewerResponse::Mobile(_) => None,
-                    EpisodeViewerResponse::Web(web) => Some(web.scramble_seed),
+                    EpisodeViewerResponse::Web(web) => Some(web.scramble_seed()),
                 };
                 let force_extensions = match &viewer_info {
                     EpisodeViewerResponse::Mobile(_) => "jpg",

@@ -293,7 +293,7 @@ impl KMClient {
             )
             .await?;
 
-        Ok(responses.episodes)
+        Ok(responses.episodes().to_vec())
     }
 
     /// Get the list of titles from the given list of title IDs
@@ -318,7 +318,7 @@ impl KMClient {
             )
             .await?;
 
-        Ok(responses.titles)
+        Ok(responses.titles().to_vec())
     }
 
     /// Get the episode viewer for the given episode ID.
@@ -337,7 +337,7 @@ impl KMClient {
         match &self.config {
             KMConfig::Web(_) => {
                 let mut params = HashMap::new();
-                params.insert("episode_id".to_string(), episode.id.to_string());
+                params.insert("episode_id".to_string(), episode.id().to_string());
 
                 let response = self
                     .request::<WebEpisodeViewerResponse>(
@@ -353,10 +353,10 @@ impl KMClient {
             }
             KMConfig::Mobile(_) => {
                 let mut params = HashMap::new();
-                params.insert("episode_id".to_string(), episode.id.to_string());
+                params.insert("episode_id".to_string(), episode.id().to_string());
                 params.insert("force_master".to_string(), "1".to_string());
                 params.insert("is_download".to_string(), "1".to_string());
-                if let Some(magazine_id) = episode.magazine_id {
+                if let Some(magazine_id) = episode.magazine_id() {
                     params.insert("magazine_id".to_string(), magazine_id.to_string());
                 }
 
@@ -387,7 +387,7 @@ impl KMClient {
         episode: &EpisodeNode,
     ) -> ToshoResult<EpisodeViewerFinishResponse> {
         let mut params = HashMap::new();
-        params.insert("episode_id".to_string(), episode.id.to_string());
+        params.insert("episode_id".to_string(), episode.id().to_string());
 
         let response = self
             .request::<EpisodeViewerFinishResponse>(
@@ -420,7 +420,11 @@ impl KMClient {
             )
             .await?;
 
-        Ok(response.tickets[0].clone())
+        let first_ticket = response.tickets().first().ok_or_else(|| {
+            make_error!("Failed to get first ticket information, first index is empty!")
+        })?;
+
+        Ok(first_ticket.clone())
     }
 
     /// Claim or purchase an episode with a user's point.
@@ -433,10 +437,10 @@ impl KMClient {
         episode: &EpisodeNode,
         wallet: &mut UserPoint,
     ) -> ToshoResult<EpisodePurchaseResponse> {
-        if !wallet.can_purchase(episode.point.try_into().unwrap_or(0)) {
+        if !wallet.can_purchase(episode.point().try_into().unwrap_or(0)) {
             let km_error = KMAPINotEnoughPointsError {
                 message: "Not enough points to purchase episode".to_string(),
-                points_needed: episode.point.try_into().unwrap_or(0),
+                points_needed: episode.point().try_into().unwrap_or(0),
                 points_have: wallet.total_point(),
             };
             // bail with custom error
@@ -444,8 +448,8 @@ impl KMClient {
         }
 
         let mut data = HashMap::new();
-        data.insert("episode_id".to_owned(), episode.id.to_string());
-        data.insert("check_point".to_owned(), episode.point.to_string());
+        data.insert("episode_id".to_owned(), episode.id().to_string());
+        data.insert("check_point".to_owned(), episode.point().to_string());
 
         let response = self
             .request::<EpisodePurchaseResponse>(
@@ -457,7 +461,7 @@ impl KMClient {
             )
             .await?;
 
-        wallet.subtract(response.paid.try_into().unwrap_or(0));
+        wallet.subtract(response.paid().try_into().unwrap_or(0));
 
         Ok(response)
     }
@@ -479,10 +483,10 @@ impl KMClient {
         let mut bonus_point = 0_u64;
 
         for episode in episodes {
-            episode_ids.push(episode.id.to_string());
+            episode_ids.push(episode.id().to_string());
 
-            paid_point += episode.point.try_into().unwrap_or(0);
-            bonus_point += episode.bonus_point.try_into().unwrap_or(0);
+            paid_point += episode.point().try_into().unwrap_or(0);
+            bonus_point += episode.bonus_point().try_into().unwrap_or(0);
         }
 
         let mut cloned_wallet = wallet.clone();
@@ -511,8 +515,8 @@ impl KMClient {
             )
             .await?;
 
-        wallet.subtract(response.paid.try_into().unwrap_or(0));
-        wallet.add(response.point_back.try_into().unwrap_or(0));
+        wallet.subtract(response.paid().try_into().unwrap_or(0));
+        wallet.add(response.point_back().try_into().unwrap_or(0));
 
         Ok(response)
     }
@@ -539,8 +543,8 @@ impl KMClient {
                 data.insert("ticket_type".to_owned(), "99".to_owned());
             }
             TicketInfoType::Title(title) => {
-                data.insert("ticket_version".to_owned(), title.version.to_string());
-                data.insert("ticket_type".to_owned(), title.r#type.to_string());
+                data.insert("ticket_version".to_owned(), title.version().to_string());
+                data.insert("ticket_type".to_owned(), title.r#type().to_string());
                 is_title = true;
             }
         }
@@ -592,7 +596,7 @@ impl KMClient {
             )
             .await?;
 
-        Ok(response.titles)
+        Ok(response.titles().to_vec())
     }
 
     /// Get the weekly ranking/list.
@@ -640,7 +644,7 @@ impl KMClient {
             )
             .await?;
 
-        Ok(response.titles)
+        Ok(response.titles().to_vec())
     }
 
     /// Get the user's favorites.
