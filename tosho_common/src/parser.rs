@@ -12,7 +12,6 @@ pub trait FailableResponse {
 
 /// Parse a JSON response.
 #[cfg(feature = "serde")]
-#[cfg_attr(docsrs, doc(cfg(feature = "serde")))]
 pub async fn parse_json_response<T>(response: reqwest::Response) -> ToshoResult<T>
 where
     T: serde::de::DeserializeOwned,
@@ -31,7 +30,6 @@ where
 ///
 /// This function is useful when the API returns some kind of error response
 #[cfg(feature = "serde")]
-#[cfg_attr(docsrs, doc(cfg(feature = "serde")))]
 pub async fn parse_json_response_failable<T, E>(response: reqwest::Response) -> ToshoResult<T>
 where
     T: serde::de::DeserializeOwned,
@@ -65,7 +63,6 @@ where
 
 /// Parse a Protobuf response.
 #[cfg(feature = "protobuf")]
-#[cfg_attr(docsrs, doc(cfg(feature = "protobuf")))]
 pub async fn parse_protobuf_response<T>(response: reqwest::Response) -> ToshoResult<T>
 where
     T: ::prost::Message + Clone + Default,

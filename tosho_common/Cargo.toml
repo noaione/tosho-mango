@@ -15,6 +15,10 @@ exclude = [
     "tests/*",
 ]
 
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
 [dependencies]
 reqwest.workspace = true
 
