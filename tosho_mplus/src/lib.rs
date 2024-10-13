@@ -172,8 +172,8 @@ impl MPClient {
         let response = parse_response(request).await?;
 
         match response {
-            SuccessOrError::Success(data) => match data.initial_view_v2 {
-                Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data.clone()))),
+            SuccessOrError::Success(data) => match data.initial_view_v2() {
+                Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
                 None => Err(ToshoParseError::expect("initial view")),
             },
             SuccessOrError::Error(error) => Ok(APIResponse::Error(error)),
@@ -195,7 +195,7 @@ impl MPClient {
         let response = parse_response(request).await?;
 
         match response {
-            SuccessOrError::Success(data) => match data.home_view_v3 {
+            SuccessOrError::Success(data) => match data.home_view_v3() {
                 Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
                 None => Err(ToshoParseError::expect("home view v3")),
             },
@@ -216,7 +216,7 @@ impl MPClient {
         let response = parse_response(request).await?;
 
         match response {
-            SuccessOrError::Success(data) => match data.user_profile_settings {
+            SuccessOrError::Success(data) => match data.user_profile_settings() {
                 Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
                 None => Err(ToshoParseError::expect("user profile settings")),
             },
@@ -239,7 +239,7 @@ impl MPClient {
         let response = parse_response(request).await?;
 
         match response {
-            SuccessOrError::Success(data) => match data.user_settings_v2 {
+            SuccessOrError::Success(data) => match data.user_settings_v2() {
                 Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
                 None => Err(ToshoParseError::expect("user settings v2")),
             },
@@ -259,7 +259,7 @@ impl MPClient {
         let response = parse_response(request).await?;
 
         match response {
-            SuccessOrError::Success(data) => match data.subscriptions {
+            SuccessOrError::Success(data) => match data.subscriptions() {
                 Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
                 None => Err(ToshoParseError::expect("subscriptions")),
             },
@@ -279,7 +279,7 @@ impl MPClient {
         let response = parse_response(request).await?;
 
         match response {
-            SuccessOrError::Success(data) => match data.all_titles_v2 {
+            SuccessOrError::Success(data) => match data.all_titles_v2() {
                 Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
                 None => Err(ToshoParseError::expect("all titles v2")),
             },
@@ -309,7 +309,7 @@ impl MPClient {
         let response = parse_response(request).await?;
 
         match response {
-            SuccessOrError::Success(data) => match data.title_ranking_v2 {
+            SuccessOrError::Success(data) => match data.title_ranking_v2() {
                 Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
                 None => Err(ToshoParseError::expect("title ranking v2")),
             },
@@ -329,7 +329,7 @@ impl MPClient {
         let response = parse_response(request).await?;
 
         match response {
-            SuccessOrError::Success(data) => match data.free_titles {
+            SuccessOrError::Success(data) => match data.free_titles() {
                 Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
                 None => Err(ToshoParseError::expect("free titles")),
             },
@@ -349,7 +349,7 @@ impl MPClient {
         let response = parse_response(request).await?;
 
         match response {
-            SuccessOrError::Success(data) => match data.subscribed_titles {
+            SuccessOrError::Success(data) => match data.subscribed_titles() {
                 Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
                 None => Err(ToshoParseError::expect("subscribed/bookmarked titles")),
             },
@@ -372,7 +372,7 @@ impl MPClient {
         let response = parse_response(request).await?;
 
         match response {
-            SuccessOrError::Success(data) => match data.search_results {
+            SuccessOrError::Success(data) => match data.search_results() {
                 Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
                 None => Err(ToshoParseError::expect("search results")),
             },
@@ -401,7 +401,7 @@ impl MPClient {
         let response = parse_response(request).await?;
 
         match response {
-            SuccessOrError::Success(data) => match data.title_detail {
+            SuccessOrError::Success(data) => match data.title_detail() {
                 Some(inner_data) => {
                     let mut cloned_data = inner_data.clone();
                     cloned_data.chapter_groups.iter_mut().for_each(|group| {
@@ -487,7 +487,7 @@ impl MPClient {
         let response = parse_response(request).await?;
 
         match response {
-            SuccessOrError::Success(data) => match data.chapter_viewer {
+            SuccessOrError::Success(data) => match data.chapter_viewer() {
                 Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
                 None => Err(ToshoParseError::expect("chapter viewer")),
             },
@@ -513,7 +513,7 @@ impl MPClient {
         let response = parse_response(request).await?;
 
         match response {
-            SuccessOrError::Success(data) => match data.comment_list {
+            SuccessOrError::Success(data) => match data.comment_list() {
                 Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
                 None => Err(ToshoParseError::expect("comment list")),
             },
@@ -600,7 +600,7 @@ async fn parse_response(res: reqwest::Response) -> ToshoResult<SuccessOrError> {
     let decoded_response = parse_protobuf_response::<crate::proto::Response>(res).await?;
 
     // oneof response on .response
-    match decoded_response.response {
+    match decoded_response.response() {
         Some(response) => Ok(response),
         None => Err(tosho_common::ToshoParseError::empty()),
     }

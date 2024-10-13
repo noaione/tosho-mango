@@ -45,7 +45,7 @@ pub(crate) async fn mplus_search(
 fn format_tags(tags: &[Tag]) -> String {
     let parsed_tags = tags
         .iter()
-        .map(|tag| cformat!("<p(244),reverse,bold>{}</>", tag.slug))
+        .map(|tag| cformat!("<p(244),reverse,bold>{}</>", tag.slug()))
         .collect::<Vec<String>>()
         .join(", ");
     parsed_tags
