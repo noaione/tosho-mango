@@ -1,3 +1,4 @@
+#![warn(missing_docs, clippy::empty_docs, rustdoc::broken_intra_doc_links)]
 #![doc = include_str!("../README.md")]
 
 use futures_util::TryStreamExt;
@@ -31,12 +32,7 @@ const PATTERN: [u8; 1] = [174];
 ///
 /// #[tokio::main]
 /// async fn main() {
-///     let config = RBConfig {
-///         token: "123".to_string(),
-///         refresh_token: "abcxyz".to_string(),
-///         platform: RBPlatform::Android,
-///     };
-///
+///     let config = RBConfig::new("123", "abcxyz", RBPlatform::Android);
 ///     let mut client = RBClient::new(config).unwrap();
 ///     // Refresh token
 ///     client.refresh_token().await.unwrap();
@@ -72,8 +68,9 @@ impl RBClient {
         Self::make_client(self.config.clone(), Some(proxy))
     }
 
+    /// Internal function to make the client
     fn make_client(config: RBConfig, proxy: Option<reqwest::Proxy>) -> ToshoResult<Self> {
-        let constants = crate::constants::get_constants(config.platform as u8);
+        let constants = crate::constants::get_constants(config.platform() as u8);
         let mut headers = reqwest::header::HeaderMap::new();
 
         headers.insert(
@@ -90,8 +87,8 @@ impl RBClient {
         );
         headers.insert(
             "x-user-token",
-            config.token.parse().map_err(|_| {
-                ToshoClientError::HeaderParseError(format!("x-user-token for {}", config.token))
+            config.token().parse().map_err(|_| {
+                ToshoClientError::HeaderParseError(format!("x-user-token for {}", config.token()))
             })?,
         );
 
@@ -112,11 +109,14 @@ impl RBClient {
             inner: client,
             config: config.clone(),
             constants,
-            token: config.token.clone(),
+            token: config.token().to_string(),
             expiry_at: None,
         })
     }
 
+    /// Set the expiry at of the token manually
+    ///
+    /// Not really recommended to use.
     pub fn set_expiry_at(&mut self, expiry_at: Option<i64>) {
         self.expiry_at = expiry_at;
     }
@@ -137,7 +137,7 @@ impl RBClient {
 
         let json_data = json!({
             "grantType": "refresh_token",
-            "refreshToken": self.config.refresh_token,
+            "refreshToken": self.config.refresh_token(),
         });
 
         let client = reqwest::Client::builder()
@@ -157,12 +157,12 @@ impl RBClient {
             .json::<crate::models::accounts::google::SecureTokenResponse>()
             .await?;
 
-        self.token.clone_from(&response.access_token);
-        self.config.token = response.access_token;
-        let expiry_in = response.expires_in.parse::<i64>().map_err(|e| {
+        self.token.clone_from(&response.access_token().to_string());
+        self.config.set_token(response.access_token());
+        let expiry_in = response.expires_in().parse::<i64>().map_err(|e| {
             make_error!(
                 "Failed to parse expiry time: {}, error: {}",
-                response.expires_in,
+                response.expires_in(),
                 e
             )
         })?;
@@ -184,6 +184,7 @@ impl RBClient {
 
     // <-- Common Helper
 
+    /// Request to the API with the given method and url.
     async fn request<T>(
         &mut self,
         method: reqwest::Method,
@@ -235,9 +236,13 @@ impl RBClient {
     ///
     /// # Arguments
     /// * `uuid` - The UUID of the manga.
-    pub async fn get_manga(&mut self, uuid: &str) -> ToshoResult<Manga> {
-        self.request(reqwest::Method::GET, &format!("/manga/{}/v0", uuid), None)
-            .await
+    pub async fn get_manga(&mut self, uuid: impl Into<String>) -> ToshoResult<Manga> {
+        self.request(
+            reqwest::Method::GET,
+            &format!("/manga/{}/v0", uuid.into()),
+            None,
+        )
+        .await
     }
 
     /// Get the manga filters for searching manga.
@@ -250,10 +255,16 @@ impl RBClient {
     ///
     /// # Arguments
     /// * `uuid` - The UUID of the manga.
-    pub async fn get_chapter_list(&mut self, uuid: &str) -> ToshoResult<ChapterListResponse> {
+    pub async fn get_chapter_list(
+        &mut self,
+        uuid: impl Into<String>,
+    ) -> ToshoResult<ChapterListResponse> {
         self.request(
             reqwest::Method::GET,
-            &format!("/mangas/{}/chapters/v4?order=asc&count=9999&offset=0", uuid),
+            &format!(
+                "/mangas/{}/chapters/v4?order=asc&count=9999&offset=0",
+                uuid.into()
+            ),
             None,
         )
         .await
@@ -263,10 +274,13 @@ impl RBClient {
     ///
     /// # Arguments
     /// * `uuid` - The UUID of the chapter.
-    pub async fn get_chapter(&mut self, uuid: &str) -> ToshoResult<ChapterDetailsResponse> {
+    pub async fn get_chapter(
+        &mut self,
+        uuid: impl Into<String>,
+    ) -> ToshoResult<ChapterDetailsResponse> {
         self.request(
             reqwest::Method::GET,
-            &format!("/chapters/{}/v2", uuid),
+            &format!("/chapters/{}/v2", uuid.into()),
             None,
         )
         .await
@@ -278,11 +292,11 @@ impl RBClient {
     /// * `uuid` - The UUID of the chapter.
     pub async fn get_chapter_viewer(
         &mut self,
-        uuid: &str,
+        uuid: impl Into<String>,
     ) -> ToshoResult<ChapterPageDetailsResponse> {
         self.request(
             reqwest::Method::GET,
-            &format!("/chapters/{}/pages/v1", uuid),
+            &format!("/chapters/{}/pages/v1", uuid.into()),
             None,
         )
         .await
@@ -297,11 +311,12 @@ impl RBClient {
     /// * `sort` - The sort option of the search result, default to [`SortOption::Alphabetical`]
     pub async fn search(
         &mut self,
-        query: &str,
+        query: impl Into<String>,
         offset: Option<u32>,
         count: Option<u32>,
         sort: Option<SortOption>,
     ) -> ToshoResult<MangaListResponse> {
+        let query: String = query.into();
         let offset = offset.unwrap_or(0);
         let count = count.unwrap_or(999);
         let sort = sort.unwrap_or(SortOption::Alphabetical);
@@ -328,10 +343,10 @@ impl RBClient {
     ///
     /// # Arguments
     /// * `slug` - The slug of the publisher.
-    pub async fn get_publisher(&mut self, slug: &str) -> ToshoResult<Publisher> {
+    pub async fn get_publisher(&mut self, slug: impl Into<String>) -> ToshoResult<Publisher> {
         self.request(
             reqwest::Method::GET,
-            &format!("/publisher/slug/{}/v0", slug),
+            &format!("/publisher/slug/{}/v0", slug.into()),
             None,
         )
         .await
@@ -343,7 +358,8 @@ impl RBClient {
     ///
     /// # Arguments
     /// * `url` - The URL to modify.
-    pub fn modify_url_for_highres(url: &str) -> ToshoResult<String> {
+    pub fn modify_url_for_highres(url: impl Into<String>) -> ToshoResult<String> {
+        let url: String = url.into();
         let mut parsed_url = url
             .parse::<reqwest::Url>()
             .map_err(|e| make_error!("Failed to parse URL: {}, error: {}", url, e))?;
@@ -385,12 +401,12 @@ impl RBClient {
     /// * `writer` - The writer to write the image to.
     pub async fn stream_download(
         &self,
-        url: &str,
+        url: impl Into<String>,
         mut writer: impl io::AsyncWrite + Unpin,
     ) -> ToshoResult<()> {
         let res = self
             .inner
-            .get(url)
+            .get(url.into())
             .query(&[("drm", "1")])
             .headers({
                 let mut headers = reqwest::header::HeaderMap::new();
@@ -437,7 +453,7 @@ impl RBClient {
     /// Try checking if the "hidden" high resolution image is available.
     ///
     /// Give the URL of any image that is requested from the API.
-    pub async fn test_high_res(&self, url: &str) -> ToshoResult<bool> {
+    pub async fn test_high_res(&self, url: impl Into<String>) -> ToshoResult<bool> {
         // Do head request to check if the high res image is available
         let url_mod = Self::modify_url_for_highres(url)?;
 
@@ -475,9 +491,15 @@ impl RBClient {
 
     // --> MangaApiInterface.kt
 
+    /// Authenticate the given email and password with RB.
+    ///
+    /// # Arguments
+    /// * `email` - The email to authenticate with.
+    /// * `password` - The password to authenticate with.
+    /// * `platform` - The platform type.
     pub async fn login(
-        email: &str,
-        password: &str,
+        email: impl Into<String>,
+        password: impl Into<String>,
         platform: RBPlatform,
     ) -> ToshoResult<RBLoginResponse> {
         let constants = crate::constants::get_constants(platform as u8);
@@ -493,6 +515,9 @@ impl RBClient {
             RBPlatform::Apple => Some("CLIENT_TYPE_IOS"),
             _ => None,
         };
+
+        let email: String = email.into();
+        let password: String = password.into();
 
         let mut json_data = json!({
             "email": email,
@@ -526,7 +551,7 @@ impl RBClient {
 
         // Step 2: Get account info
         let json_data = json!({
-            "idToken": verify_resp.id_token,
+            "idToken": verify_resp.id_token(),
         });
 
         let request = client
@@ -542,15 +567,15 @@ impl RBClient {
 
         // Step 2.5: Find user
         let goog_user = acc_info_resp
-            .users
+            .users()
             .iter()
-            .find(|user| user.local_id == verify_resp.local_id)
+            .find(|&user| user.local_id() == verify_resp.local_id())
             .ok_or(ToshoAuthError::UnknownSession)?;
 
         // Step 3: Refresh token
         let json_data = json!({
             "grantType": "refresh_token",
-            "refreshToken": verify_resp.refresh_token,
+            "refreshToken": verify_resp.refresh_token(),
         });
 
         let request = client
@@ -564,10 +589,10 @@ impl RBClient {
             .json::<crate::models::accounts::google::SecureTokenResponse>()
             .await?;
 
-        let expires_in = secure_token_resp.expires_in.parse::<i64>().map_err(|e| {
+        let expires_in = secure_token_resp.expires_in().parse::<i64>().map_err(|e| {
             make_error!(
                 "Failed to parse expiry time: {}, error: {}",
-                secure_token_resp.expires_in,
+                secure_token_resp.expires_in(),
                 e
             )
         })?;
@@ -588,11 +613,11 @@ impl RBClient {
                 );
                 headers.insert(
                     "x-user-token",
-                    reqwest::header::HeaderValue::from_str(&secure_token_resp.access_token)
+                    reqwest::header::HeaderValue::from_str(secure_token_resp.access_token())
                         .map_err(|_| {
                             ToshoClientError::HeaderParseError(format!(
                                 "x-user-token for {}",
-                                secure_token_resp.access_token
+                                secure_token_resp.access_token()
                             ))
                         })?,
                 );
@@ -604,8 +629,8 @@ impl RBClient {
         let user_resp = request.json::<UserAccount>().await?;
 
         Ok(RBLoginResponse {
-            token: secure_token_resp.access_token,
-            refresh_token: secure_token_resp.refresh_token,
+            token: secure_token_resp.access_token().to_string(),
+            refresh_token: secure_token_resp.refresh_token().to_string(),
             platform,
             user: user_resp,
             google_account: goog_user.clone(),

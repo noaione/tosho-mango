@@ -26,7 +26,7 @@ pub(crate) async fn mplus_search(
             }
 
             let merged_titles: Vec<tosho_mplus::proto::Title> =
-                results.iter().flat_map(|x| x.titles.clone()).collect();
+                results.iter().flat_map(|x| x.titles().to_vec()).collect();
             let filtered = search_manga_by_text(&merged_titles, query);
 
             if filtered.is_empty() {
@@ -45,7 +45,7 @@ pub(crate) async fn mplus_search(
 fn format_tags(tags: &[Tag]) -> String {
     let parsed_tags = tags
         .iter()
-        .map(|tag| cformat!("<p(244),reverse,bold>{}</>", tag.slug))
+        .map(|tag| cformat!("<p(244),reverse,bold>{}</>", tag.slug()))
         .collect::<Vec<String>>()
         .join(", ");
     parsed_tags
@@ -55,7 +55,7 @@ fn format_other_languages(title_lang: &[TitleLanguages]) -> String {
     let parsed_lang = title_lang
         .iter()
         .map(|lang| {
-            let lang_url = format!("https://{}/titles/{}", &*BASE_HOST, lang.id);
+            let lang_url = format!("https://{}/titles/{}", &*BASE_HOST, lang.id());
             let linked = linkify!(&lang_url, &lang.language().pretty_name());
             cformat!("<p(244),reverse,bold>{}</>", linked)
         })
@@ -80,42 +80,48 @@ pub(crate) async fn mplus_title_info(
 
     match result {
         Ok(tosho_mplus::APIResponse::Success(title_info)) => {
-            let title = title_info.title.clone().unwrap();
-            let manga_url = format!("https://{}/titles/{}", &*BASE_HOST, title.id);
-            let linked = linkify!(manga_url, &title.title);
+            let title = title_info.title().unwrap();
+            let manga_url = format!("https://{}/titles/{}", &*BASE_HOST, title.id());
+            let linked = linkify!(manga_url, title.title());
 
             console.info(cformat!(
                 "Title information for <magenta,bold>{}</>",
                 linked,
             ));
 
-            let title_labels = title_info.title_labels.clone().unwrap_or_default();
             let mut merged_labels = Vec::new();
-            if title_labels.release_schedule() != TitleReleaseSchedule::None {
-                merged_labels.push(cformat!(
-                    "<y!,bold>[<rev>{}</rev>]</y!,bold>",
-                    title_labels.release_schedule().pretty_name()
-                ));
-            }
-            if title_labels.simulpublish {
-                merged_labels.push(cformat!("<r!,bold>[<rev>Simulpub</rev>]</r!,bold>"));
-            }
-            match title_labels.plan_type() {
-                SubscriptionPlan::Basic => merged_labels.push(cformat!("[<bold>Basic</>]")),
-                SubscriptionPlan::Standard => merged_labels.push(cformat!(
-                    "<c!,bold>[<rev>Standard / Deluxe</rev>]</c!,bold>"
-                )),
-                SubscriptionPlan::Deluxe => {
-                    merged_labels.push(cformat!("<m!,bold>[<rev>Deluxe</rev>]</m!,bold>"))
+            let mut title_plan_type = SubscriptionPlan::Basic;
+            if let Some(title_labels) = title_info.title_labels() {
+                if title_labels.release_schedule() != TitleReleaseSchedule::None {
+                    merged_labels.push(cformat!(
+                        "<y!,bold>[<rev>{}</rev>]</y!,bold>",
+                        title_labels.release_schedule().pretty_name()
+                    ));
                 }
+                if title_labels.simulpublish() {
+                    merged_labels.push(cformat!("<r!,bold>[<rev>Simulpub</rev>]</r!,bold>"));
+                }
+                match title_labels.plan_type() {
+                    SubscriptionPlan::Basic => merged_labels.push(cformat!("[<bold>Basic</>]")),
+                    SubscriptionPlan::Standard => merged_labels.push(cformat!(
+                        "<c!,bold>[<rev>Standard / Deluxe</rev>]</c!,bold>"
+                    )),
+                    SubscriptionPlan::Deluxe => {
+                        merged_labels.push(cformat!("<m!,bold>[<rev>Deluxe</rev>]</m!,bold>"))
+                    }
+                }
+                title_plan_type = title_labels.plan_type();
             }
 
-            console.info(cformat!("  {}", merged_labels.join(" ")));
-            console.info(cformat!("  <s>Author</>: {}", title.author));
-            if !title_info.tags.is_empty() {
+            if !merged_labels.is_empty() {
+                console.info(cformat!("  {}", merged_labels.join(" ")));
+            }
+
+            console.info(cformat!("  <s>Author</>: {}", title.author()));
+            if !title_info.tags().is_empty() {
                 console.info(cformat!(
                     "  <s>Genre/Tags</>: {}",
-                    format_tags(&title_info.tags)
+                    format_tags(title_info.tags())
                 ));
             }
             console.info(cformat!(
@@ -123,9 +129,9 @@ pub(crate) async fn mplus_title_info(
                 title.language().pretty_name()
             ));
             let filtered_alt_langs = title_info
-                .other_languages
+                .other_languages()
                 .iter()
-                .filter_map(|x| if x.id != title.id { Some(*x) } else { None })
+                .filter_map(|x| if x.id() != title.id() { Some(*x) } else { None })
                 .collect::<Vec<TitleLanguages>>();
             if !filtered_alt_langs.is_empty() {
                 console.info(cformat!(
@@ -134,7 +140,7 @@ pub(crate) async fn mplus_title_info(
                 ));
             }
             console.info(cformat!("  <s>Summary</>"));
-            let split_desc = title_info.overview.split('\n');
+            let split_desc = title_info.overview().split('\n');
             for desc in split_desc {
                 console.info(format!("    {}", desc));
             }
@@ -147,35 +153,39 @@ pub(crate) async fn mplus_title_info(
             ));
 
             let title_ticket: Vec<u64> = title_info
-                .ticket_chapters
+                .ticket_chapters()
                 .iter()
-                .map(|x| x.chapter_id)
+                .map(|x| x.chapter_id())
                 .collect();
 
-            let user_plan = title_info.user_subscription.unwrap_or_default().plan();
+            let user_plan = title_info
+                .user_subscription()
+                .map(|d| d.plan())
+                .unwrap_or(SubscriptionPlan::Basic);
 
             if show_chapters && !all_chapters.is_empty() {
                 for chapter in all_chapters {
-                    let ch_url = format!("https://{}/viewer/{}", &*BASE_HOST, chapter.chapter_id);
-                    let linked_ch = linkify!(ch_url, &chapter.title);
-                    let mut base_txt = cformat!("    <s>{}</> ({})", linked_ch, chapter.chapter_id);
+                    let ch_url = format!("https://{}/viewer/{}", &*BASE_HOST, chapter.chapter_id());
+                    let linked_ch = linkify!(ch_url, chapter.title());
+                    let mut base_txt =
+                        cformat!("    <s>{}</> ({})", linked_ch, chapter.chapter_id());
                     base_txt =
-                        if chapter.is_ticketed() || title_ticket.contains(&chapter.chapter_id) {
+                        if chapter.is_ticketed() || title_ticket.contains(&chapter.chapter_id()) {
                             cformat!("{} <y,strong>[Ticket]</y,strong>", base_txt)
                         } else if chapter.is_free() {
                             cformat!("{} <g,strong>[FREE]</g,strong>", base_txt)
-                        } else if user_plan >= title_labels.plan_type() {
+                        } else if user_plan >= title_plan_type {
                             cformat!("{} [<c!,strong>Subscription</>]", base_txt)
                         } else {
                             cformat!("{} [<r!,strong>Locked</>]", base_txt)
                         };
 
                     console.info(&base_txt);
-                    if let Some(subtitle) = &chapter.subtitle {
-                        console.info(cformat!("     <s>{}</>", subtitle));
+                    if !chapter.subtitle().is_empty() {
+                        console.info(cformat!("     <s>{}</>", chapter.subtitle()));
                     }
 
-                    if let Some(pub_at_fmt) = unix_timestamp_to_string(chapter.published_at) {
+                    if let Some(pub_at_fmt) = unix_timestamp_to_string(chapter.published_at()) {
                         console.info(cformat!("      <s>Published</>: {}", pub_at_fmt));
                     }
                 }
@@ -183,22 +193,22 @@ pub(crate) async fn mplus_title_info(
                 println!();
             }
 
-            if let Some(next_upd) = title_info.next_update {
-                if let Some(next_upd_fmt) = unix_timestamp_to_string(next_upd) {
+            if title_info.next_update() > 0 {
+                if let Some(next_upd_fmt) = unix_timestamp_to_string(title_info.next_update()) {
                     console.info(cformat!("  <s>Next Update</>: {}", next_upd_fmt));
                 }
             }
 
             console.info(cformat!("  <s>Your Plan</>: {}", user_plan.to_name()));
 
-            if show_related && !title_info.recommended_titles.is_empty() {
+            if show_related && !title_info.recommended_titles().is_empty() {
                 println!();
                 console.info(cformat!(
                     "  <s>Related titles</>: {} titles",
-                    title_info.recommended_titles.len()
+                    title_info.recommended_titles().len()
                 ));
 
-                do_print_search_information(&title_info.recommended_titles, false, Some(3));
+                do_print_search_information(title_info.recommended_titles(), false, Some(3));
             }
 
             0

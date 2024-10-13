@@ -3,37 +3,50 @@
 //! ```rust
 //! use tosho_kmkc::{KMConfigMobile, KMConfigMobilePlatform};
 //!
-//! let config = KMConfigMobile {
-//!     user_id: "123".to_string(),
-//!     hash_key: "abcxyz".to_string(),
-//!     platform: KMConfigMobilePlatform::Android,
-//! };
+//! let config = KMConfigMobile::new("123", "abcxyz", KMConfigMobilePlatform::Android);
 //! ```
 
 use reqwest::Url;
 use reqwest_cookie_store::{CookieStoreMutex, RawCookie};
 use tosho_common::{bail_on_error, make_error, ToshoAuthError, ToshoError, ToshoResult};
-use tosho_macros::{EnumName, EnumU32};
+use tosho_macros::{AutoGetter, EnumName, EnumU32};
 use urlencoding::{decode, encode};
 
 use crate::constants::BASE_HOST;
 
 /// Key value mapping for web cookies
-#[derive(Debug, serde::Deserialize, serde::Serialize, Clone)]
+#[derive(Clone, Debug, AutoGetter, serde::Deserialize, serde::Serialize)]
 pub struct KMConfigWebKV {
     /// The value of the cookie/key
-    pub value: String,
+    value: String,
     /// The expiry of the cookie/key
-    pub expires: i64,
+    expires: i64,
+}
+
+impl KMConfigWebKV {
+    /// Create a new instance of expiry key-value
+    pub fn new(value: impl Into<String>, expires: i64) -> Self {
+        Self {
+            value: value.into(),
+            expires,
+        }
+    }
 }
 
 /// Key value mapping for web cookies with [`i64`] as a value
-#[derive(Debug, serde::Deserialize, serde::Serialize, Clone)]
+#[derive(Clone, Copy, Debug, AutoGetter, serde::Deserialize, serde::Serialize)]
 pub struct KMConfigWebKV64 {
     /// The value of the cookie/key
-    pub value: i64,
+    value: i64,
     /// The expiry of the cookie/key
-    pub expires: i64,
+    expires: i64,
+}
+
+impl KMConfigWebKV64 {
+    /// Create a new instance of expiry key-value
+    pub fn new(value: i64, expires: i64) -> Self {
+        Self { value, expires }
+    }
 }
 
 impl TryFrom<&KMConfigWebKV> for KMConfigWebKV64 {
@@ -132,16 +145,33 @@ impl KMConfigWebKV {
 }
 
 /// Represents the config/cookies for the web implementation
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, AutoGetter)]
 pub struct KMConfigWeb {
     /// The auth token for KM KC
-    pub uwt: String,
+    uwt: String,
     /// Account birthday information.
-    pub birthday: KMConfigWebKV,
+    birthday: KMConfigWebKV,
     /// Account adult ToS aggreement status.
-    pub tos_adult: KMConfigWebKV,
+    tos_adult: KMConfigWebKV,
     /// Account privacy policy agreement status.
-    pub privacy: KMConfigWebKV,
+    privacy: KMConfigWebKV,
+}
+
+impl KMConfigWeb {
+    /// Create a new instance of [`KMConfigWeb`] config
+    pub fn new(
+        uwt: impl Into<String>,
+        birthday: KMConfigWebKV,
+        tos_adult: KMConfigWebKV,
+        privacy: KMConfigWebKV,
+    ) -> Self {
+        Self {
+            uwt: uwt.into(),
+            birthday,
+            tos_adult,
+            privacy,
+        }
+    }
 }
 
 impl TryFrom<reqwest_cookie_store::CookieStore> for KMConfigWeb {
@@ -293,7 +323,7 @@ impl Default for KMConfigWeb {
 }
 
 /// The mobile platform to use
-#[derive(Debug, Clone, EnumName, EnumU32)]
+#[derive(Debug, Clone, Copy, EnumName, EnumU32)]
 #[repr(u8)]
 pub enum KMConfigMobilePlatform {
     /// Apple/iOS
@@ -303,11 +333,30 @@ pub enum KMConfigMobilePlatform {
 }
 
 /// Represents the mobile config
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, AutoGetter)]
 pub struct KMConfigMobile {
-    pub user_id: String,
-    pub hash_key: String,
-    pub platform: KMConfigMobilePlatform,
+    /// The user ID
+    user_id: String,
+    /// The user hash key information
+    hash_key: String,
+    /// The user platform
+    #[copyable]
+    platform: KMConfigMobilePlatform,
+}
+
+impl KMConfigMobile {
+    /// Create a new instance of [`KMConfigMobile`]
+    pub fn new(
+        user_id: impl Into<String>,
+        hash_key: impl Into<String>,
+        platform: KMConfigMobilePlatform,
+    ) -> Self {
+        Self {
+            user_id: user_id.into(),
+            hash_key: hash_key.into(),
+            platform,
+        }
+    }
 }
 
 /// Represents the config for the KM KC

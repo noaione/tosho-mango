@@ -51,7 +51,7 @@ pub async fn amap_account_login(
         Ok(session) => {
             console.info(cformat!(
                 "Authenticated as <m,s>{}</> ({})",
-                session.identifier,
+                session.identifier(),
                 email
             ));
 
@@ -65,9 +65,10 @@ pub async fn amap_account_login(
                         Ok(account) => {
                             let as_config = as_config
                                 .with_email(&email)
-                                .with_account_info(&account.info);
+                                .with_account_info(account.info());
 
-                            console.info(cformat!("Logged in as <m,s>{}</>", account.info.name));
+                            console
+                                .info(cformat!("Logged in as <m,s>{}</>", account.info().name()));
 
                             let final_config = match old_id {
                                 Some(old_id) => as_config.with_id(&old_id),
@@ -145,16 +146,16 @@ pub(crate) async fn amap_account_info(
         Ok(acc_resp) => {
             super::common::save_session_config(client, account);
 
-            let info = acc_resp.info;
+            let info = acc_resp.info();
 
             console.info(cformat!(
                 "Account info for <magenta,bold>{}</>:",
                 account.id
             ));
 
-            console.info(cformat!("  <s>ID</>: {}", info.id));
+            console.info(cformat!("  <s>ID</>: {}", info.id()));
             console.info(cformat!("  <s>Email</>: {}", account.email));
-            console.info(cformat!("  <s>Username</>: {}", info.name));
+            console.info(cformat!("  <s>Username</>: {}", info.name()));
 
             0
         }
@@ -181,12 +182,12 @@ pub(crate) async fn amap_account_balance(
         Ok(remainder) => {
             super::common::save_session_config(client, acc_info);
 
-            let balance = &remainder.info;
+            let balance = remainder.info();
 
             console.info("Your current point balance:");
             let total_ticket = balance.sum().to_formatted_string(&Locale::en);
-            let purchased = balance.purchased.to_formatted_string(&Locale::en);
-            let premium = balance.premium.to_formatted_string(&Locale::en);
+            let purchased = balance.purchased().to_formatted_string(&Locale::en);
+            let premium = balance.premium().to_formatted_string(&Locale::en);
             let total_point = balance.sum_point().to_formatted_string(&Locale::en);
 
             console.info(cformat!(

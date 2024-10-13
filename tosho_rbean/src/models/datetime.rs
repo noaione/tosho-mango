@@ -1,6 +1,9 @@
+//! Serde related helper for datetime format in RB
+
 use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Deserializer, Serializer};
 
+/// Serialize [`DateTime`] into a RFC3339 string that the API use.
 pub fn serialize<S>(date: &DateTime<FixedOffset>, serializer: S) -> Result<S::Ok, S::Error>
 where
     S: Serializer,
@@ -9,6 +12,7 @@ where
     serializer.serialize_str(&s)
 }
 
+/// Deserialize a RFC3339 string into [`DateTime`].
 pub fn deserialize<'de, D>(deserializer: D) -> Result<DateTime<FixedOffset>, D::Error>
 where
     D: Deserializer<'de>,
@@ -18,6 +22,7 @@ where
     Ok(datetime)
 }
 
+/// Serialize an optional [`DateTime`] into a RFC3339 string that the API use.
 pub fn serialize_opt<S>(
     date: &Option<DateTime<FixedOffset>>,
     serializer: S,
@@ -34,6 +39,7 @@ where
     }
 }
 
+/// Deserialize an optional RFC3339 string into [`DateTime`].
 pub fn deserialize_opt<'de, D>(deserializer: D) -> Result<Option<DateTime<FixedOffset>>, D::Error>
 where
     D: Deserializer<'de>,

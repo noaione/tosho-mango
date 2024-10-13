@@ -34,16 +34,19 @@ pub(crate) async fn amap_purchase(
                     results.len()
                 ));
 
-                let consume =
-                    ComicPurchase::from_episode_and_comic(&comic, &chapter.info, &mut ticket_purse);
+                let consume = ComicPurchase::from_episode_and_comic(
+                    &comic,
+                    chapter.info(),
+                    &mut ticket_purse,
+                );
 
                 if consume.is_none() {
                     console.warn(cformat!(
                         "Unable to purchase chapter <magenta,bold>{}</> ({}), insufficient point balance!",
-                        chapter.info.title, chapter.info.id
+                        chapter.info().title(), chapter.info().id()
                     ));
                     failed_claimed.push((
-                        chapter.info.clone(),
+                        chapter.info().clone(),
                         "Insufficient point balance".to_string(),
                     ));
                     continue;
@@ -54,14 +57,14 @@ pub(crate) async fn amap_purchase(
 
                 match ch_view {
                     Ok(ch_view) => {
-                        if ch_view.info.pages.is_empty() {
+                        if ch_view.info().pages().is_empty() {
                             console.warn(cformat!(
                                 "Unable to purchase chapter <magenta,bold>{}</> ({}), no images found!",
-                                chapter.info.title,
-                                chapter.info.id
+                                chapter.info().title(),
+                                chapter.info().id()
                             ));
                             failed_claimed
-                                .push((chapter.info.clone(), "Failed when claiming".to_string()));
+                                .push((chapter.info().clone(), "Failed when claiming".to_string()));
                             continue;
                         }
 
@@ -75,11 +78,11 @@ pub(crate) async fn amap_purchase(
                     Err(err) => {
                         console.warn(cformat!(
                             "Unable to purchase chapter <magenta,bold>{}</> ({}), error: {}",
-                            chapter.info.title,
-                            chapter.info.id,
+                            chapter.info().title(),
+                            chapter.info().id(),
                             err
                         ));
-                        failed_claimed.push((chapter.info.clone(), format!("Error: {}", err)));
+                        failed_claimed.push((chapter.info().clone(), format!("Error: {}", err)));
                         continue;
                     }
                 }
@@ -97,8 +100,8 @@ pub(crate) async fn amap_purchase(
                 for (chapter, reason) in failed_claimed {
                     console.warn(cformat!(
                         "  - <bold>{}</> (ID: {}): <red,bold>{}</>",
-                        chapter.title,
-                        chapter.id,
+                        chapter.title(),
+                        chapter.id(),
                         reason
                     ));
                 }
@@ -126,7 +129,7 @@ pub(crate) async fn amap_purchase_precalculate(
             }
 
             console.info("Calculating chapters cost...");
-            let price_ticket: u64 = results.iter().map(|c| c.info.price).sum();
+            let price_ticket: u64 = results.iter().map(|c| c.info().price()).sum();
 
             let price_ticket_fmt = price_ticket.to_formatted_string(&Locale::en);
             let ch_count = results.len().to_formatted_string(&Locale::en);

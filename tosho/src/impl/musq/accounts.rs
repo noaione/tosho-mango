@@ -156,11 +156,11 @@ pub async fn musq_account_info(
             console.info(cformat!("  <bold>Session:</> {}", acc_info.session));
             console.info(cformat!("  <bold>Type:</> {}", acc_info.r#type().to_name()));
             console.info(cformat!("  <bold>Registered?</> {}", account.registered()));
-            if !account.devices.is_empty() {
+            if !account.devices().is_empty() {
                 console.info(cformat!("  <bold>Devices:</>"));
-                for device in account.devices {
-                    let device_name = device.name;
-                    let device_id = device.id;
+                for device in account.devices() {
+                    let device_name = device.name();
+                    let device_id = device.id();
                     console.info(cformat!("    - <bold>{}:</> ({})", device_name, device_id));
                 }
             }
@@ -188,11 +188,11 @@ pub async fn musq_account_balance(
     match user_shop {
         Ok(user_shop) => {
             console.info("Your current point balance:");
-            let user_point = user_shop.user_point.unwrap_or_default();
+            let user_point = user_shop.user_point().unwrap_or_default();
             let total_bal = user_point.sum().to_formatted_string(&Locale::en);
-            let paid_point = user_point.paid.to_formatted_string(&Locale::en);
-            let xp_point = user_point.event.to_formatted_string(&Locale::en);
-            let free_point = user_point.free.to_formatted_string(&Locale::en);
+            let paid_point = user_point.paid().to_formatted_string(&Locale::en);
+            let xp_point = user_point.event().to_formatted_string(&Locale::en);
+            let free_point = user_point.free().to_formatted_string(&Locale::en);
             console.info(cformat!(
                 "  - <bold>Total:</> <cyan!,bold><reverse>{}</>c</cyan!,bold>",
                 total_bal
@@ -209,10 +209,10 @@ pub async fn musq_account_balance(
                 "  - <bold>Free point:</> <green,bold><reverse>{}</>c</green,bold>",
                 free_point
             ));
-            let subs_status = if !user_shop.subscriptions.is_empty() {
-                let first_subs = user_shop.subscriptions.first().unwrap();
+            let subs_status = if !user_shop.subscriptions().is_empty() {
+                let first_subs = user_shop.subscriptions().first().unwrap();
                 let status = first_subs.status().as_name();
-                match unix_timestamp_to_string(first_subs.end) {
+                match unix_timestamp_to_string(first_subs.end()) {
                     Some(ends_at) => cformat!(
                         "<bold><blue>{}</blue> Subscription</bold> (Ends at: <s>{}</>)",
                         status,

@@ -1,7 +1,7 @@
 //! A module containing information related to enums used in the library.
 
 /// Sorting options for searching.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SortOption {
     /// Sort by alphabetical order.
     Alphabetical,

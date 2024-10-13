@@ -5,7 +5,7 @@
 use tosho_common::{make_error, ToshoError};
 
 /// The used error type for the API.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct AMAPIError {
     /// The error message from the API.
     pub message: String,

@@ -3,13 +3,10 @@
 //! ```rust
 //! use tosho_sjv::{SJConfig, SJPlatform};
 //!
-//! let config = SJConfig {
-//!     user_id: 123,
-//!     token: "xyz987abc".to_string(),
-//!     instance: "abcxyz".to_string(),
-//!     platform: SJPlatform::Android,
-//! };
+//! let config = SJConfig::new(123, "xyz987abc", "abcxyz", SJPlatform::Android);
 //! ```
+
+use tosho_macros::AutoGetter;
 
 use crate::models::AccountLoginResponse;
 
@@ -17,7 +14,7 @@ use crate::models::AccountLoginResponse;
 ///
 /// Since the original has two separate application.
 ///
-/// ```
+/// ```rust
 /// use tosho_sjv::SJMode;
 ///
 /// let mode = SJMode::SJ;
@@ -33,7 +30,7 @@ pub enum SJMode {
 
 /// The platform to use.
 ///
-/// ```
+/// ```rust
 /// use tosho_sjv::SJPlatform;
 ///
 /// let platform = SJPlatform::Android;
@@ -51,26 +48,22 @@ pub enum SJPlatform {
 
 /// The configuration for the client.
 ///
-/// ```
+/// ```rust
 /// use tosho_sjv::{SJConfig, SJPlatform};
 ///
-/// let config = SJConfig {
-///     user_id: 123,
-///     token: "xyz987abc".to_string(),
-///     instance: "abcxyz".to_string(),
-///     platform: SJPlatform::Android,
-/// };
+/// let config = SJConfig::new(123, "xyz987abc", "abcxyz", SJPlatform::Android);
 /// ```
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, AutoGetter)]
 pub struct SJConfig {
     /// User ID.
-    pub user_id: u32,
+    user_id: u32,
     /// Token or also known as trust_user_jwt
-    pub token: String,
+    token: String,
     /// Instance ID or device token
-    pub instance: String,
+    instance: String,
     /// Platform to use.
-    pub platform: SJPlatform,
+    #[copyable]
+    platform: SJPlatform,
 }
 
 impl SJConfig {
@@ -82,11 +75,16 @@ impl SJConfig {
     /// * `token` - The token.
     /// * `instance` - The instance.
     /// * `platform` - The platform.
-    pub fn new(user_id: u32, token: String, instance: String, platform: SJPlatform) -> Self {
+    pub fn new(
+        user_id: u32,
+        token: impl Into<String>,
+        instance: impl Into<String>,
+        platform: SJPlatform,
+    ) -> Self {
         Self {
             user_id,
-            token,
-            instance,
+            token: token.into(),
+            instance: instance.into(),
             platform,
         }
     }
@@ -97,7 +95,7 @@ impl SJConfig {
     /// * `response` - The login response.
     /// * `instance` - The instance ID.
     ///
-    /// ```no_run
+    /// ```rust,no_run
     /// use tosho_sjv::{SJClient, SJConfig, SJMode, SJPlatform};
     ///
     /// #[tokio::main]
@@ -118,8 +116,8 @@ impl SJConfig {
         platform: SJPlatform,
     ) -> Self {
         Self {
-            user_id: response.id,
-            token: response.token.clone(),
+            user_id: response.id(),
+            token: response.token().to_string(),
             instance,
             platform,
         }

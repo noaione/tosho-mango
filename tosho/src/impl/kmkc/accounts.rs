@@ -15,7 +15,7 @@ use crate::{
 
 use super::config::{Config, ConfigMobile, MobilePlatform};
 
-#[derive(Clone, PartialEq, EnumName)]
+#[derive(Clone, Copy, PartialEq, EnumName)]
 pub(crate) enum DeviceKind {
     /// Website platform.
     Web,
@@ -91,10 +91,10 @@ pub(crate) async fn kmkc_account_login_web(
 
             match account {
                 Ok(account) => {
-                    console.info(cformat!("Authenticated as <m,s>{}</>", account.email));
+                    console.info(cformat!("Authenticated as <m,s>{}</>", account.email()));
                     let old_config = all_configs.iter().find(|&c| match c {
                         crate::config::ConfigImpl::Kmkc(super::config::Config::Web(cc)) => {
-                            cc.account_id == account.id && cc.device_id == account.user_id
+                            cc.account_id == account.id() && cc.device_id == account.user_id()
                         }
                         _ => false,
                     });
@@ -184,18 +184,14 @@ pub(crate) async fn kmkc_account_login_mobile(
         }
     }
 
-    let config = KMConfigMobile {
-        user_id: user_id.to_string(),
-        hash_key,
-        platform: platform.try_into().unwrap(),
-    };
+    let config = KMConfigMobile::new(user_id.to_string(), &hash_key, platform.try_into().unwrap());
     match make_kmkc_client(&KMConfig::Mobile(config.clone())) {
         Ok(client) => {
             let account = client.get_account().await;
 
             match account {
                 Ok(account) => {
-                    console.info(cformat!("Authenticated as <m,s>{}</>", account.email));
+                    console.info(cformat!("Authenticated as <m,s>{}</>", account.email()));
 
                     let mut acc_config =
                         super::config::ConfigMobile::from(config).with_user_account(&account);
@@ -277,15 +273,15 @@ pub async fn kmkc_account_login(
         Ok(config) => {
             console.info(cformat!(
                 "Authenticated as <m,s>{}</>",
-                config.account.email
+                config.account().email()
             ));
 
-            let acc_config = match super::config::Config::from(config.config) {
+            let acc_config = match super::config::Config::from(config.config()) {
                 super::config::Config::Mobile(cc) => {
-                    Config::Mobile(cc.with_user_account(&config.account).with_id_opt(old_id))
+                    Config::Mobile(cc.with_user_account(config.account()).with_id_opt(old_id))
                 }
                 super::config::Config::Web(cc) => {
-                    Config::Web(cc.with_user_account(&config.account).with_id_opt(old_id))
+                    Config::Web(cc.with_user_account(config.account()).with_id_opt(old_id))
                 }
             };
 
@@ -360,15 +356,15 @@ pub async fn kmkc_account_login_adapt(
 
                     match account {
                         Ok(account) => {
-                            let user_info = client.get_user(account.id).await.unwrap();
+                            let user_info = client.get_user(account.id()).await.unwrap();
 
-                            console.info(cformat!("Authenticated as <m,s>{}</>", account.email));
+                            console.info(cformat!("Authenticated as <m,s>{}</>", account.email()));
 
-                            let mobile_config = KMConfigMobile {
-                                user_id: account.id.to_string(),
-                                hash_key: user_info.hash_key,
-                                platform: platform.try_into().unwrap(),
-                            };
+                            let mobile_config = KMConfigMobile::new(
+                                account.id().to_string(),
+                                user_info.hash_key(),
+                                platform.try_into().unwrap(),
+                            );
                             let into_tosho: ConfigMobile = mobile_config.into();
                             let final_config = into_tosho.with_user_account(&account);
 
@@ -451,21 +447,21 @@ pub(crate) async fn kmkc_account_info(
                 acc_info.get_id()
             ));
 
-            console.info(cformat!("  <s>ID:</>: {}", account.id));
-            console.info(cformat!("  <s>User ID:</>: {}", account.user_id));
-            let username = account.name.unwrap_or("Unknown".to_string());
+            console.info(cformat!("  <s>ID:</>: {}", account.id()));
+            console.info(cformat!("  <s>User ID:</>: {}", account.user_id()));
+            let username = account.name().unwrap_or("Unknown");
             console.info(cformat!("  <s>Username:</>: {}", username));
-            console.info(cformat!("  <s>Email:</>: {}", account.email));
-            console.info(cformat!("  <s>Registered?</>: {}", account.registered));
+            console.info(cformat!("  <s>Email:</>: {}", account.email()));
+            console.info(cformat!("  <s>Registered?</>: {}", account.registered()));
 
-            if !account.devices.is_empty() {
+            if !account.devices().is_empty() {
                 console.info(cformat!("  <s>Devices:</>"));
-                for device in account.devices {
+                for device in account.devices() {
                     console.info(cformat!(
                         "    - <s>{}</>: {} [{}]",
-                        device.id,
-                        device.name,
-                        device.platform.to_name()
+                        device.id(),
+                        device.name(),
+                        device.platform().to_name()
                     ));
                 }
             }
@@ -497,10 +493,14 @@ pub(crate) async fn kmkc_balance(
         }
         Ok(balance) => {
             console.info("Your current point balance:");
-            let total_bal = balance.point.total_point().to_formatted_string(&Locale::en);
-            let paid_point = balance.point.paid_point.to_formatted_string(&Locale::en);
-            let free_point = balance.point.free_point.to_formatted_string(&Locale::en);
-            let premium_ticket = balance.ticket.total_num.to_formatted_string(&Locale::en);
+            let point = balance.point();
+            let total_bal = point.total_point().to_formatted_string(&Locale::en);
+            let paid_point = point.paid_point().to_formatted_string(&Locale::en);
+            let free_point = point.free_point().to_formatted_string(&Locale::en);
+            let premium_ticket = balance
+                .ticket()
+                .total_num()
+                .to_formatted_string(&Locale::en);
             console.info(cformat!(
                 "  - <bold>Total:</> <cyan!,bold><reverse>{}</>c</cyan!,bold>",
                 total_bal

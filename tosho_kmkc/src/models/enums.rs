@@ -5,14 +5,13 @@
 //! Especially for [`MagazineCategory`] enum as it needs to be manually documented/updated.
 
 use documented::DocumentedFields;
-use serde::{Deserialize, Serialize};
 use tosho_macros::{
     DeserializeEnum32, DeserializeEnum32Fallback, EnumCount, EnumName, EnumU32Fallback,
     SerializeEnum32,
 };
 
 /// A boolean type used by the API represented as an integer.
-#[derive(Debug, Clone, SerializeEnum32, DeserializeEnum32, EnumName)]
+#[derive(Debug, Clone, Copy, SerializeEnum32, DeserializeEnum32, EnumName)]
 pub enum IntBool {
     /// Property is false
     False = 0,
@@ -70,7 +69,7 @@ impl From<IntBool> for bool {
 }
 
 /// The purchase status of an episode.
-#[derive(Debug, Clone, SerializeEnum32, DeserializeEnum32, PartialEq, EnumName)]
+#[derive(Debug, Clone, Copy, SerializeEnum32, DeserializeEnum32, PartialEq, EnumName)]
 pub enum EpisodeBadge {
     /// Episode need to be purchased by point or ticket (if possible)
     Purchaseable = 1,
@@ -83,31 +82,35 @@ pub enum EpisodeBadge {
 }
 
 /// The device platform type.
-#[derive(Debug, Clone, SerializeEnum32, DeserializeEnum32, PartialEq, EnumName)]
+#[derive(Debug, Clone, Copy, SerializeEnum32, DeserializeEnum32, PartialEq, EnumName)]
 pub enum DevicePlatform {
-    // Is Apple/iOS
+    /// Is Apple/iOS
     Apple = 1,
-    // Is Android
+    /// Is Android
     Android = 2,
     /// Is Website
     Web = 3,
 }
 
 /// Gender type of the user.
-#[derive(Debug, Clone, SerializeEnum32, DeserializeEnum32, PartialEq, EnumName)]
+#[derive(Debug, Clone, Copy, SerializeEnum32, DeserializeEnum32, PartialEq, EnumName)]
 pub enum GenderType {
+    /// Male gender
     Male = 1,
+    /// Female gender
     Female = 2,
+    /// Other gender
     Other = 3,
 }
 
 /// The publication category type.
-#[derive(Debug, Clone, SerializeEnum32, DeserializeEnum32, PartialEq, EnumName)]
+#[derive(Debug, Clone, Copy, SerializeEnum32, DeserializeEnum32, PartialEq, EnumName)]
 pub enum PublishCategory {
     /// Series is being serialized
     Serializing = 1,
     /// Series is complete!
     Complete = 2,
+    /// ???
     ReadingOut = 3,
 }
 
@@ -115,6 +118,7 @@ pub enum PublishCategory {
 #[derive(
     Debug,
     Clone,
+    Copy,
     SerializeEnum32,
     DeserializeEnum32Fallback,
     PartialEq,
@@ -241,7 +245,7 @@ impl MagazineCategory {
     /// Get the pretty name of the magazine category.
     ///
     /// # Examples
-    /// ```
+    /// ```rust
     /// use tosho_kmkc::models::MagazineCategory;
     ///
     /// let e_young = MagazineCategory::eYoungMagazine;
@@ -292,7 +296,7 @@ impl MagazineCategory {
 }
 
 /// The favorite status of the titles.
-#[derive(Debug, Clone, SerializeEnum32, DeserializeEnum32, PartialEq, EnumName)]
+#[derive(Debug, Clone, Copy, SerializeEnum32, DeserializeEnum32, PartialEq, EnumName)]
 pub enum FavoriteStatus {
     /// Title is not favorited.
     None = 0,
@@ -303,7 +307,7 @@ pub enum FavoriteStatus {
 }
 
 /// The support status of the titles.
-#[derive(Debug, Clone, SerializeEnum32, DeserializeEnum32, PartialEq, EnumName)]
+#[derive(Debug, Clone, Copy, SerializeEnum32, DeserializeEnum32, PartialEq, EnumName)]
 pub enum SupportStatus {
     /// Not allowed to support the titles.
     NotAllowed = 0,

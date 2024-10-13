@@ -91,10 +91,8 @@ pub(crate) async fn mplus_auth_session(
                 Ok(tosho_mplus::APIResponse::Success(account_resp)) => {
                     let mut final_config = config.clone();
 
-                    if let Some(username) = account_resp.user_name {
-                        if !username.is_empty() {
-                            final_config = final_config.with_username(&username);
-                        }
+                    if !account_resp.user_name().is_empty() {
+                        final_config = final_config.with_username(account_resp.user_name());
                     }
 
                     console.info(cformat!(
@@ -187,13 +185,13 @@ pub async fn mplus_account_info(
             console.info(cformat!("  <bold>Session:</> {}", acc_info.session));
             console.info(cformat!("  <bold>Type:</> {}", acc_info.r#type().to_name()));
 
-            let mut username = account_resp.user_name.clone();
+            let mut username = account_resp.user_name();
             if username.is_empty() {
-                username = "[No username]".to_string();
+                username = "[No username]";
             }
 
             console.info(cformat!("  <bold>Username:</> {}", username));
-            let subs_info = account_resp.subscription.unwrap_or_default();
+            let subs_info = account_resp.subscription().cloned().unwrap_or_default();
             console.info(cformat!(
                 "  <bold>Subscription:</> {}",
                 subs_info.plan().to_name()
@@ -201,7 +199,7 @@ pub async fn mplus_account_info(
 
             console.info(cformat!(
                 "  <bold>Notify news?</> {}",
-                if account_resp.news_notification {
+                if account_resp.news_notification() {
                     "Yes"
                 } else {
                     "No"
@@ -210,7 +208,7 @@ pub async fn mplus_account_info(
 
             console.info(cformat!(
                 "  <bold>Notify chapter update?</> {}",
-                if account_resp.chapter_notification {
+                if account_resp.chapter_notification() {
                     "Yes"
                 } else {
                     "No"

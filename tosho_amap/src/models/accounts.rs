@@ -3,35 +3,40 @@
 //! If something is missing, please [open an issue](https://github.com/noaione/tosho-mango/issues/new/choose) or a [pull request](https://github.com/noaione/tosho-mango/compare).
 
 use serde::{Deserialize, Serialize};
+use tosho_macros::AutoGetter;
 
 /// User purchase information
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
 pub struct IAPInfo {
     /// Bonus ticket
-    pub bonus: u64,
+    bonus: u64,
     /// Purchased ticket
     #[serde(rename = "product")]
-    pub purchased: u64,
+    purchased: u64,
     /// Premium ticket
-    pub premium: u64,
+    premium: u64,
     /// Point that you have
     #[serde(rename = "pp")]
-    pub point: u64,
+    point: u64,
     /// New bonus ticket
-    pub new_bonus: u64,
+    new_bonus: u64,
     /// The request payload
-    pub payload: String,
+    payload: String,
+    /// The next point reset in second
     #[serde(rename = "next_pp_second")]
-    pub next_point_second: u64,
+    next_point_second: u64,
+    /// The next point in UNIX timestamp
     #[serde(rename = "next_pp_time")]
-    pub next_point_time: u64,
+    next_point_time: u64,
+    /// The next point
     #[serde(rename = "next_pp")]
-    pub next_point: u64,
-    pub available_wall: bool,
+    next_point: u64,
+    #[allow(clippy::missing_docs_in_private_items)]
+    available_wall: bool,
     /// The account identifier for the user
     ///
     /// This is different between each token.
-    pub guest_id: String,
+    guest_id: String,
 }
 
 impl IAPInfo {
@@ -44,79 +49,109 @@ impl IAPInfo {
     pub fn sum_point(&self) -> u64 {
         self.point + self.new_bonus
     }
+
+    /// Set premium ticket amount
+    pub fn set_premium(&mut self, premium: u64) {
+        self.premium = premium;
+    }
+
+    /// Set bonus ticket amount
+    pub fn set_bonus(&mut self, bonus: u64) {
+        self.bonus = bonus;
+    }
+
+    /// Set purchased ticket amount
+    pub fn set_purchased(&mut self, purchased: u64) {
+        self.purchased = purchased;
+    }
+
+    /// Subtract premium ticket amount
+    pub fn subtract_premium(&mut self, premium: u64) {
+        self.premium = self.premium.saturating_sub(premium);
+    }
+
+    /// Subtract bonus ticket amount
+    pub fn subtract_bonus(&mut self, bonus: u64) {
+        self.bonus = self.bonus.saturating_sub(bonus);
+    }
+
+    /// Subtract purchased ticket amount
+    pub fn subtract_purchased(&mut self, purchased: u64) {
+        self.purchased = self.purchased.saturating_sub(purchased);
+    }
 }
 
 /// A node of each available purchase product
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
 pub struct IAPProductInfoNode {
     /// The product identifier
     #[serde(rename = "product_id")]
-    pub id: String,
+    id: String,
     /// The product notice (sometimes is the name or description)
-    pub notice: String,
+    notice: String,
 }
 
 /// A wrapper for [`IAPProductInfoNode`]
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
 pub struct IAPProductInfo {
     /// The product information
     #[serde(rename = "iap_product_info")]
-    pub info: IAPProductInfoNode,
+    info: IAPProductInfoNode,
 }
 
 /// A complete in-app purchase information
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
 pub struct IAPRemainder {
     /// The in-app purchase information
     #[serde(rename = "iap_info")]
-    pub info: IAPInfo,
+    info: IAPInfo,
     /// The in-app purchase product list
     #[serde(rename = "iap_product_list")]
-    pub product_list: Option<Vec<IAPProductInfo>>,
+    product_list: Option<Vec<IAPProductInfo>>,
     /// The in-app purchase product version
     #[serde(rename = "iap_product_version")]
-    pub version: Option<u64>,
+    version: Option<u64>,
 }
 
 /// The result of a login request
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
 pub struct LoginResult {
     /// The account ID
     #[serde(rename = "citi_id")]
-    pub id: u64,
+    id: u64,
     /// The account username
     #[serde(rename = "p_name")]
-    pub name: String,
+    name: String,
     /// The account image URL
     #[serde(rename = "profile_img_url")]
-    pub image_url: String,
+    image_url: String,
     /// Is the account a guest account?
-    pub temp: bool,
+    temp: bool,
     /// The login message, if any
-    pub login_message: Option<String>,
+    login_message: Option<String>,
     /// In-app purchase information
     #[serde(rename = "iap_info")]
-    pub info: IAPInfo,
+    info: IAPInfo,
 }
 
 /// A minimal user account information
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
 pub struct AccountUserInfo {
     /// The account ID
     #[serde(rename = "citi_id")]
-    pub id: u64,
+    id: u64,
     /// The account username
     #[serde(rename = "p_name")]
-    pub name: String,
+    name: String,
     /// The account image URL
     #[serde(rename = "prof_image_url")]
-    pub image_url: String,
+    image_url: String,
 }
 
 /// Response for user account information
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
 pub struct AccountUserResponse {
     /// The account information
     #[serde(rename = "user_info")]
-    pub info: AccountUserInfo,
+    info: AccountUserInfo,
 }

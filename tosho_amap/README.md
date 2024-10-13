@@ -15,12 +15,7 @@ use tosho_amap::{AMClient, AMConfig};
 
 #[tokio::main]
 async fn main() {
-    let config = AMConfig {
-        token: "123".to_string(),
-        identifier: "abcxyz".to_string(),
-        session_v2: "xyz987abc".to_string(),
-    };
-
+    let config = AMConfig::new("123", "abcxyz", "xyz987abc");
     let client = AMClient::new(config).unwrap();
 
     let manga = client.get_comic(48000051).await.unwrap();

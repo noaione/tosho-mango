@@ -68,9 +68,9 @@ pub(crate) async fn mplus_home_rankings(
     match results {
         Ok(tosho_mplus::APIResponse::Success(results)) => {
             let all_titles: Vec<tosho_mplus::proto::Title> = results
-                .titles
+                .titles()
                 .iter()
-                .map(|title| title.titles.first().unwrap().clone())
+                .map(|title| title.titles().first().unwrap().clone())
                 .collect();
 
             console.info(cformat!(

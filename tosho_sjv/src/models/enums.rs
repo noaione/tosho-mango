@@ -2,14 +2,13 @@
 
 use std::str::FromStr;
 
-use serde::{Deserialize, Serialize};
 use tosho_macros::{
     enum_error, DeserializeEnum, DeserializeEnum32, DeserializeEnum32Fallback, EnumName,
     EnumU32Fallback, SerializeEnum, SerializeEnum32,
 };
 
 /// A boolean type used by the API represented as an integer.
-#[derive(Debug, Clone, SerializeEnum32, DeserializeEnum32, EnumName)]
+#[derive(Debug, Clone, Copy, SerializeEnum32, DeserializeEnum32, EnumName)]
 pub enum IntBool {
     /// Property is false
     False = 0,
@@ -68,7 +67,7 @@ impl From<IntBool> for bool {
 
 /// The subscription type
 ///
-/// ```
+/// ```rust
 /// use tosho_sjv::models::SubscriptionType;
 ///
 /// let st = SubscriptionType::VM;
@@ -113,7 +112,7 @@ impl std::fmt::Display for SubscriptionType {
 
 /// The manga rating
 ///
-/// ```
+/// ```rust
 /// use tosho_sjv::models::MangaRating;
 ///
 /// let st = MangaRating::AllAges;
@@ -179,6 +178,7 @@ impl std::fmt::Display for MangaRating {
 #[derive(
     Debug,
     Clone,
+    Copy,
     SerializeEnum32,
     DeserializeEnum32Fallback,
     PartialEq,
@@ -216,7 +216,7 @@ impl MangaImprint {
     /// Get the pretty name of the imprint category.
     ///
     /// # Examples
-    /// ```
+    /// ```rust
     /// use tosho_sjv::models::MangaImprint;
     ///
     /// let ssunday = MangaImprint::ShonenSunday;

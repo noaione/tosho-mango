@@ -1,3 +1,4 @@
+#![warn(missing_docs, clippy::empty_docs, rustdoc::broken_intra_doc_links)]
 #![doc = include_str!("../README.md")]
 
 use std::{collections::HashMap, sync::MutexGuard};
@@ -26,15 +27,19 @@ use tosho_common::{
     bail_on_error, make_error, parse_json_response, parse_json_response_failable, ToshoAuthError,
     ToshoClientError, ToshoResult,
 };
+use tosho_macros::AutoGetter;
 
 /// Login result for the API.
 ///
 /// This will return either a [`KMConfig::Web`] or [`KMConfig::Mobile`] depending on the login type.
 ///
 /// And will also include the current account info.
+#[derive(Clone, AutoGetter)]
 pub struct KMLoginResult {
-    pub config: KMConfig,
-    pub account: UserAccount,
+    /// Config data
+    config: KMConfig,
+    /// The user account itself
+    account: UserAccount,
 }
 
 /// Main client for interacting with the SQ MU!
@@ -45,12 +50,7 @@ pub struct KMLoginResult {
 ///
 /// #[tokio::main]
 /// async fn main() {
-///     let config = KMConfigMobile {
-///         user_id: "123".to_string(),
-///         hash_key: "abcxyz".to_string(),
-///         platform: KMConfigMobilePlatform::Android,
-///     };
-///
+///     let config = KMConfigMobile::new("123", "abcxyz", KMConfigMobilePlatform::Android);
 ///     let client = KMClient::new(KMConfig::Mobile(config)).unwrap();
 ///
 ///     let manga = client.get_titles(vec![10007]).await.unwrap();
@@ -128,7 +128,7 @@ impl KMClient {
                 })
             }
             KMConfig::Mobile(mobile) => {
-                let consts = get_constants(mobile.platform.clone() as u8);
+                let consts = get_constants(mobile.platform() as u8);
                 headers.insert(
                     reqwest::header::USER_AGENT,
                     reqwest::header::HeaderValue::from_static(&consts.ua),
@@ -167,7 +167,7 @@ impl KMClient {
         query_params.insert("platform".to_string(), platform.to_string());
         query_params.insert("version".to_string(), version.to_string());
         if let KMConfig::Mobile(mobile) = &self.config {
-            query_params.insert("user_id".to_string(), mobile.user_id.to_string());
+            query_params.insert("user_id".to_string(), mobile.user_id().to_string());
         }
         if let Some(disp_ver) = self.constants.display_version {
             query_params.insert("disp_version".to_string(), disp_ver.to_string());
@@ -293,7 +293,7 @@ impl KMClient {
             )
             .await?;
 
-        Ok(responses.episodes)
+        Ok(responses.episodes().to_vec())
     }
 
     /// Get the list of titles from the given list of title IDs
@@ -318,7 +318,7 @@ impl KMClient {
             )
             .await?;
 
-        Ok(responses.titles)
+        Ok(responses.titles().to_vec())
     }
 
     /// Get the episode viewer for the given episode ID.
@@ -337,7 +337,7 @@ impl KMClient {
         match &self.config {
             KMConfig::Web(_) => {
                 let mut params = HashMap::new();
-                params.insert("episode_id".to_string(), episode.id.to_string());
+                params.insert("episode_id".to_string(), episode.id().to_string());
 
                 let response = self
                     .request::<WebEpisodeViewerResponse>(
@@ -353,10 +353,10 @@ impl KMClient {
             }
             KMConfig::Mobile(_) => {
                 let mut params = HashMap::new();
-                params.insert("episode_id".to_string(), episode.id.to_string());
+                params.insert("episode_id".to_string(), episode.id().to_string());
                 params.insert("force_master".to_string(), "1".to_string());
                 params.insert("is_download".to_string(), "1".to_string());
-                if let Some(magazine_id) = episode.magazine_id {
+                if let Some(magazine_id) = episode.magazine_id() {
                     params.insert("magazine_id".to_string(), magazine_id.to_string());
                 }
 
@@ -387,7 +387,7 @@ impl KMClient {
         episode: &EpisodeNode,
     ) -> ToshoResult<EpisodeViewerFinishResponse> {
         let mut params = HashMap::new();
-        params.insert("episode_id".to_string(), episode.id.to_string());
+        params.insert("episode_id".to_string(), episode.id().to_string());
 
         let response = self
             .request::<EpisodeViewerFinishResponse>(
@@ -420,7 +420,11 @@ impl KMClient {
             )
             .await?;
 
-        Ok(response.tickets[0].clone())
+        let first_ticket = response.tickets().first().ok_or_else(|| {
+            make_error!("Failed to get first ticket information, first index is empty!")
+        })?;
+
+        Ok(first_ticket.clone())
     }
 
     /// Claim or purchase an episode with a user's point.
@@ -433,10 +437,10 @@ impl KMClient {
         episode: &EpisodeNode,
         wallet: &mut UserPoint,
     ) -> ToshoResult<EpisodePurchaseResponse> {
-        if !wallet.can_purchase(episode.point.try_into().unwrap_or(0)) {
+        if !wallet.can_purchase(episode.point().try_into().unwrap_or(0)) {
             let km_error = KMAPINotEnoughPointsError {
                 message: "Not enough points to purchase episode".to_string(),
-                points_needed: episode.point.try_into().unwrap_or(0),
+                points_needed: episode.point().try_into().unwrap_or(0),
                 points_have: wallet.total_point(),
             };
             // bail with custom error
@@ -444,8 +448,8 @@ impl KMClient {
         }
 
         let mut data = HashMap::new();
-        data.insert("episode_id".to_owned(), episode.id.to_string());
-        data.insert("check_point".to_owned(), episode.point.to_string());
+        data.insert("episode_id".to_owned(), episode.id().to_string());
+        data.insert("check_point".to_owned(), episode.point().to_string());
 
         let response = self
             .request::<EpisodePurchaseResponse>(
@@ -457,7 +461,7 @@ impl KMClient {
             )
             .await?;
 
-        wallet.subtract(response.paid.try_into().unwrap_or(0));
+        wallet.subtract(response.paid().try_into().unwrap_or(0));
 
         Ok(response)
     }
@@ -479,10 +483,10 @@ impl KMClient {
         let mut bonus_point = 0_u64;
 
         for episode in episodes {
-            episode_ids.push(episode.id.to_string());
+            episode_ids.push(episode.id().to_string());
 
-            paid_point += episode.point.try_into().unwrap_or(0);
-            bonus_point += episode.bonus_point.try_into().unwrap_or(0);
+            paid_point += episode.point().try_into().unwrap_or(0);
+            bonus_point += episode.bonus_point().try_into().unwrap_or(0);
         }
 
         let mut cloned_wallet = wallet.clone();
@@ -511,8 +515,8 @@ impl KMClient {
             )
             .await?;
 
-        wallet.subtract(response.paid.try_into().unwrap_or(0));
-        wallet.add(response.point_back.try_into().unwrap_or(0));
+        wallet.subtract(response.paid().try_into().unwrap_or(0));
+        wallet.add(response.point_back().try_into().unwrap_or(0));
 
         Ok(response)
     }
@@ -539,8 +543,8 @@ impl KMClient {
                 data.insert("ticket_type".to_owned(), "99".to_owned());
             }
             TicketInfoType::Title(title) => {
-                data.insert("ticket_version".to_owned(), title.version.to_string());
-                data.insert("ticket_type".to_owned(), title.r#type.to_string());
+                data.insert("ticket_version".to_owned(), title.version().to_string());
+                data.insert("ticket_type".to_owned(), title.r#type().to_string());
                 is_title = true;
             }
         }
@@ -572,11 +576,15 @@ impl KMClient {
     /// # Arguments
     /// * `query` - The query to search for
     /// * `limit` - The limit of results to return
-    pub async fn search(&self, query: &str, limit: Option<u32>) -> ToshoResult<Vec<TitleNode>> {
+    pub async fn search(
+        &self,
+        query: impl Into<String>,
+        limit: Option<u32>,
+    ) -> ToshoResult<Vec<TitleNode>> {
         let mut params = HashMap::new();
-        params.insert("keyword".to_owned(), query.to_owned());
+        params.insert("keyword".to_string(), query.into());
         let limit = limit.unwrap_or(99_999);
-        params.insert("limit".to_owned(), limit.to_string());
+        params.insert("limit".to_string(), limit.to_string());
 
         let response = self
             .request::<SearchResponse>(
@@ -588,7 +596,7 @@ impl KMClient {
             )
             .await?;
 
-        Ok(response.titles)
+        Ok(response.titles().to_vec())
     }
 
     /// Get the weekly ranking/list.
@@ -606,7 +614,7 @@ impl KMClient {
             .request::<AccountResponse>(reqwest::Method::GET, "/account", None, None, None)
             .await?;
 
-        Ok(response.account)
+        Ok(response.account().clone())
     }
 
     /// Get a user information
@@ -636,7 +644,7 @@ impl KMClient {
             )
             .await?;
 
-        Ok(response.titles)
+        Ok(response.titles().to_vec())
     }
 
     /// Get the user's favorites.
@@ -737,10 +745,11 @@ impl KMClient {
     /// * `writer` - The writer to write the image to
     pub async fn stream_download(
         &self,
-        url: &str,
+        url: impl Into<String>,
         scramble_seed: Option<u32>,
         mut writer: impl tokio::io::AsyncWrite + std::marker::Unpin,
     ) -> ToshoResult<()> {
+        let url: String = url.into();
         let res = self
             .inner
             .get(url)
@@ -801,8 +810,8 @@ impl KMClient {
     /// * `password` - The password to login with
     /// * `mobile` - Whether to login as mobile or not
     pub async fn login(
-        email: &str,
-        password: &str,
+        email: impl Into<String>,
+        password: impl Into<String>,
         mobile_platform: Option<KMConfigMobilePlatform>,
     ) -> ToshoResult<KMLoginResult> {
         // Create a new client
@@ -835,8 +844,8 @@ impl KMClient {
 
         // Perform web login
         let mut req_data = HashMap::new();
-        req_data.insert("email".to_string(), email.to_string());
-        req_data.insert("password".to_string(), password.to_string());
+        req_data.insert("email".to_string(), email.into());
+        req_data.insert("password".to_string(), password.into());
         req_data.insert("platform".to_string(), WEB_CONSTANTS.platform.to_string());
         req_data.insert("version".to_string(), WEB_CONSTANTS.version.to_string());
 
@@ -863,10 +872,11 @@ impl KMClient {
 
         let login_status = parse_json_response::<StatusResponse>(response).await?;
 
-        if login_status.response_code != 0 {
-            return Err(
-                ToshoAuthError::InvalidCredentials(login_status.error_message.clone()).into(),
-            );
+        if login_status.response_code() != 0 {
+            return Err(ToshoAuthError::InvalidCredentials(
+                login_status.error_message().to_string(),
+            )
+            .into());
         }
 
         let unparse_web = KMConfigWeb::try_from(cookie_store.lock().unwrap().clone())?;
@@ -877,15 +887,14 @@ impl KMClient {
         match mobile_platform {
             Some(platform) => {
                 // Authenticate as mobile
-                let user_info = km_client.get_user(account.user_id).await?;
+                let user_info = km_client.get_user(account.user_id()).await?;
 
                 Ok(KMLoginResult {
-                    config: KMConfig::Mobile(KMConfigMobile {
-                        user_id: user_info.id.to_string(),
-                        hash_key: user_info.hash_key.clone(),
-                        // Guaranteed to be Some because we checked it above
+                    config: KMConfig::Mobile(KMConfigMobile::new(
+                        user_info.id().to_string(),
+                        user_info.hash_key(),
                         platform,
-                    }),
+                    )),
                     account,
                 })
             }
@@ -907,9 +916,8 @@ fn create_request_hash(
 ) -> ToshoResult<String> {
     match config {
         KMConfig::Web(web) => {
-            let birthday = &web.birthday.value;
-
-            let expires = web.birthday.expires.to_string();
+            let birthday = web.birthday().value();
+            let expires = web.birthday().expires().to_string();
 
             let mut keys = query_params.keys().collect::<Vec<&String>>();
             keys.sort();
@@ -935,10 +943,8 @@ fn create_request_hash(
         KMConfig::Mobile(mobile) => {
             let mut hasher = <Sha256 as Digest>::new();
 
-            let hash_key = &mobile.hash_key;
-
             let mut query_params = query_params.clone();
-            query_params.insert("hash_key".to_string(), hash_key.to_string());
+            query_params.insert("hash_key".to_string(), mobile.hash_key().to_string());
 
             // iterate sorted keys
             let mut keys = query_params.keys().collect::<Vec<&String>>();

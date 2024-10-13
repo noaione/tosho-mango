@@ -123,19 +123,21 @@ pub(crate) struct RBDownloadConfigCli {
     pub(crate) parallel: bool,
 }
 
-fn create_chapters_info(title: &Manga, chapters: Vec<Chapter>) -> MangaDetailDump {
-    let mut dumped_chapters: Vec<ChapterDetailDump> = vec![];
-    for chapter in chapters {
-        dumped_chapters.push(ChapterDetailDump::from(chapter));
-    }
+fn create_chapters_info(title: &Manga, chapters: &[Chapter]) -> MangaDetailDump {
+    let dumped_chapters: Vec<ChapterDetailDump> =
+        chapters.iter().map(ChapterDetailDump::from).collect();
 
     let creators = title
-        .creators
+        .creators()
         .iter()
-        .map(|cc| cc.name.clone())
+        .map(|cc| cc.name().to_string())
         .collect::<Vec<String>>();
 
-    MangaDetailDump::new(title.title.clone(), creators.join(", "), dumped_chapters)
+    MangaDetailDump::new(
+        title.title().to_string(),
+        creators.join(", "),
+        dumped_chapters,
+    )
 }
 
 fn get_output_directory(
@@ -165,8 +167,8 @@ fn do_chapter_select(
     console: &mut crate::term::Terminal,
 ) -> Vec<Chapter> {
     console.info("Title information:");
-    console.info(cformat!("  - <bold>ID:</> {}", result.uuid));
-    console.info(cformat!("  - <bold>Title:</> {}", result.title));
+    console.info(cformat!("  - <bold>ID:</> {}", result.uuid()));
+    console.info(cformat!("  - <bold>Title:</> {}", result.title()));
     console.info(cformat!(
         "  - <bold>Chapters:</> {} chapters",
         chapters_entry.len()
@@ -176,13 +178,13 @@ fn do_chapter_select(
         .iter()
         .filter(|&&ch| {
             // Hide unavailable chapters
-            ch.published.is_some() && !ch.upcoming
+            ch.published().is_some() && !ch.upcoming()
         })
         .filter_map(|&ch| {
             // Download chapter if it's free or user is premium
-            if ch.free_published.is_some() || user_info.is_premium {
+            if ch.free_published().is_some() || user_info.is_premium() {
                 Some(ConsoleChoice {
-                    name: ch.uuid.to_string(),
+                    name: ch.uuid().to_string(),
                     value: ch.formatted_title(),
                 })
             } else {
@@ -199,7 +201,7 @@ fn do_chapter_select(
                 .filter_map(|x| {
                     let ch = chapters_entry
                         .iter()
-                        .find(|&&ch| ch.uuid == x.name)
+                        .find(|&&ch| ch.uuid() == x.name)
                         .cloned();
 
                     ch.cloned()
@@ -232,21 +234,21 @@ fn select_quality_url(
     hires_available: bool,
 ) -> anyhow::Result<String> {
     if hires_available && quality == CLIDownloadQuality::Highest {
-        RBClient::modify_url_for_highres(&source[0].url).map_err(|e| anyhow::anyhow!(e))
+        RBClient::modify_url_for_highres(source[0].url()).map_err(|e| anyhow::anyhow!(e))
     } else {
         // Source is reverse sorted from highest to lowest quality
         match quality {
             CLIDownloadQuality::Highest | CLIDownloadQuality::High => {
                 // Get the highest quality image
                 match source.first() {
-                    Some(first_src) => Ok(first_src.url.clone()),
+                    Some(first_src) => Ok(first_src.url().to_string()),
                     None => Err(anyhow::anyhow!("No image source available for download")),
                 }
             }
             CLIDownloadQuality::Lowest => {
                 // Get the lowest quality image
                 match source.last() {
-                    Some(last_src) => Ok(last_src.url.clone()),
+                    Some(last_src) => Ok(last_src.url().to_string()),
                     None => Err(anyhow::anyhow!("No image source available for download")),
                 }
             }
@@ -256,11 +258,11 @@ fn select_quality_url(
                     // Get the middle quality image
                     let idx = source.len() / 2;
                     match source.get(idx) {
-                        Some(mid_src) => Ok(mid_src.url.clone()),
+                        Some(mid_src) => Ok(mid_src.url().to_string()),
                         None => {
                             // get the highest quality image
                             match source.first() {
-                                Some(first_src) => Ok(first_src.url.clone()),
+                                Some(first_src) => Ok(first_src.url().to_string()),
                                 None => Err(anyhow::anyhow!("Tried to get middle quality {idx} but no image source available for download")),
                             }
                         }
@@ -268,7 +270,7 @@ fn select_quality_url(
                 } else {
                     // Get the highest quality image
                     match source.first() {
-                        Some(first_src) => Ok(first_src.url.clone()),
+                        Some(first_src) => Ok(first_src.url().to_string()),
                         None => Err(anyhow::anyhow!("No image source available for download")),
                     }
                 }
@@ -289,8 +291,8 @@ async fn rbean_actual_downloader(
     let img_dl_path = image_dir.join(image_fn.clone());
 
     let mut img_source = match dl_config.format {
-        CLIDownloadFormat::Jpeg => node.page.image.jpg.clone(),
-        CLIDownloadFormat::Webp => node.page.image.webp.clone(),
+        CLIDownloadFormat::Jpeg => node.page.image().jpg().to_vec(),
+        CLIDownloadFormat::Webp => node.page.image().webp().to_vec(),
     };
 
     img_source.sort();
@@ -360,7 +362,7 @@ pub(crate) async fn rbean_download(
 
     console.info(cformat!(
         "Fetching chapters for <magenta,bold>{}</>...",
-        result.title
+        result.title()
     ));
 
     let chapter_meta = client.get_chapter_list(uuid).await;
@@ -374,9 +376,9 @@ pub(crate) async fn rbean_download(
     save_session_config(client, account);
 
     let chapters: Vec<&Chapter> = chapter_meta
-        .chapters
+        .chapters()
         .iter()
-        .filter(|&ch| ch.published.is_some())
+        .filter(|&ch| ch.published().is_some())
         .collect();
 
     if chapters.is_empty() {
@@ -392,11 +394,14 @@ pub(crate) async fn rbean_download(
 
     let download_chapters: Vec<&Chapter> = selected_chapters
         .iter()
-        .filter(|&ch| dl_config.chapter_ids.is_empty() || dl_config.chapter_ids.contains(&ch.uuid))
-        .filter(|&ch| ch.published.is_some() && !ch.upcoming)
+        .filter(|&ch| {
+            dl_config.chapter_ids.is_empty()
+                || dl_config.chapter_ids.contains(&ch.uuid().to_string())
+        })
+        .filter(|&ch| ch.published().is_some() && !ch.upcoming())
         .filter(|&ch| {
             // Download chapter if it's free or user is premium
-            ch.free_published.is_some() || acc_info.is_premium
+            ch.free_published().is_some() || acc_info.is_premium()
         })
         .collect();
 
@@ -405,8 +410,8 @@ pub(crate) async fn rbean_download(
         return 1;
     }
 
-    let title_dir = get_output_directory(&output_dir, result.uuid.clone(), None, true);
-    let dump_info = create_chapters_info(&result, chapter_meta.chapters);
+    let title_dir = get_output_directory(&output_dir, result.uuid().to_string(), None, true);
+    let dump_info = create_chapters_info(&result, chapter_meta.chapters());
 
     let title_dump_path = title_dir.join("_info.json");
     dump_info
@@ -417,12 +422,12 @@ pub(crate) async fn rbean_download(
         console.info(cformat!(
             "  Downloading chapter <m,s>{}</> ({})...",
             chapter.formatted_title(),
-            chapter.uuid
+            chapter.uuid()
         ));
 
         let image_dir = get_output_directory(
             &output_dir,
-            result.uuid.clone(),
+            result.uuid().to_string(),
             Some(chapter.formatted_title()),
             false,
         );
@@ -432,7 +437,7 @@ pub(crate) async fn rbean_download(
             CLIDownloadFormat::Webp => "webp",
         };
 
-        let view_req = client.get_chapter_viewer(&chapter.uuid).await;
+        let view_req = client.get_chapter_viewer(chapter.uuid()).await;
 
         if let Err(e) = view_req {
             console.error(cformat!(
@@ -447,11 +452,11 @@ pub(crate) async fn rbean_download(
         save_session_config(client, account);
 
         if let Some(count) = check_downloaded_image_count(&image_dir, image_ext) {
-            if count >= view_req.data.pages.len() {
+            if count >= view_req.data().pages().len() {
                 console.warn(cformat!(
                     "   Chapter <m,s>{}</> (<s>{}</>) has been downloaded, skipping",
                     chapter.formatted_title(),
-                    chapter.uuid
+                    chapter.uuid()
                 ));
                 continue;
             }
@@ -460,16 +465,16 @@ pub(crate) async fn rbean_download(
         // create chapter dir
         std::fs::create_dir_all(&image_dir).unwrap();
 
-        let total_img_count = view_req.data.pages.len() as u64;
+        let total_img_count = view_req.data().pages().len() as u64;
 
-        let pages_data = view_req.data.pages.clone();
+        let pages_data = view_req.data().pages();
 
         // Test if 2000x3000 is available when highest quality is selected
         let hires_available = match dl_config.quality {
             CLIDownloadQuality::Highest => {
                 let img_source = match dl_config.format {
-                    CLIDownloadFormat::Jpeg => pages_data[0].image.jpg.clone(),
-                    CLIDownloadFormat::Webp => pages_data[0].image.webp.clone(),
+                    CLIDownloadFormat::Jpeg => pages_data[0].image().jpg(),
+                    CLIDownloadFormat::Webp => pages_data[0].image().webp(),
                 };
                 let first_image = img_source.first().unwrap();
                 console.info(cformat!(
@@ -477,7 +482,7 @@ pub(crate) async fn rbean_download(
                     chapter.formatted_title()
                 ));
                 let test_hires = client
-                    .test_high_res(&first_image.url)
+                    .test_high_res(first_image.url())
                     .await
                     .unwrap_or(false);
 

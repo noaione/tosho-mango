@@ -18,16 +18,19 @@ pub(crate) async fn kmkc_my_favorites(
 
     match results {
         Ok(results) => {
-            if results.favorites.is_empty() {
+            if results.favorites().is_empty() {
                 console.error("You don't have any favorites.");
                 return 0;
             }
 
             let mapped_favorites: Vec<tosho_kmkc::models::TitleNode> = results
-                .favorites
+                .favorites()
                 .iter()
                 .filter_map(|favorite| {
-                    let title = results.titles.iter().find(|title| title.id == favorite.id);
+                    let title = results
+                        .titles()
+                        .iter()
+                        .find(|title| title.id() == favorite.id());
 
                     title.cloned()
                 })
@@ -38,7 +41,7 @@ pub(crate) async fn kmkc_my_favorites(
                 mapped_favorites.len()
             ));
 
-            do_print_search_information(mapped_favorites, false, None);
+            do_print_search_information(&mapped_favorites, false, None);
 
             0
         }

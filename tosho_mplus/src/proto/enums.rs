@@ -54,7 +54,7 @@ impl Language {
     /// Get the pretty name of the language.
     ///
     /// # Examples
-    /// ```
+    /// ```rust
     /// use tosho_mplus::proto::Language;
     ///
     /// let pt_br = Language::BrazilianPortuguese;
@@ -68,7 +68,7 @@ impl Language {
     /// Get the language code for the language.
     ///
     /// # Examples
-    /// ```
+    /// ```rust
     /// use tosho_mplus::proto::Language;
     ///
     /// let english = Language::English;
@@ -93,7 +93,7 @@ impl Language {
     /// Get the country code for the language.
     ///
     /// # Examples
-    /// ```
+    /// ```rust
     /// use tosho_mplus::proto::Language;
     ///
     /// let english = Language::English;
@@ -229,7 +229,7 @@ impl TitleReleaseSchedule {
     /// Get the pretty name of the release schedule.
     ///
     /// # Examples
-    /// ```
+    /// ```rust
     /// use tosho_mplus::proto::TitleReleaseSchedule;
     ///
     /// let biweekly = TitleReleaseSchedule::BiWeekly;

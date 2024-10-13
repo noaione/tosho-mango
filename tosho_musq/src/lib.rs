@@ -1,3 +1,4 @@
+#![warn(missing_docs, clippy::empty_docs, rustdoc::broken_intra_doc_links)]
 #![doc = include_str!("../README.md")]
 
 pub mod constants;
@@ -33,8 +34,11 @@ use tosho_common::{
 /// ```
 #[derive(Debug)]
 pub struct MUClient {
+    /// The inner client
     inner: reqwest::Client,
+    /// Current secret used
     secret: String,
+    /// The constants used
     constants: &'static Constants,
 }
 
@@ -44,7 +48,7 @@ impl MUClient {
     /// # Parameters
     /// * `secret` - The secret key to use for the client.
     /// * `constants` - The constants to use for the client.
-    pub fn new(secret: &str, constants: &'static Constants) -> ToshoResult<Self> {
+    pub fn new(secret: impl Into<String>, constants: &'static Constants) -> ToshoResult<Self> {
         Self::make_client(secret, constants, None)
     }
 
@@ -58,8 +62,9 @@ impl MUClient {
         Self::make_client(&self.secret, self.constants, Some(proxy))
     }
 
+    /// Internal function to make the new client
     fn make_client(
-        secret: &str,
+        secret: impl Into<String>,
         constants: &'static Constants,
         proxy: Option<reqwest::Proxy>,
     ) -> ToshoResult<Self> {
@@ -87,7 +92,7 @@ impl MUClient {
 
         Ok(Self {
             inner: client,
-            secret: secret.to_string(),
+            secret: secret.into(),
             constants,
         })
     }
@@ -100,6 +105,7 @@ impl MUClient {
         params.insert("lang".to_string(), "en".to_string());
     }
 
+    /// Create a custom cosume coin object.
     fn build_coin(
         &self,
         need_coin: u64,
@@ -128,17 +134,17 @@ impl MUClient {
     /// * `chapter` - The chapter you want to check with.
     ///
     /// # Example
-    /// ```no_run
+    /// ```rust,no_run
     /// use tosho_musq::MUClient;
     ///
     /// #[tokio::main]
     /// async fn main() {
     ///     let client = MUClient::new("1234", tosho_musq::constants::get_constants(1)).unwrap();
-    ///    
+    ///
     ///     let user_point = client.get_user_point().await.unwrap();
     ///     let manga = client.get_manga(240).await.unwrap();
-    ///     let first_ch = &manga.chapters[0];
-    ///    
+    ///     let first_ch = &manga.chapters()[0];
+    ///
     ///     let coins = client.calculate_coin(&user_point, first_ch);
     ///     assert!(coins.is_possible());
     /// }
@@ -151,67 +157,68 @@ impl MUClient {
         match chapter.consumption() {
             ConsumptionType::Any => {
                 // Prioritization: Free > Event > Paid
-                let free = user_point.free;
-                let event = user_point.event;
-                let paid = user_point.paid;
+                let free = user_point.free();
+                let event = user_point.event();
+                let paid = user_point.paid();
 
-                let need = ((chapter.price - free) as i64).max(0);
+                let need = ((chapter.price() - free) as i64).max(0);
                 if need <= 0 {
-                    return self.build_coin(chapter.price, chapter.price, Some(0), Some(0));
+                    return self.build_coin(chapter.price(), chapter.price(), Some(0), Some(0));
                 }
 
                 let need = (need - event as i64).max(0);
                 if need <= 0 {
-                    let event_diff = chapter.price.saturating_sub(free);
+                    let event_diff = chapter.price().saturating_sub(free);
 
-                    return self.build_coin(chapter.price, free, Some(event_diff), Some(0));
+                    return self.build_coin(chapter.price(), free, Some(event_diff), Some(0));
                 }
 
                 let need = (need - paid as i64).max(0);
-                let mut paid_diff = chapter.price.saturating_sub(free).saturating_sub(event);
+                let mut paid_diff = chapter.price().saturating_sub(free).saturating_sub(event);
                 if need > 0 {
                     paid_diff = paid;
                 }
 
-                self.build_coin(chapter.price, free, Some(event), Some(paid_diff))
+                self.build_coin(chapter.price(), free, Some(event), Some(paid_diff))
             }
             ConsumptionType::EventOrPaid => {
                 // Prioritization: Event > Paid
-                let event = user_point.event;
-                let paid = user_point.paid;
+                let event = user_point.event();
+                let paid = user_point.paid();
 
-                let need = ((chapter.price - event) as i64).max(0);
+                let need = ((chapter.price() - event) as i64).max(0);
                 if need <= 0 {
-                    return self.build_coin(chapter.price, chapter.price, Some(0), Some(0));
+                    return self.build_coin(chapter.price(), chapter.price(), Some(0), Some(0));
                 }
 
                 let need = (need - paid as i64).max(0);
-                let mut paid_diff = chapter.price.saturating_sub(event);
+                let mut paid_diff = chapter.price().saturating_sub(event);
                 if need > 0 {
                     paid_diff = paid;
                 }
 
-                self.build_coin(chapter.price, event, Some(paid_diff), Some(0))
+                self.build_coin(chapter.price(), event, Some(paid_diff), Some(0))
             }
             ConsumptionType::Paid => {
-                let paid_left: i64 = user_point.paid as i64 - chapter.price as i64;
+                let paid_left: i64 = user_point.paid() as i64 - chapter.price() as i64;
 
                 if paid_left < 0 {
-                    return self.build_coin(chapter.price, 0, Some(0), Some(0));
+                    return self.build_coin(chapter.price(), 0, Some(0), Some(0));
                 }
 
-                self.build_coin(chapter.price, 0, Some(0), Some(chapter.price))
+                self.build_coin(chapter.price(), 0, Some(0), Some(chapter.price()))
             }
             ConsumptionType::Free
             | ConsumptionType::Rental
             | ConsumptionType::Purchased
-            | ConsumptionType::Subscription => self.build_coin(chapter.price, 0, None, None),
+            | ConsumptionType::Subscription => self.build_coin(chapter.price(), 0, None, None),
             _ => {
                 panic!("Unknown consumption type: {:?}", chapter.consumption());
             }
         }
     }
 
+    /// Build and merge URL into a full API url
     fn build_url(&self, path: &str) -> String {
         if path.starts_with('/') {
             return format!("{}{}", &*BASE_API, path);
@@ -220,6 +227,7 @@ impl MUClient {
         format!("{}/{}", &*BASE_API, path)
     }
 
+    /// Create an empty params
     fn empty_params(&self) -> HashMap<String, String> {
         let mut params: HashMap<String, String> = HashMap::new();
 
@@ -248,7 +256,7 @@ impl MUClient {
     pub async fn get_user_point(&self) -> ToshoResult<UserPoint> {
         // Guarantee that the user point is always available
         let point = self.get_point_shop().await?;
-        match point.user_point {
+        match point.user_point() {
             Some(point) => Ok(point),
             None => Err(ToshoParseError::expect("user point")),
         }
@@ -322,9 +330,9 @@ impl MUClient {
     ///
     /// # Parameters
     /// * `query` - The query to search for.
-    pub async fn search(&self, query: &str) -> ToshoResult<MangaResults> {
+    pub async fn search(&self, query: impl Into<String>) -> ToshoResult<MangaResults> {
         let mut params: HashMap<String, String> = HashMap::new();
-        params.insert("word".to_string(), query.to_string());
+        params.insert("word".to_string(), query.into());
 
         self.build_params(&mut params);
 
@@ -473,8 +481,9 @@ impl MUClient {
     /// Sometimes the API would return a URL with cloudfront host,
     /// which can't be accessed directly but need to use the "mirror" host
     /// provided by the client.
-    fn replace_image_host(&self, url: &str) -> ToshoResult<::reqwest::Url> {
-        match ::reqwest::Url::parse(url) {
+    fn replace_image_host(&self, url: impl Into<String>) -> ToshoResult<::reqwest::Url> {
+        let url: String = url.into();
+        match ::reqwest::Url::parse(&url) {
             Ok(mut parsed_url) => {
                 let valid_host = ::reqwest::Url::parse(
                     format!("https://{}", &*IMAGE_HOST).as_str(),
@@ -514,7 +523,7 @@ impl MUClient {
     /// * `writer` - The writer to write the image to.
     pub async fn stream_download(
         &self,
-        url: &str,
+        url: impl Into<String>,
         mut writer: impl io::AsyncWrite + Unpin,
     ) -> ToshoResult<()> {
         let actual_url = self.replace_image_host(url)?;

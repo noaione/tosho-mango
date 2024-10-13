@@ -27,15 +27,18 @@ pub(crate) async fn rbean_read_list(
             console.info(cformat!("Reading list for <m,s>{}</>", account.id));
 
             for result in results.iter() {
-                do_print_single_information(&result.manga, 0, false, None);
+                let manga = result.manga();
+                do_print_single_information(manga, 0, false, None);
 
-                if let Some(chapter) = &result.chapter {
+                if let Some(chapter) = result.chapter() {
                     let linked_ch = format!(
                         "https://{}/series/{}/read/{}",
-                        &*BASE_HOST, result.manga.slug, chapter.uuid
+                        &*BASE_HOST,
+                        manga.slug(),
+                        chapter.uuid()
                     );
 
-                    let linked_url = linkify!(linked_ch, &format!("Chapter {}", chapter.name));
+                    let linked_url = linkify!(linked_ch, &format!("Chapter {}", chapter.name()));
 
                     console.info(cformat!("   <s>{}:</> {}", linked_url, linked_ch));
                 }

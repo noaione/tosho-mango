@@ -32,17 +32,17 @@ impl ComicPurchase {
         episode: &ComicEpisodeInfoNode,
         account: &mut IAPInfo,
     ) -> Option<Self> {
-        let id = episode.id;
-        let rental_term = comic.rental_term.clone();
+        let id = episode.id();
+        let rental_term = comic.rental_term().map(|e| e.to_string());
 
-        let price = episode.price;
+        let price = episode.price();
 
-        let bonus = account.bonus;
-        let purchased = account.purchased;
-        let premium = account.premium;
-        let point = account.point;
+        let bonus = account.bonus();
+        let purchased = account.purchased();
+        let premium = account.premium();
+        let point = account.point();
 
-        let is_free_daily = episode.is_free_daily;
+        let is_free_daily = episode.is_free_daily();
 
         if is_free_daily {
             return Some(Self {

@@ -134,9 +134,9 @@ pub static IMAGE_HOST: LazyLock<String> = LazyLock::new(|| {
 /// Panics if the device type is invalid.
 ///
 /// # Examples
-/// ```
-/// use tosho_musq::constants::get_constants;
-///
+/// ```rust
+/// # use tosho_musq::constants::get_constants;
+/// #
 /// let _ = get_constants(1); // Android
 /// let _ = get_constants(2); // Apple
 /// ```

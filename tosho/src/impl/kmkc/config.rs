@@ -91,18 +91,18 @@ pub struct ConfigMobile {
 
 impl From<ConfigMobile> for tosho_kmkc::KMConfigMobile {
     fn from(value: ConfigMobile) -> Self {
-        tosho_kmkc::config::KMConfigMobile {
-            user_id: value.user_id.clone(),
-            hash_key: value.user_secret.clone(),
-            platform: value.platform().into(),
-        }
+        tosho_kmkc::config::KMConfigMobile::new(
+            &value.user_id,
+            &value.user_secret,
+            value.platform().into(),
+        )
     }
 }
 
-impl From<tosho_kmkc::KMConfigMobile> for ConfigMobile {
-    fn from(value: tosho_kmkc::KMConfigMobile) -> Self {
+impl From<&tosho_kmkc::KMConfigMobile> for ConfigMobile {
+    fn from(value: &tosho_kmkc::KMConfigMobile) -> Self {
         let id = uuid::Uuid::new_v4().to_string();
-        let platform_id = match value.platform {
+        let platform_id = match value.platform() {
             tosho_kmkc::config::KMConfigMobilePlatform::Android => MobilePlatform::Android,
             tosho_kmkc::config::KMConfigMobilePlatform::Apple => MobilePlatform::Apple,
         };
@@ -113,10 +113,16 @@ impl From<tosho_kmkc::KMConfigMobile> for ConfigMobile {
             email: String::from("temp@kmkc.xyz"),
             account_id: 0,
             device_id: 0,
-            user_id: value.user_id.clone(),
-            user_secret: value.hash_key.clone(),
+            user_id: value.user_id().to_string(),
+            user_secret: value.hash_key().to_string(),
             platform: Some(platform_id as i32),
         }
+    }
+}
+
+impl From<tosho_kmkc::KMConfigMobile> for ConfigMobile {
+    fn from(value: tosho_kmkc::KMConfigMobile) -> Self {
+        (&value).into()
     }
 }
 
@@ -136,18 +142,15 @@ pub struct ConfigWebKeyValue {
 impl From<tosho_kmkc::config::KMConfigWebKV> for ConfigWebKeyValue {
     fn from(value: tosho_kmkc::config::KMConfigWebKV) -> Self {
         ConfigWebKeyValue {
-            value: value.value.clone(),
-            expires: value.expires.try_into().unwrap_or(0),
+            value: value.value().to_string(),
+            expires: value.expires().try_into().unwrap_or(0),
         }
     }
 }
 
 impl From<ConfigWebKeyValue> for tosho_kmkc::KMConfigWebKV {
     fn from(value: ConfigWebKeyValue) -> Self {
-        tosho_kmkc::KMConfigWebKV {
-            value: value.value.clone(),
-            expires: value.expires.try_into().unwrap_or(0),
-        }
+        tosho_kmkc::KMConfigWebKV::new(&value.value, value.expires.try_into().unwrap_or(0))
     }
 }
 
@@ -188,17 +191,17 @@ pub struct ConfigWeb {
 
 impl From<ConfigWeb> for tosho_kmkc::KMConfigWeb {
     fn from(value: ConfigWeb) -> Self {
-        tosho_kmkc::KMConfigWeb {
-            uwt: value.uwt.clone(),
-            birthday: value.birthday.clone().unwrap().into(),
-            tos_adult: value.tos_adult.clone().unwrap().into(),
-            privacy: value.privacy.clone().unwrap().into(),
-        }
+        tosho_kmkc::KMConfigWeb::new(
+            &value.uwt,
+            value.birthday.clone().unwrap().into(),
+            value.tos_adult.clone().unwrap().into(),
+            value.privacy.clone().unwrap().into(),
+        )
     }
 }
 
-impl From<tosho_kmkc::KMConfigWeb> for ConfigWeb {
-    fn from(value: tosho_kmkc::KMConfigWeb) -> Self {
+impl From<&tosho_kmkc::KMConfigWeb> for ConfigWeb {
+    fn from(value: &tosho_kmkc::KMConfigWeb) -> Self {
         let id = uuid::Uuid::new_v4().to_string();
         ConfigWeb {
             id,
@@ -207,11 +210,17 @@ impl From<tosho_kmkc::KMConfigWeb> for ConfigWeb {
             email: String::from("temp@kmkc.xyz"),
             account_id: 0,
             device_id: 0,
-            uwt: value.uwt.clone(),
-            birthday: Some(value.birthday.clone().into()),
-            tos_adult: Some(value.tos_adult.clone().into()),
-            privacy: Some(value.privacy.clone().into()),
+            uwt: value.uwt().to_string(),
+            birthday: Some(value.birthday().clone().into()),
+            tos_adult: Some(value.tos_adult().clone().into()),
+            privacy: Some(value.privacy().clone().into()),
         }
+    }
+}
+
+impl From<tosho_kmkc::KMConfigWeb> for ConfigWeb {
+    fn from(value: tosho_kmkc::KMConfigWeb) -> Self {
+        (&value).into()
     }
 }
 
@@ -220,10 +229,10 @@ impl ConfigWeb {
     pub fn with_user_account(&self, account: &tosho_kmkc::models::UserAccount) -> Self {
         let mut config = self.clone();
 
-        config.username = account.name.clone().unwrap_or("Unknown".to_string());
-        config.email.clone_from(&account.email);
-        config.account_id = account.id;
-        config.device_id = account.user_id;
+        config.username = account.name().unwrap_or("Unknown").to_string();
+        config.email.clone_from(&account.email().to_string());
+        config.account_id = account.id();
+        config.device_id = account.user_id();
 
         config
     }
@@ -251,10 +260,10 @@ impl ConfigMobile {
     pub fn with_user_account(&self, account: &tosho_kmkc::models::UserAccount) -> Self {
         let mut config = self.clone();
 
-        config.username = account.name.clone().unwrap_or("Unknown".to_string());
-        config.email.clone_from(&account.email);
-        config.account_id = account.id;
-        config.device_id = account.user_id;
+        config.username = account.name().unwrap_or("Unknown").to_string();
+        config.email.clone_from(&account.email().to_string());
+        config.account_id = account.id();
+        config.device_id = account.user_id();
 
         config
     }
@@ -365,6 +374,15 @@ impl From<ConfigWeb> for KMConfig {
 
 impl From<KMConfig> for Config {
     fn from(value: KMConfig) -> Self {
+        match value {
+            KMConfig::Mobile(c) => Config::Mobile(c.into()),
+            KMConfig::Web(c) => Config::Web(c.into()),
+        }
+    }
+}
+
+impl From<&KMConfig> for Config {
+    fn from(value: &KMConfig) -> Self {
         match value {
             KMConfig::Mobile(c) => Config::Mobile(c.into()),
             KMConfig::Web(c) => Config::Web(c.into()),

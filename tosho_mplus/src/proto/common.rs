@@ -6,6 +6,8 @@
 
 use std::str::FromStr;
 
+use tosho_macros::AutoGetter;
+
 use crate::helper::SubscriptionPlan;
 
 use super::enums::{ErrorAction, Language};
@@ -15,32 +17,35 @@ use super::enums::{ErrorAction, Language};
 pub struct PopupButton {
     /// The button action.
     #[prost(string, optional, tag = "1")]
-    pub text: ::core::option::Option<::prost::alloc::string::String>,
+    text: ::core::option::Option<::prost::alloc::string::String>,
     // There is also a `action` but it's tied to system.
     // So we don't need to implement it.
 }
 
 /// A default Popup response.
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[derive(Clone, AutoGetter, PartialEq, ::prost::Message)]
 pub struct PopupMessage {
     /// The message subject.
     #[prost(string, optional, tag = "1")]
-    pub subject: ::core::option::Option<::prost::alloc::string::String>,
+    #[skip_field]
+    subject: ::core::option::Option<::prost::alloc::string::String>,
     /// The message body.
     #[prost(string, optional, tag = "2")]
-    pub body: ::core::option::Option<::prost::alloc::string::String>,
+    #[skip_field]
+    body: ::core::option::Option<::prost::alloc::string::String>,
     /// The OK button action.
     #[prost(message, optional, tag = "3")]
-    pub ok_button: ::core::option::Option<PopupButton>,
+    ok_button: ::core::option::Option<PopupButton>,
     /// The neutral button action.
     #[prost(message, optional, tag = "4")]
-    pub neutral_button: ::core::option::Option<PopupButton>,
+    neutral_button: ::core::option::Option<PopupButton>,
     /// The cancel button action.
     #[prost(message, optional, tag = "5")]
-    pub cancel_button: ::core::option::Option<PopupButton>,
+    cancel_button: ::core::option::Option<PopupButton>,
     /// The language of the message.
     #[prost(enumeration = "Language", tag = "6")]
-    pub language: i32,
+    #[skip_field]
+    language: i32,
 }
 
 impl PopupMessage {
@@ -59,23 +64,25 @@ impl PopupMessage {
 }
 
 /// An error response.
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[derive(Clone, AutoGetter, PartialEq, ::prost::Message)]
 pub struct ErrorResponse {
     /// The error action or error code of the request.
     #[prost(enumeration = "ErrorAction", tag = "1")]
-    pub action: i32,
+    #[skip_field]
+    action: i32,
     /// English popup message
     #[prost(message, optional, tag = "2")]
-    pub english_popup: ::core::option::Option<PopupMessage>,
+    english_popup: ::core::option::Option<PopupMessage>,
     /// Spanish popup message
     #[prost(message, optional, tag = "3")]
-    pub spanish_popup: ::core::option::Option<PopupMessage>,
+    spanish_popup: ::core::option::Option<PopupMessage>,
     /// Debug message
     #[prost(string, optional, tag = "4")]
-    pub debug_message: ::core::option::Option<::prost::alloc::string::String>,
+    #[skip_field]
+    debug_message: ::core::option::Option<::prost::alloc::string::String>,
     /// Array of other popup messages
     #[prost(message, repeated, tag = "5")]
-    pub other_popups: ::prost::alloc::vec::Vec<PopupMessage>,
+    other_popups: ::prost::alloc::vec::Vec<PopupMessage>,
 }
 
 impl ErrorResponse {
@@ -131,111 +138,119 @@ impl ErrorResponse {
 }
 
 /// The banner data.
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[derive(Clone, AutoGetter, PartialEq, ::prost::Message)]
 pub struct Banner {
     /// The banner image.
     #[prost(string, tag = "1")]
-    pub image: ::prost::alloc::string::String,
+    image: ::prost::alloc::string::String,
     /// The associated ID.
     #[prost(uint64, optional, tag = "3")]
-    pub id: Option<u64>,
+    #[skip_field]
+    id: Option<u64>,
     /// The banner width.
     #[prost(uint32, optional, tag = "4")]
-    pub width: Option<u32>,
+    #[skip_field]
+    width: Option<u32>,
     /// The banner height.
     #[prost(uint32, optional, tag = "5")]
-    pub height: Option<u32>,
+    #[skip_field]
+    height: Option<u32>,
 }
 
 /// A tag information
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[derive(Clone, AutoGetter, PartialEq, ::prost::Message)]
 pub struct Tag {
     /// Tag ID
     #[prost(uint64, tag = "1")]
-    pub id: u64,
+    id: u64,
     /// Tag slug
     #[prost(string, tag = "2")]
-    pub slug: ::prost::alloc::string::String,
+    slug: ::prost::alloc::string::String,
 }
 
 /// A label information
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[derive(Clone, AutoGetter, PartialEq, ::prost::Message)]
 pub struct Label {
     /// Label ID
     #[prost(uint64, tag = "1")]
-    pub id: u64,
+    id: u64,
     /// Label description
     #[prost(string, tag = "2")]
-    pub description: ::prost::alloc::string::String,
+    description: ::prost::alloc::string::String,
 }
 
 /// A publisher news information
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[derive(Clone, AutoGetter, PartialEq, ::prost::Message)]
 pub struct PublisherNews {
     /// Publisher news ID
     #[prost(uint64, tag = "1")]
-    pub news_id: u64,
+    news_id: u64,
     /// Publisher ID
     #[prost(uint64, tag = "2")]
-    pub publisher_id: u64,
+    publisher_id: u64,
     /// Publisher name
     #[prost(string, tag = "3")]
-    pub name: ::prost::alloc::string::String,
+    name: ::prost::alloc::string::String,
     /// Publisher news title
     #[prost(string, tag = "4")]
-    pub title: ::prost::alloc::string::String,
+    title: ::prost::alloc::string::String,
     /// Publisher news content
     #[prost(string, tag = "5")]
-    pub content: ::prost::alloc::string::String,
+    content: ::prost::alloc::string::String,
     /// Time of publication in UNIX timestamp
     #[prost(uint64, tag = "6")]
-    pub published_at: u64,
+    published_at: u64,
 }
 
 /// A publisher information
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[derive(Clone, AutoGetter, PartialEq, ::prost::Message)]
 pub struct PublisherItem {
     /// The publisher banner info
     #[prost(message, optional, tag = "1")]
-    pub banner: ::core::option::Option<Banner>,
+    banner: ::core::option::Option<Banner>,
     /// The publisher news
     #[prost(message, optional, tag = "2")]
-    pub news: ::core::option::Option<PublisherNews>,
+    news: ::core::option::Option<PublisherNews>,
 }
 
 /// Available languages in the source.
-#[derive(Clone, PartialEq, Copy, ::prost::Message)]
+#[derive(Clone, AutoGetter, PartialEq, Copy, ::prost::Message)]
 pub struct AvailableLanguages {
     /// The language
     #[prost(enumeration = "Language", tag = "1")]
-    pub language: i32,
+    #[skip_field]
+    language: i32,
     /// Total count of titles available in the language
     #[prost(uint64, tag = "2")]
-    pub titles_count: u64,
+    titles_count: u64,
 }
 
 /// A information about the current languages
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[derive(Clone, AutoGetter, PartialEq, ::prost::Message)]
 pub struct Languages {
     /// The current UI language
     #[prost(enumeration = "Language", tag = "1")]
-    pub language: i32,
+    #[skip_field]
+    language: i32,
     /// The content language
     #[prost(enumeration = "Language", optional, tag = "2")]
-    pub content_language: ::core::option::Option<i32>,
+    #[skip_field]
+    content_language: ::core::option::Option<i32>,
     /// The secondary content language
     ///
     /// This will take priority over the first content language.
     #[prost(enumeration = "Language", optional, tag = "3")]
-    pub content_language_secondary: ::core::option::Option<i32>,
+    #[skip_field]
+    content_language_secondary: ::core::option::Option<i32>,
     /// The tertiary content language
     ///
     /// This will take priority over the first and second content language.
     #[prost(enumeration = "Language", optional, tag = "4")]
-    pub content_language_tertiary: ::core::option::Option<i32>,
+    #[skip_field]
+    content_language_tertiary: ::core::option::Option<i32>,
     /// The available languages
     #[prost(message, repeated, tag = "5")]
-    pub availables: ::prost::alloc::vec::Vec<AvailableLanguages>,
+    availables: ::prost::alloc::vec::Vec<AvailableLanguages>,
 }
 
 impl Languages {
@@ -255,54 +270,56 @@ impl Languages {
 }
 
 /// A subscription offer for Android device
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[derive(Clone, AutoGetter, PartialEq, ::prost::Message)]
 pub struct SubscriptionOfferAndroid {
     /// The offer tag
     #[prost(string, tag = "1")]
-    pub tag: ::prost::alloc::string::String,
+    tag: ::prost::alloc::string::String,
 }
 
 /// A subscription offer for Apple device
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[derive(Clone, AutoGetter, PartialEq, ::prost::Message)]
 pub struct SubscriptionOfferApple {
     /// The offer type
     #[prost(enumeration = "super::PlanOfferType", tag = "1")]
-    pub kind: i32,
+    #[skip_field]
+    kind: i32,
     /// The signature info
     #[prost(string, tag = "2")]
-    pub signature: ::prost::alloc::string::String,
+    signature: ::prost::alloc::string::String,
     /// The apple key info
     #[prost(string, tag = "3")]
-    pub key: ::prost::alloc::string::String,
+    key: ::prost::alloc::string::String,
     /// The nonce info
     #[prost(string, tag = "4")]
-    pub nonce: ::prost::alloc::string::String,
+    nonce: ::prost::alloc::string::String,
     /// The timestamp info
     #[prost(string, tag = "5")]
-    pub timestamp: ::prost::alloc::string::String,
+    timestamp: ::prost::alloc::string::String,
     /// The identifier info
     #[prost(string, tag = "6")]
-    pub identifier: ::prost::alloc::string::String,
+    identifier: ::prost::alloc::string::String,
 }
 
 /// A plan information
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[derive(Clone, AutoGetter, PartialEq, ::prost::Message)]
 pub struct Plan {
     /// The plan name/ID
     #[prost(string, tag = "1")]
-    pub name: ::prost::alloc::string::String,
+    #[skip_field]
+    name: ::prost::alloc::string::String,
     /// The plan description
     #[prost(string, tag = "2")]
-    pub description: ::prost::alloc::string::String,
+    description: ::prost::alloc::string::String,
     /// The plan product ID
     #[prost(string, tag = "3")]
-    pub product_id: ::prost::alloc::string::String,
+    product_id: ::prost::alloc::string::String,
     /// The subscription offer for apple devices
     #[prost(message, optional, tag = "4")]
-    pub apple_offer: ::core::option::Option<SubscriptionOfferApple>,
+    apple_offer: ::core::option::Option<SubscriptionOfferApple>,
     /// The subscription offer for android devices
     #[prost(message, repeated, tag = "5")]
-    pub android_offer: ::prost::alloc::vec::Vec<SubscriptionOfferAndroid>,
+    android_offer: ::prost::alloc::vec::Vec<SubscriptionOfferAndroid>,
 }
 
 impl Plan {

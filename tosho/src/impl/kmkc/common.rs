@@ -17,7 +17,7 @@ use crate::{
 use super::config::Config;
 
 pub(super) fn do_print_search_information(
-    results: Vec<TitleNode>,
+    results: &[TitleNode],
     with_number: bool,
     spacing: Option<usize>,
 ) {
@@ -25,19 +25,15 @@ pub(super) fn do_print_search_information(
     let spacing = spacing.unwrap_or(2);
 
     for (idx, result) in results.iter().enumerate() {
-        let id = result.id;
-        let manga_url = format!("https://{}/title/{}", &*BASE_HOST, result.id);
-        let linked = linkify!(&manga_url, &result.title);
+        let id = result.id();
+        let manga_url = format!("https://{}/title/{}", &*BASE_HOST, id);
+        let linked = linkify!(&manga_url, result.title());
         let mut text_data = cformat!("<s>{}</s> ({})", linked, id);
-        if result.next_update.is_some() {
-            text_data = cformat!(
-                "{} [<y,s>{}</>]",
-                text_data,
-                result.next_update.clone().unwrap()
-            );
+        if let Some(next_update) = result.next_update() {
+            text_data = cformat!("{} [<y,s>{}</>]", text_data, next_update);
         }
-        if !result.update_cycle.is_empty() {
-            text_data = cformat!("{} [<b!,s>{}</>]", text_data, result.update_cycle);
+        if !result.update_cycle().is_empty() {
+            text_data = cformat!("{} [<b!,s>{}</>]", text_data, result.update_cycle());
         }
 
         let pre_space = " ".repeat(spacing);
@@ -128,9 +124,9 @@ pub(super) async fn common_purchase_select(
 
     console.info(cformat!(
         "Fetching <m,s>{}</> title ticket...",
-        result.title
+        result.title()
     ));
-    let ticket_entry = client.get_title_ticket(result.id).await;
+    let ticket_entry = client.get_title_ticket(result.id()).await;
     if let Err(error) = ticket_entry {
         console.error(format!("Failed to get title ticket: {}", error));
         return (Err(error), Some(result.clone()), vec![], None);
@@ -141,10 +137,10 @@ pub(super) async fn common_purchase_select(
     let mut chapters_entry = vec![];
     console.info(cformat!(
         "Fetching <m,s>{}</> <s>{}</> chapters...",
-        &result.title,
-        result.episode_ids.len()
+        result.title(),
+        result.episode_ids().len()
     ));
-    for episodes in result.episode_ids.chunks(50) {
+    for episodes in result.episode_ids().chunks(50) {
         let chapters = client.get_episodes(episodes.to_vec()).await;
 
         if let Err(error) = chapters {
@@ -165,12 +161,21 @@ pub(super) async fn common_purchase_select(
 
     console.info("Your current point balance:");
     let total_bal = user_point
-        .point
+        .point()
         .total_point()
         .to_formatted_string(&Locale::en);
-    let paid_point = user_point.point.paid_point.to_formatted_string(&Locale::en);
-    let free_point = user_point.point.free_point.to_formatted_string(&Locale::en);
-    let premium_ticket = user_point.ticket.total_num.to_formatted_string(&Locale::en);
+    let paid_point = user_point
+        .point()
+        .paid_point()
+        .to_formatted_string(&Locale::en);
+    let free_point = user_point
+        .point()
+        .free_point()
+        .to_formatted_string(&Locale::en);
+    let premium_ticket = user_point
+        .ticket()
+        .total_num()
+        .to_formatted_string(&Locale::en);
     console.info(cformat!(
         "  - <bold>Total:</> <cyan!,bold><reverse>{}</>c</cyan!,bold>",
         total_bal
@@ -193,8 +198,8 @@ pub(super) async fn common_purchase_select(
     ));
 
     console.info("Title information:");
-    console.info(cformat!("  - <bold>ID:</> {}", result.id));
-    console.info(cformat!("  - <bold>Title:</> {}", result.title));
+    console.info(cformat!("  - <bold>ID:</> {}", result.id()));
+    console.info(cformat!("  - <bold>Title:</> {}", result.title()));
     console.info(cformat!(
         "  - <bold>Chapters:</> {} chapters",
         chapters_entry.len()
@@ -219,14 +224,14 @@ pub(super) async fn common_purchase_select(
                 None
             } else {
                 let value = if ch.is_available() {
-                    ch.title.clone()
+                    ch.title().to_string()
                 } else if ch.is_ticketable() {
-                    format!("{} ({}P/Ticket)", ch.title, ch.point)
+                    format!("{} ({}P/Ticket)", ch.title(), ch.point())
                 } else {
-                    format!("{} ({}P)", ch.title, ch.point)
+                    format!("{} ({}P)", ch.title(), ch.point())
                 };
                 Some(ConsoleChoice {
-                    name: ch.id.to_string(),
+                    name: ch.id().to_string(),
                     value,
                 })
             }
@@ -248,7 +253,7 @@ pub(super) async fn common_purchase_select(
                     let ch_id = ch.name.parse::<i32>().unwrap();
                     let ch = chapters_entry
                         .iter()
-                        .find(|ch| ch.id == ch_id)
+                        .find(|ch| ch.id() == ch_id)
                         .unwrap()
                         .clone();
 

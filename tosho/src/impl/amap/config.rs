@@ -47,9 +47,9 @@ impl From<AMConfig> for Config {
             id: new_uuid.clone(),
             email: format!("{}@amap.xyz", new_uuid),
             user_id: 0,
-            token: value.token,
-            identifier: value.identifier,
-            session: value.session_v2,
+            token: value.token().to_string(),
+            identifier: value.identifier().to_string(),
+            session: value.session_v2().to_string(),
             r#type: DeviceType::Android as i32,
         }
     }
@@ -72,7 +72,7 @@ impl Config {
     /// Apply the account info response to the new config.
     pub fn with_account_info(self, info: &AccountUserInfo) -> Self {
         Self {
-            user_id: info.id,
+            user_id: info.id(),
             ..self
         }
     }

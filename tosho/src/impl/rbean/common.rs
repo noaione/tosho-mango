@@ -14,9 +14,9 @@ pub(super) fn do_print_single_information(
     let term = get_console(0);
     let spacing = spacing.unwrap_or(2);
 
-    let manga_url = format!("https://{}/series/{}", &*BASE_HOST, result.slug);
-    let linked = linkify!(&manga_url, &result.title);
-    let text_data = cformat!("<s>{}</s> ({})", linked, result.uuid);
+    let manga_url = format!("https://{}/series/{}", &*BASE_HOST, result.slug());
+    let linked = linkify!(&manga_url, &result.title());
+    let text_data = cformat!("<s>{}</s> ({})", linked, result.uuid());
 
     let pre_space = " ".repeat(spacing);
     let pre_space_lupd = " ".repeat(spacing + 1);
@@ -26,7 +26,7 @@ pub(super) fn do_print_single_information(
         true => term.info(format!("{}[{:02}] {}", pre_space, index + 1, text_data)),
         false => term.info(format!("{}{}", pre_space, text_data)),
     }
-    let updated_at = result.last_updated.format("%Y-%m-%d").to_string();
+    let updated_at = result.last_updated().format("%Y-%m-%d").to_string();
     term.info(cformat!(
         "{}<s>Last update</s>: {}",
         pre_space_lupd,
@@ -34,14 +34,16 @@ pub(super) fn do_print_single_information(
     ));
     term.info(format!("{}{}", pre_space_url, manga_url));
 
-    if let Some(chapter_info) = &result.latest_chapters {
+    if let Some(chapter_info) = result.latest_chapters() {
         println!();
         for chapter in chapter_info.iter() {
             let chapter_url = format!(
                 "https://{}/series/{}/chapter/{}",
-                &*BASE_HOST, result.slug, chapter.uuid
+                &*BASE_HOST,
+                result.slug(),
+                chapter.uuid()
             );
-            let linked = linkify!(&chapter_url, &format!("Chapter {}", chapter.chapter));
+            let linked = linkify!(&chapter_url, &format!("Chapter {}", chapter.chapter()));
             term.info(cformat!("{}<s>Chapter</s>: {}", pre_space_lupd, linked));
             term.info(format!("{}{}", pre_space_url, chapter_url));
         }

@@ -1,23 +1,18 @@
-//! # tosho-macros
-//!
-//! A collection of macros used by [`tosho`](https://github.com/noaione/tosho-mango) and the other sources crates.
-//!
-//! ## License
-//!
-//! This project is licensed with MIT License ([LICENSE](https://github.com/noaione/tosho-mango/blob/master/LICENSE) or <http://opensource.org/licenses/MIT>)
+#![warn(missing_docs, clippy::empty_docs, rustdoc::broken_intra_doc_links)]
+#![doc = include_str!("../README.md")]
 
 use proc_macro::TokenStream;
 
 mod deser;
 mod enums;
+mod structs;
 
 /// Derives [`serde::Serialize`](https://docs.rs/serde/latest/serde/trait.Serialize.html) for an enum using [`std::fmt::Display`]
 ///
 /// # Example
-/// ```
-/// use serde::Serialize;
-/// use tosho_macros::SerializeEnum;
-///
+/// ```rust
+/// # use tosho_macros::SerializeEnum;
+/// #
 /// #[derive(SerializeEnum)]
 /// enum TestEnum {
 ///     Create,
@@ -45,10 +40,9 @@ pub fn serializenum_derive(input: TokenStream) -> TokenStream {
 /// Derives [`serde::Deserialize`](https://docs.rs/serde/latest/serde/trait.Deserialize.html) for an enum using [`std::str::FromStr`]
 ///
 /// # Example
-/// ```
-/// use serde::Deserialize;
-/// use tosho_macros::DeserializeEnum;
-///
+/// ```rust
+/// # use tosho_macros::DeserializeEnum;
+/// #
 /// #[derive(DeserializeEnum, PartialEq, Eq, Debug)]
 /// enum TestEnum {
 ///     Create,
@@ -83,10 +77,9 @@ pub fn deserializeenum_derive(input: TokenStream) -> TokenStream {
 /// Derives [`serde::Serialize`](https://docs.rs/serde/latest/serde/trait.Serialize.html) for an enum in i32 mode.
 ///
 /// # Example
-/// ```
-/// use serde::Serialize;
-/// use tosho_macros::SerializeEnum32;
-///
+/// ```rust
+/// # use tosho_macros::SerializeEnum32;
+/// #
 /// #[derive(SerializeEnum32)]
 /// enum TestEnum {
 ///     Create = 0,
@@ -102,10 +95,9 @@ pub fn serializenum32_derive(input: TokenStream) -> TokenStream {
 /// Derives [`serde::Deserialize`](https://docs.rs/serde/latest/serde/trait.Deserialize.html) for an enum in i32 mode.
 ///
 /// # Example
-/// ```
-/// use serde::Deserialize;
-/// use tosho_macros::DeserializeEnum32;
-///
+/// ```rust
+/// # use tosho_macros::DeserializeEnum32;
+/// #
 /// #[derive(DeserializeEnum32)]
 /// enum TestEnum {
 ///     Create = 0,
@@ -121,10 +113,9 @@ pub fn deserializeenum32_derive(input: TokenStream) -> TokenStream {
 /// Derives [`serde::Deserialize`](https://docs.rs/serde/latest/serde/trait.Deserialize.html) for an enum in i32 mode with fallback to [`std::default::Default`].
 ///
 /// # Example
-/// ```
-/// use serde::Deserialize;
-/// use tosho_macros::DeserializeEnum32Fallback;
-///
+/// ```rust
+/// # use tosho_macros::DeserializeEnum32Fallback;
+/// #
 /// #[derive(DeserializeEnum32Fallback, Default)]
 /// enum TestEnum {
 ///     #[default]
@@ -142,9 +133,9 @@ pub fn deserializeenum32fallback_derive(input: TokenStream) -> TokenStream {
 /// Derives an enum that would implement `.to_name()`
 ///
 /// # Example
-/// ```
-/// use tosho_macros::EnumName;
-///
+/// ```rust
+/// # use tosho_macros::EnumName;
+/// #
 /// #[derive(EnumName, Clone, Debug)]
 /// enum TestEnum {
 ///     Create,
@@ -163,9 +154,9 @@ pub fn enumname_derive(input: TokenStream) -> TokenStream {
 /// Derives an enum that would implement `::count()` to return the number of variants
 ///
 /// # Example
-/// ```
-/// use tosho_macros::EnumCount;
-///
+/// ```rust
+/// # use tosho_macros::EnumCount;
+/// #
 /// #[derive(EnumCount, Clone, Debug)]
 /// enum TestEnum {
 ///     Create,
@@ -198,7 +189,7 @@ pub fn enumu32fallback_derive(input: TokenStream) -> TokenStream {
 /// when using other macros to derive [`std::str::FromStr`] for an enum.
 ///
 /// # Example
-/// ```
+/// ```rust
 /// # use tosho_macros::enum_error;
 /// #
 /// enum TestEnum {
@@ -212,4 +203,42 @@ pub fn enumu32fallback_derive(input: TokenStream) -> TokenStream {
 pub fn enum_error(item: TokenStream) -> TokenStream {
     let input = syn::parse_macro_input!(item as enums::EnumErrorMacroInput);
     enums::impl_enum_error(&input)
+}
+
+/// Derive the `AutoGetter` macro for a struct
+///
+/// Automatically expand each field into their own getter function for all private field.
+///
+/// # Examples
+/// ```rust
+/// # use tosho_macros::AutoGetter;
+/// #
+/// #[derive(AutoGetter)]
+/// pub struct Data {
+///     #[copyable]
+///     id: i64,
+///     username: String,
+///     #[skip_field]
+///     pos: u32,
+/// }
+///
+/// # fn main() {
+/// let data = Data { id: 1, username: "test".to_string(), pos: 0 };
+///
+/// assert_eq!(data.id(), 1);
+/// assert_eq!(data.username(), "test");
+/// // "pos" field doesn't have getter
+/// assert_eq!(data.pos, 0);
+/// # }
+/// ```
+#[proc_macro_derive(
+    AutoGetter,
+    attributes(auto_getters, copyable, skip_field, deref_clone)
+)]
+pub fn autogetter_derive(input: TokenStream) -> TokenStream {
+    // Parse the input tokens into a syntax tree
+    let input = syn::parse_macro_input!(input as syn::DeriveInput);
+
+    // Generate the implementation of the trait
+    structs::impl_autogetter(&input)
 }

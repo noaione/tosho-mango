@@ -28,6 +28,7 @@ impl std::error::Error for KMAPIError {}
 /// An error when you don't have enough point to buy a titles chapters.
 #[derive(Debug)]
 pub struct KMAPINotEnoughPointsError {
+    /// The error message
     pub message: String,
     /// The amount of points you need to buy the chapters.
     pub points_needed: u64,

@@ -18,9 +18,9 @@ pub(super) fn do_print_search_information(
     let spacing = spacing.unwrap_or(2);
 
     for (idx, result) in results.iter().enumerate() {
-        let manga_url = format!("https://{}/titles/{}", &*BASE_HOST, result.id);
-        let linked = linkify!(&manga_url, &result.title);
-        let mut text_data = cformat!("<s>{}</s> ({})", linked, result.id);
+        let manga_url = format!("https://{}/titles/{}", &*BASE_HOST, result.id());
+        let linked = linkify!(&manga_url, result.title());
+        let mut text_data = cformat!("<s>{}</s> ({})", linked, result.id());
 
         if result.language() != Language::English {
             text_data = cformat!("{} [<s>{}</>]", text_data, result.language().pretty_name());
@@ -74,7 +74,7 @@ pub(super) fn search_manga_by_text(contents: &[Title], target: &str) -> Vec<Titl
         .iter()
         .filter_map(|content| {
             // Remove diacritics and lower case the title
-            let cleaned_title = secular::lower_lay_string(&content.title);
+            let cleaned_title = secular::lower_lay_string(content.title());
             let matches: Vec<aho_corasick::Match> = ac.find_iter(&cleaned_title).collect();
 
             if matches.is_empty() {
@@ -151,15 +151,16 @@ pub(super) async fn get_cached_titles_data(client: &MPClient) -> anyhow::Result<
 
     match titles {
         APIResponse::Success(titles) => {
+            let title_list = titles.titles();
             let cache = TitleListCache {
-                titles: titles.titles.clone(),
+                titles: title_list.to_vec(),
                 last_updated: chrono::Utc::now().timestamp(),
             };
 
             let mut buf = Vec::new();
             cache.encode(&mut buf).unwrap();
             tokio::fs::write(cache_path, buf).await?;
-            Ok(titles.titles.clone())
+            Ok(title_list.to_vec())
         }
         APIResponse::Error(e) => {
             term.error(format!(

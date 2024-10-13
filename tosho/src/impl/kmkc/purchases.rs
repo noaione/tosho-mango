@@ -25,7 +25,7 @@ pub(crate) async fn kmkc_purchase(
                 return 1;
             }
 
-            let mut wallet_copy = user_point.point.point.clone();
+            let mut wallet_copy = user_point.point.point().clone();
             let mut ticket_entry = user_point.ticket.clone();
 
             let mut chapter_point_claim: Vec<EpisodeNode> = vec![];
@@ -35,7 +35,7 @@ pub(crate) async fn kmkc_purchase(
                 if chapter.is_available() {
                     console.warn(cformat!(
                         "Chapter <m,s>{}</> is already purchased, skipping",
-                        chapter.title
+                        chapter.title()
                     ));
                     continue;
                 }
@@ -46,7 +46,7 @@ pub(crate) async fn kmkc_purchase(
                     // }
                     ticketing_claim.push((
                         chapter,
-                        TicketInfoType::Title(ticket_entry.info.title.clone().unwrap()),
+                        TicketInfoType::Title(ticket_entry.info().title().unwrap()),
                     ));
                     ticket_entry.subtract_title();
                 } else if chapter.is_ticketable() && ticket_entry.is_premium_available() {
@@ -55,11 +55,11 @@ pub(crate) async fn kmkc_purchase(
                     // }
                     ticketing_claim.push((
                         chapter,
-                        TicketInfoType::Premium(ticket_entry.info.premium.clone().unwrap()),
+                        TicketInfoType::Premium(ticket_entry.info().premium().unwrap()),
                     ));
                     ticket_entry.subtract_premium();
-                } else if wallet_copy.can_purchase(chapter.point.try_into().unwrap_or(0)) {
-                    wallet_copy.subtract(chapter.point.try_into().unwrap_or(0));
+                } else if wallet_copy.can_purchase(chapter.point().try_into().unwrap_or(0)) {
+                    wallet_copy.subtract(chapter.point().try_into().unwrap_or(0));
                     // if chapter.bonus_point > 0 {
                     //     chapter_point_back.push(chapter.clone());
                     // }
@@ -97,7 +97,7 @@ pub(crate) async fn kmkc_purchase(
                 ));
 
                 let result = client
-                    .claim_episode_with_ticket(chapter.id, &ticket_info)
+                    .claim_episode_with_ticket(chapter.id(), &ticket_info)
                     .await;
 
                 if let Err(error) = result {
@@ -116,7 +116,7 @@ pub(crate) async fn kmkc_purchase(
                 let temp_chapter_claim: Vec<&EpisodeNode> =
                     chapter_point_claim.iter().collect::<Vec<&EpisodeNode>>();
 
-                let mut mutable_point = user_point.point.point.clone();
+                let mut mutable_point = user_point.point.point().clone();
 
                 let result = client
                     .claim_episodes(temp_chapter_claim, &mut mutable_point)
@@ -220,10 +220,10 @@ pub(crate) async fn kmkc_purchased(
             ));
 
             for result in results {
-                let manga_url = format!("https://{}/title/{}", &*BASE_HOST, result.id);
-                let linked = linkify!(&manga_url, &result.title);
+                let manga_url = format!("https://{}/title/{}", &*BASE_HOST, result.id());
+                let linked = linkify!(&manga_url, result.title());
 
-                console.info(cformat!("  {} ({})", linked, result.id));
+                console.info(cformat!("  {} ({})", linked, result.id()));
                 console.info(format!("   {}", manga_url));
             }
 
@@ -265,13 +265,13 @@ pub(crate) async fn kmkc_purchase_precalculate(
                 if chapter.is_ticketable() && ticket_entry.is_title_available() {
                     ticketing_claim.push((
                         chapter,
-                        TicketInfoType::Title(ticket_entry.info.title.clone().unwrap()),
+                        TicketInfoType::Title(ticket_entry.info().title().unwrap()),
                     ));
                     ticket_entry.subtract_title();
                 } else if chapter.is_ticketable() && ticket_entry.is_premium_available() {
                     ticketing_claim.push((
                         chapter,
-                        TicketInfoType::Premium(ticket_entry.info.premium.clone().unwrap()),
+                        TicketInfoType::Premium(ticket_entry.info().premium().unwrap()),
                     ));
                     ticket_entry.subtract_premium();
                 } else {
@@ -289,7 +289,7 @@ pub(crate) async fn kmkc_purchase_precalculate(
 
             let coin_total = chapter_point_claim
                 .iter()
-                .map(|ch| ch.point)
+                .map(|ch| ch.point())
                 .sum::<i32>()
                 .to_formatted_string(&Locale::en);
             let ticket_total = ticketing_claim.len().to_formatted_string(&Locale::en);

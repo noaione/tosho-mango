@@ -5,33 +5,24 @@
 use std::cmp::Ordering;
 
 use serde::{Deserialize, Serialize};
+use tosho_macros::AutoGetter;
 
 /// A struct containing each image source.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ImageSource {
     /// The URL of the image.
-    pub url: String,
+    url: String,
     /// The width of the image.
-    pub width: i32,
+    width: i32,
     /// The height of the image.
-    pub height: i32,
+    height: i32,
 }
 
 impl ImageSource {
     /// The file name of the image.
     ///
-    /// # Examples
-    /// ```
-    /// use tosho_rbean::models::ImageSource;
-    ///
-    /// let page = ImageSource {
-    ///     width: 800,
-    ///     height: 1200,
-    ///     url: "https://example.com/image.jpg?ignore=me".to_string(),
-    /// };
-    ///
-    /// assert_eq!(page.file_name(), "image.jpg");
-    /// ```
+    /// When you have the URL of `https://example.com/image.jpg?ignore=me`,
+    /// the filename would become `image.jpg` including the extension.
     pub fn file_name(&self) -> String {
         let url = self.url.as_str();
         match url.rfind('/') {
@@ -48,18 +39,9 @@ impl ImageSource {
 
     /// The file extension of the image.
     ///
-    /// # Examples
-    /// ```
-    /// use tosho_rbean::models::ImageSource;
-    ///
-    /// let page = ImageSource {
-    ///     width: 800,
-    ///     height: 1200,
-    ///     url: "https://example.com/image.jpg?ignore=me".to_string(),
-    /// };
-    ///
-    /// assert_eq!(page.extension(), "jpg");
-    /// ```
+    /// When you have the URL of `https://example.com/image.jpg?ignore=me`,
+    /// the extension would become `jpg`, when there is no extension it
+    /// would return an empty string.
     pub fn extension(&self) -> String {
         let file_name = self.file_name();
         let split: Vec<&str> = file_name.rsplitn(2, '.').collect();
@@ -73,18 +55,8 @@ impl ImageSource {
 
     /// The file stem of the image.
     ///
-    /// # Examples
-    /// ```
-    /// use tosho_rbean::models::ImageSource;
-    ///
-    /// let page = ImageSource {
-    ///     width: 800,
-    ///     height: 1200,
-    ///     url: "https://example.com/image.jpg?ignore=me".to_string(),
-    /// };
-    ///
-    /// assert_eq!(page.file_stem(), "image");
-    /// ```
+    /// When you have the URL of `https://example.com/image.jpg?ignore=me`,
+    /// the file stem would become `image`.
     pub fn file_stem(&self) -> String {
         let file_name = self.file_name();
         let split: Vec<&str> = file_name.rsplitn(2, '.').collect();
@@ -132,12 +104,12 @@ impl Ord for ImageSource {
 }
 
 /// A struct containing collection of images.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
 pub struct Image {
     /// WEBP images.
-    pub webp: Vec<ImageSource>,
+    webp: Vec<ImageSource>,
     /// JPEG images.
-    pub jpg: Vec<ImageSource>,
+    jpg: Vec<ImageSource>,
 }
 
 #[cfg(test)]

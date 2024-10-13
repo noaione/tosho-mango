@@ -167,9 +167,9 @@ pub(crate) static MASKED_LOGIN: LazyLock<String> = LazyLock::new(|| {
 /// Panics if the device type is invalid.
 ///
 /// # Examples
-/// ```
-/// use tosho_amap::constants::get_constants;
-///
+/// ```rust
+/// # use tosho_amap::constants::get_constants;
+/// #
 /// let _ = get_constants(1); // Android
 /// ```
 pub fn get_constants(device_type: u8) -> &'static Constants {

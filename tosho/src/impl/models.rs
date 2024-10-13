@@ -95,107 +95,117 @@ impl MangaDetailDump {
     }
 }
 
-impl From<ChapterV2> for ChapterDetailDump {
+impl From<&ChapterV2> for ChapterDetailDump {
     /// Convert from [`tosho_musq::proto::ChapterV2`] into [`ChapterDetailDump`]
     /// `_info.json` format.
-    fn from(value: ChapterV2) -> Self {
-        let pub_at = match value.published_at {
-            Some(published) => {
-                // assume JST
-                let published = chrono::NaiveDate::parse_from_str(&published, "%b %d, %Y")
-                    .map(|d| d.and_hms_opt(0, 0, 0).unwrap())
-                    .map(|d| d.and_local_timezone(chrono::FixedOffset::east_opt(9 * 3600).unwrap()))
-                    .unwrap_or_else(|_| {
-                        panic!("Failed to parse published date to JST TZ: {}", published)
-                    })
-                    .unwrap();
+    fn from(value: &ChapterV2) -> Self {
+        let pub_at = if !value.published_at().is_empty() {
+            // assume JST
+            let published = chrono::NaiveDate::parse_from_str(value.published_at(), "%b %d, %Y")
+                .map(|d| d.and_hms_opt(0, 0, 0).unwrap())
+                .map(|d| d.and_local_timezone(chrono::FixedOffset::east_opt(9 * 3600).unwrap()))
+                .unwrap_or_else(|_| {
+                    panic!(
+                        "Failed to parse published date to JST TZ: {}",
+                        value.published_at()
+                    )
+                })
+                .unwrap();
 
-                // to timestamp
-                Some(published.timestamp())
-            }
-            None => None,
+            // to timestamp
+            Some(published.timestamp())
+        } else {
+            None
         };
 
         Self {
-            id: value.id.into(),
-            main_name: value.title,
+            id: value.id().into(),
+            main_name: value.title().to_string(),
             timestamp: pub_at,
-            sub_name: value.subtitle,
+            sub_name: if value.subtitle().is_empty() {
+                None
+            } else {
+                Some(value.subtitle().to_string())
+            },
         }
     }
 }
 
-impl From<EpisodeNode> for ChapterDetailDump {
+impl From<&EpisodeNode> for ChapterDetailDump {
     /// Convert from [`tosho_kmkc::models::EpisodeNode`] into [`ChapterDetailDump`]
     /// `_info.json` format.
-    fn from(value: EpisodeNode) -> Self {
-        let start_time_ts = value.start_time.timestamp();
+    fn from(value: &EpisodeNode) -> Self {
+        let start_time_ts = value.start_time().timestamp();
 
         Self {
-            main_name: value.title,
-            id: (value.id as u64).into(),
+            main_name: value.title().to_string(),
+            id: (value.id() as u64).into(),
             timestamp: Some(start_time_ts),
             sub_name: None,
         }
     }
 }
 
-impl From<ComicEpisodeInfoNode> for ChapterDetailDump {
+impl From<&ComicEpisodeInfoNode> for ChapterDetailDump {
     /// Convert from [`tosho_amap::models::ComicEpisodeInfoNode`] into [`ChapterDetailDump`]
     /// `_info.json` format.
-    fn from(value: ComicEpisodeInfoNode) -> Self {
+    fn from(value: &ComicEpisodeInfoNode) -> Self {
         Self {
-            main_name: value.title,
-            id: value.id.into(),
-            timestamp: Some(value.update_date as i64),
+            main_name: value.title().to_string(),
+            id: value.id().into(),
+            timestamp: Some(value.update_date() as i64),
             sub_name: None,
         }
     }
 }
 
-impl From<ComicEpisodeInfo> for ChapterDetailDump {
+impl From<&ComicEpisodeInfo> for ChapterDetailDump {
     /// Convert from [`tosho_amap::models::ComicEpisodeInfo`] into [`ChapterDetailDump`]
     /// `_info.json` format.
-    fn from(value: ComicEpisodeInfo) -> Self {
-        Self::from(value.info)
+    fn from(value: &ComicEpisodeInfo) -> Self {
+        Self::from(value.info())
     }
 }
 
-impl From<MangaChapterDetail> for ChapterDetailDump {
+impl From<&MangaChapterDetail> for ChapterDetailDump {
     /// Convert from [`tosho_sjv::models::MangaChapterDetail`] into [`ChapterDetailDump`]
     /// `_info.json` format.
-    fn from(value: MangaChapterDetail) -> Self {
+    fn from(value: &MangaChapterDetail) -> Self {
         Self {
             main_name: value.pretty_title(),
-            id: (value.id as u64).into(),
-            timestamp: value.published_at.map(|d| d.timestamp()),
+            id: (value.id() as u64).into(),
+            timestamp: value.published_at().map(|d| d.timestamp()),
             sub_name: None,
         }
     }
 }
 
-impl From<Chapter> for ChapterDetailDump {
+impl From<&Chapter> for ChapterDetailDump {
     /// Convert from [`tosho_rbean::models::Chapter`] into [`ChapterDetailDump`]
     /// `_info.json` format.
-    fn from(value: Chapter) -> Self {
+    fn from(value: &Chapter) -> Self {
         Self {
-            id: value.uuid.clone().into(),
+            id: value.uuid().to_string().into(),
             main_name: value.formatted_title(),
-            timestamp: value.published.map(|d| d.timestamp()),
+            timestamp: value.published().map(|d| d.timestamp()),
             sub_name: None,
         }
     }
 }
 
-impl From<MPChapter> for ChapterDetailDump {
+impl From<&MPChapter> for ChapterDetailDump {
     /// Convert from [`tosho_mplus::proto::Chapter`] into [`ChapterDetailDump`]
     /// `_info.json` format.
-    fn from(value: MPChapter) -> Self {
+    fn from(value: &MPChapter) -> Self {
         Self {
-            id: value.chapter_id.into(),
-            main_name: value.title,
-            timestamp: Some(value.published_at),
-            sub_name: value.subtitle,
+            id: value.chapter_id().into(),
+            main_name: value.title().to_string(),
+            timestamp: Some(value.published_at()),
+            sub_name: if value.subtitle().is_empty() {
+                None
+            } else {
+                Some(value.subtitle().to_string())
+            },
         }
     }
 }

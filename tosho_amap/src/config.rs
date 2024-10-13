@@ -3,11 +3,7 @@
 //! ```rust
 //! use tosho_amap::AMConfig;
 //!
-//! let config = AMConfig {
-//!     token: "123".to_string(),
-//!     identifier: "abcxyz".to_string(),
-//!     session_v2: "xyz987abc".to_string(),
-//! };
+//! let config = AMConfig::new("123", "abcxyz", "xyz987abc");
 //! ```
 
 use std::sync::LazyLock;
@@ -16,6 +12,7 @@ use base64::{engine::general_purpose, Engine as _};
 use reqwest::Url;
 use reqwest_cookie_store::{CookieStoreMutex, RawCookie};
 use tosho_common::{make_error, ToshoError};
+use tosho_macros::AutoGetter;
 
 use crate::constants::BASE_HOST;
 
@@ -30,14 +27,29 @@ pub static SESSION_COOKIE_NAME: LazyLock<String> = LazyLock::new(|| {
 });
 
 /// Represents the configuration for the client.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, AutoGetter)]
 pub struct AMConfig {
     /// The token of the account
-    pub token: String,
+    token: String,
     /// The identifier (guest ID) of the account, tied to token.
-    pub identifier: String,
+    identifier: String,
     /// The cookie of session_v2
-    pub session_v2: String,
+    session_v2: String,
+}
+
+impl AMConfig {
+    /// Create a new config instance of [`AMConfig`]
+    pub fn new(
+        token: impl Into<String>,
+        identifier: impl Into<String>,
+        session_v2: impl Into<String>,
+    ) -> Self {
+        Self {
+            token: token.into(),
+            identifier: identifier.into(),
+            session_v2: session_v2.into(),
+        }
+    }
 }
 
 impl TryFrom<AMConfig> for reqwest_cookie_store::CookieStore {

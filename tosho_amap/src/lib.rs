@@ -1,3 +1,4 @@
+#![warn(missing_docs, clippy::empty_docs, rustdoc::broken_intra_doc_links)]
 #![doc = include_str!("../README.md")]
 
 use std::{collections::HashMap, sync::MutexGuard};
@@ -35,12 +36,7 @@ const SCREEN_INCH: f64 = 61.1918658356194;
 ///
 /// #[tokio::main]
 /// async fn main() {
-///     let config = AMConfig {
-///         token: "123".to_string(),
-///         identifier: "abcxyz".to_string(),
-///         session_v2: "xyz987abc".to_string(),
-///     };
-///
+///     let config = AMConfig::new("123", "abcxyz", "xyz987abc");
 ///     let client = AMClient::new(config).unwrap();
 ///     let manga = client.get_comic(48000051).await.unwrap();
 ///     println!("{:?}", manga);
@@ -161,7 +157,7 @@ impl AMClient {
         let mut json_body = HashMap::new();
         json_body.insert(
             "i_token".to_string(),
-            serde_json::Value::String(self.config.token.clone()),
+            serde_json::Value::String(self.config.token().to_string()),
         );
         json_body.insert(
             "iap_product_version".to_string(),
@@ -177,7 +173,11 @@ impl AMClient {
             )
             .await?;
 
-        results.result.body.ok_or_else(ToshoParseError::empty)
+        results
+            .result()
+            .body()
+            .ok_or_else(ToshoParseError::empty)
+            .cloned()
     }
 
     /// Get a single comic information by ID.
@@ -192,7 +192,7 @@ impl AMClient {
         );
         json_body.insert(
             "i_token".to_string(),
-            serde_json::Value::String(self.config.token.clone()),
+            serde_json::Value::String(self.config.token().to_string()),
         );
         json_body.insert("app_login".to_string(), serde_json::Value::Bool(true));
 
@@ -204,7 +204,11 @@ impl AMClient {
             )
             .await?;
 
-        results.result.body.ok_or_else(ToshoParseError::empty)
+        results
+            .result()
+            .body()
+            .ok_or_else(ToshoParseError::empty)
+            .cloned()
     }
 
     /// Get reader/viewer for an episode.
@@ -256,7 +260,7 @@ impl AMClient {
         );
         json_body.insert(
             "i_token".to_string(),
-            serde_json::Value::String(self.config.token.clone()),
+            serde_json::Value::String(self.config.token().to_string()),
         );
         json_body.insert("app_login".to_string(), serde_json::Value::Bool(true));
 
@@ -268,7 +272,11 @@ impl AMClient {
             )
             .await?;
 
-        results.result.body.ok_or_else(ToshoParseError::empty)
+        results
+            .result()
+            .body()
+            .ok_or_else(ToshoParseError::empty)
+            .cloned()
     }
 
     /// Get the account for the current session.
@@ -284,7 +292,11 @@ impl AMClient {
             )
             .await?;
 
-        results.result.body.ok_or_else(ToshoParseError::empty)
+        results
+            .result()
+            .body()
+            .ok_or_else(ToshoParseError::empty)
+            .cloned()
     }
 
     /// Get account favorites.
@@ -297,7 +309,11 @@ impl AMClient {
             )
             .await?;
 
-        results.result.body.ok_or_else(ToshoParseError::empty)
+        results
+            .result()
+            .body()
+            .ok_or_else(ToshoParseError::empty)
+            .cloned()
     }
 
     /// Search for comics.
@@ -308,7 +324,7 @@ impl AMClient {
     /// * `limit` - The limit of results per page. (default to 30)
     pub async fn search(
         &self,
-        query: &str,
+        query: impl Into<String>,
         status: Option<ComicStatus>,
         tag_id: Option<u64>,
         page: Option<u64>,
@@ -319,7 +335,7 @@ impl AMClient {
         let mut conditions = serde_json::Map::new();
         conditions.insert(
             "free_word".to_string(),
-            serde_json::Value::String(query.to_string()),
+            serde_json::Value::String(query.into()),
         );
         conditions.insert(
             "tag_id".to_string(),
@@ -352,7 +368,11 @@ impl AMClient {
             )
             .await?;
 
-        results.result.body.ok_or_else(ToshoParseError::empty)
+        results
+            .result()
+            .body()
+            .ok_or_else(ToshoParseError::empty)
+            .cloned()
     }
 
     /// Get home discovery.
@@ -361,7 +381,11 @@ impl AMClient {
             .request::<ComicDiscovery>(reqwest::Method::POST, "/manga/discover.json", None)
             .await?;
 
-        results.result.body.ok_or_else(ToshoParseError::empty)
+        results
+            .result()
+            .body()
+            .ok_or_else(ToshoParseError::empty)
+            .cloned()
     }
 
     /// Stream download the image from the given URL.
@@ -371,7 +395,7 @@ impl AMClient {
     /// * `writer` - The writer to write the image to.
     pub async fn stream_download(
         &self,
-        url: &str,
+        url: impl Into<String>,
         mut writer: impl tokio::io::AsyncWrite + Unpin,
     ) -> ToshoResult<()> {
         let mut headers = make_header(&self.config, self.constants)?;
@@ -383,6 +407,7 @@ impl AMClient {
             "User-Agent",
             reqwest::header::HeaderValue::from_static(&self.constants.image_ua),
         );
+        let url: String = url.into();
 
         let res = self.inner.get(url).headers(headers).send().await?;
 
@@ -405,7 +430,10 @@ impl AMClient {
     /// # Arguments
     /// * `email` - The email of the user.
     /// * `password` - The password of the user.
-    pub async fn login(email: &str, password: &str) -> ToshoResult<AMConfig> {
+    pub async fn login(
+        email: impl Into<String>,
+        password: impl Into<String>,
+    ) -> ToshoResult<AMConfig> {
         let cookie_store = CookieStoreMutex::default();
         let cookie_store = std::sync::Arc::new(cookie_store);
 
@@ -433,11 +461,7 @@ impl AMClient {
             .map_err(ToshoClientError::BuildError)?;
 
         let secret_token = tosho_common::generate_random_token(16);
-        let temp_config = AMConfig {
-            token: secret_token.clone(),
-            identifier: "".to_string(),
-            session_v2: "".to_string(),
-        };
+        let temp_config = AMConfig::new(&secret_token, "", "");
         let android_c = get_constants(1);
 
         let mut json_body = HashMap::new();
@@ -465,7 +489,7 @@ impl AMClient {
         let results =
             parse_json_response_failable::<APIResult<models::IAPRemainder>, BasicWrapStatus>(req)
                 .await?;
-        let result = results.clone().result.body.ok_or_else(|| {
+        let result = results.result().body().ok_or_else(|| {
             make_error!(
                 "Failed to get remainder, got empty response: {:#?}",
                 results
@@ -474,13 +498,10 @@ impl AMClient {
 
         // Step 2: Perform login
         let mut json_body_login = HashMap::new();
-        json_body_login.insert(
-            "email".to_string(),
-            serde_json::Value::String(email.to_string()),
-        );
+        json_body_login.insert("email".to_string(), serde_json::Value::String(email.into()));
         json_body_login.insert(
             "citi_pass".to_string(),
-            serde_json::Value::String(password.to_string()),
+            serde_json::Value::String(password.into()),
         );
         json_body_login.insert(
             "iap_token".to_string(),
@@ -488,11 +509,7 @@ impl AMClient {
         );
         json_with_common(&mut json_body_login, android_c)?;
 
-        let temp_config = AMConfig {
-            token: secret_token.clone(),
-            identifier: result.info.guest_id,
-            session_v2: "".to_string(),
-        };
+        let temp_config = AMConfig::new(&secret_token, result.info().guest_id(), "");
 
         let req = session
             .request(
@@ -505,10 +522,10 @@ impl AMClient {
             .await?;
 
         let results = parse_json_response::<APIResult<models::LoginResult>>(req).await?;
-        let result =
-            results.clone().result.body.ok_or_else(|| {
-                ToshoAuthError::InvalidCredentials("Got empty response".to_string())
-            })?;
+        let result = results
+            .result()
+            .body()
+            .ok_or_else(|| ToshoAuthError::InvalidCredentials("Got empty response".to_string()))?;
 
         // final step: get session_v2
         let mut json_body_session = HashMap::new();
@@ -523,11 +540,7 @@ impl AMClient {
         json_body_session.insert("app_login".to_string(), serde_json::Value::Bool(true));
         json_with_common(&mut json_body_session, android_c)?;
 
-        let temp_config = AMConfig {
-            token: secret_token.clone(),
-            identifier: result.info.guest_id.clone(),
-            session_v2: "".to_string(),
-        };
+        let temp_config = AMConfig::new(&secret_token, result.info().guest_id(), "");
 
         let req = session
             .request(
@@ -557,11 +570,11 @@ impl AMClient {
             return Err(ToshoAuthError::UnknownSession.into());
         }
 
-        Ok(AMConfig {
-            token: secret_token,
-            identifier: result.info.guest_id,
-            session_v2,
-        })
+        Ok(AMConfig::new(
+            &secret_token,
+            result.info().guest_id(),
+            &session_v2,
+        ))
     }
 }
 
@@ -589,7 +602,7 @@ fn make_header(
 
     let current_unix = chrono::Utc::now().timestamp();
     let av = format!("{}/{}", &*APP_NAME, constants.version);
-    let formulae = format!("{}{}{}", config.token, current_unix, av);
+    let formulae = format!("{}{}{}", config.token(), current_unix, av);
 
     let formulae_hashed = <Sha256 as Digest>::digest(formulae.as_bytes());
     let formulae_hashed = format!("{:x}", formulae_hashed);
@@ -600,11 +613,11 @@ fn make_header(
             .parse()
             .map_err(|e| make_error!("Failed to parse custom hash into header value: {}", e))?,
     );
-    if !config.identifier.is_empty() {
+    if !config.identifier().is_empty() {
         req_headers.insert(
             HEADER_NAMES.i.as_str(),
             config
-                .identifier
+                .identifier()
                 .parse()
                 .map_err(|e| make_error!("Failed to parse identifier into header value: {}", e))?,
         );
@@ -621,7 +634,7 @@ fn make_header(
     req_headers.insert(
         HEADER_NAMES.t.as_str(),
         config
-            .token
+            .token()
             .parse()
             .map_err(|e| make_error!("Failed to parse token into header value: {}", e))?,
     );

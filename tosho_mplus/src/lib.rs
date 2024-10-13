@@ -1,3 +1,4 @@
+#![warn(missing_docs, clippy::empty_docs, rustdoc::broken_intra_doc_links)]
 #![doc = include_str!("../README.md")]
 
 pub mod constants;
@@ -53,7 +54,7 @@ impl MPClient {
     /// * `language` - The language to use for the client.
     /// * `constants` - The constants to use for the client.
     pub fn new(
-        secret: &str,
+        secret: impl Into<String>,
         language: Language,
         constants: &'static Constants,
     ) -> ToshoResult<Self> {
@@ -83,7 +84,7 @@ impl MPClient {
     }
 
     fn make_client(
-        secret: &str,
+        secret: impl Into<String>,
         language: Language,
         constants: &'static Constants,
         proxy: Option<reqwest::Proxy>,
@@ -111,7 +112,7 @@ impl MPClient {
 
         Ok(Self {
             inner: client,
-            secret: secret.to_string(),
+            secret: secret.into(),
             language,
             constants,
             app_ver: None,
@@ -171,7 +172,7 @@ impl MPClient {
         let response = parse_response(request).await?;
 
         match response {
-            SuccessOrError::Success(data) => match data.initial_view_v2 {
+            SuccessOrError::Success(data) => match data.initial_view_v2() {
                 Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
                 None => Err(ToshoParseError::expect("initial view")),
             },
@@ -194,7 +195,7 @@ impl MPClient {
         let response = parse_response(request).await?;
 
         match response {
-            SuccessOrError::Success(data) => match data.home_view_v3 {
+            SuccessOrError::Success(data) => match data.home_view_v3() {
                 Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
                 None => Err(ToshoParseError::expect("home view v3")),
             },
@@ -215,7 +216,7 @@ impl MPClient {
         let response = parse_response(request).await?;
 
         match response {
-            SuccessOrError::Success(data) => match data.user_profile_settings {
+            SuccessOrError::Success(data) => match data.user_profile_settings() {
                 Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
                 None => Err(ToshoParseError::expect("user profile settings")),
             },
@@ -238,7 +239,7 @@ impl MPClient {
         let response = parse_response(request).await?;
 
         match response {
-            SuccessOrError::Success(data) => match data.user_settings_v2 {
+            SuccessOrError::Success(data) => match data.user_settings_v2() {
                 Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
                 None => Err(ToshoParseError::expect("user settings v2")),
             },
@@ -258,7 +259,7 @@ impl MPClient {
         let response = parse_response(request).await?;
 
         match response {
-            SuccessOrError::Success(data) => match data.subscriptions {
+            SuccessOrError::Success(data) => match data.subscriptions() {
                 Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
                 None => Err(ToshoParseError::expect("subscriptions")),
             },
@@ -278,7 +279,7 @@ impl MPClient {
         let response = parse_response(request).await?;
 
         match response {
-            SuccessOrError::Success(data) => match data.all_titles_v2 {
+            SuccessOrError::Success(data) => match data.all_titles_v2() {
                 Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
                 None => Err(ToshoParseError::expect("all titles v2")),
             },
@@ -308,7 +309,7 @@ impl MPClient {
         let response = parse_response(request).await?;
 
         match response {
-            SuccessOrError::Success(data) => match data.title_ranking_v2 {
+            SuccessOrError::Success(data) => match data.title_ranking_v2() {
                 Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
                 None => Err(ToshoParseError::expect("title ranking v2")),
             },
@@ -328,7 +329,7 @@ impl MPClient {
         let response = parse_response(request).await?;
 
         match response {
-            SuccessOrError::Success(data) => match data.free_titles {
+            SuccessOrError::Success(data) => match data.free_titles() {
                 Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
                 None => Err(ToshoParseError::expect("free titles")),
             },
@@ -348,7 +349,7 @@ impl MPClient {
         let response = parse_response(request).await?;
 
         match response {
-            SuccessOrError::Success(data) => match data.subscribed_titles {
+            SuccessOrError::Success(data) => match data.subscribed_titles() {
                 Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
                 None => Err(ToshoParseError::expect("subscribed/bookmarked titles")),
             },
@@ -371,7 +372,7 @@ impl MPClient {
         let response = parse_response(request).await?;
 
         match response {
-            SuccessOrError::Success(data) => match data.search_results {
+            SuccessOrError::Success(data) => match data.search_results() {
                 Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
                 None => Err(ToshoParseError::expect("search results")),
             },
@@ -400,25 +401,28 @@ impl MPClient {
         let response = parse_response(request).await?;
 
         match response {
-            SuccessOrError::Success(data) => match data.title_detail {
+            SuccessOrError::Success(data) => match data.title_detail() {
                 Some(inner_data) => {
                     let mut cloned_data = inner_data.clone();
-                    cloned_data.chapter_groups.iter_mut().for_each(|group| {
-                        group
-                            .first_chapters
-                            .iter_mut()
-                            .for_each(|ch| ch.set_position(proto::ChapterPosition::First));
+                    cloned_data
+                        .chapter_groups_mut()
+                        .iter_mut()
+                        .for_each(|group| {
+                            group
+                                .first_chapters_mut()
+                                .iter_mut()
+                                .for_each(|ch| ch.set_position(proto::ChapterPosition::First));
 
-                        group
-                            .last_chapters
-                            .iter_mut()
-                            .for_each(|ch| ch.set_position(proto::ChapterPosition::Last));
+                            group
+                                .last_chapters_mut()
+                                .iter_mut()
+                                .for_each(|ch| ch.set_position(proto::ChapterPosition::Last));
 
-                        group
-                            .mid_chapters
-                            .iter_mut()
-                            .for_each(|ch| ch.set_position(proto::ChapterPosition::Middle));
-                    });
+                            group
+                                .mid_chapters_mut()
+                                .iter_mut()
+                                .for_each(|ch| ch.set_position(proto::ChapterPosition::Middle));
+                        });
 
                     Ok(APIResponse::Success(Box::new(cloned_data)))
                 }
@@ -443,13 +447,16 @@ impl MPClient {
         split: bool,
     ) -> ToshoResult<APIResponse<proto::ChapterViewer>> {
         let mut query_params = vec![];
-        query_params.push(("chapter_id".to_string(), chapter.chapter_id.to_string()));
+        query_params.push(("chapter_id".to_string(), chapter.chapter_id().to_string()));
         query_params.push((
             "split".to_string(),
             if split { "yes" } else { "no" }.to_string(),
         ));
         query_params.push(("img_quality".to_string(), quality.to_string()));
-        query_params.push(("viewer_mode".to_string(), chapter.default_view_mode()));
+        query_params.push((
+            "viewer_mode".to_string(),
+            chapter.default_view_mode().to_string(),
+        ));
         // Determine the way to read the chapter
         if chapter.is_free() {
             query_params.push(("free_reading".to_string(), "yes".to_string()));
@@ -460,8 +467,8 @@ impl MPClient {
             query_params.push(("free_reading".to_string(), "no".to_string()));
             query_params.push(("subscription_reading".to_string(), "no".to_string()));
         } else {
-            let user_sub = title.user_subscription.clone().unwrap_or_default();
-            let title_labels = title.title_labels.clone().unwrap_or_default();
+            let user_sub = title.user_subscription().cloned().unwrap_or_default();
+            let title_labels = title.title_labels().cloned().unwrap_or_default();
             if user_sub.plan() >= title_labels.plan_type() {
                 query_params.push(("subscription_reading".to_string(), "yes".to_string()));
                 query_params.push(("ticket_reading".to_string(), "no".to_string()));
@@ -486,7 +493,7 @@ impl MPClient {
         let response = parse_response(request).await?;
 
         match response {
-            SuccessOrError::Success(data) => match data.chapter_viewer {
+            SuccessOrError::Success(data) => match data.chapter_viewer() {
                 Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
                 None => Err(ToshoParseError::expect("chapter viewer")),
             },
@@ -512,7 +519,7 @@ impl MPClient {
         let response = parse_response(request).await?;
 
         match response {
-            SuccessOrError::Success(data) => match data.comment_list {
+            SuccessOrError::Success(data) => match data.comment_list() {
                 Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
                 None => Err(ToshoParseError::expect("comment list")),
             },
@@ -529,9 +536,10 @@ impl MPClient {
     /// * `writer` - The writer to write the image to.
     pub async fn stream_download(
         &self,
-        url: &str,
+        url: impl Into<String>,
         mut writer: impl io::AsyncWrite + Unpin,
     ) -> ToshoResult<()> {
+        let url: String = url.into();
         let res = self
             .inner
             .get(url)
@@ -573,7 +581,9 @@ impl MPClient {
 ///
 /// It either returns the specified success response or an error.
 pub enum APIResponse<T: ::prost::Message + Clone> {
+    /// A [`Box`]-ed [`ErrorResponse`]
     Error(Box<ErrorResponse>),
+    /// Successfull response, also [`Box`]-ed and depends on the API call
     Success(Box<T>),
 }
 
@@ -596,7 +606,7 @@ async fn parse_response(res: reqwest::Response) -> ToshoResult<SuccessOrError> {
     let decoded_response = parse_protobuf_response::<crate::proto::Response>(res).await?;
 
     // oneof response on .response
-    match decoded_response.response {
+    match decoded_response.response() {
         Some(response) => Ok(response),
         None => Err(tosho_common::ToshoParseError::empty()),
     }

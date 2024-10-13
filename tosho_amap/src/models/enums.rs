@@ -2,11 +2,10 @@
 //!
 //! If something is missing, please [open an issue](https://github.com/noaione/tosho-mango/issues/new/choose) or a [pull request](https://github.com/noaione/tosho-mango/compare).
 
-use serde::{Deserialize, Serialize};
 use tosho_macros::{DeserializeEnum32, EnumName, SerializeEnum32};
 
 /// A status of a comic.
-#[derive(Debug, Clone, SerializeEnum32, DeserializeEnum32, PartialEq, EnumName)]
+#[derive(Debug, Clone, Copy, SerializeEnum32, DeserializeEnum32, PartialEq, EnumName)]
 pub enum ComicStatus {
     /// The comic is completed.
     Complete = 1,

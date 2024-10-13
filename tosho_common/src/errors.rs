@@ -204,6 +204,7 @@ pub struct ToshoDetailedImageError {
 
 #[cfg(feature = "image")]
 impl ToshoDetailedImageError {
+    /// Create a new instance of image errow with a more detailed response
     pub fn new(inner: image::ImageError, description: impl Into<String>) -> Self {
         Self {
             inner,

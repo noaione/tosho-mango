@@ -30,7 +30,7 @@ pub(crate) async fn kmkc_search(
                 results.len()
             ));
 
-            do_print_search_information(results, false, None);
+            do_print_search_information(&results, false, None);
 
             0
         }
@@ -54,17 +54,17 @@ pub(crate) async fn kmkc_search_weekly(
     let results = client.get_weekly().await;
     match results {
         Ok(results) => {
-            let mut title_ids_list = vec![];
-            for weekly_info in results.contents {
-                if weekly_info.weekday == weekday.indexed() {
-                    title_ids_list = weekly_info.titles;
+            let mut title_ids_list: Vec<i32> = vec![];
+            for weekly_info in results.contents() {
+                if weekly_info.weekday() == weekday.indexed() {
+                    title_ids_list = weekly_info.titles().to_vec();
                     break;
                 }
             }
 
             let mut titles = vec![];
             for title_id in title_ids_list {
-                let find_title = results.titles.iter().find(|t| t.id == title_id);
+                let find_title = results.titles().iter().find(|t| t.id() == title_id);
 
                 if let Some(title) = find_title {
                     titles.push(title.clone());
@@ -82,7 +82,7 @@ pub(crate) async fn kmkc_search_weekly(
                 titles.len()
             ));
 
-            do_print_search_information(titles, false, None);
+            do_print_search_information(&titles, false, None);
 
             0
         }
@@ -93,7 +93,7 @@ pub(crate) async fn kmkc_search_weekly(
     }
 }
 
-fn format_tag_name(tag_name: String) -> String {
+fn format_tag_name(tag_name: &str) -> String {
     let tag_split = tag_name.split('･').collect::<Vec<&str>>();
 
     let mut tag_name = tag_split.join(" & ");
@@ -105,15 +105,10 @@ fn format_tag_name(tag_name: String) -> String {
     tag_name
 }
 
-fn format_tags(tags: Vec<GenreNode>) -> String {
+fn format_tags(tags: &[GenreNode]) -> String {
     let parsed_tags = tags
         .iter()
-        .map(|tag| {
-            cformat!(
-                "<p(244),reverse,bold>{}</>",
-                format_tag_name(tag.clone().name)
-            )
-        })
+        .map(|tag| cformat!("<p(244),reverse,bold>{}</>", format_tag_name(tag.name())))
         .collect::<Vec<String>>()
         .join(", ");
     parsed_tags
@@ -145,14 +140,14 @@ pub(crate) async fn kmkc_title_info(
             let result = results.first().unwrap();
 
             let mut genre_results = vec![];
-            if !result.genre_ids.is_empty() {
+            if !result.genre_ids().is_empty() {
                 let genre_resp = client.get_genres().await;
                 match genre_resp {
                     Err(e) => {
                         console.error(cformat!("Unable to connect to KM: {}", e));
                         return 1;
                     }
-                    Ok(genre_resp) => genre_results.clone_from(&genre_resp.genres),
+                    Ok(genre_resp) => genre_results.clone_from(&genre_resp.genres().to_vec()),
                 }
             }
 
@@ -160,11 +155,11 @@ pub(crate) async fn kmkc_title_info(
             if show_chapters {
                 console.info(cformat!(
                     "Fetching <magenta,bold>{}</> <bold>{}</bold> chapters information...",
-                    &result.title,
-                    result.episode_ids.len()
+                    result.title(),
+                    result.episode_ids().len()
                 ));
 
-                for chunk_eps in result.episode_ids.chunks(50) {
+                for chunk_eps in result.episode_ids().chunks(50) {
                     let chap_req = client.get_episodes(chunk_eps.to_vec()).await;
 
                     match chap_req {
@@ -180,57 +175,57 @@ pub(crate) async fn kmkc_title_info(
             }
 
             let manga_url = format!("https://{}/title/{}", &*BASE_HOST, title_id);
-            let linked = linkify!(&manga_url, &result.title);
+            let linked = linkify!(&manga_url, result.title());
 
             console.info(cformat!(
                 "Title information for <magenta,bold>{}</>",
                 linked,
             ));
-            console.info(cformat!("  <s>Author</>: {}", result.author));
+            console.info(cformat!("  <s>Author</>: {}", result.author()));
 
             if !genre_results.is_empty() {
                 console.info(cformat!(
                     "  <s>Genre/Tags</>: {}",
-                    format_tags(genre_results)
+                    format_tags(&genre_results)
                 ));
             }
-            if result.magazine != MagazineCategory::Undefined {
+            if result.magazine() != MagazineCategory::Undefined {
                 console.info(cformat!(
                     "  <s>Magazine</>: {}",
-                    result.magazine.pretty_name()
+                    result.magazine().pretty_name()
                 ));
             }
 
             console.info(cformat!("  <s>Summary</>"));
-            if !result.summary.is_empty() {
-                console.info(cformat!("   <blue>{}</>", result.summary));
+            if !result.summary().is_empty() {
+                console.info(cformat!("   <blue>{}</>", result.summary()));
             }
-            let split_desc: Vec<&str> = result.description.split('\n').collect();
+            let split_desc: Vec<&str> = result.description().split('\n').collect();
             for desc in split_desc {
                 console.info(format!("    {}", desc));
             }
 
-            if !result.notice.is_empty() {
-                console.warn(cformat!("  <s>Notice</>: {}", result.notice));
+            if !result.notice().is_empty() {
+                console.warn(cformat!("  <s>Notice</>: {}", result.notice()));
             }
 
             println!();
             console.info(cformat!(
                 "  <s>Chapters</>: {} chapters",
-                result.episode_ids.len()
+                result.episode_ids().len()
             ));
             if show_chapters && chapters_info.is_empty() {
                 console.warn("   <red,s>Error</>: Unable to get chapters information");
                 println!();
             } else if show_chapters && !chapters_info.is_empty() {
                 for chapter in chapters_info {
-                    let episode_url = format!("{}/episode/{}", manga_url, chapter.id);
-                    let ep_linked = linkify!(&episode_url, &chapter.title);
+                    let episode_url = format!("{}/episode/{}", manga_url, chapter.id());
+                    let ep_linked = linkify!(&episode_url, chapter.title());
 
-                    let mut text_info = cformat!("    <s>{}</> ({})", ep_linked, chapter.id);
-                    match chapter.badge {
+                    let mut text_info = cformat!("    <s>{}</> ({})", ep_linked, chapter.id());
+                    match chapter.badge() {
                         tosho_kmkc::models::EpisodeBadge::Purchaseable => {
-                            if chapter.ticket_rental.into() {
+                            if chapter.ticket_rental().into() {
                                 let ticket_emote = if console.is_modern() {
                                     "🎫"
                                 } else {
@@ -246,7 +241,7 @@ pub(crate) async fn kmkc_title_info(
                                 text_info = cformat!(
                                     "{} [<green,bold,reverse>P{}</>]",
                                     text_info,
-                                    chapter.point
+                                    chapter.point()
                                 );
                             }
                         }
@@ -257,7 +252,7 @@ pub(crate) async fn kmkc_title_info(
                             text_info = cformat!("{} [<green,bold>Purchased</>]", text_info);
                         }
                         tosho_kmkc::models::EpisodeBadge::Rental => {
-                            if let Some(rental_time) = chapter.rental_rest_time {
+                            if let Some(rental_time) = chapter.rental_rest_time() {
                                 text_info = cformat!(
                                     "{} [<yellow,bold>Renting: {}</>]",
                                     text_info,
@@ -268,13 +263,13 @@ pub(crate) async fn kmkc_title_info(
                     }
 
                     console.info(&text_info);
-                    let st_fmt = chapter.start_time.format("%b %d, %Y");
+                    let st_fmt = chapter.start_time().format("%b %d, %Y");
                     console.info(cformat!("     <s>Published</>: {}", st_fmt));
                 }
                 println!();
             }
 
-            if let Some(next_update) = &result.next_update {
+            if let Some(next_update) = result.next_update() {
                 console.info(cformat!("  <s>Next update</>: {}", next_update));
             }
 
@@ -297,19 +292,19 @@ pub(crate) async fn kmkc_magazines_list(
             1
         }
         Ok(results) => {
-            if results.categories.is_empty() {
+            if results.categories().is_empty() {
                 console.warn("No magazine results found.");
                 return 1;
             }
 
             let mut unknown_ids = vec![];
-            for magazine in results.categories {
-                if magazine.id == 0 {
+            for magazine in results.categories() {
+                if magazine.id() == 0 {
                     continue;
                 }
 
-                let mag_text = cformat!("<s>{}</> ({})", magazine.name, magazine.id);
-                let mag = MagazineCategory::from(magazine.id);
+                let mag_text = cformat!("<s>{}</> ({})", magazine.name(), magazine.id());
+                let mag = MagazineCategory::from(magazine.id());
 
                 if mag != MagazineCategory::Undefined {
                     console.info(cformat!("{} <s>{}</>", mag_text, mag.pretty_name()));
@@ -321,7 +316,7 @@ pub(crate) async fn kmkc_magazines_list(
                     }
                 } else {
                     console.warn(cformat!("{} <s>Unknown</>", mag_text));
-                    unknown_ids.push(magazine.id);
+                    unknown_ids.push(magazine.id());
                 }
             }
 

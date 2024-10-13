@@ -13,14 +13,13 @@
 use std::str::FromStr;
 
 use chrono::Datelike;
-use serde::{Deserialize, Serialize};
 
 /// Weekly code for manga updates.
 ///
 /// Used with [`crate::MUClient::get_weekly_titles`] to get manga updates for each week.
 ///
 /// # Example
-/// ```no_run
+/// ```rust,no_run
 /// use tosho_musq::{constants::get_constants, MUClient};
 ///
 /// let client = MUClient::new("123456", get_constants(1)).unwrap();
@@ -93,7 +92,7 @@ impl WeeklyCode {
     /// the corresponding [``WeeklyCode``] enum.
     ///
     /// # Example
-    /// ```
+    /// ```rust
     /// use tosho_musq::helper::WeeklyCode;
     ///
     /// let today = WeeklyCode::today();
@@ -115,7 +114,7 @@ impl WeeklyCode {
     /// Get the zero-based index of the day of the week.
     ///
     /// # Example
-    /// ```
+    /// ```rust
     /// use tosho_musq::helper::WeeklyCode;
     ///
     /// let monday = WeeklyCode::Monday;
@@ -139,7 +138,7 @@ impl WeeklyCode {
 /// Used with [`crate::MUClient::get_chapter_images`] to select image quality.
 ///
 /// # Example
-/// ```no_run
+/// ```rust,no_run
 /// use tosho_musq::{constants::get_constants, MUClient, ImageQuality};
 ///
 /// let client = MUClient::new("123456", get_constants(1)).unwrap();
@@ -184,7 +183,7 @@ impl std::fmt::Display for ImageQuality {
 /// Every attribute will default to 0.
 ///
 /// # Example
-/// ```
+/// ```rust
 /// use tosho_musq::ConsumeCoin;
 ///
 /// let coins = ConsumeCoin::new(1, 2, 3, 4);
@@ -203,6 +202,7 @@ pub struct ConsumeCoin {
 }
 
 impl ConsumeCoin {
+    /// Create a new instance of coin consumption
     pub fn new(free: u64, event: u64, paid: u64, need: u64) -> Self {
         Self {
             free,
@@ -215,7 +215,7 @@ impl ConsumeCoin {
     /// Check if the chapter can be purchased.
     ///
     /// # Example
-    /// ```
+    /// ```rust
     /// use tosho_musq::ConsumeCoin;
     ///
     /// let coins = ConsumeCoin::new(1, 2, 3, 4);
@@ -231,7 +231,7 @@ impl ConsumeCoin {
     /// Check if the chapter is free.
     ///
     /// # Example
-    /// ```
+    /// ```rust
     /// use tosho_musq::ConsumeCoin;
     ///
     /// let coins = ConsumeCoin::new(1, 2, 3, 4);

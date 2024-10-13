@@ -38,24 +38,24 @@ pub(crate) async fn musq_purchase(
                 if !consume.is_possible() {
                     console.warn(cformat!(
                         "Unable to purchase chapter <magenta,bold>{}</> (ID: {}), insufficient point balance!",
-                        chapter.title, title_id
+                        chapter.title(), title_id
                     ));
                     failed_claimed
                         .push((chapter.clone(), "Insufficient point balance".to_string()));
                     continue;
                 }
 
-                user_point.free -= consume.get_free();
-                user_point.paid -= consume.get_paid();
-                user_point.event -= consume.get_event();
+                user_point.subtract_free(consume.get_free());
+                user_point.subtract_event(consume.get_event());
+                user_point.subtract_paid(consume.get_paid());
                 let img_chapter = client
-                    .get_chapter_images(chapter.id, tosho_musq::ImageQuality::High, Some(consume))
+                    .get_chapter_images(chapter.id(), tosho_musq::ImageQuality::High, Some(consume))
                     .await
                     .unwrap();
-                if img_chapter.blocks.is_empty() {
+                if img_chapter.blocks().is_empty() {
                     console.warn(cformat!(
                         "Unable to purchase chapter <magenta,bold>{}</> (ID: {}), no images found!",
-                        chapter.title,
+                        chapter.title(),
                         title_id
                     ));
                     failed_claimed.push((chapter.clone(), "Failed when claiming".to_string()));
@@ -77,8 +77,8 @@ pub(crate) async fn musq_purchase(
                 for (chapter, reason) in failed_claimed {
                     console.warn(cformat!(
                         "  - <bold>{}</> (ID: {}): <red,bold>{}</>",
-                        chapter.title,
-                        chapter.id,
+                        chapter.title(),
+                        chapter.id(),
                         reason
                     ));
                 }
@@ -105,7 +105,7 @@ pub(crate) async fn musq_purchase_precalculate(
             }
 
             console.info("Calculating chapters cost...");
-            let total_coin: u64 = results.iter().map(|c| c.price).sum();
+            let total_coin: u64 = results.iter().map(|c| c.price()).sum();
 
             let total_coin_fmt = total_coin.to_formatted_string(&Locale::en);
             let ch_count = results.len().to_formatted_string(&Locale::en);

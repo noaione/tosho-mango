@@ -22,17 +22,17 @@ pub(crate) async fn musq_my_favorites(
             1
         }
         Ok(results) => {
-            if results.favorites.is_empty() {
+            if results.favorites().is_empty() {
                 console.error("You don't have any favorites.");
                 return 0;
             }
 
             console.info(cformat!(
                 "Your favorites list (<m,s>{}</> results):",
-                results.favorites.len()
+                results.favorites().len()
             ));
 
-            do_print_search_information(results.favorites, false, None);
+            do_print_search_information(results.favorites(), false, None);
 
             0
         }
@@ -57,17 +57,17 @@ pub(crate) async fn musq_my_history(
             1
         }
         Ok(results) => {
-            if results.history.is_empty() {
+            if results.history().is_empty() {
                 console.error("You don't have any reading history.");
                 return 0;
             }
 
             console.info(cformat!(
                 "Your read history (<m,s>{}</> results):",
-                results.history.len()
+                results.history().len()
             ));
 
-            do_print_search_information(results.history, false, None);
+            do_print_search_information(results.history(), false, None);
 
             0
         }

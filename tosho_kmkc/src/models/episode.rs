@@ -4,41 +4,44 @@
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use tosho_macros::AutoGetter;
 
 use super::{EpisodeBadge, FavoriteStatus, IntBool, TitleShare};
 
 /// A node of a single episode's information.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
 pub struct EpisodeNode {
     /// The episode ID.
     #[serde(rename = "episode_id")]
-    pub id: i32,
+    id: i32,
     /// The episode title.
     #[serde(rename = "episode_name")]
-    pub title: String,
+    title: String,
     /// The episode index.
-    pub index: i32,
+    index: i32,
     /// The badge for the episode.
-    pub badge: EpisodeBadge,
+    #[copyable]
+    badge: EpisodeBadge,
     /// The episode purchase point.
-    pub point: i32,
+    point: i32,
     /// The episode bonus point that will be given if purchased/read.
-    pub bonus_point: i32,
+    bonus_point: i32,
     /// The episode use status.
-    /// TODO: Change to enum
-    pub use_status: i32,
+    use_status: i32, // TODO: Change to enum
     /// The episode ticket rental status.
     #[serde(rename = "ticket_rental_enabled")]
-    pub ticket_rental: IntBool,
+    #[copyable]
+    ticket_rental: IntBool,
     /// The title ID associated with the episode.
-    pub title_id: i32,
+    title_id: i32,
     /// The episode start time or release time.
     #[serde(with = "super::datetime")]
-    pub start_time: DateTime<Utc>,
+    #[copyable]
+    start_time: DateTime<Utc>,
     /// The episosde rental rest time.
-    pub rental_rest_time: Option<String>,
+    rental_rest_time: Option<String>,
     /// Magazine ID associated with the episode.
-    pub magazine_id: Option<i32>,
+    magazine_id: Option<i32>,
 }
 
 impl EpisodeNode {
@@ -59,35 +62,28 @@ impl EpisodeNode {
 }
 
 /// Represents the episode list response.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
 pub struct EpisodesListResponse {
     /// The list of episodes.
     #[serde(rename = "episode_list")]
-    pub episodes: Vec<EpisodeNode>,
+    episodes: Vec<EpisodeNode>,
 }
 
 /// The node of a single image page.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
 pub struct ImagePageNode {
-    pub index: i32,
+    /// Image index
+    index: i32,
+    /// Image URL
     #[serde(rename = "image_url")]
-    pub url: String,
+    url: String,
 }
 
 impl ImagePageNode {
     /// The file name of the image.
     ///
-    /// # Examples
-    /// ```
-    /// use tosho_kmkc::models::ImagePageNode;
-    ///
-    /// let page = ImagePageNode {
-    ///     index: 0,
-    ///     url: "https://example.com/image.jpg?test=ignore".to_string(),
-    /// };
-    ///
-    /// assert_eq!(page.file_name(), "image.jpg");
-    /// ```
+    /// When you have the URL of `https://example.com/image.jpg?ignore=me`,
+    /// the filename would become `image.jpg` including the extension.
     pub fn file_name(&self) -> String {
         let url = self.url.as_str();
         match url.rfind('/') {
@@ -106,17 +102,9 @@ impl ImagePageNode {
 
     /// The file extension of the image.
     ///
-    /// # Examples
-    /// ```
-    /// use tosho_kmkc::models::ImagePageNode;
-    ///
-    /// let page = ImagePageNode {
-    ///     index: 0,
-    ///     url: "https://example.com/image.jpg?test=ignore".to_string(),
-    /// };
-    ///
-    /// assert_eq!(page.extension(), "jpg");
-    /// ```
+    /// When you have the URL of `https://example.com/image.jpg?ignore=me`,
+    /// the extension would become `jpg`, when there is no extension it
+    /// would return an empty string.
     pub fn extension(&self) -> String {
         let file_name = self.file_name();
         let split: Vec<&str> = file_name.rsplitn(2, '.').collect();
@@ -130,17 +118,8 @@ impl ImagePageNode {
 
     /// The file stem of the image.
     ///
-    /// # Examples
-    /// ```
-    /// use tosho_kmkc::models::ImagePageNode;
-    ///
-    /// let page = ImagePageNode {
-    ///     index: 0,
-    ///     url: "https://example.com/image.jpg?test=ignore".to_string(),
-    /// };
-    ///
-    /// assert_eq!(page.file_stem(), "image");
-    /// ```
+    /// When you have the URL of `https://example.com/image.jpg?ignore=me`,
+    /// the file stem would become `image`.
     pub fn file_stem(&self) -> String {
         let file_name = self.file_name();
         let split: Vec<&str> = file_name.rsplitn(2, '.').collect();
@@ -179,11 +158,20 @@ impl From<ImagePageNodeStr> for ImagePageNode {
     }
 }
 
+impl From<&ImagePageNodeStr> for ImagePageNode {
+    fn from(value: &ImagePageNodeStr) -> Self {
+        Self {
+            index: 0,
+            url: value.0.clone(),
+        }
+    }
+}
+
 impl ImagePageNodeStr {
     /// The file name of the image.
     ///
     /// # Examples
-    /// ```
+    /// ```rust
     /// use tosho_kmkc::models::ImagePageNodeStr;
     ///
     /// let page = ImagePageNodeStr("https://example.com/image.jpg?test=ignore".to_string());
@@ -198,7 +186,7 @@ impl ImagePageNodeStr {
     /// The file extension of the image.
     ///
     /// # Examples
-    /// ```
+    /// ```rust
     /// use tosho_kmkc::models::ImagePageNodeStr;
     ///
     /// let page = ImagePageNodeStr("https://example.com/image.jpg?test=ignore".to_string());
@@ -213,7 +201,7 @@ impl ImagePageNodeStr {
     /// The file stem of the image.
     ///
     /// # Examples
-    /// ```
+    /// ```rust
     /// use tosho_kmkc::models::ImagePageNodeStr;
     ///
     /// let page = ImagePageNodeStr("https://example.com/image.jpg?test=ignore".to_string());
@@ -227,40 +215,40 @@ impl ImagePageNodeStr {
 }
 
 /// Represents the episode view response for mobile viewer.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
 pub struct MobileEpisodeViewerResponse {
     /// The episode ID.
     #[serde(rename = "episode_id")]
-    pub id: i32,
+    id: i32,
     /// The list of pages.
     #[serde(rename = "page_list")]
-    pub pages: Vec<ImagePageNode>,
+    pages: Vec<ImagePageNode>,
     /// The list of episodes for this titles.
     #[serde(rename = "episode_list")]
-    pub episodes: Vec<EpisodeNode>,
+    episodes: Vec<EpisodeNode>,
     /// The next episode ID.
     #[serde(rename = "next_episode_id", default)]
-    pub next_id: Option<i32>,
+    next_id: Option<i32>,
     /// The previous episode ID.
     #[serde(rename = "prev_episode_id", default)]
-    pub prev_id: Option<i32>,
+    prev_id: Option<i32>,
 }
 
 /// Represents the episode view response for web viewer.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
 pub struct WebEpisodeViewerResponse {
     /// The episode ID.
     #[serde(rename = "episode_id")]
-    pub id: i32,
+    id: i32,
     /// The list of pages.
     #[serde(rename = "page_list")]
-    pub pages: Vec<ImagePageNodeStr>,
+    pages: Vec<ImagePageNodeStr>,
     /// The bonus point of the episode.
-    pub bonus_point: i32,
+    bonus_point: i32,
     /// The title ID associated with the episode.
-    pub title_id: i32,
+    title_id: i32,
     /// The scramble seed for the epsiode
-    pub scramble_seed: u32,
+    scramble_seed: u32,
 }
 
 /// Represents the episode view response.
@@ -275,46 +263,48 @@ pub enum EpisodeViewerResponse {
 }
 
 /// Represents an episode purchase response.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, AutoGetter, Serialize, Deserialize)]
 pub struct EpisodePurchaseResponse {
     /// The point left on the account
     #[serde(rename = "account_point")]
-    pub left: i32,
+    left: i32,
     /// The point paid for the episode
     #[serde(rename = "paid_point")]
-    pub paid: i32,
+    paid: i32,
 }
 
 /// Represents a bulk episode purchase response.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, AutoGetter, Serialize, Deserialize)]
 pub struct BulkEpisodePurchaseResponse {
     /// The point left on the account
     #[serde(rename = "account_point")]
-    pub left: i32,
+    left: i32,
     /// The point paid for the episode
     #[serde(rename = "paid_point")]
-    pub paid: i32,
+    paid: i32,
     /// The point earned back from the purchase
     #[serde(rename = "earned_point_back")]
-    pub point_back: i32,
+    point_back: i32,
 }
 
 /// Represents an episode finish response.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
 pub struct EpisodeViewerFinishResponse {
     /// The ID of the episode.
     #[serde(rename = "episode_id")]
-    pub id: u32,
+    id: u32,
     /// The title ID of the episode.
-    pub title_id: i32,
+    title_id: i32,
     /// The favorite status of the titles.
     #[serde(rename = "favorite_status")]
-    pub favorite: FavoriteStatus,
+    #[copyable]
+    favorite: FavoriteStatus,
     /// The bonus point of the episode.
-    pub bonus_point: i32,
+    bonus_point: i32,
     /// The bonus point of the episode.
     #[serde(rename = "view_finish_episode_count")]
-    pub view_count: u64,
+    view_count: u64,
+    /// Episode or title SNS sharing information
     #[serde(rename = "title_share_ret")]
-    pub share: TitleShare,
+    share: TitleShare,
 }

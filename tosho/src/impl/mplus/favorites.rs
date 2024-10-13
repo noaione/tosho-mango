@@ -18,17 +18,17 @@ pub(crate) async fn mplus_my_favorites(
 
     match results {
         Ok(tosho_mplus::APIResponse::Success(results)) => {
-            if results.titles.is_empty() {
+            if results.titles().is_empty() {
                 console.warn("You don't have any favorites.");
                 return 0;
             }
 
             console.info(cformat!(
                 "Your favorites list (<m,s>{}</> results):",
-                results.titles.len()
+                results.titles().len()
             ));
 
-            do_print_search_information(&results.titles, false, None);
+            do_print_search_information(results.titles(), false, None);
 
             0
         }
