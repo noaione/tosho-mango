@@ -372,7 +372,7 @@ impl std::fmt::Display for ToshoParseError {
             #[cfg(feature = "serde")]
             ToshoParseError::SerdeMinimalError(e) => write!(f, "failed to decode JSON data: {}", e),
             #[cfg(feature = "protobuf")]
-            ToshoParseError::ProstError(e) => write!(f, "failed to decode protobuf data: {}", e),
+            ToshoParseError::ProstError(e) => write!(f, "{}", e),
             ToshoParseError::EmptyResponse => write!(f, "empty response received"),
             ToshoParseError::ExpectedResponse(e) => write!(
                 f,
