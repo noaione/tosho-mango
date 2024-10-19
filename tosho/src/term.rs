@@ -59,35 +59,35 @@ impl Terminal {
     }
 
     /// Log info to terminal
-    pub fn info(&self, msg: impl Into<String>) {
+    pub fn info(&self, msg: impl AsRef<str>) {
         println!(
             "{}",
-            cformat!(" [<cyan,strong>INFO</cyan,strong>] {}", msg.into())
+            cformat!(" [<cyan,strong>INFO</cyan,strong>] {}", msg.as_ref())
         )
     }
 
     /// Log warning to terminal
-    pub fn warn(&self, msg: impl Into<String>) {
+    pub fn warn(&self, msg: impl AsRef<str>) {
         println!(
             "{}",
-            cformat!(" [<yellow,strong>WARN</yellow,strong>] {}", msg.into())
+            cformat!(" [<yellow,strong>WARN</yellow,strong>] {}", msg.as_ref())
         )
     }
 
     /// Log error to terminal
-    pub fn error(&self, msg: impl Into<String>) {
+    pub fn error(&self, msg: impl AsRef<str>) {
         println!(
             "{}",
-            cformat!("[<red,strong>ERROR</red,strong>] {}", msg.into())
+            cformat!("[<red,strong>ERROR</red,strong>] {}", msg.as_ref())
         )
     }
 
     /// Log to terminal
-    pub fn log(&self, msg: impl Into<String>) {
+    pub fn log(&self, msg: impl AsRef<str>) {
         if self.debug >= 1 {
             println!(
                 "{}",
-                cformat!("  [<magenta,strong>LOG</magenta,strong>] {}", msg.into())
+                cformat!("  [<magenta,strong>LOG</magenta,strong>] {}", msg.as_ref())
             )
         }
     }
@@ -194,9 +194,14 @@ impl Terminal {
             .progress_chars("#>-")
             .tick_strings(&["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏", " "]),
         );
-        let message: Option<String> = message.map(|m| m.into());
-        let message = message.unwrap_or("Processing".to_string());
-        progress.set_message(message);
+        match message {
+            Some(msg) => {
+                progress.set_message(msg.into());
+            }
+            None => {
+                progress.set_message("Processing");
+            }
+        }
         progress
     }
 
