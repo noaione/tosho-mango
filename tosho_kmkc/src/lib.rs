@@ -745,14 +745,13 @@ impl KMClient {
     /// * `writer` - The writer to write the image to
     pub async fn stream_download(
         &self,
-        url: impl Into<String>,
+        url: impl AsRef<str>,
         scramble_seed: Option<u32>,
         mut writer: impl tokio::io::AsyncWrite + std::marker::Unpin,
     ) -> ToshoResult<()> {
-        let url: String = url.into();
         let res = self
             .inner
-            .get(url)
+            .get(url.as_ref())
             .headers({
                 let mut headers = reqwest::header::HeaderMap::new();
                 headers.insert(

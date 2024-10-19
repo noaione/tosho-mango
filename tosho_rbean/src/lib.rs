@@ -236,10 +236,10 @@ impl RBClient {
     ///
     /// # Arguments
     /// * `uuid` - The UUID of the manga.
-    pub async fn get_manga(&mut self, uuid: impl Into<String>) -> ToshoResult<Manga> {
+    pub async fn get_manga(&mut self, uuid: impl AsRef<str>) -> ToshoResult<Manga> {
         self.request(
             reqwest::Method::GET,
-            &format!("/manga/{}/v0", uuid.into()),
+            &format!("/manga/{}/v0", uuid.as_ref()),
             None,
         )
         .await
@@ -257,13 +257,13 @@ impl RBClient {
     /// * `uuid` - The UUID of the manga.
     pub async fn get_chapter_list(
         &mut self,
-        uuid: impl Into<String>,
+        uuid: impl AsRef<str>,
     ) -> ToshoResult<ChapterListResponse> {
         self.request(
             reqwest::Method::GET,
             &format!(
                 "/mangas/{}/chapters/v4?order=asc&count=9999&offset=0",
-                uuid.into()
+                uuid.as_ref()
             ),
             None,
         )
@@ -276,11 +276,11 @@ impl RBClient {
     /// * `uuid` - The UUID of the chapter.
     pub async fn get_chapter(
         &mut self,
-        uuid: impl Into<String>,
+        uuid: impl AsRef<str>,
     ) -> ToshoResult<ChapterDetailsResponse> {
         self.request(
             reqwest::Method::GET,
-            &format!("/chapters/{}/v2", uuid.into()),
+            &format!("/chapters/{}/v2", uuid.as_ref()),
             None,
         )
         .await
@@ -292,11 +292,11 @@ impl RBClient {
     /// * `uuid` - The UUID of the chapter.
     pub async fn get_chapter_viewer(
         &mut self,
-        uuid: impl Into<String>,
+        uuid: impl AsRef<str>,
     ) -> ToshoResult<ChapterPageDetailsResponse> {
         self.request(
             reqwest::Method::GET,
-            &format!("/chapters/{}/pages/v1", uuid.into()),
+            &format!("/chapters/{}/pages/v1", uuid.as_ref()),
             None,
         )
         .await
@@ -311,19 +311,21 @@ impl RBClient {
     /// * `sort` - The sort option of the search result, default to [`SortOption::Alphabetical`]
     pub async fn search(
         &mut self,
-        query: impl Into<String>,
+        query: impl AsRef<str>,
         offset: Option<u32>,
         count: Option<u32>,
         sort: Option<SortOption>,
     ) -> ToshoResult<MangaListResponse> {
-        let query: String = query.into();
         let offset = offset.unwrap_or(0);
         let count = count.unwrap_or(999);
         let sort = sort.unwrap_or(SortOption::Alphabetical);
 
         let query_param = format!(
             "sort={}&offset={}&count={}&tags=&search_string={}&publisher_slug=",
-            sort, offset, count, query
+            sort,
+            offset,
+            count,
+            query.as_ref()
         );
 
         self.request(
@@ -343,10 +345,10 @@ impl RBClient {
     ///
     /// # Arguments
     /// * `slug` - The slug of the publisher.
-    pub async fn get_publisher(&mut self, slug: impl Into<String>) -> ToshoResult<Publisher> {
+    pub async fn get_publisher(&mut self, slug: impl AsRef<str>) -> ToshoResult<Publisher> {
         self.request(
             reqwest::Method::GET,
-            &format!("/publisher/slug/{}/v0", slug.into()),
+            &format!("/publisher/slug/{}/v0", slug.as_ref()),
             None,
         )
         .await
@@ -358,8 +360,8 @@ impl RBClient {
     ///
     /// # Arguments
     /// * `url` - The URL to modify.
-    pub fn modify_url_for_highres(url: impl Into<String>) -> ToshoResult<String> {
-        let url: String = url.into();
+    pub fn modify_url_for_highres(url: impl AsRef<str>) -> ToshoResult<String> {
+        let url = url.as_ref();
         let mut parsed_url = url
             .parse::<reqwest::Url>()
             .map_err(|e| make_error!("Failed to parse URL: {}, error: {}", url, e))?;
@@ -401,12 +403,12 @@ impl RBClient {
     /// * `writer` - The writer to write the image to.
     pub async fn stream_download(
         &self,
-        url: impl Into<String>,
+        url: impl AsRef<str>,
         mut writer: impl io::AsyncWrite + Unpin,
     ) -> ToshoResult<()> {
         let res = self
             .inner
-            .get(url.into())
+            .get(url.as_ref())
             .query(&[("drm", "1")])
             .headers({
                 let mut headers = reqwest::header::HeaderMap::new();
@@ -453,7 +455,7 @@ impl RBClient {
     /// Try checking if the "hidden" high resolution image is available.
     ///
     /// Give the URL of any image that is requested from the API.
-    pub async fn test_high_res(&self, url: impl Into<String>) -> ToshoResult<bool> {
+    pub async fn test_high_res(&self, url: impl AsRef<str>) -> ToshoResult<bool> {
         // Do head request to check if the high res image is available
         let url_mod = Self::modify_url_for_highres(url)?;
 
@@ -498,8 +500,8 @@ impl RBClient {
     /// * `password` - The password to authenticate with.
     /// * `platform` - The platform type.
     pub async fn login(
-        email: impl Into<String>,
-        password: impl Into<String>,
+        email: impl AsRef<str>,
+        password: impl AsRef<str>,
         platform: RBPlatform,
     ) -> ToshoResult<RBLoginResponse> {
         let constants = crate::constants::get_constants(platform as u8);
@@ -516,8 +518,8 @@ impl RBClient {
             _ => None,
         };
 
-        let email: String = email.into();
-        let password: String = password.into();
+        let email = email.as_ref();
+        let password = password.as_ref();
 
         let mut json_data = json!({
             "email": email,

@@ -395,7 +395,7 @@ impl AMClient {
     /// * `writer` - The writer to write the image to.
     pub async fn stream_download(
         &self,
-        url: impl Into<String>,
+        url: impl AsRef<str>,
         mut writer: impl tokio::io::AsyncWrite + Unpin,
     ) -> ToshoResult<()> {
         let mut headers = make_header(&self.config, self.constants)?;
@@ -407,9 +407,8 @@ impl AMClient {
             "User-Agent",
             reqwest::header::HeaderValue::from_static(&self.constants.image_ua),
         );
-        let url: String = url.into();
 
-        let res = self.inner.get(url).headers(headers).send().await?;
+        let res = self.inner.get(url.as_ref()).headers(headers).send().await?;
 
         // bail if not success
         if !res.status().is_success() {

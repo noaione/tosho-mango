@@ -374,13 +374,13 @@ impl SJClient {
     /// # Parameters
     /// * `url` - The URL to download the image from.
     /// * `writer` - The writer to write the image to.
-    pub async fn stream_download(
+    pub async fn stream_download<T: AsRef<str>>(
         &self,
-        url: impl Into<String>,
+        url: T,
         mut writer: impl io::AsyncWrite + Unpin,
     ) -> ToshoResult<()> {
-        let url: String = url.into();
-        let url_parse = reqwest::Url::parse(&url)
+        let url = url.as_ref();
+        let url_parse = reqwest::Url::parse(url)
             .map_err(|e| make_error!("Failed to parse URL: {} ({})", url, e))?;
         let host = url_parse
             .host_str()
@@ -440,9 +440,9 @@ impl SJClient {
     /// * `email` - The email of the user.
     /// * `password` - The password of the user.
     /// * `mode` - The mode to use for the login.
-    pub async fn login(
-        email: impl Into<String>,
-        password: impl Into<String>,
+    pub async fn login<T: Into<String>>(
+        email: T,
+        password: T,
         mode: SJMode,
         platform: SJPlatform,
     ) -> ToshoResult<(AccountLoginResponse, String)> {

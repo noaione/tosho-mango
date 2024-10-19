@@ -481,9 +481,9 @@ impl MUClient {
     /// Sometimes the API would return a URL with cloudfront host,
     /// which can't be accessed directly but need to use the "mirror" host
     /// provided by the client.
-    fn replace_image_host(&self, url: impl Into<String>) -> ToshoResult<::reqwest::Url> {
-        let url: String = url.into();
-        match ::reqwest::Url::parse(&url) {
+    fn replace_image_host(&self, url: impl AsRef<str>) -> ToshoResult<::reqwest::Url> {
+        let url = url.as_ref();
+        match ::reqwest::Url::parse(url) {
             Ok(mut parsed_url) => {
                 let valid_host = ::reqwest::Url::parse(
                     format!("https://{}", &*IMAGE_HOST).as_str(),
@@ -523,7 +523,7 @@ impl MUClient {
     /// * `writer` - The writer to write the image to.
     pub async fn stream_download(
         &self,
-        url: impl Into<String>,
+        url: impl AsRef<str>,
         mut writer: impl io::AsyncWrite + Unpin,
     ) -> ToshoResult<()> {
         let actual_url = self.replace_image_host(url)?;

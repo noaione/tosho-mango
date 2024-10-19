@@ -21,7 +21,7 @@ This should give more consistent error handling across all sources.
 - `MU`, `KM`, and `AM`: Cleanup `precalculate` command output a bit more
 - All source: flush bytes stream on each loop iteration
 - `RB`: Possibly faster image decryption
-- All sources: Replace `String` or `&str` input on client with `impl Into<String>` instead
+- All sources: Replace `String` or `&str` input on client with `impl Into<String>` or `impl AsRef<str>` instead
 - All sources: Add `Copy` to some `Copy`-able struct
 - Adjust exit code handling on CLI
 - Simplify progress bar handling
