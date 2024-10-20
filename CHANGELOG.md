@@ -21,6 +21,7 @@ This should give more consistent error handling across all sources.
 - `MU`, `KM`, and `AM`: Cleanup `precalculate` command output a bit more
 - `RB`: Possibly faster image decryption
 - `MP`: Fix issue when decoding title tags
+- `MP`: Unable to download anything because of image host changes
 - All source: flush bytes stream on each loop iteration
 - All sources: Replace `String` or `&str` input on client with `impl Into<String>` or `impl AsRef<str>` instead
 - All sources: Add `Copy` to some `Copy`-able struct

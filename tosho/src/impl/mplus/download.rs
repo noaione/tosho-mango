@@ -210,7 +210,7 @@ async fn mplus_actual_downloader(
     if console.is_debug() {
         console.log(cformat!(
             "   Downloading image <s>{}</> to <s>{}</>...",
-            node.image.file_name(),
+            node.image.url(),
             image_fn
         ));
     }

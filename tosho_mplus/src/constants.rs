@@ -51,7 +51,7 @@ pub static BASE_API: LazyLock<String> = LazyLock::new(|| {
 pub static BASE_IMG: LazyLock<String> = LazyLock::new(|| {
     String::from_utf8(
         general_purpose::STANDARD
-            .decode("aHR0cHM6Ly9tYW5nYXBsdXMuc2h1ZWlzaGEuY28uanA=")
+            .decode("aHR0cHM6Ly9qdW1wZy1hc3NldHMudG9reW8tY2RuLmNvbQ==")
             .expect("Failed to decode base64 BASE_IMG"),
     )
     .expect("Invalid base64 string (BASE_IMG)")
@@ -79,7 +79,7 @@ pub static API_HOST: LazyLock<String> = LazyLock::new(|| {
 pub static IMAGE_HOST: LazyLock<String> = LazyLock::new(|| {
     String::from_utf8(
         general_purpose::STANDARD
-            .decode("bWFuZ2FwbHVzLnNodWVpc2hhLmNvLmpw")
+            .decode("anVtcGctYXNzZXRzLnRva3lvLWNkbi5jb20=")
             .expect("Failed to decode base64 IMAGE_HOST"),
     )
     .expect("Invalid base64 string (IMAGE_HOST)")
