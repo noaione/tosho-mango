@@ -251,7 +251,7 @@ pub fn autogetter_derive(input: TokenStream) -> TokenStream {
 /// ```rust
 /// # use tosho_macros::AutoDocFields;
 /// #
-/// [derive(AutoDocFields)]
+/// #[derive(AutoDocFields)]
 /// enum TestEnum {
 ///     /// Create a new item
 ///     Create,
