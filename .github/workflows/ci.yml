@@ -107,11 +107,11 @@ jobs:
       - name: Build (Nightly)
         if: env.BUILD_PROFILE == 'debug'
         run: |
-          cargo build --verbose --all --target ${{ matrix.os[1] }} --release
+          cargo build --verbose --all --target ${{ matrix.os[1] }} --profile ci
         shell: bash
 
       - name: Permissions (Nightly)
-        if: env.BUILD_PROFILE == 'debug'
+        if: env.BUILD_PROFILE == 'debug' && matrix.os[0] != 'windows-latest'
         run: |
           chmod +x target/${{ matrix.os[1] }}/ci/tosho
         shell: bash
