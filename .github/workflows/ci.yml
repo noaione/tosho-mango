@@ -27,6 +27,7 @@ on:
         description: 'Create the release build without publishing'
         required: true
         type: boolean
+        default: false
 
 env:
   CARGO_TERM_COLOR: always
