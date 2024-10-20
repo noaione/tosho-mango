@@ -105,19 +105,19 @@ jobs:
           prefix-key: "rust-tosho-build-${{ env.BUILD_PROFILE }}-${{ runner.os }}-${{ matrix.os[1] }}-${{ env.RUST_VERSION }}"
 
       - name: Build (Nightly)
-        if: startsWith(github.ref, 'refs/tags/v') != true
+        if: env.BUILD_PROFILE == 'debug'
         run: |
-          cargo build --verbose --all --target ${{ matrix.os[1] }} --profile ci
+          cargo build --verbose --all --target ${{ matrix.os[1] }} --release
         shell: bash
 
       - name: Permissions (Nightly)
-        if: startsWith(github.ref, 'refs/tags/v') != true && matrix.os[0] != 'windows-latest'
+        if: env.BUILD_PROFILE == 'debug'
         run: |
           chmod +x target/${{ matrix.os[1] }}/ci/tosho
         shell: bash
 
       - name: Upload artifact
-        if: startsWith(github.ref, 'refs/tags/v') != true
+        if: env.BUILD_PROFILE == 'debug'
         uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a
         with:
           name: tosho-${{ matrix.os[1] }}
@@ -126,7 +126,7 @@ jobs:
             target/${{ matrix.os[1] }}/ci/tosho
 
       - name: Build (Release)
-        if: startsWith(github.ref, 'refs/tags/v') || ${{ inputs.release_build }} == true
+        if: env.BUILD_PROFILE == 'release'
         run: |
           cargo build --verbose --all --target ${{ matrix.os[1] }} --profile ci
         shell: bash
@@ -134,7 +134,7 @@ jobs:
           RELEASE: true
 
       - name: Prepare release
-        if: matrix.os[0] != 'windows-latest' && startsWith(github.ref, 'refs/tags/v')
+        if: env.BUILD_PROFILE == 'release'
         shell: bash
         run: |
           cd target/${{ matrix.os[1] }}/ci
@@ -144,16 +144,16 @@ jobs:
           cd ../../..
 
       - name: Prepare release (Win32)
-        if: matrix.os[0] == 'windows-latest' && startsWith(github.ref, 'refs/tags/v')
+        if: env.BUILD_PROFILE == 'release'
         run: |
           cd target/${{ matrix.os[1] }}/ci
           Compress-Archive -Path tosho.exe -DestinationPath tosho-${{ matrix.os[1] }}.zip
           mv tosho-${{ matrix.os[1] }}.zip ../../..
           cd ../../..
 
-      - name: Upload artifact
+      - name: Upload artifact (Release)
         uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a
-        if: startsWith(github.ref, 'refs/tags/v') || ${{ inputs.release_build }} == true
+        if: env.BUILD_PROFILE == 'release'
         with:
           name: tosho-packages-${{ matrix.os[1] }}
           path: |
