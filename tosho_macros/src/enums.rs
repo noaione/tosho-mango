@@ -1,5 +1,6 @@
 //! A implementation collection of Enum related derive and expansion
 
+use crate::common::get_field_comment;
 use proc_macro::TokenStream;
 
 pub(crate) fn impl_enumname_derive(ast: &syn::DeriveInput) -> TokenStream {
@@ -133,6 +134,48 @@ pub(crate) fn impl_enum_error(ast: &EnumErrorMacroInput) -> TokenStream {
         impl std::fmt::Display for #name {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                 write!(f, #error_str, self.original)
+            }
+        }
+    };
+
+    tokens.into()
+}
+
+pub(crate) fn impl_auto_doc_fiels(ast: &syn::DeriveInput) -> TokenStream {
+    let name = &ast.ident;
+
+    let variants = match &ast.data {
+        syn::Data::Enum(v) => &v.variants,
+        _ => panic!("`AutoDocFields` can only be derived for enums"),
+    };
+
+    // Get each variants doc data
+    let mut variant_docs = vec![];
+    for variant in variants {
+        let variant_name = &variant.ident;
+        let comments = get_field_comment(&variant.attrs);
+
+        // Create match arms
+        let quote_arms = if let Some(comments) = comments {
+            quote::quote! {
+                #name::#variant_name => Some(#comments),
+            }
+        } else {
+            quote::quote! {
+                #name::#variant_name => None,
+            }
+        };
+
+        variant_docs.push(quote_arms);
+    }
+
+    let tokens = quote::quote! {
+        impl #name {
+            /// Get the documentation or docstring of the current enums.
+            pub fn get_doc(&self) -> Option<&'static str> {
+                match self {
+                    #(#variant_docs)*
+                }
             }
         }
     };

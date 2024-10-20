@@ -13,6 +13,8 @@ This should give more consistent error handling across all sources.
   - Example: `data.name` now become `data.name()`
 - `KM`, `RB`, `AM`, and `SJ/V`: Privatize config fields
   - Please use the getter function and the *new* `new` function to create a new config.
+- `KM`: `MagazineCategory::${Enum}.get_doc()` now return `Option<&'static str>` instead of `Result<&'static str, Error>`
+  - It also remove `documented` related function since we now use simpler derive macro instead.
 
 ### Changes
 - `MU`: Proto changes for subscription in manga detail
@@ -34,6 +36,7 @@ This should give more consistent error handling across all sources.
 - Remove `time` as dependency for `tosho-amap`
 - Replace `futures` with `futures-util` in `tosho`
 - Remove `rayon` feature from `image` since it's unused
+- Remove `documented`
 
 ### Docs
 - Use `README.md` on each source crate as the docs instead of duplicating the content in `lib.rs`

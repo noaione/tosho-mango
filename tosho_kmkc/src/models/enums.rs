@@ -4,10 +4,9 @@
 //!
 //! Especially for [`MagazineCategory`] enum as it needs to be manually documented/updated.
 
-use documented::DocumentedFields;
 use tosho_macros::{
-    DeserializeEnum32, DeserializeEnum32Fallback, EnumCount, EnumName, EnumU32Fallback,
-    SerializeEnum32,
+    AutoDocFields, DeserializeEnum32, DeserializeEnum32Fallback, EnumCount, EnumName,
+    EnumU32Fallback, SerializeEnum32,
 };
 
 /// A boolean type used by the API represented as an integer.
@@ -126,7 +125,7 @@ pub enum PublishCategory {
     EnumCount,
     EnumU32Fallback,
     Default,
-    DocumentedFields,
+    AutoDocFields,
 )]
 pub enum MagazineCategory {
     /// Unknown magazine.
@@ -288,11 +287,6 @@ impl MagazineCategory {
         }
         merge_back
     }
-
-    /// Get the documentation or docstring of the current magazine category.
-    pub fn get_doc(&self) -> Result<&'static str, documented::Error> {
-        Self::get_field_docs(self.to_name())
-    }
 }
 
 /// The favorite status of the titles.
@@ -400,7 +394,7 @@ mod tests {
     #[test]
     fn test_enum_doc_for_magazine() {
         let magazine = MagazineCategory::eYoungMagazine;
-        assert_eq!(magazine.get_doc(), Ok("e-Young Magazine, a digital-only of Young magazine which focused on user-submitted serialized content."));
+        assert_eq!(magazine.get_doc(), Some("e-Young Magazine, a digital-only of Young magazine which focused on user-submitted serialized content."));
 
         let ichijinsha_doc = "Ichijinsha, a subsidiary of Kodansha.
 
@@ -413,7 +407,7 @@ Owns the following:
 - IDOLM@STER Million Live Magazine Plus+";
 
         let ichijinsha = MagazineCategory::Ichijinsha;
-        assert_eq!(ichijinsha.get_doc(), Ok(ichijinsha_doc));
+        assert_eq!(ichijinsha.get_doc(), Some(ichijinsha_doc));
     }
 
     #[test]

@@ -3,6 +3,7 @@
 
 use proc_macro::TokenStream;
 
+mod common;
 mod deser;
 mod enums;
 mod structs;
@@ -241,4 +242,32 @@ pub fn autogetter_derive(input: TokenStream) -> TokenStream {
 
     // Generate the implementation of the trait
     structs::impl_autogetter(&input)
+}
+
+/// Create a function that is derived from the enum and returns the
+/// documentation of the variant as a static string that can be used.
+///
+/// # Example
+/// ```rust
+/// # use tosho_macros::AutoDocFields;
+/// #
+/// [derive(AutoDocFields)]
+/// enum TestEnum {
+///     /// Create a new item
+///     Create,
+///     /// Read an item
+///     Read,
+///     NoComment,
+/// }
+///
+/// # fn main() {
+/// assert_eq!(TestEnum::Create.get_doc(), Some("Create a new item"));
+/// assert_eq!(TestEnum::Read.get_doc(), Some("Read an item"));
+/// assert_eq!(TestEnum::NoComment.get_doc(), None);
+/// # }
+/// ```
+#[proc_macro_derive(AutoDocFields)]
+pub fn autodocfields_derive(input: TokenStream) -> TokenStream {
+    let ast = syn::parse(input).unwrap();
+    enums::impl_auto_doc_fiels(&ast)
 }

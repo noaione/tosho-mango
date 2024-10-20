@@ -6,6 +6,8 @@ use proc_macro::TokenStream;
 use quote::ToTokens;
 use syn::{punctuated::Punctuated, Attribute, Expr, Lit, Meta, Token};
 
+use crate::common::get_field_comment;
+
 static KNOWN_COPYABLE_FIELD: &[&str; 16] = &[
     "u8", "u16", "u32", "u64", "u128", "i8", "i16", "i32", "i64", "i128", "f32", "f64", "f128",
     "bool", "char", "usize",
@@ -365,39 +367,15 @@ fn is_string_field(ty: &syn::Type) -> bool {
 /// If `option_mode` use the "if it exists" comment
 fn make_field_comment(field: &syn::Field, option_mode: bool) -> String {
     // Check if field has doc-comment
-    let field_comment: Vec<String> = field
-        .attrs
-        .iter()
-        .filter_map(|attr| {
-            if attr.path().is_ident("doc") {
-                if let syn::Meta::NameValue(name_val) = &attr.meta {
-                    if let syn::Expr::Lit(doc_lit) = &name_val.value {
-                        if let syn::Lit::Str(doc_str) = &doc_lit.lit {
-                            let doc_val = doc_str.value();
-
-                            let doc_val_fix = if doc_val.trim() == "" {
-                                "\n\n".to_string()
-                            } else {
-                                doc_val
-                            };
-
-                            return Some(doc_val_fix);
-                        }
-                    }
-                }
-            }
-            None
-        })
-        .collect();
+    let field_comment = get_field_comment(&field.attrs);
 
     let ident = field.ident.as_ref().unwrap();
-    let joined_cmt = field_comment.join("").trim().to_string();
 
-    if joined_cmt.is_empty() {
+    if let Some(cmt) = field_comment {
+        cmt
+    } else {
         let if_it_exists = if option_mode { " if it exists" } else { "" };
 
         format!("Get the value of `{}`{}", ident, if_it_exists)
-    } else {
-        joined_cmt
     }
 }
