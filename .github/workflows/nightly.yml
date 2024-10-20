@@ -28,11 +28,6 @@ jobs:
       - name: Rustup nightly
         run: |
           rustup update nightly
-
-      - name: Setup rust cache
-        uses: Swatinem/rust-cache@9bdad043e88c75890e36ad3bbc8d27f0090dd609
-        with:
-          prefix-key: "${{ runner.os }}-nightly-check-tosho-rust"
       
       - name: Test and Build
         run: |

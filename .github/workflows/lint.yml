@@ -43,7 +43,7 @@ jobs:
       - name: Setup rust cache
         uses: Swatinem/rust-cache@9bdad043e88c75890e36ad3bbc8d27f0090dd609
         with:
-          prefix-key: "${{ runner.os }}-tosho-rust-lint"
+          prefix-key: "rust-tosho-lint-${{ runner.os }}"
 
       - name: Lint
         run: cargo clippy --verbose --all -- -D warnings
