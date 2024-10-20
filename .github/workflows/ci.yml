@@ -113,7 +113,7 @@ jobs:
             target/${{ matrix.os[1] }}/ci/tosho
 
       - name: Build (Release)
-        if: startsWith(github.ref, 'refs/tags/v') || ${{ inputs.release_build }}
+        if: startsWith(github.ref, 'refs/tags/v') || ${{ inputs.release_build }} == true
         run: |
           cargo build --verbose --all --target ${{ matrix.os[1] }} --profile ci
         shell: bash
@@ -140,7 +140,7 @@ jobs:
 
       - name: Upload artifact
         uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a
-        if: startsWith(github.ref, 'refs/tags/v') || ${{ inputs.release_build }}
+        if: startsWith(github.ref, 'refs/tags/v') || ${{ inputs.release_build }} == true
         with:
           name: tosho-packages-${{ matrix.os[1] }}
           path: |
