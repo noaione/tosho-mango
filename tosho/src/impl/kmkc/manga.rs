@@ -310,7 +310,7 @@ pub(crate) async fn kmkc_magazines_list(
                     console.info(cformat!("{} <s>{}</>", mag_text, mag.pretty_name()));
 
                     let doc_text = mag.get_doc();
-                    if let Ok(doc_text) = doc_text {
+                    if let Some(doc_text) = doc_text {
                         let first_line = doc_text.split('\n').next().unwrap();
                         console.info(cformat!("  <s>{}</s>", first_line));
                     }
