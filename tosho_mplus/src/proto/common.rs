@@ -160,9 +160,9 @@ pub struct Banner {
 /// A tag information
 #[derive(Clone, AutoGetter, PartialEq, ::prost::Message)]
 pub struct Tag {
-    /// Tag ID
-    #[prost(uint64, tag = "1")]
-    id: u64,
+    /// Tag name
+    #[prost(string, tag = "1")]
+    name: ::prost::alloc::string::String,
     /// Tag slug
     #[prost(string, tag = "2")]
     slug: ::prost::alloc::string::String,
