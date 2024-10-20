@@ -86,18 +86,18 @@ jobs:
         run: |
           rustup update stable
           rustup target add ${{ matrix.os[1] }}
-          echo "RUST_VERSION=$(rustc --version | cut -d ' ' -f 2)" >> "$GITHUB_ENV"
 
       # In here, we set up the rust version used, the build mode (release or nightly/debug)
       # We can check for relase mode by checking refs/tags/v* or input.release_build
       - name: Set up cache tag
         run: |
           echo "RUST_VERSION=$(rustc --version | cut -d ' ' -f 2)" >> "$GITHUB_ENV"
-          if [ ${{ startsWith(github.ref, 'refs/tags/v') }} = true ] || [ ${{ inputs.release_build }} = true ]; then
+          if [ ${{ startsWith(github.ref, 'refs/tags/v') }} = true ] || [ ${{ inputs.release_build == true }} = true ]; then
             echo "BUILD_PROFILE=release" >> "$GITHUB_ENV"
           else
             echo "BUILD_PROFILE=debug" >> "$GITHUB_ENV"
           fi
+        shell: bash
 
       - name: Setup rust cache
         uses: Swatinem/rust-cache@9bdad043e88c75890e36ad3bbc8d27f0090dd609
