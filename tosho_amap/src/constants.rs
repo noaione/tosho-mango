@@ -46,20 +46,16 @@ pub static APP_NAME: LazyLock<String> = LazyLock::new(|| {
 
 /// The constants used for Android devices.
 pub static ANDROID_CONSTANTS: LazyLock<Constants> = LazyLock::new(|| {
-    let app_version = "3.0.6";
+    let app_version = "3.0.9";
 
-    let ua_base = String::from_utf8(
-        general_purpose::STANDARD
-            .decode("RGFsdmlrLzIuMS4wIChMaW51eDsgVTsgQW5kcm9pZCAxMTsgU00tUzkwOEUgQnVpbGQvVFAxQS4yMjA2MjQuMDE0KQ==")
-            .expect("Failed to decode base64 ANDROID_UA_BASE"),
-    )
-    .expect("Invalid base64 string");
-
-    let final_ua: String = format!("{} {}/{}", ua_base, *APP_NAME, app_version);
+    let main_ua: String = format!(
+        "Dalvik/2.1.0 (Linux; U; Android 11; SM-S908E Build/TP1A.220624.014) {}/{}",
+        *APP_NAME, app_version
+    );
 
     Constants {
-        ua: final_ua.clone(),
-        image_ua: final_ua,
+        ua: main_ua.clone(),
+        image_ua: main_ua,
         platform: "android",
         version: app_version,
     }
