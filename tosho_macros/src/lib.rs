@@ -258,7 +258,7 @@ pub fn enum_error(item: TokenStream) -> TokenStream {
 /// # fn main() {
 /// let data = Data { id: 1, username: "test".to_string() };
 /// let owned_username = data.username(); // Data is now "moved" or "owned"
-
+///
 /// assert_eq!(owned_username, "test");
 /// # }
 /// ```

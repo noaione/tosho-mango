@@ -159,7 +159,7 @@ impl Terminal {
         }
     }
 
-    /// Stop the current spinner
+    // /// Stop the current spinner
     // pub fn stop_status(&mut self) {
     //     match self.current_spinner.as_mut() {
     //         Some(spinner) => {

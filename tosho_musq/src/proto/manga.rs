@@ -64,8 +64,6 @@ pub struct ChaptersRange {
     end: u64,
 }
 
-/// A simplified manga information
-
 /// Manga detail information responses.
 ///
 /// This is the ``v1`` version of the manga detail response.
