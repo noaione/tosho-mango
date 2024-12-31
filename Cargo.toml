@@ -23,28 +23,28 @@ rust-version = "1.80.0"
 
 [workspace.dependencies]
 # Tokio related
-tokio = { version = "1.40.0", features = ["full"] }
+tokio = { version = "1.42.0", features = ["full"] }
 futures-util = "0.3.31"
 
 # JSON/Protobuf related
-serde = { version = "1.0.210", features = ["derive"] }
-serde_json = "1.0.132"
-prost = "0.13.3"
+serde = { version = "1.0.217", features = ["derive"] }
+serde_json = "1.0.134"
+prost = "0.13.4"
 
 # Utilities
 anyhow = "1"
 base64 = "0.22.1"
 sha2 = "0.10.8"
-chrono = "0.4.38"
+chrono = "0.4.39"
 rand = "0.8.5"
 
 # HTTP related
-reqwest = { version = "0.12.8", features = ["rustls-tls", "socks", "stream"] }
+reqwest = { version = "0.12.11", features = ["rustls-tls", "socks", "stream"] }
 reqwest_cookie_store = "0.8.0"
 
 # Image
-image = { version = "0.25.4", default-features = false, features = ["jpeg", "png"] }
-kamadak-exif = "0.5.5"
+image = { version = "0.25.5", default-features = false, features = ["jpeg", "png"] }
+kamadak-exif = "0.6.1"
 
 # CI build profile, very optimized
 [profile.ci]

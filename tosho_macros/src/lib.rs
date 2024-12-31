@@ -210,6 +210,16 @@ pub fn enum_error(item: TokenStream) -> TokenStream {
 ///
 /// Automatically expand each field into their own getter function for all private field.
 ///
+/// # Attributes
+/// The following is an attribute that can be used on each field of the struct.
+/// - `#[copyable]` will make the field return a copy instead of a reference (only for `Copy` types or primitives).
+/// - `#[skip_field]` will make the field not have a getter or be skipped.
+/// - `#[deref_clone]` will not return the reference and will return an "Owned" type (no actual cloning happens).
+///
+/// And, an attribute can be used on the struct as well.
+/// - `#[auto_getters(unref = true)]` similar to `#[copyable]` but for all the fields.
+/// - `#[auto_getters(cloned = true)]` similar to `#[deref_clone]` but for all the fields.
+///
 /// # Examples
 /// ```rust
 /// # use tosho_macros::AutoGetter;
@@ -230,6 +240,26 @@ pub fn enum_error(item: TokenStream) -> TokenStream {
 /// assert_eq!(data.username(), "test");
 /// // "pos" field doesn't have getter
 /// assert_eq!(data.pos, 0);
+/// # }
+/// ```
+///
+/// Another one with `cloned` or `deref_clone`
+/// ```rust,no_run
+/// # use tosho_macros::AutoGetter;
+/// #
+/// #[derive(AutoGetter)]
+/// pub struct Data {
+///     #[copyable]
+///     id: i64,
+///     #[deref_clone]
+///     username: String,
+/// }
+///
+/// # fn main() {
+/// let data = Data { id: 1, username: "test".to_string() };
+/// let owned_username = data.username(); // Data is now "moved" or "owned"
+
+/// assert_eq!(owned_username, "test");
 /// # }
 /// ```
 #[proc_macro_derive(
