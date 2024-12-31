@@ -13,6 +13,8 @@ pub enum DeviceType {
     Android = 1,
     /// iOS device/Apple.
     Apple = 2,
+    /// Web browser.
+    Web = 3,
 }
 
 /// Represents the main config file for the MU! by SQ app.
@@ -60,11 +62,13 @@ mod tests {
     fn test_numbering_device_type() {
         assert_eq!(DeviceType::Android as i32, 1);
         assert_eq!(DeviceType::Apple as i32, 2);
+        assert_eq!(DeviceType::Web as i32, 3);
     }
 
     #[test]
     fn test_numbering_u8_device_type() {
         assert_eq!(DeviceType::Android as u8, 1);
         assert_eq!(DeviceType::Apple as u8, 2);
+        assert_eq!(DeviceType::Web as u8, 3);
     }
 }

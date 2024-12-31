@@ -28,23 +28,40 @@ The following sources do not have any easy authentication method.
 
 The command to authenticate is `tosho mu auth`.
 
-It's recommended that you set up network intercepting first; please read [INTERCEPTING](https://github.com/noaione/tosho-mango/blob/master/INTERCEPTING.md).
+You can login on the website version of the app then checking via Network Inspector for API call which has `secret` query parameter.<br />
+This secret token can be reused for all platform.
 
 Using the CLI, you can do this:
 
 ```bash
-$ tosho mu auth secret -t android
+$ tosho mu auth [secret] -t android
 ```
 
 Or, with Apple constants:
 
 ```bash
-$ tosho mu auth secret -t ios
+$ tosho mu auth [secret] -t ios
+```
+
+Or, with Web constants:
+
+```bash
+$ tosho mu auth [secret] -t web
 ```
 
 With crates, you can follow the above usages.
 
+### Web
+
+1. Login in the browser
+2. Open Network Inspector
+3. Visit the "My Page" page
+4. Check API call to `/api/my_page` which has the `secret` param, copy it.
+5. Authenticate with `tosho`.
+
 ### Android
+
+It's recommended that you set up network intercepting first; please read [INTERCEPTING](https://github.com/noaione/tosho-mango/blob/master/INTERCEPTING.md).
 
 1. Open the source app.
 2. Click on the home page or my page.
@@ -52,6 +69,8 @@ With crates, you can follow the above usages.
 4. Save that secret elsewhere and authenticate with `tosho`.
 
 ### Apple
+
+It's recommended that you set up network intercepting first; please read [INTERCEPTING](https://github.com/noaione/tosho-mango/blob/master/INTERCEPTING.md).
 
 1. Open the Stream app and click `Sniff Now`.
 2. Go to the source app and open the `Home` or `My Page`.

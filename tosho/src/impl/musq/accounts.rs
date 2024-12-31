@@ -15,6 +15,7 @@ use super::config::{Config, DeviceType};
 pub(crate) enum DeviceKind {
     Android,
     Apple,
+    Web,
 }
 
 impl ValueEnum for DeviceKind {
@@ -22,11 +23,12 @@ impl ValueEnum for DeviceKind {
         match self {
             DeviceKind::Android => Some(clap::builder::PossibleValue::new("android")),
             DeviceKind::Apple => Some(clap::builder::PossibleValue::new("ios")),
+            DeviceKind::Web => Some(clap::builder::PossibleValue::new("web")),
         }
     }
 
     fn value_variants<'a>() -> &'a [Self] {
-        &[DeviceKind::Android, DeviceKind::Apple]
+        &[DeviceKind::Android, DeviceKind::Apple, DeviceKind::Web]
     }
 
     fn from_str(s: &str, ignore_case: bool) -> Result<Self, String> {
@@ -38,6 +40,7 @@ impl ValueEnum for DeviceKind {
         match s.as_str() {
             "android" => Ok(DeviceKind::Android),
             "ios" => Ok(DeviceKind::Apple),
+            "web" => Ok(DeviceKind::Web),
             _ => Err(format!("Invalid device kind: {}", s)),
         }
     }
@@ -51,6 +54,7 @@ pub(crate) async fn musq_auth_session(
     let r#type = match device_kind {
         DeviceKind::Android => DeviceType::Android,
         DeviceKind::Apple => DeviceType::Apple,
+        DeviceKind::Web => DeviceType::Web,
     };
 
     let all_configs = get_all_config(&crate::r#impl::Implementations::Musq, None);
@@ -154,7 +158,10 @@ pub async fn musq_account_info(
                 acc_info.id
             ));
             console.info(cformat!("  <bold>Session:</> {}", acc_info.session));
-            console.info(cformat!("  <bold>Type:</> {}", acc_info.r#type().to_name()));
+            console.info(cformat!(
+                "  <bold>Platform:</> {}",
+                acc_info.r#type().to_name()
+            ));
             console.info(cformat!("  <bold>Registered?</> {}", account.registered()));
             if !account.devices().is_empty() {
                 console.info(cformat!("  <bold>Devices:</>"));

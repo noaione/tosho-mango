@@ -19,6 +19,7 @@ This should give more consistent error handling across all sources.
 ### Changes
 - `MU`: Proto changes for subscription in manga detail
 - `MU`: Bump constants version
+- `MU`: Add web version constants, improve the auth flow a bit more.
 - `KM`: Fix precalculation of point usages
 - `MU`, `KM`, and `AM`: Cleanup `precalculate` command output a bit more
 - `RB`: Possibly faster image decryption

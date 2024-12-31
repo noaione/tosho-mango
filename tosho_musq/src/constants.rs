@@ -73,6 +73,15 @@ pub static APPLE_CONSTANTS: LazyLock<Constants> = LazyLock::new(|| {
         app_ver: ios_app_ver.to_string(),
     }
 });
+/// The constants used for Web devices.
+pub static WEB_CONSTANTS: LazyLock<Constants> = LazyLock::new(|| Constants {
+    image_ua: "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:133.0) Gecko/20100101 Firefox/133.0"
+        .to_string(),
+    api_ua: "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:133.0) Gecko/20100101 Firefox/133.0"
+        .to_string(),
+    os_ver: "0",
+    app_ver: "0".to_string(),
+});
 
 /// The base API used for overall requests.
 pub static BASE_API: LazyLock<String> = LazyLock::new(|| {
@@ -129,6 +138,7 @@ pub static IMAGE_HOST: LazyLock<String> = LazyLock::new(|| {
 /// # Available device types
 /// * `1` - Android
 /// * `2` - Apple/iOS
+/// * `3` - Web
 ///
 /// # Panics
 /// Panics if the device type is invalid.
@@ -139,11 +149,13 @@ pub static IMAGE_HOST: LazyLock<String> = LazyLock::new(|| {
 /// #
 /// let _ = get_constants(1); // Android
 /// let _ = get_constants(2); // Apple
+/// let _ = get_constants(3); // Web
 /// ```
 pub fn get_constants(device_type: u8) -> &'static Constants {
     match device_type {
         1 => &ANDROID_CONSTANTS,
         2 => &APPLE_CONSTANTS,
+        3 => &WEB_CONSTANTS,
         _ => panic!("Invalid device type"),
     }
 }
