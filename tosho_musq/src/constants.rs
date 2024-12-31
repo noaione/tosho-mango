@@ -27,7 +27,7 @@ pub struct Constants {
 
 /// The constants used for Android devices.
 pub static ANDROID_CONSTANTS: LazyLock<Constants> = LazyLock::new(|| {
-    let android_app_ver = "69"; // 2.4.0
+    let android_app_ver = "73"; // 2.7.0
 
     Constants {
         image_ua: "Dalvik/2.1.0 (Linux; U; Android 12; SM-G935F Build/SQ3A.220705.004)".to_string(),
@@ -57,8 +57,8 @@ pub static APPLE_CONSTANTS: LazyLock<Constants> = LazyLock::new(|| {
     )
     .expect("Invalid base64 string (IOS_APP_POST)");
 
-    let ios_app_ver = "2.2.0";
-    let ios_app_build = "202307211728";
+    let ios_app_ver = "2.6.1";
+    let ios_app_build = "202411251121";
 
     Constants {
         image_ua: format!(
