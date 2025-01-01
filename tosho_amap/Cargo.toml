@@ -1,6 +1,6 @@
 [package]
 name = "tosho-amap"
-version = "0.6.1"
+version = "0.6.0"
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
