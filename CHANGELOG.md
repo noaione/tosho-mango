@@ -3,6 +3,10 @@
 Starting from Rust port of the project, all changes will be put into this file.
 
 ## Unreleased
+
+Nothing yet!
+
+## [0.7.0] (2025-01-01)
 ### Breaking Changes
 - Create a new `Error` type for all sources, this replace `anyhow` error type.
 This should give more consistent error handling across all sources.
