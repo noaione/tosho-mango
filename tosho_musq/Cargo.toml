@@ -1,6 +1,6 @@
 [package]
 name = "tosho-musq"
-version = "0.6.0"
+version = "0.6.1"
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
@@ -15,7 +15,9 @@ exclude = [
     "tests/*",
 ]
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
 
 [dependencies]
 tokio.workspace = true
@@ -33,7 +35,7 @@ aes = { workspace = true, optional = true }
 cbc = { workspace = true, optional = true }
 
 tosho-macros = { path = "../tosho_macros", version = "0.4" }
-tosho-common = { path = "../tosho_common", version = "=0.1.0", features = ["protobuf"] }
+tosho-common = { path = "../tosho_common", version = "=0.1.1", features = ["protobuf"] }
 
 [features]
 default = []

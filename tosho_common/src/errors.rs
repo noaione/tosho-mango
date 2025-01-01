@@ -220,14 +220,14 @@ impl std::fmt::Display for ToshoDetailedImageError {
     }
 }
 
-#[cfg(feature = "image")]
+#[cfg(feature = "serde")]
 impl From<ToshoDetailedParseError> for ToshoParseError {
     fn from(value: ToshoDetailedParseError) -> Self {
         ToshoParseError::SerdeDetailedError(value)
     }
 }
 
-#[cfg(feature = "image")]
+#[cfg(feature = "serde")]
 impl From<ToshoDetailedParseError> for ToshoError {
     fn from(value: ToshoDetailedParseError) -> Self {
         ToshoError::ParseError(ToshoParseError::SerdeDetailedError(value))
