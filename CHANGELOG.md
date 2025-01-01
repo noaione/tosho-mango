@@ -3,8 +3,8 @@
 Starting from Rust port of the project, all changes will be put into this file.
 
 ## Unreleased
-
-Nothing yet!
+### Changes
+- `KM`: Revert back constants
 
 ## [0.7.0] (2025-01-01)
 ### Breaking Changes

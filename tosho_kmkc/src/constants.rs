@@ -59,8 +59,8 @@ pub static ANDROID_CONSTANTS: LazyLock<Constants> = LazyLock::new(|| {
         ua: "okhttp/4.9.3".to_string(),
         image_ua: "okhttp/4.9.3".to_string(),
         platform: "2",
-        version: "6.3.5",
-        display_version: Some("2.3.0"),
+        version: "6.1.0",
+        display_version: Some("2.1.5"),
         hash: hash_header,
     }
 });
