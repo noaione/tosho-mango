@@ -206,9 +206,11 @@ pub struct ChapterPage {
     #[prost(uint64, optional, tag = "4")]
     #[skip_field]
     extra_id: ::core::option::Option<u64>,
+    /// The encryption key for the image if encrypted.
     #[prost(string, optional, tag = "5")]
     #[skip_field]
     key: ::core::option::Option<::prost::alloc::string::String>,
+    /// The initialization vector for the image if encrypted.
     #[prost(string, optional, tag = "6")]
     #[skip_field]
     iv: ::core::option::Option<::prost::alloc::string::String>,

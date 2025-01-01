@@ -388,7 +388,7 @@ pub(crate) async fn musq_download(
                         Ok(_) => {
                             if image.is_encrypted() {
                                 // decrypt
-                                match tosho_musq::decrypt_image(&temp_memory, &image) {
+                                match tosho_musq::decrypt_image(&temp_memory, image) {
                                     Ok(decrypted) => {
                                         // write to file
                                         match tokio::fs::write(&img_dl_path, &decrypted).await {

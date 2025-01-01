@@ -22,6 +22,9 @@ async fn main() {
 }
 ```
 
+Available `get_constants` value are:
+- `1`: Android
+
 ## Authentication
 
 The following sources do not have any easy authentication method.

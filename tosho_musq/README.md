@@ -22,14 +22,18 @@ async fn main() {
 }
 ```
 
+Available `get_constants` value are:
+- `1`: Android
+- `2`: iOS
+- `3`: Web
+
 ## Authentication
 
 The following sources do not have any easy authentication method.
 
 The command to authenticate is `tosho mu auth`.
 
-You can login on the website version of the app then checking via Network Inspector for API call which has `secret` query parameter.<br />
-This secret token can be reused for all platform.
+See below on how to obtain the `secret` token. For mobile version, it's recommended that you set up network intercepting first; please read [INTERCEPTING](https://github.com/noaione/tosho-mango/blob/master/INTERCEPTING.md).
 
 Using the CLI, you can do this:
 
@@ -61,16 +65,12 @@ With crates, you can follow the above usages.
 
 ### Android
 
-It's recommended that you set up network intercepting first; please read [INTERCEPTING](https://github.com/noaione/tosho-mango/blob/master/INTERCEPTING.md).
-
 1. Open the source app.
 2. Click on the home page or my page.
 3. Observe the requests on HTTP Toolkit and find the request to the API that has `secret` as the query parameters.
 4. Save that secret elsewhere and authenticate with `tosho`.
 
 ### Apple
-
-It's recommended that you set up network intercepting first; please read [INTERCEPTING](https://github.com/noaione/tosho-mango/blob/master/INTERCEPTING.md).
 
 1. Open the Stream app and click `Sniff Now`.
 2. Go to the source app and open the `Home` or `My Page`.
