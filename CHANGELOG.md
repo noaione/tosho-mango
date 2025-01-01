@@ -16,10 +16,14 @@ This should give more consistent error handling across all sources.
 - `KM`: `MagazineCategory::${Enum}.get_doc()` now return `Option<&'static str>` instead of `Result<&'static str, Error>`
   - It also remove `documented` related function since we now use simpler derive macro instead.
 
+### New Features
+- `MU`: Add web version constants, improve the auth flow a bit more.
+- `MU`: Add a new crate feature `aes-dec` that support decrypting images if needed.
+
 ### Changes
 - `MU`: Proto changes for subscription in manga detail
 - `MU`: Bump constants version
-- `MU`: Add web version constants, improve the auth flow a bit more.
+
 - `KM`: Fix precalculation of point usages
 - `MU`, `KM`, and `AM`: Cleanup `precalculate` command output a bit more
 - `RB`: Possibly faster image decryption

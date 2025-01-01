@@ -29,5 +29,12 @@ reqwest.workspace = true
 base64.workspace = true
 chrono.workspace = true
 
+aes = { workspace = true, optional = true }
+cbc = { workspace = true, optional = true }
+
 tosho-macros = { path = "../tosho_macros", version = "0.4" }
 tosho-common = { path = "../tosho_common", version = "=0.1.0", features = ["protobuf"] }
+
+[features]
+default = []
+aes-dec = ["dep:aes", "dep:cbc"]

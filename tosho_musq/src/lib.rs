@@ -567,3 +567,36 @@ impl MUClient {
 
     // <-- Downloader
 }
+
+/// Decrypt the image if it's encrypted.
+///
+/// # Parameters
+/// * `image` - The image to decrypt.
+/// * `page` - The chapter page information which contains the key.
+#[cfg(feature = "aes-dec")]
+pub fn decrypt_image(image: &[u8], page: &proto::ChapterPage) -> ToshoResult<Vec<u8>> {
+    use aes::cipher::block_padding::Pkcs7;
+    use aes::cipher::{BlockDecryptMut, KeyIvInit};
+    use aes::Aes256;
+
+    let key_bytes = page.key_as_bytes()?;
+    let iv_bytes = page.iv_as_bytes()?;
+
+    match (key_bytes, iv_bytes) {
+        (Some(key), Some(iv)) => {
+            let decryptor = cbc::Decryptor::<Aes256>::new_from_slices(&key, &iv)
+                .map_err(|e| make_error!("Failed to create decryptor: {}", e))?;
+
+            let mut dec_image = image.to_vec();
+            decryptor
+                .decrypt_padded_mut::<Pkcs7>(&mut dec_image)
+                .map_err(|e| make_error!("Failed to decrypt image: {}", e))?;
+
+            Ok(dec_image)
+        }
+        _ => {
+            // Just return the image
+            Ok(image.to_vec())
+        }
+    }
+}

@@ -4,6 +4,7 @@
 
 #![allow(clippy::derive_partial_eq_without_eq)]
 
+use tosho_common::ToshoResult;
 use tosho_macros::AutoGetter;
 
 use super::enums::{Badge, ConsumptionType, Status};
@@ -205,6 +206,12 @@ pub struct ChapterPage {
     #[prost(uint64, optional, tag = "4")]
     #[skip_field]
     extra_id: ::core::option::Option<u64>,
+    #[prost(string, optional, tag = "5")]
+    #[skip_field]
+    key: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(string, optional, tag = "6")]
+    #[skip_field]
+    iv: ::core::option::Option<::prost::alloc::string::String>,
 }
 
 impl ChapterPage {
@@ -221,13 +228,23 @@ impl ChapterPage {
         file_name[0].to_string()
     }
 
+    /// Check if the image is encrypted or not.
+    pub fn is_encrypted(&self) -> bool {
+        self.file_name().ends_with(".enc")
+    }
+
     /// The file extension of the image.
     ///
     /// When you have the URL of `/path/to/image.avif`,
     /// the extension would become `avif`, when there
     /// is no extension it would return an empty string.
     pub fn extension(&self) -> String {
-        let file_name = self.file_name();
+        let file_name = if self.is_encrypted() {
+            self.file_name().replace(".enc", "")
+        } else {
+            self.file_name()
+        };
+
         // split at the last dot
         let split: Vec<&str> = file_name.rsplitn(2, '.').collect();
 
@@ -243,7 +260,12 @@ impl ChapterPage {
     /// When you have the URL of `/path/to/image.avif`,
     /// the file stem would become `image`.
     pub fn file_stem(&self) -> String {
-        let file_name = self.file_name();
+        let file_name = if self.is_encrypted() {
+            self.file_name().replace(".enc", "")
+        } else {
+            self.file_name()
+        };
+
         // split at the last dot
         let split: Vec<&str> = file_name.rsplitn(2, '.').collect();
 
@@ -259,6 +281,47 @@ impl ChapterPage {
     /// This is mostly used for testing, so it's not recommended to be used.
     pub fn set_url(&mut self, url: impl Into<String>) {
         self.url = url.into();
+    }
+
+    /// Internal function to convert the hex data to bytes.
+    fn to_hex_data(&self, hex_data: &str, when: &str) -> ToshoResult<Vec<u8>> {
+        if hex_data.len() % 2 != 0 {
+            tosho_common::bail_on_error!("Invalid {} length, must be even", when)
+        }
+
+        let mut key_bytes = Vec::with_capacity(hex_data.len() / 2);
+        let characters = hex_data.chars().collect::<Vec<char>>();
+        // We loop like this since we want to propagate error.
+        for pair in characters.chunks(2) {
+            let byte =
+                u8::from_str_radix(&format!("{}{}", pair[0], pair[1]), 16).map_err(|_| {
+                    tosho_common::make_error!("Invalid hex string in {} for pair {:?}", when, pair)
+                })?;
+
+            key_bytes.push(byte);
+        }
+
+        Ok(key_bytes)
+    }
+
+    /// Convert the key to bytes if possible.
+    pub fn key_as_bytes(&self) -> ToshoResult<Option<Vec<u8>>> {
+        if let Some(key) = &self.key {
+            let key_bytes = self.to_hex_data(key, "key")?;
+            Ok(Some(key_bytes))
+        } else {
+            Ok(None)
+        }
+    }
+
+    /// Convert the IV to bytes if possible.
+    pub fn iv_as_bytes(&self) -> ToshoResult<Option<Vec<u8>>> {
+        if let Some(iv) = &self.iv {
+            let iv_bytes = self.to_hex_data(iv, "iv")?;
+            Ok(Some(iv_bytes))
+        } else {
+            Ok(None)
+        }
     }
 }
 
