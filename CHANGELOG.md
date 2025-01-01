@@ -23,7 +23,6 @@ This should give more consistent error handling across all sources.
 ### Changes
 - `MU`: Proto changes for subscription in manga detail
 - `MU`: Bump constants version
-
 - `KM`: Fix precalculation of point usages
 - `MU`, `KM`, and `AM`: Cleanup `precalculate` command output a bit more
 - `RB`: Possibly faster image decryption
@@ -35,6 +34,7 @@ This should give more consistent error handling across all sources.
 - All sources: Bump constants version when possible
 - Adjust exit code handling on CLI
 - Simplify progress bar handling
+- Fix more issue on chapter merging
 
 ### Build
 - Update `tokio`, `serde-*`, `prost`, `reqwest`, and some other CLI related dependencies

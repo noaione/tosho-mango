@@ -153,12 +153,12 @@ fn inquire_chapter_number(
 pub fn auto_chapters_collector(
     mut chapters_dump: Vec<ChapterDetailDump>,
     console: &mut crate::term::Terminal,
-) -> BTreeMap<String, Vec<ChapterDetailDump>> {
+) -> Option<BTreeMap<String, Vec<ChapterDetailDump>>> {
     chapters_dump.sort_by(|a, b| a.id.cmp(&b.id));
 
     if chapters_dump.is_empty() {
         console.error("  Empty chapters collection, aborting...");
-        return BTreeMap::new();
+        return None;
     }
 
     let mut last_known_num = 0;
@@ -228,18 +228,19 @@ pub fn auto_chapters_collector(
             chapters_mapping.entry(name).or_default().push(chapter);
         }
     }
-    chapters_mapping
+
+    Some(chapters_mapping)
 }
 
 pub fn manual_chapters_collector(
     mut chapters_dump: Vec<ChapterDetailDump>,
     console: &mut crate::term::Terminal,
-) -> BTreeMap<String, Vec<ChapterDetailDump>> {
+) -> Option<BTreeMap<String, Vec<ChapterDetailDump>>> {
     chapters_dump.sort_by(|a, b| a.id.cmp(&b.id));
 
     if chapters_dump.is_empty() {
         console.error("  Empty chapters collection, aborting...");
-        return BTreeMap::new();
+        return None;
     }
 
     let mut chapters_mapping: BTreeMap<String, Vec<ChapterDetailDump>> = BTreeMap::new();
@@ -341,10 +342,10 @@ pub fn manual_chapters_collector(
     }
 
     if abort_after {
-        return BTreeMap::new();
+        None
+    } else {
+        Some(chapters_mapping)
     }
-
-    chapters_mapping
 }
 
 fn is_all_folder_exist(base_dir: PathBuf, chapters: &[ChapterDetailDump]) -> bool {
@@ -457,7 +458,7 @@ pub(crate) async fn tools_split_merge(
 
     let mut manual_info_merge = read_manual_info_json(input_folder).await;
 
-    let mut chapters_maps = if config.no_input {
+    let chapters_maps = if config.no_input {
         auto_chapters_collector(info_json.chapters.clone(), console)
     } else {
         let mut current_chapters = info_json.chapters.clone();
@@ -470,6 +471,12 @@ pub(crate) async fn tools_split_merge(
             current_chapters.retain(|ch| !manual_chapters.contains(&ch.id));
         }
         manual_chapters_collector(current_chapters, console)
+    };
+
+    let mut chapters_maps = if let Some(chapters_maps) = chapters_maps {
+        chapters_maps
+    } else {
+        return 1;
     };
 
     if chapters_maps.is_empty() {
