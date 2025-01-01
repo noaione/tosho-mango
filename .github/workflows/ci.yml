@@ -69,8 +69,8 @@ jobs:
         os:
           # GNU Linux (x64)
           - [ubuntu-24.04, x86_64-unknown-linux-gnu]
-          # macOS Intel (x64)
-          - [macos-13, x86_64-apple-darwin]
+          # macOS Apple Silicon (cross-compile to x64)
+          - [macos-14, x86_64-apple-darwin]
           # macOS Apple Silicon (ARM64)
           - [macos-14, aarch64-apple-darwin]
           # Windows Server 2022 (x64)
