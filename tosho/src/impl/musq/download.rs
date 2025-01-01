@@ -369,10 +369,6 @@ pub(crate) async fn musq_download(
                     let file_number: u64 = image.file_stem().parse().unwrap();
                     let img_fn = format!("p{:03}.{}", file_number, image.extension());
                     let img_dl_path = ch_dir.join(&img_fn);
-                    // async download
-                    let writer = tokio::fs::File::create(&img_dl_path)
-                        .await
-                        .expect("Failed to create image file");
 
                     if console.is_debug() {
                         console.log(cformat!(
@@ -384,14 +380,45 @@ pub(crate) async fn musq_download(
                         console.progress(total_image_count, 1, Some("Downloading".to_string()));
                     }
 
-                    match client.stream_download(image.url(), writer).await {
-                        Ok(_) => {}
+                    // temporarily write to a memory
+                    let mut temp_memory = Vec::new();
+
+                    // async download
+                    match client.stream_download(image.url(), &mut temp_memory).await {
+                        Ok(_) => {
+                            if image.is_encrypted() {
+                                // decrypt
+                                match tosho_musq::decrypt_image(&temp_memory, &image) {
+                                    Ok(decrypted) => {
+                                        // write to file
+                                        match tokio::fs::write(&img_dl_path, &decrypted).await {
+                                            Ok(_) => {}
+                                            Err(err) => {
+                                                console.error(format!(
+                                                    "    Failed to write image: {}",
+                                                    err
+                                                ));
+                                            }
+                                        }
+                                    }
+                                    Err(err) => {
+                                        console
+                                            .error(format!("    Failed to decrypt image: {}", err));
+                                    }
+                                }
+                            } else {
+                                // write to file
+                                match tokio::fs::write(&img_dl_path, &temp_memory).await {
+                                    Ok(_) => {}
+                                    Err(err) => {
+                                        console
+                                            .error(format!("    Failed to write image: {}", err));
+                                    }
+                                }
+                            }
+                        }
                         Err(err) => {
                             console.error(format!("    Failed to download image: {}", err));
-                            // silent delete the file
-                            tokio::fs::remove_file(&img_dl_path)
-                                .await
-                                .unwrap_or_default();
                         }
                     }
                 }
