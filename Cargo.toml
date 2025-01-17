@@ -13,7 +13,7 @@ members = [
 ]
 
 [workspace.package]
-version = "0.7.0"
+version = "0.7.1-dev"
 edition = "2021"
 authors = ["noaione <noaione@n4o.xyz>"]
 license = "MIT"
@@ -23,19 +23,19 @@ rust-version = "1.80.0"
 
 [workspace.dependencies]
 # Tokio related
-tokio = { version = "1.42.0", features = ["full"] }
+tokio = { version = "1.43.0", features = ["full"] }
 futures-util = "0.3.31"
 
 # JSON/Protobuf related
 serde = { version = "1.0.217", features = ["derive"] }
-serde_json = "1.0.134"
+serde_json = "1.0.135"
 prost = "0.13.4"
 
 # Utilities
 anyhow = "1"
 base64 = "0.22.1"
 sha2 = "0.10.8"
-chrono = "0.4.39"
+chrono = { version = "0.4.39", default-features = false, features = ["clock", "std"]}
 rand = "0.8.5"
 
 # HTTP related

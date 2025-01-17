@@ -6,6 +6,10 @@ Starting from Rust port of the project, all changes will be put into this file.
 ### Changes
 - `KM`: Revert back constants
 
+### Build
+- Bump `tokio` to `1.43.0`
+- Bump CLI related dependencies
+
 ## [0.7.0] (2025-01-01)
 ### Breaking Changes
 - Create a new `Error` type for all sources, this replace `anyhow` error type.
