@@ -45,7 +45,7 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@9a9194f87191a7e9055e3e9b95b8cfb13023bb08
+        uses: actions/checkout@85e6279cec87321a52edac9c87bce653a07cf6c2
         with:
           submodules: 'true'
 
@@ -55,7 +55,7 @@ jobs:
           echo "RUST_VERSION=$(rustc --version | cut -d ' ' -f 2)" >> "$GITHUB_ENV"
 
       - name: Setup rust cache
-        uses: Swatinem/rust-cache@9bdad043e88c75890e36ad3bbc8d27f0090dd609
+        uses: Swatinem/rust-cache@f0deed1e0edfc6a9be95417288c0e1099b1eeec3
         with:
           prefix-key: "rust-tosho-tests-${{ runner.os }}-${{ env.RUST_VERSION }}"
 
@@ -73,14 +73,16 @@ jobs:
           - [macos-14, x86_64-apple-darwin]
           # macOS Apple Silicon (ARM64)
           - [macos-14, aarch64-apple-darwin]
-          # Windows Server 2022 (x64)
-          - [windows-2022, x86_64-pc-windows-msvc]
+          # Windows Server 2025 (x64)
+          - [windows-2025, x86_64-pc-windows-msvc]
+          # Windows Server 2025 (ARM64)
+          - [windows-2025, aarch64-pc-windows-msvc]
       fail-fast: false
     
     runs-on: ${{ matrix.os[0] }}
     steps:
       - name: Checkout repo
-        uses: actions/checkout@9a9194f87191a7e9055e3e9b95b8cfb13023bb08
+        uses: actions/checkout@85e6279cec87321a52edac9c87bce653a07cf6c2
 
       - name: Rust Target
         run: |
@@ -100,7 +102,7 @@ jobs:
         shell: bash
 
       - name: Setup rust cache
-        uses: Swatinem/rust-cache@9bdad043e88c75890e36ad3bbc8d27f0090dd609
+        uses: Swatinem/rust-cache@f0deed1e0edfc6a9be95417288c0e1099b1eeec3
         with:
           prefix-key: "rust-tosho-build-${{ env.BUILD_PROFILE }}-${{ runner.os }}-${{ matrix.os[1] }}-${{ env.RUST_VERSION }}"
 
@@ -111,14 +113,14 @@ jobs:
         shell: bash
 
       - name: Permissions (Nightly)
-        if: env.BUILD_PROFILE == 'debug' && matrix.os[0] != 'windows-2022'
+        if: env.BUILD_PROFILE == 'debug' && matrix.os[0] != 'windows-2025'
         run: |
           chmod +x target/${{ matrix.os[1] }}/ci/tosho
         shell: bash
 
       - name: Upload artifact
         if: env.BUILD_PROFILE == 'debug'
-        uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08
         with:
           name: tosho-${{ matrix.os[1] }}
           path: |
@@ -134,7 +136,7 @@ jobs:
           RELEASE: true
 
       - name: Prepare release
-        if: env.BUILD_PROFILE == 'release' && matrix.os[0] != 'windows-2022'
+        if: env.BUILD_PROFILE == 'release' && matrix.os[0] != 'windows-2025'
         shell: bash
         run: |
           cd target/${{ matrix.os[1] }}/ci
@@ -144,7 +146,7 @@ jobs:
           cd ../../..
 
       - name: Prepare release (Win32)
-        if: env.BUILD_PROFILE == 'release' && matrix.os[0] == 'windows-2022'
+        if: env.BUILD_PROFILE == 'release' && matrix.os[0] == 'windows-2025'
         run: |
           cd target/${{ matrix.os[1] }}/ci
           Compress-Archive -Path tosho.exe -DestinationPath tosho-${{ matrix.os[1] }}.zip
@@ -153,7 +155,7 @@ jobs:
         shell: powershell
 
       - name: Upload artifact (Release)
-        uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08
         if: env.BUILD_PROFILE == 'release'
         with:
           name: tosho-packages-${{ matrix.os[1] }}
@@ -162,7 +164,7 @@ jobs:
             tosho-${{ matrix.os[1] }}.tar.gz
 
   releases:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: build
     if: startsWith(github.ref, 'refs/tags/v') && github.repository_owner == 'noaione'
     permissions:
@@ -170,10 +172,10 @@ jobs:
       discussions: write
     steps:
       - name: Checkout repo
-        uses: actions/checkout@9a9194f87191a7e9055e3e9b95b8cfb13023bb08
+        uses: actions/checkout@85e6279cec87321a52edac9c87bce653a07cf6c2
 
       - name: Download artifacts
-        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16
+        uses: actions/download-artifact@7fba95161a0924506ed1ae69cdbae8371ee00b3f
         with:
           path: tosho-packages
           pattern: tosho-packages-*
@@ -190,7 +192,7 @@ jobs:
           VERSION: ${{ github.ref }}
 
       - name: Release
-        uses: softprops/action-gh-release@9a28f2423fd7ba2781181bb13e8aba228027c4e9
+        uses: softprops/action-gh-release@67b6c38432c171b8aa64dc6f3f152d12da2d99fa
         with:
           files: |
             tosho-packages/*
@@ -201,7 +203,7 @@ jobs:
           name: ${{ steps.prepare-change.outputs.version_subject }}
 
       - name: Create discussions
-        uses: nvdaes/build-discussion@44180020a97632aa87af4f9452d9bf78c35b25e5
+        uses: nvdaes/build-discussion@b35678c64d2814f35a0b26c799e3c7a57bfb9a03
         with:
           title: Release ${{ github.ref_name }}
           body: |

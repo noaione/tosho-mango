@@ -7,14 +7,14 @@ on:
 
 jobs:
   auto-assign:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # run on issue opened, and run in my repo
     if: github.event.issue.pull_request == null && github.event.repository.owner.login == 'noaione'
     permissions:
       issues: write
     steps:
       - name: Assign author
-        uses: pozil/auto-assign-issue@9fe872bb72487df4637d1eacd434c2fa97703230
+        uses: pozil/auto-assign-issue@c015a6a3f410f12f58255c3d085fd774312f7a2f
         with:
           assignees: noaione
           numOfAssignee: 1
