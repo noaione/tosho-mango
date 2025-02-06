@@ -67,8 +67,11 @@ jobs:
     strategy:
       matrix:
         os:
-          # GNU Linux (x64)
+          # Linux (x64)
           - [ubuntu-24.04, x86_64-unknown-linux-gnu]
+          # Linux (ARM64)
+          # >> See: https://github.com/rust-lang/rust/issues/135867#issuecomment-2608638344
+          - [ubuntu-22.04-arm, aarch64-unknown-linux-gnu]
           # macOS Apple Silicon (cross-compile to x64)
           - [macos-14, x86_64-apple-darwin]
           # macOS Apple Silicon (ARM64)
@@ -78,7 +81,7 @@ jobs:
           # Windows Server 2025 (ARM64)
           - [windows-2025, aarch64-pc-windows-msvc]
       fail-fast: false
-    
+
     runs-on: ${{ matrix.os[0] }}
     steps:
       - name: Checkout repo
