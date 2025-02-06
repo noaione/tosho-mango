@@ -9,6 +9,7 @@ Starting from Rust port of the project, all changes will be put into this file.
 ### Build
 - Bump `tokio` to `1.43.0`
 - Bump CLI related dependencies
+- Fully use `rustls` instead of `native-tls`/`openssl`
 
 ## [0.7.0] (2025-01-01)
 ### Breaking Changes
