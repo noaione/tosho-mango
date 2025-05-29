@@ -659,6 +659,51 @@ mod tests {
     }
 
     #[test]
+    fn test_calculate_coin_weird_types_should_panic() {
+        let client = dummy_client();
+        let user_point = TestUserPoint { free: 10, event: 10, paid: 10 }.to_proto();
+
+        // note: legitimately weird consumption types default to Any, *not* Unrecognized
+        // see `cargo +nightly rustc -p tosho-musq --profile=check -- -Zunpretty=expanded`, ctrl+f `pub fn consumption(&self) -> ConsumptionType`
+        let chapter = TestChapterV2 { price: 50, consumption: ConsumptionType::Unrecognized }.to_proto();
+
+        let prev_hook = std::panic::take_hook();
+        std::panic::set_hook(Box::new(|_| {}));
+        // This should panic because the consumption type isn't in the arms
+        let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            client.calculate_coin(&user_point, &chapter);
+        }));
+        std::panic::set_hook(prev_hook);
+
+        assert!(result.is_err());
+    }
+
+    // always returns not possible
+    // #[test]
+    // fn test_calculate_coin_free_rental_purchased_and_subscription() {
+    //     let client = dummy_client();
+    //     let user_point = TestUserPoint { free: 40, event: 40, paid: 40 }.to_proto();
+    //
+    //     for consumption in [
+    //         ConsumptionType::Free,
+    //         ConsumptionType::Rental,
+    //         ConsumptionType::Purchased,
+    //         ConsumptionType::Subscription,
+    //     ] {
+    //         let chapter = TestChapterV2 { price: 20, consumption }.to_proto();
+    //
+    //         let coin = client.calculate_coin(&user_point, &chapter);
+    //         assert_eq!(coin.get_free(), 0);
+    //         // event and paid should be equal to free when they are None, which they are in this case
+    //         assert_eq!(coin.get_event(), 0);
+    //         assert_eq!(coin.get_paid(), 0);
+    //         assert_eq!(coin.get_need(), 20);
+    //         // Free/event/paid are always set to 0, and their total is < need, so always not possible?
+    //         assert!(coin.is_possible());
+    //     }
+    // }
+
+    #[test]
     fn test_calculate_coin_type_free_should_use_no_currency() {
         let client = dummy_client();
         let user_point = TestUserPoint { free: 10, event: 10, paid: 10 }.to_proto();
