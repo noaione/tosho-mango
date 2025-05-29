@@ -193,7 +193,7 @@ impl MUClient {
 
                 let need = chapter.price().saturating_sub(event);
                 if need == 0 {
-                    return Ok(self.build_coin(chapter.price(), chapter.price(), Some(0), Some(0)));
+                    return Ok(self.build_coin(chapter.price(), 0, Some(chapter.price()), Some(0)));
                 }
 
                 let need = need.saturating_sub(paid);
@@ -202,7 +202,7 @@ impl MUClient {
                     paid_diff = paid;
                 }
 
-                Ok(self.build_coin(chapter.price(), event, Some(paid_diff), Some(0)))
+                Ok(self.build_coin(chapter.price(), 0, Some(event), Some(paid_diff)))
             }
             ConsumptionType::Paid => {
                 let paid_left = user_point.paid().saturating_sub(chapter.price());
