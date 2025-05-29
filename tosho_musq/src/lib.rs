@@ -167,19 +167,18 @@ impl MUClient {
                 let event = user_point.event();
                 let paid = user_point.paid();
 
-                let need = ((chapter.price() - free) as i64).max(0);
-                if need <= 0 {
+                let need = chapter.price().saturating_sub(free);
+                if need == 0 {
                     return Ok(self.build_coin(chapter.price(), chapter.price(), Some(0), Some(0)));
                 }
 
-                let need = (need - event as i64).max(0);
-                if need <= 0 {
+                let need = need.saturating_sub(event);
+                if need == 0 {
                     let event_diff = chapter.price().saturating_sub(free);
-
                     return Ok(self.build_coin(chapter.price(), free, Some(event_diff), Some(0)));
                 }
 
-                let need = (need - paid as i64).max(0);
+                let need = need.saturating_sub(paid);
                 let mut paid_diff = chapter.price().saturating_sub(free).saturating_sub(event);
                 if need > 0 {
                     paid_diff = paid;
@@ -192,12 +191,12 @@ impl MUClient {
                 let event = user_point.event();
                 let paid = user_point.paid();
 
-                let need = ((chapter.price() - event) as i64).max(0);
-                if need <= 0 {
+                let need = chapter.price().saturating_sub(event);
+                if need == 0 {
                     return Ok(self.build_coin(chapter.price(), chapter.price(), Some(0), Some(0)));
                 }
 
-                let need = (need - paid as i64).max(0);
+                let need = need.saturating_sub(paid);
                 let mut paid_diff = chapter.price().saturating_sub(event);
                 if need > 0 {
                     paid_diff = paid;
@@ -206,9 +205,9 @@ impl MUClient {
                 Ok(self.build_coin(chapter.price(), event, Some(paid_diff), Some(0)))
             }
             ConsumptionType::Paid => {
-                let paid_left: i64 = user_point.paid() as i64 - chapter.price() as i64;
+                let paid_left = user_point.paid().saturating_sub(chapter.price());
 
-                if paid_left < 0 {
+                if paid_left == 0 {
                     return Ok(self.build_coin(chapter.price(), 0, Some(0), Some(0)));
                 }
 
