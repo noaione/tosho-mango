@@ -170,6 +170,14 @@ impl ChapterV2 {
     }
 }
 
+#[cfg(test)]
+impl ChapterV2 {
+    /// For testing purposes, set the chapter price.
+    pub fn set_price(&mut self, value: u64) {
+        self.price = value;
+    }
+}
+
 impl From<ChapterV2> for Chapter {
     fn from(value: ChapterV2) -> Self {
         Self {

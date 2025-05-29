@@ -608,3 +608,194 @@ pub fn decrypt_image(image: &[u8], page: &proto::ChapterPage) -> ToshoResult<Vec
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::sync::LazyLock;
+    use super::*;
+    use crate::proto::ConsumptionType;
+
+    // Minimal stubs for UserPoint and ChapterV2 for testing
+    #[derive(Default)]
+    struct TestUserPoint {
+        free: u64,
+        event: u64,
+        paid: u64,
+    }
+    impl TestUserPoint {
+        fn to_proto(&self) -> UserPoint {
+            let mut up = UserPoint::default();
+            up.set_free(self.free);
+            up.set_event(self.event);
+            up.set_paid(self.paid);
+            up
+        }
+    }
+
+    #[derive(Default)]
+    struct TestChapterV2 {
+        price: u64,
+        consumption: ConsumptionType,
+    }
+    impl TestChapterV2 {
+        fn to_proto(&self) -> ChapterV2 {
+            let mut ch = ChapterV2::default();
+            ch.set_price(self.price);
+            ch.set_consumption(self.consumption.clone());
+            ch
+        }
+    }
+
+    fn dummy_client() -> MUClient {
+        static CONSTS: LazyLock<Constants> = LazyLock::new(|| {
+            Constants {
+                image_ua: "Dalvik/2.1.0 (Linux; U; Android 12; SM-G935F Build/SQ3A.220705.004)".to_string(),
+                api_ua: "okhttp/4.12.0".to_string(),
+                os_ver: "32", // Android SDK 12
+                app_ver: "73".to_string(),
+            }
+        });
+
+        MUClient::new("dummy", &CONSTS).unwrap()
+    }
+
+    #[test]
+    fn test_calculate_coin_type_free_should_use_no_currency() {
+        let client = dummy_client();
+        let user_point = TestUserPoint { free: 10, event: 10, paid: 10 }.to_proto();
+        let chapter = TestChapterV2 { price: 0, consumption: ConsumptionType::Free }.to_proto();
+
+        let coin = client.calculate_coin(&user_point, &chapter);
+        assert_eq!(coin.get_free(), 0);
+        assert_eq!(coin.get_event(), 0);
+        assert_eq!(coin.get_paid(), 0);
+        assert_eq!(coin.get_need(), 0);
+        assert!(coin.is_possible());
+    }
+
+    #[test]
+    fn test_calculate_coin_type_any_with_enough_free_should_be_possible() {
+        let client = dummy_client();
+        let user_point = TestUserPoint { free: 100, event: 0, paid: 0 }.to_proto();
+        let chapter = TestChapterV2 { price: 50, consumption: ConsumptionType::Any }.to_proto();
+
+        let coin = client.calculate_coin(&user_point, &chapter);
+        assert_eq!(coin.get_free(), 50);
+        assert_eq!(coin.get_event(), 0);
+        assert_eq!(coin.get_paid(), 0);
+        assert_eq!(coin.get_need(), 50);
+        assert!(coin.is_possible());
+    }
+
+    #[test]
+    fn test_calculate_coin_type_any_should_supplement_with_event() {
+        let client = dummy_client();
+        let user_point = TestUserPoint { free: 10, event: 40, paid: 0 }.to_proto();
+        let chapter = TestChapterV2 { price: 50, consumption: ConsumptionType::Any }.to_proto();
+
+        let coin = client.calculate_coin(&user_point, &chapter);
+        assert_eq!(coin.get_free(), 10);
+        assert_eq!(coin.get_event(), 40);
+        assert_eq!(coin.get_paid(), 0);
+        assert_eq!(coin.get_need(), 50);
+        assert!(coin.is_possible());
+    }
+
+    #[test]
+    fn test_calculate_coin_type_any_should_maximise_use_of_less_valuable_currencies() {
+        let client = dummy_client();
+        let user_point = TestUserPoint { free: 20, event: 10, paid: 30 }.to_proto();
+        let chapter = TestChapterV2 { price: 50, consumption: ConsumptionType::Any }.to_proto();
+
+        let coin = client.calculate_coin(&user_point, &chapter);
+        assert_eq!(coin.get_free(), 20);
+        assert_eq!(coin.get_event(), 10);
+        assert_eq!(coin.get_paid(), 20);
+        assert_eq!(coin.get_need(), 50);
+        assert!(coin.is_possible());
+    }
+
+    #[test]
+    fn test_calculate_coin_type_any_should_not_be_possible_when_not_enough_currency() {
+        let client = dummy_client();
+        let user_point = TestUserPoint { free: 10, event: 10, paid: 10 }.to_proto();
+        let chapter = TestChapterV2 { price: 50, consumption: ConsumptionType::Any }.to_proto();
+
+        let coin = client.calculate_coin(&user_point, &chapter);
+        assert_eq!(coin.get_free(), 10);
+        assert_eq!(coin.get_event(), 10);
+        assert_eq!(coin.get_paid(), 10);
+        assert_eq!(coin.get_need(), 50);
+        assert!(!coin.is_possible());
+    }
+
+    #[test]
+    fn test_calculate_coin_type_event_or_paid_enough_event_should_be_possible() {
+        let client = dummy_client();
+        let user_point = TestUserPoint { free: 0, event: 50, paid: 0 }.to_proto();
+        let chapter = TestChapterV2 { price: 50, consumption: ConsumptionType::EventOrPaid }.to_proto();
+
+        let coin = client.calculate_coin(&user_point, &chapter);
+        assert_eq!(coin.get_free(), 0);
+        assert_eq!(coin.get_event(), 50);
+        assert_eq!(coin.get_paid(), 0);
+        assert_eq!(coin.get_need(), 50);
+        assert!(coin.is_possible());
+    }
+
+    #[test]
+    fn test_calculate_coin_type_event_or_paid_should_supplement_with_paid() {
+        let client = dummy_client();
+        let user_point = TestUserPoint { free: 0, event: 10, paid: 40 }.to_proto();
+        let chapter = TestChapterV2 { price: 50, consumption: ConsumptionType::EventOrPaid }.to_proto();
+
+        let coin = client.calculate_coin(&user_point, &chapter);
+        assert_eq!(coin.get_free(), 0);
+        assert_eq!(coin.get_event(), 10);
+        assert_eq!(coin.get_paid(), 40);
+        assert_eq!(coin.get_need(), 50);
+        assert!(coin.is_possible());
+    }
+
+    #[test]
+    fn test_calculate_coin_type_event_or_paid_should_not_try_to_use_free() {
+        let client = dummy_client();
+        let user_point = TestUserPoint { free: 160, event: 840, paid: 0 }.to_proto();
+        let chapter = TestChapterV2 { price: 40, consumption: ConsumptionType::EventOrPaid }.to_proto();
+
+        let coin = client.calculate_coin(&user_point, &chapter);
+        assert_eq!(coin.get_free(), 0);
+        assert_eq!(coin.get_event(), 40);
+        assert_eq!(coin.get_paid(), 0);
+        assert_eq!(coin.get_need(), 40);
+        assert!(coin.is_possible());
+    }
+
+    #[test]
+    fn test_calculate_coin_type_paid_enough_should_be_possible() {
+        let client = dummy_client();
+        let user_point = TestUserPoint { free: 0, event: 0, paid: 100 }.to_proto();
+        let chapter = TestChapterV2 { price: 50, consumption: ConsumptionType::Paid }.to_proto();
+
+        let coin = client.calculate_coin(&user_point, &chapter);
+        assert_eq!(coin.get_free(), 0);
+        assert_eq!(coin.get_event(), 0);
+        assert_eq!(coin.get_paid(), 50);
+        assert_eq!(coin.get_need(), 50);
+        assert!(coin.is_possible());
+    }
+
+    #[test]
+    fn test_calculate_coin_type_paid_zeros_out_usage_when_not_possible() {
+        let client = dummy_client();
+        let user_point = TestUserPoint { free: 0, event: 40, paid: 10 }.to_proto();
+        let chapter = TestChapterV2 { price: 50, consumption: ConsumptionType::Paid }.to_proto();
+
+        let coin = client.calculate_coin(&user_point, &chapter);
+        assert_eq!(coin.get_free(), 0);
+        assert_eq!(coin.get_event(), 0);
+        assert_eq!(coin.get_paid(), 0);
+        assert_eq!(coin.get_need(), 50);
+        assert!(!coin.is_possible());
+    }
+}
