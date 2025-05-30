@@ -9,16 +9,15 @@
 //! # assert_eq!(generate_random_token(16).len(), 16);
 //! ```
 
-use rand::distributions::Alphanumeric;
-use rand::{thread_rng, Rng};
+use rand::{distr::Alphanumeric, rng, Rng};
 
 /// Generate a string of random characters used for token and other ID.
 ///
 /// This will return an all lowercase string of X characters.
 pub fn generate_random_token(count: usize) -> String {
-    let rng = thread_rng();
+    let rng = rng();
     let token: String = rng
-        .sample_iter(&Alphanumeric)
+        .sample_iter(Alphanumeric)
         .take(count)
         .map(char::from)
         .collect();

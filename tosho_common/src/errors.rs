@@ -131,6 +131,7 @@ pub struct ToshoDetailedFailableError {
 }
 
 impl ToshoDetailedFailableError {
+    #[cfg(feature = "serde")]
     pub(crate) fn new(message: impl Into<String>, inner: ToshoError) -> Self {
         Self {
             message: message.into(),
