@@ -7,7 +7,7 @@ pub mod constants;
 pub mod helper;
 pub mod proto;
 
-use crate::constants::{Constants, API_HOST, BASE_API, IMAGE_HOST};
+use crate::constants::{API_HOST, BASE_API, Constants, IMAGE_HOST};
 use crate::proto::*;
 use futures_util::TryStreamExt;
 pub use helper::ConsumeCoin;
@@ -16,8 +16,8 @@ pub use helper::WeeklyCode;
 use std::collections::HashMap;
 use tokio::io::{self, AsyncWriteExt};
 use tosho_common::{
-    bail_on_error, make_error, parse_protobuf_response, ToshoClientError, ToshoError,
-    ToshoParseError, ToshoResult,
+    ToshoClientError, ToshoError, ToshoParseError, ToshoResult, bail_on_error, make_error,
+    parse_protobuf_response,
 };
 
 /// Main client for interacting with the SQ MU!
@@ -147,7 +147,7 @@ impl MUClient {
     ///     let manga = client.get_manga(240).await.unwrap();
     ///     let first_ch = &manga.chapters()[0];
     ///
-    ///     let coins = client.calculate_coin(&user_point, first_ch);
+    ///     let coins = client.calculate_coin(&user_point, first_ch).unwrap();
     ///     assert!(coins.is_possible());
     /// }
     /// ```
@@ -583,9 +583,9 @@ impl MUClient {
 /// * `page` - The chapter page information which contains the key.
 #[cfg(feature = "aes-dec")]
 pub fn decrypt_image(image: &[u8], page: &proto::ChapterPage) -> ToshoResult<Vec<u8>> {
+    use aes::Aes256;
     use aes::cipher::block_padding::Pkcs7;
     use aes::cipher::{BlockDecryptMut, KeyIvInit};
-    use aes::Aes256;
 
     let key_bytes = page.key_as_bytes()?;
     let iv_bytes = page.iv_as_bytes()?;
