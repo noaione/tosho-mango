@@ -709,7 +709,9 @@ mod tests {
         let user_point = TestUserPoint { free: 10, event: 10, paid: 10 }.to_proto();
         let chapter = TestChapterV2 { price: 0, consumption: ConsumptionType::Free }.to_proto();
 
-        let coin = client.calculate_coin(&user_point, &chapter);
+        let result = client.calculate_coin(&user_point, &chapter);
+        assert!(result.is_ok());
+        let coin = result.unwrap();
         assert_eq!(coin.get_free(), 0);
         assert_eq!(coin.get_event(), 0);
         assert_eq!(coin.get_paid(), 0);
@@ -723,7 +725,9 @@ mod tests {
         let user_point = TestUserPoint { free: 100, event: 0, paid: 0 }.to_proto();
         let chapter = TestChapterV2 { price: 50, consumption: ConsumptionType::Any }.to_proto();
 
-        let coin = client.calculate_coin(&user_point, &chapter);
+        let result = client.calculate_coin(&user_point, &chapter);
+        assert!(result.is_ok());
+        let coin = result.unwrap();
         assert_eq!(coin.get_free(), 50);
         assert_eq!(coin.get_event(), 0);
         assert_eq!(coin.get_paid(), 0);
@@ -737,7 +741,9 @@ mod tests {
         let user_point = TestUserPoint { free: 10, event: 40, paid: 0 }.to_proto();
         let chapter = TestChapterV2 { price: 50, consumption: ConsumptionType::Any }.to_proto();
 
-        let coin = client.calculate_coin(&user_point, &chapter);
+        let result = client.calculate_coin(&user_point, &chapter);
+        assert!(result.is_ok());
+        let coin = result.unwrap();
         assert_eq!(coin.get_free(), 10);
         assert_eq!(coin.get_event(), 40);
         assert_eq!(coin.get_paid(), 0);
@@ -751,7 +757,9 @@ mod tests {
         let user_point = TestUserPoint { free: 20, event: 10, paid: 30 }.to_proto();
         let chapter = TestChapterV2 { price: 50, consumption: ConsumptionType::Any }.to_proto();
 
-        let coin = client.calculate_coin(&user_point, &chapter);
+        let result = client.calculate_coin(&user_point, &chapter);
+        assert!(result.is_ok());
+        let coin = result.unwrap();
         assert_eq!(coin.get_free(), 20);
         assert_eq!(coin.get_event(), 10);
         assert_eq!(coin.get_paid(), 20);
@@ -765,7 +773,9 @@ mod tests {
         let user_point = TestUserPoint { free: 10, event: 10, paid: 10 }.to_proto();
         let chapter = TestChapterV2 { price: 50, consumption: ConsumptionType::Any }.to_proto();
 
-        let coin = client.calculate_coin(&user_point, &chapter);
+        let result = client.calculate_coin(&user_point, &chapter);
+        assert!(result.is_ok());
+        let coin = result.unwrap();
         assert_eq!(coin.get_free(), 10);
         assert_eq!(coin.get_event(), 10);
         assert_eq!(coin.get_paid(), 10);
@@ -779,7 +789,9 @@ mod tests {
         let user_point = TestUserPoint { free: 0, event: 50, paid: 0 }.to_proto();
         let chapter = TestChapterV2 { price: 50, consumption: ConsumptionType::EventOrPaid }.to_proto();
 
-        let coin = client.calculate_coin(&user_point, &chapter);
+        let result = client.calculate_coin(&user_point, &chapter);
+        assert!(result.is_ok());
+        let coin = result.unwrap();
         assert_eq!(coin.get_free(), 0);
         assert_eq!(coin.get_event(), 50);
         assert_eq!(coin.get_paid(), 0);
@@ -793,7 +805,9 @@ mod tests {
         let user_point = TestUserPoint { free: 0, event: 10, paid: 40 }.to_proto();
         let chapter = TestChapterV2 { price: 50, consumption: ConsumptionType::EventOrPaid }.to_proto();
 
-        let coin = client.calculate_coin(&user_point, &chapter);
+        let result = client.calculate_coin(&user_point, &chapter);
+        assert!(result.is_ok());
+        let coin = result.unwrap();
         assert_eq!(coin.get_free(), 0);
         assert_eq!(coin.get_event(), 10);
         assert_eq!(coin.get_paid(), 40);
@@ -807,7 +821,9 @@ mod tests {
         let user_point = TestUserPoint { free: 160, event: 840, paid: 0 }.to_proto();
         let chapter = TestChapterV2 { price: 40, consumption: ConsumptionType::EventOrPaid }.to_proto();
 
-        let coin = client.calculate_coin(&user_point, &chapter);
+        let result = client.calculate_coin(&user_point, &chapter);
+        assert!(result.is_ok());
+        let coin = result.unwrap();
         assert_eq!(coin.get_free(), 0);
         assert_eq!(coin.get_event(), 40);
         assert_eq!(coin.get_paid(), 0);
@@ -821,7 +837,9 @@ mod tests {
         let user_point = TestUserPoint { free: 0, event: 0, paid: 100 }.to_proto();
         let chapter = TestChapterV2 { price: 50, consumption: ConsumptionType::Paid }.to_proto();
 
-        let coin = client.calculate_coin(&user_point, &chapter);
+        let result = client.calculate_coin(&user_point, &chapter);
+        assert!(result.is_ok());
+        let coin = result.unwrap();
         assert_eq!(coin.get_free(), 0);
         assert_eq!(coin.get_event(), 0);
         assert_eq!(coin.get_paid(), 50);
@@ -835,7 +853,9 @@ mod tests {
         let user_point = TestUserPoint { free: 0, event: 40, paid: 10 }.to_proto();
         let chapter = TestChapterV2 { price: 50, consumption: ConsumptionType::Paid }.to_proto();
 
-        let coin = client.calculate_coin(&user_point, &chapter);
+        let result = client.calculate_coin(&user_point, &chapter);
+        assert!(result.is_ok());
+        let coin = result.unwrap();
         assert_eq!(coin.get_free(), 0);
         assert_eq!(coin.get_event(), 0);
         assert_eq!(coin.get_paid(), 0);
