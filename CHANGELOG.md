@@ -5,11 +5,13 @@ Starting from Rust port of the project, all changes will be put into this file.
 ## Unreleased
 ### Changes
 - `KM`: Revert back constants
+- `MU`: Change the `calculate_coin` signature to return `ToshoResult<ConsumeCoin>` instead of panic.
 
 ### Build
-- Bump `tokio` to `1.43.0`
+- Bump dependencies to latest version
 - Bump CLI related dependencies
 - Fully use `rustls` instead of `native-tls`/`openssl`
+- Bump MSRV to 1.85.0 (and upgrade to Rust 2024 edition)
 
 ## [0.7.0] (2025-01-01)
 ### Breaking Changes

@@ -271,14 +271,14 @@ pub(crate) mod macros {
     ///
     /// Ref: [`GitHub Gist`](https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda)
     macro_rules! linkify {
-        ($url:expr, $text:expr) => {
+        ($url:expr_2021, $text:expr_2021) => {
             if *$crate::term::IS_WIN_VT_SUPPORTED {
                 format!("\x1b]8;;{}\x1b\\{}\x1b]8;;\x1b\\", $url, $text)
             } else {
                 $text.to_string()
             }
         };
-        ($url:expr) => {
+        ($url:expr_2021) => {
             linkify!($url, $url)
         };
     }

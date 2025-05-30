@@ -14,12 +14,12 @@ members = [
 
 [workspace.package]
 version = "0.7.1-dev"
-edition = "2021"
+edition = "2024"
 authors = ["noaione <noaione@n4o.xyz>"]
 license = "MIT"
 repository = "https://github.com/noaione/tosho-mango"
 homepage = "https://tosho.dev"
-rust-version = "1.80.0"
+rust-version = "1.85.0"
 
 [workspace.dependencies]
 # Tokio related

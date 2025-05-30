@@ -19,7 +19,7 @@ pub use parser::*;
 #[macro_export]
 macro_rules! make_error {
     // If user only pass a string, then just return the string
-    ($arg:expr) => {
+    ($arg:expr_2021) => {
         $crate::ToshoError::new($arg.to_string())
     };
     // Accept string that can be formatted, then also accept a list of arguments

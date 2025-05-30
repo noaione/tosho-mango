@@ -60,7 +60,7 @@ macro_rules! config_reader {
 /// 4. The list of implementation name.
 macro_rules! save_config_impl {
     (
-        $user_path:expr, $config:expr,
+        $user_path:expr_2021, $config:expr_2021,
         $($handlebar:ident)*,
         $($prefix:ident)*
     ) => {
@@ -104,7 +104,7 @@ macro_rules! config_to_configimpl {
 macro_rules! config_match_expand {
     // get_config
     (
-        $id:expr, $user_path:expr, $base_impl:expr,
+        $id:expr_2021, $user_path:expr_2021, $base_impl:expr_2021,
         $($handlebar:ident)*,
         $($get_conf:ident)*
     ) => {
@@ -119,7 +119,7 @@ macro_rules! config_match_expand {
     };
     // get_all_config
     (
-        $entry:expr, $base_impl:expr,
+        $entry:expr_2021, $base_impl:expr_2021,
         $($handlebar:ident)*,
         $($read_conf:ident)*
     ) => {
@@ -134,7 +134,7 @@ macro_rules! config_match_expand {
     };
     // prefix_expansion
     (
-        $base_impl:expr,
+        $base_impl:expr_2021,
         $($handlebar:ident)*,
         $($prefix:ident)*
     ) => {

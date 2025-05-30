@@ -92,8 +92,7 @@ fn generate_copy_targets(rectbox: u32, seed: u32) -> Vec<((u32, u32), (u32, u32)
 /// # Arguments
 /// * `img_bytes` - Image bytes to descramble.
 /// * `rectbox` - How much block that divide the images, usually `4`.
-/// * `scramble_seed` - The seed used to scramble the image. Available in the [`crate::models::WebEpisodeViewerResponse`]
-///                     response.
+/// * `scramble_seed` - The seed used to scramble the image. Available in the [`crate::models::WebEpisodeViewerResponse`] response.
 ///
 /// # Example
 /// ```rust,no_run

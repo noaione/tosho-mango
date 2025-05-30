@@ -112,7 +112,7 @@ jobs:
       - name: Build (Nightly)
         if: env.BUILD_PROFILE == 'debug'
         run: |
-          cargo build --verbose --all --target ${{ matrix.os[1] }} --profile ci
+          cargo build --locked --verbose --all --target ${{ matrix.os[1] }} --profile ci
         shell: bash
 
       - name: Permissions (Nightly)
@@ -133,7 +133,7 @@ jobs:
       - name: Build (Release)
         if: env.BUILD_PROFILE == 'release'
         run: |
-          cargo build --verbose --all --target ${{ matrix.os[1] }} --profile ci
+          cargo build --locked --verbose --all --target ${{ matrix.os[1] }} --profile ci
         shell: bash
         env:
           RELEASE: true

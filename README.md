@@ -29,7 +29,7 @@ This is just a fun side project, and as a disclaimer, I'm not condoning anything
 ## Installation
 
 **Requirements**:
-- Rust 1.80.0+ (If manually building or using `cargo`)
+- Rust 1.85.0+ (If manually building or using `cargo`)
 - 64-bit devices (ARM64/aarch64 support is untested)
 - Modern terminal with the following ANSI support:
   - Support [OSC-8](https://github.com/Alhadis/OSC8-Adoption#terminal-emulators)
