@@ -667,15 +667,16 @@ mod tests {
         // see `cargo +nightly rustc -p tosho-musq --profile=check -- -Zunpretty=expanded`, ctrl+f `pub fn consumption(&self) -> ConsumptionType`
         let chapter = TestChapterV2 { price: 50, consumption: ConsumptionType::Unrecognized }.to_proto();
 
-        let prev_hook = std::panic::take_hook();
-        std::panic::set_hook(Box::new(|_| {}));
-        // This should panic because the consumption type isn't in the arms
-        let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-            client.calculate_coin(&user_point, &chapter);
-        }));
-        std::panic::set_hook(prev_hook);
-
+        let result = client.calculate_coin(&user_point, &chapter);
         assert!(result.is_err());
+        let err = result.unwrap_err();
+
+        if let ToshoError::ParseError(ToshoParseError::ExpectedResponse(msg)) = err {
+            assert_eq!(msg, "valid consumption type (got code -1 instead)");
+        }
+        else {
+            panic!("Expected ToshoError::ParseError with ExpectedResponse, got: {:?}", err);
+        }
     }
 
     // always returns not possible
