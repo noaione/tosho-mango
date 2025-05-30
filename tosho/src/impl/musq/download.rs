@@ -183,7 +183,19 @@ pub(crate) async fn musq_download(
                     continue;
                 }
 
-                let consume = client.calculate_coin(&coin_purse, chapter);
+                let consume = match client.calculate_coin(&coin_purse, chapter) {
+                    Ok(consume) => consume,
+                    Err(err) => {
+                        console.error(format!(
+                            "Failed to calculate coin for chapter <m,s>{}</> (<s>{}): {}",
+                            chapter.title(),
+                            chapter.id(),
+                            err
+                        ));
+                        continue;
+                    }
+                };
+
                 if !consume.is_possible() {
                     if !dl_config.no_input {
                         console.warn(cformat!(

@@ -33,7 +33,19 @@ pub(crate) async fn musq_purchase(
                     results.len()
                 ));
 
-                let consume = client.calculate_coin(&user_point, chapter);
+                let consume = match client.calculate_coin(&user_point, chapter) {
+                    Ok(consume) => consume,
+                    Err(e) => {
+                        console.warn(cformat!(
+                            "Unable to purchase chapter <magenta,bold>{}</> (ID: {}), error: {}",
+                            chapter.title(),
+                            title_id,
+                            e
+                        ));
+                        failed_claimed.push((chapter.clone(), e.to_string()));
+                        continue;
+                    }
+                };
 
                 if !consume.is_possible() {
                     console.warn(cformat!(

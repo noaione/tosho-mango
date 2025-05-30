@@ -151,9 +151,13 @@ impl MUClient {
     ///     assert!(coins.is_possible());
     /// }
     /// ```
-    pub fn calculate_coin(&self, user_point: &UserPoint, chapter: &ChapterV2) -> ConsumeCoin {
+    pub fn calculate_coin(
+        &self,
+        user_point: &UserPoint,
+        chapter: &ChapterV2,
+    ) -> ToshoResult<ConsumeCoin> {
         if chapter.is_free() {
-            return self.build_coin(0, 0, None, None);
+            return Ok(self.build_coin(0, 0, None, None));
         }
 
         match chapter.consumption() {
@@ -165,14 +169,14 @@ impl MUClient {
 
                 let need = ((chapter.price() - free) as i64).max(0);
                 if need <= 0 {
-                    return self.build_coin(chapter.price(), chapter.price(), Some(0), Some(0));
+                    return Ok(self.build_coin(chapter.price(), chapter.price(), Some(0), Some(0)));
                 }
 
                 let need = (need - event as i64).max(0);
                 if need <= 0 {
                     let event_diff = chapter.price().saturating_sub(free);
 
-                    return self.build_coin(chapter.price(), free, Some(event_diff), Some(0));
+                    return Ok(self.build_coin(chapter.price(), free, Some(event_diff), Some(0)));
                 }
 
                 let need = (need - paid as i64).max(0);
@@ -181,7 +185,7 @@ impl MUClient {
                     paid_diff = paid;
                 }
 
-                self.build_coin(chapter.price(), free, Some(event), Some(paid_diff))
+                Ok(self.build_coin(chapter.price(), free, Some(event), Some(paid_diff)))
             }
             ConsumptionType::EventOrPaid => {
                 // Prioritization: Event > Paid
@@ -190,7 +194,7 @@ impl MUClient {
 
                 let need = ((chapter.price() - event) as i64).max(0);
                 if need <= 0 {
-                    return self.build_coin(chapter.price(), chapter.price(), Some(0), Some(0));
+                    return Ok(self.build_coin(chapter.price(), chapter.price(), Some(0), Some(0)));
                 }
 
                 let need = (need - paid as i64).max(0);
@@ -199,23 +203,25 @@ impl MUClient {
                     paid_diff = paid;
                 }
 
-                self.build_coin(chapter.price(), event, Some(paid_diff), Some(0))
+                Ok(self.build_coin(chapter.price(), event, Some(paid_diff), Some(0)))
             }
             ConsumptionType::Paid => {
                 let paid_left: i64 = user_point.paid() as i64 - chapter.price() as i64;
 
                 if paid_left < 0 {
-                    return self.build_coin(chapter.price(), 0, Some(0), Some(0));
+                    return Ok(self.build_coin(chapter.price(), 0, Some(0), Some(0)));
                 }
 
-                self.build_coin(chapter.price(), 0, Some(0), Some(chapter.price()))
+                Ok(self.build_coin(chapter.price(), 0, Some(0), Some(chapter.price())))
             }
             ConsumptionType::Free
             | ConsumptionType::Rental
             | ConsumptionType::Purchased
-            | ConsumptionType::Subscription => self.build_coin(chapter.price(), 0, None, None),
-            _ => {
-                panic!("Unknown consumption type: {:?}", chapter.consumption());
+            | ConsumptionType::Subscription => Ok(self.build_coin(chapter.price(), 0, None, None)),
+            ConsumptionType::Unrecognized => {
+                Err(ToshoError::ParseError(ToshoParseError::ExpectedResponse(
+                    "valid consumption type (got code -1 instead)".to_string(),
+                )))
             }
         }
     }
