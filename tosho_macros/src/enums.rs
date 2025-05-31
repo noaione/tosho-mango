@@ -190,8 +190,11 @@ pub(crate) fn impl_prost_enum_unrecognized(ast: &syn::DeriveInput) -> proc_macro
         syn::Data::Enum(data) => data,
         _ => {
             return TokenStream::from(
-                syn::Error::new_spanned(ast, "Expected a struct for the `AutoGetter` derive macro")
-                    .to_compile_error(),
+                syn::Error::new_spanned(
+                    ast,
+                    "Expected an enum for the `ProstEnumUnrecognized` derive macro",
+                )
+                .to_compile_error(),
             );
         }
     };
