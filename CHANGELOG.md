@@ -6,6 +6,8 @@ Starting from Rust port of the project, all changes will be put into this file.
 ### Changes
 - `KM`: Revert back constants
 - `MU`: Change the `calculate_coin` signature to return `ToshoResult<ConsumeCoin>` instead of panic.
+- `MU`: Fix issues when purchasing event or paid chapters.
+- `MU`/`M+`: Use custom `tosho_macros::ProstEnumUnrecognized` to make sure we can use custom unrecognized values.
 
 ### Build
 - Bump dependencies to latest version

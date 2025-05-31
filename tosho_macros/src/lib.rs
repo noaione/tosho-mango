@@ -311,7 +311,7 @@ pub fn autodocfields_derive(input: TokenStream) -> TokenStream {
 /// ```rust
 /// # use tosho_macros::ProstEnumUnrecognized;
 /// #
-/// #[derive(ProstEnumUnrecognized)]
+/// #[derive(ProstEnumUnrecognized, Debug, PartialEq, Eq, PartialOrd, Ord)]
 /// enum TestEnum {
 ///     Any = 0,
 ///     Paid = 1,

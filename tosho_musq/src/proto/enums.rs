@@ -3,18 +3,23 @@
 //! If something is missing, please [open an issue](https://github.com/noaione/tosho-mango/issues/new/choose) or a [pull request](https://github.com/noaione/tosho-mango/compare).
 
 /// The status of each request
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::tosho_macros::ProstEnumUnrecognized,
+)]
 pub enum Status {
     /// The request was successful.
     Success = 0,
     /// The content was not found.
     ContentNotFound = 1,
     /// An error has occurred.
+    #[invalid_enum]
     Unrecognized = -1,
 }
 
 /// The attached badge of the chapter.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::tosho_macros::ProstEnumUnrecognized,
+)]
 pub enum Badge {
     /// No badge marking for this chapter.
     None = 0,
@@ -23,11 +28,14 @@ pub enum Badge {
     /// The chapter is marked as an advance/early chapter.
     Advance = 2,
     /// An error has occurred.
+    #[invalid_enum]
     Unrecognized = -1,
 }
 
 /// The attached badge of the manga.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::tosho_macros::ProstEnumUnrecognized,
+)]
 pub enum BadgeManga {
     /// No badge marking for this manga.
     None = 0,
@@ -40,22 +48,28 @@ pub enum BadgeManga {
     /// The manga is marked with unread chapters.
     Unread = 4,
     /// An error has occurred.
+    #[invalid_enum]
     Unrecognized = -1,
 }
 
 /// The attached label badge of the manga
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::tosho_macros::ProstEnumUnrecognized,
+)]
 pub enum LabelBadgeManga {
     /// No label badge marking for this manga.
     None = 0,
     /// MU! Original manga.
     Original = 1,
     /// An error has occurred.
+    #[invalid_enum]
     Unrecognized = -1,
 }
 
 /// The type of coin used to read the chapter.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::tosho_macros::ProstEnumUnrecognized,
+)]
 pub enum ConsumptionType {
     /// Any coint type can be used to read this chapter
     Any = 0,
@@ -72,11 +86,14 @@ pub enum ConsumptionType {
     /// This chapter is on subscriptions and can be read if user has subscriptions
     Subscription = 6,
     /// An error has occurred.
+    #[invalid_enum]
     Unrecognized = -1,
 }
 
 /// Subscription status of the user.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::tosho_macros::ProstEnumUnrecognized,
+)]
 pub enum SubscriptionKind {
     /// Not subscribed.
     None = 0,
@@ -89,6 +106,7 @@ pub enum SubscriptionKind {
     /// Subscribed half-yearly.
     HalfYearly = 4,
     /// An error has occurred.
+    #[invalid_enum]
     Unrecognized = -1,
 }
 
@@ -121,18 +139,23 @@ impl SubscriptionKind {
 }
 
 /// The current subscription status of the user.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::tosho_macros::ProstEnumUnrecognized,
+)]
 pub enum SubscriptionStatus {
     /// The user is not subscribed.
     Unsubscribed = 0,
     /// The user is subscribed.
     Subscribed = 1,
     /// An error has occurred.
+    #[invalid_enum]
     Unrecognized = -1,
 }
 
 /// The subscription badge information of a manga.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::tosho_macros::ProstEnumUnrecognized,
+)]
 pub enum SubscriptionBadge {
     /// No subscription badge marking for this manga.
     None = 0,
@@ -141,6 +164,7 @@ pub enum SubscriptionBadge {
     /// Has a subscription badge marking for this manga, and the user is subscribed.
     Subscribed = 2,
     /// An error has occurred.
+    #[invalid_enum]
     Unrecognized = -1,
 }
 
