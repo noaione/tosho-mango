@@ -301,3 +301,32 @@ pub fn autodocfields_derive(input: TokenStream) -> TokenStream {
     let ast = syn::parse(input).unwrap();
     enums::impl_auto_doc_fiels(&ast)
 }
+
+/// A custom derive macro that follows similar pattern to `prost::Enumeration`
+///
+/// This version allows us to define an enum with an unrecognized variant
+/// instead of falling back to a default value.
+///
+/// # Example
+/// ```rust
+/// # use tosho_macros::ProstEnumUnrecognized;
+/// #
+/// #[derive(ProstEnumUnrecognized)]
+/// enum TestEnum {
+///     Any = 0,
+///     Paid = 1,
+///     // #[invalid_enum] is always required to be present
+///     #[invalid_enum]
+///     Unrecognized = -1,
+/// }
+///
+/// # fn main() {
+/// assert_eq!(TestEnum::try_from(2).unwrap(), TestEnum::Unrecognized);
+/// assert_eq!(TestEnum::try_from(0).unwrap(), TestEnum::Any);
+/// # }
+/// ```
+#[proc_macro_derive(ProstEnumUnrecognized, attributes(invalid_enum))]
+pub fn prost_enum_unrecognized_derive(input: TokenStream) -> TokenStream {
+    let ast = syn::parse_macro_input!(input as syn::DeriveInput);
+    enums::impl_prost_enum_unrecognized(&ast)
+}

@@ -18,6 +18,7 @@ proc-macro2 = "1.0"
 
 [dev-dependencies]
 serde.workspace = true
+prost.workspace = true
 
 [lib]
 proc-macro = true
