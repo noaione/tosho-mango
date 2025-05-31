@@ -2,7 +2,7 @@
 //!
 //! If something is missing, please [open an issue](https://github.com/noaione/tosho-mango/issues/new/choose) or a [pull request](https://github.com/noaione/tosho-mango/compare).
 
-use tosho_common::{make_error, ToshoError};
+use tosho_common::{ToshoError, make_error};
 
 /// The used error type for the API.
 #[derive(Debug)]

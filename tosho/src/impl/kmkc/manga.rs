@@ -1,8 +1,8 @@
 use color_print::cformat;
 use tosho_kmkc::{
+    KMClient,
     constants::BASE_HOST,
     models::{GenreNode, MagazineCategory},
-    KMClient,
 };
 
 use super::super::parser::WeeklyCodeCli;

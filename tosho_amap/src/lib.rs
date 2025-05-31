@@ -4,7 +4,7 @@
 use std::{collections::HashMap, sync::MutexGuard};
 
 use constants::{
-    get_constants, API_HOST, APP_NAME, BASE_API, HEADER_NAMES, IMAGE_HOST, MASKED_LOGIN,
+    API_HOST, APP_NAME, BASE_API, HEADER_NAMES, IMAGE_HOST, MASKED_LOGIN, get_constants,
 };
 use futures_util::TryStreamExt;
 use helper::ComicPurchase;
@@ -18,8 +18,8 @@ use tokio::io::AsyncWriteExt;
 
 pub use config::*;
 use tosho_common::{
-    make_error, parse_json_response, parse_json_response_failable, FailableResponse,
-    ToshoAuthError, ToshoClientError, ToshoParseError, ToshoResult,
+    FailableResponse, ToshoAuthError, ToshoClientError, ToshoParseError, ToshoResult, make_error,
+    parse_json_response, parse_json_response_failable,
 };
 pub mod config;
 pub mod constants;

@@ -7,8 +7,8 @@ use clap::ValueEnum;
 use color_print::cformat;
 use tosho_macros::EnumName;
 use tosho_rbean::{
-    models::{Chapter, ChapterPage, ImageSource, Manga, UserAccount},
     RBClient,
+    models::{Chapter, ChapterPage, ImageSource, Manga, UserAccount},
 };
 
 use crate::{
@@ -263,7 +263,9 @@ fn select_quality_url(
                             // get the highest quality image
                             match source.first() {
                                 Some(first_src) => Ok(first_src.url().to_string()),
-                                None => Err(anyhow::anyhow!("Tried to get middle quality {idx} but no image source available for download")),
+                                None => Err(anyhow::anyhow!(
+                                    "Tried to get middle quality {idx} but no image source available for download"
+                                )),
                             }
                         }
                     }

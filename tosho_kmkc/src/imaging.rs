@@ -16,7 +16,7 @@
 use std::io::Cursor;
 
 use image::{GenericImage, GenericImageView, ImageEncoder};
-use tosho_common::{bail_on_error, ToshoDetailedImageError, ToshoImageError, ToshoResult};
+use tosho_common::{ToshoDetailedImageError, ToshoImageError, ToshoResult, bail_on_error};
 
 fn u32_to_f32(n: u32) -> f32 {
     if n > i32::MAX as u32 {

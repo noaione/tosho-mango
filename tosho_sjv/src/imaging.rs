@@ -14,7 +14,7 @@
 use std::io::Cursor;
 
 use image::{GenericImage, GenericImageView, ImageEncoder};
-use tosho_common::{make_error, ToshoResult};
+use tosho_common::{ToshoResult, make_error};
 
 const CUT_WIDTH: u32 = 90;
 const CUT_HEIGHT: u32 = 140;

@@ -1,8 +1,8 @@
-use tokio::time::{sleep, Duration};
+use tokio::time::{Duration, sleep};
 
 use color_print::cformat;
 use num_format::{Locale, ToFormattedString};
-use tosho_amap::{helper::ComicPurchase, models::ComicEpisodeInfoNode, AMClient};
+use tosho_amap::{AMClient, helper::ComicPurchase, models::ComicEpisodeInfoNode};
 
 use crate::cli::ExitCode;
 

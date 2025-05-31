@@ -1,5 +1,5 @@
 use color_print::cformat;
-use tosho_amap::{constants::BASE_HOST, models::ComicTagInfo, AMClient};
+use tosho_amap::{AMClient, constants::BASE_HOST, models::ComicTagInfo};
 
 use crate::{cli::ExitCode, linkify};
 

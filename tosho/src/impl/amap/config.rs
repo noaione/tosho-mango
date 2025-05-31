@@ -1,6 +1,6 @@
 #![allow(clippy::derive_partial_eq_without_eq)]
 
-use tosho_amap::{models::AccountUserInfo, AMConfig};
+use tosho_amap::{AMConfig, models::AccountUserInfo};
 use tosho_macros::EnumName;
 
 pub const PREFIX: &str = "amap";

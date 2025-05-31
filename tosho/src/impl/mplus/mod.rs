@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use clap::{Subcommand, ValueEnum};
 
-use super::parser::{parse_comma_number, CommaSeparatedNumber};
+use super::parser::{CommaSeparatedNumber, parse_comma_number};
 
 pub(crate) mod accounts;
 pub(super) mod common;

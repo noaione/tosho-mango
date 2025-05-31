@@ -5,8 +5,8 @@ use futures_util::TryStreamExt;
 use std::collections::HashMap;
 use tokio::io::{self, AsyncWriteExt};
 use tosho_common::{
-    bail_on_error, make_error, parse_json_response, ToshoAuthError, ToshoClientError, ToshoError,
-    ToshoResult,
+    ToshoAuthError, ToshoClientError, ToshoError, ToshoResult, bail_on_error, make_error,
+    parse_json_response,
 };
 
 use crate::models::UserAccount;

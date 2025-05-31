@@ -2,17 +2,17 @@ use std::collections::HashMap;
 
 use color_print::cformat;
 use tosho_sjv::{
+    SJClient,
     constants::{EXPAND_SJ_NAME, EXPAND_VM_NAME},
     models::{ChapterMessage, MangaImprint},
-    SJClient,
 };
 
 use super::common::{do_print_search_information, get_cached_store_data, search_manga_by_text};
 use crate::r#impl::common::unix_timestamp_to_string;
 use crate::{
     cli::ExitCode,
-    linkify,
     r#impl::{parser::NumberOrString, sjv::common::sort_chapters},
+    linkify,
 };
 
 pub(crate) async fn sjv_search(

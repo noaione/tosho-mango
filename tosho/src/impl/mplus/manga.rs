@@ -1,13 +1,13 @@
 use color_print::cformat;
 use tosho_mplus::{
+    MPClient,
     constants::BASE_HOST,
     helper::SubscriptionPlan,
     proto::{Tag, TitleLanguages, TitleReleaseSchedule},
-    MPClient,
 };
 
 use super::common::{do_print_search_information, get_cached_titles_data, search_manga_by_text};
-use crate::{cli::ExitCode, linkify, r#impl::common::unix_timestamp_to_string};
+use crate::{cli::ExitCode, r#impl::common::unix_timestamp_to_string, linkify};
 
 pub(crate) async fn mplus_search(
     query: &str,

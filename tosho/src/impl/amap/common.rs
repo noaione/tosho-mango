@@ -1,18 +1,18 @@
 use color_print::cformat;
 use num_format::{Locale, ToFormattedString};
 use tosho_amap::{
+    AMClient, SESSION_COOKIE_NAME,
     constants::BASE_HOST,
     models::{ComicEpisodeInfo, ComicInfo, ComicSimpleInfo, IAPInfo},
-    AMClient, SESSION_COOKIE_NAME,
 };
-use tosho_common::{make_error, ToshoResult};
+use tosho_common::{ToshoResult, make_error};
 
 use super::config::Config;
 use crate::r#impl::common::unix_timestamp_to_string;
 use crate::{
     config::save_config,
     linkify,
-    term::{get_console, ConsoleChoice},
+    term::{ConsoleChoice, get_console},
 };
 
 impl From<super::config::Config> for tosho_amap::AMConfig {

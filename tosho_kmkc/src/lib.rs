@@ -8,7 +8,7 @@ pub mod config;
 pub mod constants;
 pub mod imaging;
 pub mod models;
-use constants::{get_constants, API_HOST, BASE_API, IMAGE_HOST, WEB_CONSTANTS};
+use constants::{API_HOST, BASE_API, IMAGE_HOST, WEB_CONSTANTS, get_constants};
 use futures_util::TryStreamExt;
 use md5::Md5;
 use models::{
@@ -24,8 +24,8 @@ use reqwest_cookie_store::CookieStoreMutex;
 use sha2::{Digest, Sha256, Sha512};
 use tokio::io::AsyncWriteExt;
 use tosho_common::{
-    bail_on_error, make_error, parse_json_response, parse_json_response_failable, ToshoAuthError,
-    ToshoClientError, ToshoResult,
+    ToshoAuthError, ToshoClientError, ToshoResult, bail_on_error, make_error, parse_json_response,
+    parse_json_response_failable,
 };
 use tosho_macros::AutoGetter;
 

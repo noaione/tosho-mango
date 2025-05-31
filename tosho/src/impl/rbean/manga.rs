@@ -3,9 +3,9 @@ use std::collections::HashMap;
 use clap::ValueEnum;
 use color_print::cformat;
 use tosho_rbean::{
+    RBClient,
     constants::BASE_HOST,
     models::{Separator, SortOption},
-    RBClient,
 };
 
 use crate::{cli::ExitCode, linkify};

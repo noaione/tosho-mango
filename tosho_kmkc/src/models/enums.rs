@@ -394,7 +394,12 @@ mod tests {
     #[test]
     fn test_enum_doc_for_magazine() {
         let magazine = MagazineCategory::eYoungMagazine;
-        assert_eq!(magazine.get_doc(), Some("e-Young Magazine, a digital-only of Young magazine which focused on user-submitted serialized content."));
+        assert_eq!(
+            magazine.get_doc(),
+            Some(
+                "e-Young Magazine, a digital-only of Young magazine which focused on user-submitted serialized content."
+            )
+        );
 
         let ichijinsha_doc = "Ichijinsha, a subsidiary of Kodansha.
 

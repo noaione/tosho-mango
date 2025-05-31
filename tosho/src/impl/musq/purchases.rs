@@ -1,8 +1,8 @@
-use tokio::time::{sleep, Duration};
+use tokio::time::{Duration, sleep};
 
 use color_print::cformat;
 use num_format::{Locale, ToFormattedString};
-use tosho_musq::{proto::ChapterV2, MUClient};
+use tosho_musq::{MUClient, proto::ChapterV2};
 
 use crate::cli::ExitCode;
 

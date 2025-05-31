@@ -1,8 +1,8 @@
 use color_print::cformat;
 use tosho_musq::{
+    MUClient, WeeklyCode,
     constants::BASE_HOST,
     proto::{ConsumptionType, Tag},
-    MUClient, WeeklyCode,
 };
 
 use crate::{cli::ExitCode, linkify};

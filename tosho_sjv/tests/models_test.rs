@@ -1,6 +1,6 @@
 use std::{fs::File, io::Read, path::PathBuf, str::FromStr};
 
-use base64::{engine::general_purpose, Engine as _};
+use base64::{Engine as _, engine::general_purpose};
 use tosho_sjv::models::{
     MangaImprint, MangaRating, MangaSeriesResponse, MangaStoreResponse, SubscriptionType,
 };

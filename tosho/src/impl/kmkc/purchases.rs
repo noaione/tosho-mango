@@ -1,9 +1,9 @@
 use color_print::cformat;
 use num_format::{Locale, ToFormattedString};
 use tosho_kmkc::{
+    KMClient,
     constants::BASE_HOST,
     models::{EpisodeNode, TicketInfoType},
-    KMClient,
 };
 
 use crate::{cli::ExitCode, linkify};

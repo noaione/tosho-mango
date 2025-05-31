@@ -2,8 +2,8 @@ use aho_corasick::AhoCorasick;
 use color_print::cformat;
 use tosho_sjv::constants::BASE_HOST;
 use tosho_sjv::{
-    models::{MangaChapterDetail, MangaDetail, MangaStoreInfo, MangaStoreResponse},
     SJClient,
+    models::{MangaChapterDetail, MangaDetail, MangaStoreInfo, MangaStoreResponse},
 };
 
 use crate::linkify;

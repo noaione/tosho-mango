@@ -3,8 +3,8 @@
 use std::str::FromStr;
 
 use tosho_macros::{
-    enum_error, DeserializeEnum, DeserializeEnum32, DeserializeEnum32Fallback, EnumName,
-    EnumU32Fallback, SerializeEnum, SerializeEnum32,
+    DeserializeEnum, DeserializeEnum32, DeserializeEnum32Fallback, EnumName, EnumU32Fallback,
+    SerializeEnum, SerializeEnum32, enum_error,
 };
 
 /// A boolean type used by the API represented as an integer.

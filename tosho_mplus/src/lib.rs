@@ -8,11 +8,11 @@ pub mod proto;
 use futures_util::TryStreamExt;
 use tokio::io::{self, AsyncWriteExt};
 use tosho_common::{
-    bail_on_error, parse_protobuf_response, ToshoClientError, ToshoError, ToshoParseError,
-    ToshoResult,
+    ToshoClientError, ToshoError, ToshoParseError, ToshoResult, bail_on_error,
+    parse_protobuf_response,
 };
 
-use constants::{Constants, API_HOST, IMAGE_HOST};
+use constants::{API_HOST, Constants, IMAGE_HOST};
 use helper::RankingType;
 use proto::{CommentList, ErrorResponse, Language, SuccessOrError};
 

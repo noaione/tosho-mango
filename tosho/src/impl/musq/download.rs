@@ -4,8 +4,8 @@ use clap::ValueEnum;
 
 use color_print::cformat;
 use tosho_musq::{
-    proto::{ChapterV2, MangaDetailV2},
     ImageQuality, MUClient,
+    proto::{ChapterV2, MangaDetailV2},
 };
 
 use crate::{

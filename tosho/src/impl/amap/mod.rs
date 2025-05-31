@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use super::parser::{parse_comma_number, CommaSeparatedNumber};
+use super::parser::{CommaSeparatedNumber, parse_comma_number};
 use clap::Subcommand;
 
 pub(crate) mod accounts;

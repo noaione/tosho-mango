@@ -7,7 +7,7 @@ use crate::{
     term::ConsoleChoice,
 };
 use color_print::cformat;
-use inquire::{required, validator::StringValidator, Text};
+use inquire::{Text, required, validator::StringValidator};
 use std::{
     collections::{BTreeMap, HashMap},
     path::{Path, PathBuf},

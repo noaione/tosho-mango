@@ -1,8 +1,8 @@
 use color_print::cformat;
 use tosho_rbean::{
+    RBClient,
     constants::BASE_HOST,
     models::{Carousel, MangaNode},
-    RBClient,
 };
 
 use crate::{cli::ExitCode, linkify, term::ConsoleChoice};

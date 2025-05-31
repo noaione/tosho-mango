@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use clap::Subcommand;
 
-use super::parser::{parse_comma_string, CommaSeparatedString};
+use super::parser::{CommaSeparatedString, parse_comma_string};
 
 pub(crate) mod accounts;
 pub(super) mod common;

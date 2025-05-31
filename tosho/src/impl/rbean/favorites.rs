@@ -1,5 +1,5 @@
 use color_print::cformat;
-use tosho_rbean::{constants::BASE_HOST, RBClient};
+use tosho_rbean::{RBClient, constants::BASE_HOST};
 
 use crate::{cli::ExitCode, linkify};
 

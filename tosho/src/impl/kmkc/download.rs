@@ -4,8 +4,8 @@ use std::sync::Arc;
 use color_print::cformat;
 use tosho_kmkc::models::ImagePageNode;
 use tosho_kmkc::{
-    models::{EpisodeNode, EpisodeViewerResponse, TicketInfoType, TitleNode},
     KMClient,
+    models::{EpisodeNode, EpisodeViewerResponse, TicketInfoType, TitleNode},
 };
 
 use crate::r#impl::common::check_downloaded_image_count;

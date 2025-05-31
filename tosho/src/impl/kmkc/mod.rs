@@ -2,7 +2,7 @@ use std::{ops::RangeInclusive, path::PathBuf};
 
 use clap::Subcommand;
 
-use super::parser::{parse_comma_number, CommaSeparatedNumber, WeeklyCodeCli};
+use super::parser::{CommaSeparatedNumber, WeeklyCodeCli, parse_comma_number};
 
 use self::rankings::RankingType;
 

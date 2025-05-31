@@ -8,7 +8,7 @@
 
 use reqwest::Url;
 use reqwest_cookie_store::{CookieStoreMutex, RawCookie};
-use tosho_common::{bail_on_error, make_error, ToshoAuthError, ToshoError, ToshoResult};
+use tosho_common::{ToshoAuthError, ToshoError, ToshoResult, bail_on_error, make_error};
 use tosho_macros::{AutoGetter, EnumName, EnumU32};
 use urlencoding::{decode, encode};
 

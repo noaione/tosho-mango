@@ -9,7 +9,7 @@
 //! # assert_eq!(generate_random_token(16).len(), 16);
 //! ```
 
-use rand::{distr::Alphanumeric, rng, Rng};
+use rand::{Rng, distr::Alphanumeric, rng};
 
 /// Generate a string of random characters used for token and other ID.
 ///

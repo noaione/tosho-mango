@@ -2,9 +2,9 @@ use aho_corasick::AhoCorasick;
 use color_print::cformat;
 use prost::Message;
 use tosho_mplus::{
+    APIResponse, MPClient,
     constants::BASE_HOST,
     proto::{Language, Title, TitleListV2, TitleUpdateStatus},
-    APIResponse, MPClient,
 };
 
 use crate::{config::get_user_path, linkify, term::get_console};

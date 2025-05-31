@@ -8,10 +8,10 @@
 
 use std::sync::LazyLock;
 
-use base64::{engine::general_purpose, Engine as _};
+use base64::{Engine as _, engine::general_purpose};
 use reqwest::Url;
 use reqwest_cookie_store::{CookieStoreMutex, RawCookie};
-use tosho_common::{make_error, ToshoError};
+use tosho_common::{ToshoError, make_error};
 use tosho_macros::AutoGetter;
 
 use crate::constants::BASE_HOST;

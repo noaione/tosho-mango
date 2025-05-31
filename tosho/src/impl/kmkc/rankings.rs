@@ -1,8 +1,8 @@
 use clap::ValueEnum;
 use color_print::cformat;
 use tosho_kmkc::{
-    constants::{RankingTab, RANKING_TABS},
     KMClient,
+    constants::{RANKING_TABS, RankingTab},
 };
 
 use crate::cli::ExitCode;

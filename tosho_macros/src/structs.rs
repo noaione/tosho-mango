@@ -4,7 +4,7 @@
 
 use proc_macro::TokenStream;
 use quote::ToTokens;
-use syn::{punctuated::Punctuated, Attribute, Expr, Lit, Meta, Token};
+use syn::{Attribute, Expr, Lit, Meta, Token, punctuated::Punctuated};
 
 use crate::common::get_field_comment;
 

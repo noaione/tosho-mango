@@ -1,15 +1,15 @@
 use color_print::cformat;
 use num_format::{Locale, ToFormattedString};
-use tosho_common::{make_error, ToshoResult};
+use tosho_common::{ToshoResult, make_error};
 use tosho_musq::{
+    MUClient,
     constants::BASE_HOST,
     proto::{BadgeManga, ChapterV2, LabelBadgeManga, MangaDetailV2, MangaResultNode, UserPoint},
-    MUClient,
 };
 
 use crate::{
     linkify,
-    term::{get_console, ConsoleChoice},
+    term::{ConsoleChoice, get_console},
 };
 
 pub(super) fn do_print_search_information(

@@ -1,7 +1,7 @@
 use clap::ValueEnum;
 use color_print::cformat;
 use tosho_macros::EnumName;
-use tosho_mplus::{helper::RankingType, MPClient};
+use tosho_mplus::{MPClient, helper::RankingType};
 
 use crate::cli::ExitCode;
 

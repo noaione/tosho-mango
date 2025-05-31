@@ -2,9 +2,9 @@ use std::path::{Path, PathBuf};
 
 use color_print::cformat;
 use tosho_amap::{
+    AMClient,
     helper::ComicPurchase,
     models::{ComicEpisodeInfo, ComicInfo},
-    AMClient,
 };
 
 use crate::{
