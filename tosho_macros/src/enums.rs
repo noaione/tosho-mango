@@ -402,12 +402,10 @@ fn expand_expr_enum_unrecognized_i32(expr: &syn::Expr) -> Result<i32, syn::Error
                         // Parse the integer then negate it
                         match lit_int.base10_parse::<i32>() {
                             Ok(n) => Ok(-n),
-                            Err(_) => {
-                                return Err(syn::Error::new_spanned(
-                                    unary,
-                                    "Expected a valid i32 literal for the enum value",
-                                ));
-                            }
+                            Err(_) => Err(syn::Error::new_spanned(
+                                unary,
+                                "Expected a valid i32 literal for the enum value",
+                            )),
                         }
                     } else {
                         Err(syn::Error::new_spanned(
@@ -427,10 +425,10 @@ fn expand_expr_enum_unrecognized_i32(expr: &syn::Expr) -> Result<i32, syn::Error
         }
         _ => {
             // If the expression is not a literal, we cannot handle it
-            return Err(syn::Error::new_spanned(
+            Err(syn::Error::new_spanned(
                 expr,
                 "Expected a literal integer for the enum value",
-            ));
+            ))
         }
     }
 }
