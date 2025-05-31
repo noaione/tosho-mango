@@ -1,6 +1,6 @@
 [package]
 name = "tosho-kmkc"
-version = "0.6.1"
+version = "0.7.0"
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
@@ -36,5 +36,5 @@ md-5 = "0.10.6"
 
 image.workspace = true
 
-tosho-macros = { path = "../tosho_macros", version = "0.4" }
-tosho-common = { path = "../tosho_common", version = "=0.1.1", features = ["serde", "image"] }
+tosho-macros = { path = "../tosho_macros", version = "0.5" }
+tosho-common = { path = "../tosho_common", version = "=0.2.0", features = ["serde", "image"] }

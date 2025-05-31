@@ -2410,7 +2410,7 @@ dependencies = [
 
 [[package]]
 name = "tosho-amap"
-version = "0.6.1"
+version = "0.7.0"
 dependencies = [
  "base64",
  "chrono",
@@ -2427,7 +2427,7 @@ dependencies = [
 
 [[package]]
 name = "tosho-common"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "image",
  "prost",
@@ -2439,7 +2439,7 @@ dependencies = [
 
 [[package]]
 name = "tosho-kmkc"
-version = "0.6.1"
+version = "0.7.0"
 dependencies = [
  "base64",
  "chrono",
@@ -2460,7 +2460,7 @@ dependencies = [
 
 [[package]]
 name = "tosho-macros"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "proc-macro2",
  "prost",
@@ -2471,7 +2471,7 @@ dependencies = [
 
 [[package]]
 name = "tosho-mplus"
-version = "0.3.1"
+version = "0.4.0"
 dependencies = [
  "base64",
  "chrono",
@@ -2486,7 +2486,7 @@ dependencies = [
 
 [[package]]
 name = "tosho-musq"
-version = "0.6.1"
+version = "0.7.0"
 dependencies = [
  "aes",
  "base64",
@@ -2503,7 +2503,7 @@ dependencies = [
 
 [[package]]
 name = "tosho-rbean"
-version = "0.4.1"
+version = "0.5.0"
 dependencies = [
  "base64",
  "chrono",
@@ -2518,7 +2518,7 @@ dependencies = [
 
 [[package]]
 name = "tosho-sjv"
-version = "0.6.1"
+version = "0.7.0"
 dependencies = [
  "base64",
  "chrono",
