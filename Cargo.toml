@@ -13,12 +13,12 @@ members = [
 ]
 
 [workspace.package]
-version = "0.8.0-dev"
+version = "0.8.0"
 edition = "2024"
 authors = ["noaione <noaione@n4o.xyz>"]
 license = "MIT"
 repository = "https://github.com/noaione/tosho-mango"
-homepage = "https://tosho.dev"
+homepage = "https://github.com/noaione/tosho-mango"
 rust-version = "1.85.0"
 
 [workspace.dependencies]

@@ -3,6 +3,7 @@
 Starting from Rust port of the project, all changes will be put into this file.
 
 ## Unreleased
+## [0.8.0] (2025-05-31)
 ### Changes
 - `KM`: Revert back constants
 - `MU`: Change the `calculate_coin` signature to return `ToshoResult<ConsumeCoin>` instead of panic.
