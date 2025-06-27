@@ -115,7 +115,7 @@ fn inquire_chapter_number(
 
     let ch_number = Text::new("Chapter number")
         .with_help_message("")
-        .with_placeholder(&format!("Last known: Chapter {}", last_known_num))
+        .with_placeholder(&format!("Last known: Chapter {last_known_num}"))
         .with_validator(required!())
         .with_validator(NumberValidation)
         .prompt();
@@ -219,12 +219,12 @@ pub fn auto_chapters_collector(
 
         if use_extra {
             // name: ex{base:03}.{extra}
-            let name = format!("ex{:03}.{}", base, extra);
+            let name = format!("ex{base:03}.{extra}");
             extra += 1;
             chapters_mapping.entry(name).or_default().push(chapter);
         } else {
             // name: c{base:03}
-            let name = format!("c{:03}", base);
+            let name = format!("c{base:03}");
             chapters_mapping.entry(name).or_default().push(chapter);
         }
     }
@@ -321,7 +321,7 @@ pub fn manual_chapters_collector(
                     continue;
                 }
                 selected_chapters.extend(chapter_ids.clone());
-                let name = format!("c{:03}", ch_number);
+                let name = format!("c{ch_number:03}");
                 let remapped = chapter_ids
                     .iter()
                     .map(|id| chapter_id_map.remove(id).unwrap().clone())
@@ -438,7 +438,7 @@ pub(crate) async fn tools_split_merge(
     let info_json = match tokio::fs::read_to_string(info_json).await {
         Ok(info_json) => info_json,
         Err(err) => {
-            console.error(format!("Failed to read _info.json file: {}", err));
+            console.error(format!("Failed to read _info.json file: {err}"));
             return 1;
         }
     };
@@ -446,7 +446,7 @@ pub(crate) async fn tools_split_merge(
     let info_json: MangaDetailDump = match serde_json::from_str(&info_json) {
         Ok(info_json) => info_json,
         Err(err) => {
-            console.error(format!("Failed to parse _info.json file: {}", err));
+            console.error(format!("Failed to parse _info.json file: {err}"));
             return 1;
         }
     };
@@ -493,7 +493,7 @@ pub(crate) async fn tools_split_merge(
             .join(", ");
         let mut info_log = format!("  {}: has {} chapters", name, chapters.len());
         if console.is_debug() {
-            info_log.push_str(&format!(" ({})", ch_ids));
+            info_log.push_str(&format!(" ({ch_ids})"));
         }
         console.info(&info_log);
         for chapter in chapters {
@@ -507,8 +507,7 @@ pub(crate) async fn tools_split_merge(
             .map(|chapters| chapters.len())
             .sum::<usize>();
         let is_continue = console.confirm(Some(&format!(
-            "Do you want to continue with {} chapters?",
-            total_values
+            "Do you want to continue with {total_values} chapters?"
         )));
         if !is_continue {
             console.warn("Aborting...");
@@ -525,13 +524,10 @@ pub(crate) async fn tools_split_merge(
 
     console.info("Starting merge...");
     for (name, chapters) in chapters_maps.iter() {
-        console.info(format!("  Merging {}...", name));
+        console.info(format!("  Merging {name}..."));
 
         if !is_all_folder_exist(input_folder.to_path_buf(), chapters) {
-            console.warn(format!(
-                "   Not all folders exist for {}, skipping...",
-                name
-            ));
+            console.warn(format!("   Not all folders exist for {name}, skipping..."));
             continue;
         }
 
@@ -544,7 +540,7 @@ pub(crate) async fn tools_split_merge(
                 if err.kind() == tokio::io::ErrorKind::AlreadyExists {
                     // ignore
                 } else {
-                    console.error(format!("   Failed to create target directory: {}", err));
+                    console.error(format!("   Failed to create target directory: {err}"));
                     continue;
                 }
             }
@@ -566,7 +562,7 @@ pub(crate) async fn tools_split_merge(
             let mut read_dirs = match tokio::fs::read_dir(source_dir).await {
                 Ok(read_dirs) => read_dirs,
                 Err(err) => {
-                    console.error(format!("   Failed to read source directory: {}", err));
+                    console.error(format!("   Failed to read source directory: {err}"));
                     continue;
                 }
             };
@@ -575,7 +571,7 @@ pub(crate) async fn tools_split_merge(
                 let file = match read_dirs.next_entry().await {
                     Ok(file) => file,
                     Err(err) => {
-                        console.error(format!("   Failed to read source directory: {}", err));
+                        console.error(format!("   Failed to read source directory: {err}"));
                         break;
                     }
                 };
@@ -588,9 +584,9 @@ pub(crate) async fn tools_split_merge(
                 let path = &file.path();
                 if path.is_file() && is_image(path) {
                     // move the file from "file" to target_dir / p{last_page}.{ext}
-                    let file_name = format!("p{:03}", last_page);
+                    let file_name = format!("p{last_page:03}");
                     let file_ext = path.extension().unwrap().to_str().unwrap();
-                    let file_name = format!("{}.{}", file_name, file_ext);
+                    let file_name = format!("{file_name}.{file_ext}");
 
                     let target_path = target_dir.join(file_name);
                     match tokio::fs::rename(path, target_path).await {
@@ -607,7 +603,7 @@ pub(crate) async fn tools_split_merge(
             }
         }
 
-        console.info(format!("   Merged {} with {} pages", name, last_page));
+        console.info(format!("   Merged {name} with {last_page} pages"));
 
         if !config.no_input && write_to_json {
             // manual mode, update the manual info
@@ -632,7 +628,7 @@ pub(crate) async fn tools_split_merge(
         match tokio::fs::write(manual_json_path, manual_json_content).await {
             Ok(_) => {}
             Err(err) => {
-                console.error(format!("Failed to write _info_manual_merge.json: {}", err));
+                console.error(format!("Failed to write _info_manual_merge.json: {err}"));
             }
         }
     }

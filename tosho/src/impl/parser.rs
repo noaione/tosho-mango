@@ -57,7 +57,7 @@ impl ValueEnum for WeeklyCodeCli {
             "thu" => Ok(WeeklyCodeCli::Thursday),
             "fri" => Ok(WeeklyCodeCli::Friday),
             "sat" => Ok(WeeklyCodeCli::Saturday),
-            _ => Err(format!("Invalid weekly code: {}", input)),
+            _ => Err(format!("Invalid weekly code: {input}")),
         }
     }
 }
@@ -114,8 +114,8 @@ pub enum NumberOrString {
 impl std::fmt::Display for NumberOrString {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            NumberOrString::Number(n) => write!(f, "{}", n),
-            NumberOrString::Str(s) => write!(f, "{}", s),
+            NumberOrString::Number(n) => write!(f, "{n}"),
+            NumberOrString::Str(s) => write!(f, "{s}"),
         }
     }
 }
@@ -138,7 +138,7 @@ pub(super) fn parse_comma_number(s: &str) -> Result<CommaSeparatedNumber, String
         let number = number.trim();
         let number = number
             .parse()
-            .map_err(|_| format!("Invalid number: {}", number))?;
+            .map_err(|_| format!("Invalid number: {number}"))?;
 
         numbers.push(number);
     }

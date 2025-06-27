@@ -94,10 +94,10 @@ impl ErrorResponse {
                 let mut message = String::new();
                 message.push_str("An error occurred");
                 if let Some(popup_message) = popup_message {
-                    message.push_str(&format!(": {}", popup_message));
+                    message.push_str(&format!(": {popup_message}"));
                 }
                 if let Some(debug_message) = &self.debug_message {
-                    message.push_str(&format!("\nDebug: {}", debug_message));
+                    message.push_str(&format!("\nDebug: {debug_message}"));
                 }
                 message
             }
@@ -105,7 +105,7 @@ impl ErrorResponse {
                 let mut message = String::new();
                 message.push_str("You are not authorized to access this resource");
                 if let Some(debug_message) = &self.debug_message {
-                    message.push_str(&format!("\nDebug: {}", debug_message));
+                    message.push_str(&format!("\nDebug: {debug_message}"));
                 }
                 message
             }
@@ -113,7 +113,7 @@ impl ErrorResponse {
                 let mut message = String::new();
                 message.push_str("Server is under maintenance");
                 if let Some(debug_message) = &self.debug_message {
-                    message.push_str(&format!("\nDebug: {}", debug_message));
+                    message.push_str(&format!("\nDebug: {debug_message}"));
                 }
                 message
             }
@@ -121,7 +121,7 @@ impl ErrorResponse {
                 let mut message = String::new();
                 message.push_str("Your request is blocked by GeoIP");
                 if let Some(debug_message) = &self.debug_message {
-                    message.push_str(&format!("\nDebug: {}", debug_message));
+                    message.push_str(&format!("\nDebug: {debug_message}"));
                 }
                 message
             }
@@ -129,7 +129,7 @@ impl ErrorResponse {
                 let mut message = String::new();
                 message.push_str("An unknown error occurred");
                 if let Some(debug_message) = &self.debug_message {
-                    message.push_str(&format!("\nDebug: {}", debug_message));
+                    message.push_str(&format!("\nDebug: {debug_message}"));
                 }
                 message
             }

@@ -34,7 +34,7 @@ pub(crate) async fn amap_search(
             0
         }
         Err(e) => {
-            console.error(format!("Failed to fetch balance: {}", e));
+            console.error(format!("Failed to fetch balance: {e}"));
 
             1
         }
@@ -42,12 +42,10 @@ pub(crate) async fn amap_search(
 }
 
 fn format_tags(tags: &[ComicTagInfo]) -> String {
-    let parsed_tags = tags
-        .iter()
+    tags.iter()
         .map(|tag| cformat!("<p(244),reverse,bold>{}</>", tag.info().name()))
         .collect::<Vec<String>>()
-        .join(", ");
-    parsed_tags
+        .join(", ")
 }
 
 pub(crate) async fn amap_title_info(
@@ -139,7 +137,7 @@ pub(crate) async fn amap_title_info(
             let prod_participants = prod_binding.split('\n');
             console.info(cformat!("  <s>Production Participants</>"));
             for prod in prod_participants {
-                console.info(format!("    - {}", prod));
+                console.info(format!("    - {prod}"));
             }
 
             if let Some(free_daily) = info.free_daily() {
@@ -157,7 +155,7 @@ pub(crate) async fn amap_title_info(
             0
         }
         Err(e) => {
-            console.error(format!("Failed to fetch title info: {}", e));
+            console.error(format!("Failed to fetch title info: {e}"));
 
             1
         }

@@ -108,7 +108,7 @@ async fn kmkc_actual_downloader(
     {
         Ok(_) => {}
         Err(err) => {
-            console.error(format!("    Failed to download image: {}", err));
+            console.error(format!("    Failed to download image: {err}"));
             // silent delete the file
             tokio::fs::remove_file(&img_dl_path).await?;
         }
@@ -237,8 +237,7 @@ pub(crate) async fn kmkc_download(
                                 }
                                 Err(e) => {
                                     console.error(format!(
-                                        "   Failed to purchase chapter, ignoring: {}",
-                                        e
+                                        "   Failed to purchase chapter, ignoring: {e}"
                                     ));
                                 }
                             }
@@ -277,8 +276,7 @@ pub(crate) async fn kmkc_download(
                             // }
                         }
                         Err(e) => {
-                            console
-                                .error(format!("   Failed to purchase chapter, ignoring: {}", e));
+                            console.error(format!("   Failed to purchase chapter, ignoring: {e}"));
                         }
                     }
                 }
@@ -309,7 +307,7 @@ pub(crate) async fn kmkc_download(
                 let viewer_info = client.get_episode_viewer(chapter).await;
 
                 if let Err(e) = viewer_info {
-                    console.error(format!("Failed to get viewer info, ignoring: {}", e));
+                    console.error(format!("Failed to get viewer info, ignoring: {e}"));
                     continue;
                 }
 
@@ -419,7 +417,7 @@ pub(crate) async fn kmkc_download(
                                 {
                                     Ok(_) => {}
                                     Err(e) => {
-                                        cnsl.error(format!("    Failed to download image: {}", e));
+                                        cnsl.error(format!("    Failed to download image: {e}"));
                                     }
                                 }
                             })
@@ -445,7 +443,7 @@ pub(crate) async fn kmkc_download(
                         {
                             Ok(_) => {}
                             Err(e) => {
-                                console.error(format!("    Failed to download image: {}", e));
+                                console.error(format!("    Failed to download image: {e}"));
                             }
                         }
                     }

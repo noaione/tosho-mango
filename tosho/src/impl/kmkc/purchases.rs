@@ -85,15 +85,14 @@ pub(crate) async fn kmkc_purchase(
                 ticketing_claim.len()
             ));
 
-            console.status(format!("Purchasing chapter(s)... (1/{})", total_claim));
+            console.status(format!("Purchasing chapter(s)... (1/{total_claim})"));
             let mut purchase_count = 0;
             let mut failure_count = 0_u64;
 
             for (chapter, ticket_info) in ticketing_claim {
                 purchase_count += 1;
                 console.status(format!(
-                    "Purchasing chapter(s)... ({}/{})",
-                    purchase_count, total_claim
+                    "Purchasing chapter(s)... ({purchase_count}/{total_claim})"
                 ));
 
                 let result = client
@@ -101,15 +100,14 @@ pub(crate) async fn kmkc_purchase(
                     .await;
 
                 if let Err(error) = result {
-                    console.error(format!("Failed to purchase chapter: {}", error));
+                    console.error(format!("Failed to purchase chapter: {error}"));
                     failure_count += 1;
                 }
             }
 
             if !chapter_point_claim.is_empty() {
                 console.status(format!(
-                    "Purchasing chapter(s)... ({}/{}) [point]",
-                    purchase_count, total_claim
+                    "Purchasing chapter(s)... ({purchase_count}/{total_claim}) [point]"
                 ));
 
                 // convert Vec<EpisodeNode> to Vec<&EpisodeNode>
@@ -127,7 +125,7 @@ pub(crate) async fn kmkc_purchase(
                         purchase_count += chapter_point_claim.len();
                     }
                     Err(error) => {
-                        console.error(format!("Failed to purchase chapter: {}", error));
+                        console.error(format!("Failed to purchase chapter: {error}"));
                         failure_count += chapter_point_claim.len() as u64;
                     }
                 }
@@ -224,13 +222,13 @@ pub(crate) async fn kmkc_purchased(
                 let linked = linkify!(&manga_url, result.title());
 
                 console.info(cformat!("  {} ({})", linked, result.id()));
-                console.info(format!("   {}", manga_url));
+                console.info(format!("   {manga_url}"));
             }
 
             0
         }
         Err(error) => {
-            console.error(format!("Failed to get purchased title: {}", error));
+            console.error(format!("Failed to get purchased title: {error}"));
             1
         }
     }

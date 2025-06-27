@@ -41,7 +41,7 @@ impl ValueEnum for DeviceKind {
             "android" => Ok(DeviceKind::Android),
             "ios" => Ok(DeviceKind::Apple),
             "web" => Ok(DeviceKind::Web),
-            _ => Err(format!("Invalid device kind: {}", s)),
+            _ => Err(format!("Invalid device kind: {s}")),
         }
     }
 }
@@ -103,13 +103,13 @@ pub(crate) async fn musq_auth_session(
                     0
                 }
                 Err(e) => {
-                    console.error(format!("Authentication failed: {}", e));
+                    console.error(format!("Authentication failed: {e}"));
                     1
                 }
             }
         }
         Err(e) => {
-            console.error(format!("Failed to create client: {}", e));
+            console.error(format!("Failed to create client: {e}"));
             1
         }
     }
@@ -175,7 +175,7 @@ pub async fn musq_account_info(
             0
         }
         Err(e) => {
-            console.error(format!("Failed to fetch account info: {}", e));
+            console.error(format!("Failed to fetch account info: {e}"));
             1
         }
     }
@@ -234,7 +234,7 @@ pub async fn musq_account_balance(
             0
         }
         Err(e) => {
-            console.error(format!("Failed to fetch account info: {}", e));
+            console.error(format!("Failed to fetch account info: {e}"));
             1
         }
     }
@@ -264,7 +264,7 @@ pub(crate) fn musq_account_revoke(account: &Config, console: &crate::term::Termi
             0
         }
         Err(err) => {
-            console.error(format!("Failed to delete account: {}", err));
+            console.error(format!("Failed to delete account: {err}"));
             1
         }
     }

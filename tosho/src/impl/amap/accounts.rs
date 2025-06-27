@@ -85,19 +85,19 @@ pub async fn amap_account_login(
                             0
                         }
                         Err(e) => {
-                            console.error(format!("Failed to login: {}", e));
+                            console.error(format!("Failed to login: {e}"));
                             1
                         }
                     }
                 }
                 Err(e) => {
-                    console.error(format!("Failed to create client: {}", e));
+                    console.error(format!("Failed to create client: {e}"));
                     1
                 }
             }
         }
         Err(e) => {
-            console.error(format!("Failed to authenticate: {}", e));
+            console.error(format!("Failed to authenticate: {e}"));
             1
         }
     }
@@ -160,7 +160,7 @@ pub(crate) async fn amap_account_info(
             0
         }
         Err(e) => {
-            console.error(format!("Failed to fetch account info: {}", e));
+            console.error(format!("Failed to fetch account info: {e}"));
 
             1
         }
@@ -210,7 +210,7 @@ pub(crate) async fn amap_account_balance(
             0
         }
         Err(e) => {
-            console.error(format!("Failed to fetch balance: {}", e));
+            console.error(format!("Failed to fetch balance: {e}"));
 
             1
         }
@@ -241,7 +241,7 @@ pub(crate) fn amap_account_revoke(account: &Config, console: &crate::term::Termi
             0
         }
         Err(err) => {
-            console.error(format!("Failed to delete account: {}", err));
+            console.error(format!("Failed to delete account: {err}"));
             1
         }
     }

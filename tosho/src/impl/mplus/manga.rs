@@ -43,16 +43,14 @@ pub(crate) async fn mplus_search(
 }
 
 fn format_tags(tags: &[Tag]) -> String {
-    let parsed_tags = tags
-        .iter()
+    tags.iter()
         .map(|tag| cformat!("<p(244),reverse,bold>{}</>", tag.slug()))
         .collect::<Vec<String>>()
-        .join(", ");
-    parsed_tags
+        .join(", ")
 }
 
 fn format_other_languages(title_lang: &[TitleLanguages]) -> String {
-    let parsed_lang = title_lang
+    title_lang
         .iter()
         .map(|lang| {
             let lang_url = format!("https://{}/titles/{}", &*BASE_HOST, lang.id());
@@ -60,8 +58,7 @@ fn format_other_languages(title_lang: &[TitleLanguages]) -> String {
             cformat!("<p(244),reverse,bold>{}</>", linked)
         })
         .collect::<Vec<String>>()
-        .join(", ");
-    parsed_lang
+        .join(", ")
 }
 
 pub(crate) async fn mplus_title_info(
@@ -142,7 +139,7 @@ pub(crate) async fn mplus_title_info(
             console.info(cformat!("  <s>Summary</>"));
             let split_desc = title_info.overview().split('\n');
             for desc in split_desc {
-                console.info(format!("    {}", desc));
+                console.info(format!("    {desc}"));
             }
 
             println!();
@@ -218,7 +215,7 @@ pub(crate) async fn mplus_title_info(
             1
         }
         Err(e) => {
-            console.error(format!("Unable to connect to M+: {}", e));
+            console.error(format!("Unable to connect to M+: {e}"));
             1
         }
     }

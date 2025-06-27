@@ -62,7 +62,7 @@ pub(crate) async fn rbean_home_page(
                     linked_url
                 ));
                 console.info(format!("  {}", featured.description()));
-                console.info(format!("   {}", manga_url));
+                console.info(format!("   {manga_url}"));
             }
 
             loop {

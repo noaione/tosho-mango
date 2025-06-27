@@ -45,7 +45,7 @@ impl From<AMConfig> for Config {
         let new_uuid = uuid::Uuid::new_v4().to_string();
         Self {
             id: new_uuid.clone(),
-            email: format!("{}@amap.xyz", new_uuid),
+            email: format!("{new_uuid}@amap.xyz"),
             user_id: 0,
             token: value.token().to_string(),
             identifier: value.identifier().to_string(),

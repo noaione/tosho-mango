@@ -52,7 +52,7 @@ impl ValueEnum for DeviceType {
             "android" => Ok(Self::Android),
             "apple" => Ok(Self::Apple),
             "web" => Ok(Self::Web),
-            _ => Err(format!("Invalid SJ device mode: {}", input)),
+            _ => Err(format!("Invalid SJ device mode: {input}")),
         }
     }
 }
@@ -98,7 +98,7 @@ impl ValueEnum for SJDeviceMode {
         match input.as_str() {
             "vm" => Ok(Self::VM),
             "sj" => Ok(Self::SJ),
-            _ => Err(format!("Invalid SJ device mode: {}", input)),
+            _ => Err(format!("Invalid SJ device mode: {input}")),
         }
     }
 }
@@ -142,7 +142,7 @@ impl From<SJConfig> for Config {
         };
         Self {
             id: new_uuid.clone(),
-            email: format!("{}@sjv.xyz", new_uuid),
+            email: format!("{new_uuid}@sjv.xyz"),
             username: "sjv_temp".to_string(),
             user_id: value.user_id(),
             token: value.token().to_string(),

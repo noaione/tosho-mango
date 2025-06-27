@@ -46,8 +46,8 @@ impl FromStr for IdDump {
 impl std::fmt::Display for IdDump {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Number(n) => write!(f, "{}", n),
-            Self::Uuid(s) => write!(f, "{}", s),
+            Self::Number(n) => write!(f, "{n}"),
+            Self::Uuid(s) => write!(f, "{s}"),
         }
     }
 }

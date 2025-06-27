@@ -36,7 +36,7 @@ impl ValueEnum for DownloadImageQuality {
             "middle" => Ok(Self::Normal),
             "normal" => Ok(Self::Normal),
             "high" => Ok(Self::High),
-            _ => Err(format!("Invalid image quality: {}", input)),
+            _ => Err(format!("Invalid image quality: {input}")),
         }
     }
 
@@ -243,7 +243,7 @@ pub(crate) async fn musq_download(
 
                     match purchase_result {
                         Err(err) => {
-                            console.error(format!("   Failed to purchase chapter: {}", err));
+                            console.error(format!("   Failed to purchase chapter: {err}"));
                             console.error(cformat!(
                                 "    Skipping chapter <m,s>{}</> (<s>{}</>)",
                                 chapter.title(),
@@ -302,7 +302,7 @@ pub(crate) async fn musq_download(
                             )
                             .await;
                         if let Err(err) = ch_viewer {
-                            console.error(format!("Failed to download chapter: {}", err));
+                            console.error(format!("Failed to download chapter: {err}"));
                             console.error(cformat!(
                                 "   Skipping chapter <m,s>{}</> (<s>{}</>)",
                                 chapter.title(),
@@ -407,15 +407,14 @@ pub(crate) async fn musq_download(
                                             Ok(_) => {}
                                             Err(err) => {
                                                 console.error(format!(
-                                                    "    Failed to write image: {}",
-                                                    err
+                                                    "    Failed to write image: {err}"
                                                 ));
                                             }
                                         }
                                     }
                                     Err(err) => {
                                         console
-                                            .error(format!("    Failed to decrypt image: {}", err));
+                                            .error(format!("    Failed to decrypt image: {err}"));
                                     }
                                 }
                             } else {
@@ -423,14 +422,13 @@ pub(crate) async fn musq_download(
                                 match tokio::fs::write(&img_dl_path, &temp_memory).await {
                                     Ok(_) => {}
                                     Err(err) => {
-                                        console
-                                            .error(format!("    Failed to write image: {}", err));
+                                        console.error(format!("    Failed to write image: {err}"));
                                     }
                                 }
                             }
                         }
                         Err(err) => {
-                            console.error(format!("    Failed to download image: {}", err));
+                            console.error(format!("    Failed to download image: {err}"));
                         }
                     }
                 }

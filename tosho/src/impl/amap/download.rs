@@ -188,7 +188,7 @@ pub(crate) async fn amap_download(
 
                     match purchase_result {
                         Err(err) => {
-                            console.error(format!("   Failed to purchase chapter: {}", err));
+                            console.error(format!("   Failed to purchase chapter: {err}"));
                             console.error(format!(
                                 "    Skipping chapter <m,s>{}</> (<s>{}</>)",
                                 chapter.info().title(),
@@ -248,7 +248,7 @@ pub(crate) async fn amap_download(
 
                 let ch_view = client.get_comic_viewer(title_id, &consume).await;
                 if let Err(err) = ch_view {
-                    console.error(format!("Failed to download chapter: {}", err));
+                    console.error(format!("Failed to download chapter: {err}"));
                     console.error(cformat!(
                         "   Skipping chapter <m,s>{}</> (<s>{}</>)",
                         info.title(),
@@ -289,7 +289,7 @@ pub(crate) async fn amap_download(
                 // download images
                 let total_image_count = ch_pages.len() as u64;
                 for (idx, image) in ch_pages.iter().enumerate() {
-                    let img_fn = format!("p{:03}.jpg", idx);
+                    let img_fn = format!("p{idx:03}.jpg");
                     let img_dl_path = ch_dir.join(&img_fn);
                     // async download
                     let writer = tokio::fs::File::create(&img_dl_path)
@@ -309,7 +309,7 @@ pub(crate) async fn amap_download(
                     match client.stream_download(image.info().url(), writer).await {
                         Ok(_) => {}
                         Err(err) => {
-                            console.error(format!("    Failed to download image: {}", err));
+                            console.error(format!("    Failed to download image: {err}"));
                             // silently delete the file
                             tokio::fs::remove_file(&img_dl_path)
                                 .await

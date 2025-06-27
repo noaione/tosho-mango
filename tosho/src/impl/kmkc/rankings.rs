@@ -27,8 +27,7 @@ pub enum RankingType {
 
 impl RankingType {
     pub fn get_tab(&self) -> Option<&RankingTab> {
-        let find_manual = RANKING_TABS.iter().find(|&t| t.id == self.clone() as u32);
-        find_manual
+        RANKING_TABS.iter().find(|&t| t.id == self.clone() as u32)
     }
 }
 
@@ -43,7 +42,7 @@ pub(crate) async fn kmkc_home_rankings(
     let rank_tab = match ranking.get_tab() {
         Some(tab) => tab,
         None => {
-            console.error(format!("Invalid ranking type: {:?}", ranking));
+            console.error(format!("Invalid ranking type: {ranking:?}"));
             return 1;
         }
     };

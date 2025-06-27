@@ -227,7 +227,7 @@ pub fn get_all_config(r#impl: &Implementations, user_path: Option<PathBuf>) -> V
         Kmkc Musq Amap Sjv Rbean Mplus,
         kmkc musq amap sjv rbean mplus
     );
-    glob_path.push(format!("{}.*.tmconf", prefix));
+    glob_path.push(format!("{prefix}.*.tmconf"));
 
     glob::glob(glob_path.to_str().unwrap()).expect("Failed to read glob pattern")
         .flatten()
@@ -268,7 +268,7 @@ pub fn try_remove_config(
         Kmkc Musq Amap Sjv Rbean Mplus,
         kmkc musq amap sjv rbean mplus
     );
-    user_conf.push(format!("{}.{}.tmconf", prefix, id));
+    user_conf.push(format!("{prefix}.{id}.tmconf"));
 
     if user_conf.exists() {
         std::fs::remove_file(user_conf)

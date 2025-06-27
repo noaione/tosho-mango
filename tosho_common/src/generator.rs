@@ -32,7 +32,7 @@ mod tests {
     #[test]
     fn test_generate_random_token() {
         let token = generate_random_token(16);
-        println!("{}", token);
+        println!("{token}");
         assert_eq!(token.len(), 16);
     }
 }

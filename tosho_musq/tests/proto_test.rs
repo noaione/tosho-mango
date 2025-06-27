@@ -67,7 +67,7 @@ fn hex_to_bytes(hex: &str) -> Vec<u8> {
     let mut bytes = Vec::new();
     let mut chars = hex.chars();
     while let (Some(a), Some(b)) = (chars.next(), chars.next()) {
-        bytes.push(u8::from_str_radix(&format!("{}{}", a, b), 16).unwrap());
+        bytes.push(u8::from_str_radix(&format!("{a}{b}"), 16).unwrap());
     }
     bytes
 }
@@ -347,11 +347,8 @@ fn test_proto_pointshopview() {
 fn test_common_reader() {
     let proto_data = common_reader("chapterview.tmfxture");
 
-    match proto_data {
-        Err(err) => {
-            assert!(true, "{}", err);
-        }
-        Ok(_) => {}
+    if let Err(err) = proto_data {
+        assert!(true, "{}", err);
     }
 }
 

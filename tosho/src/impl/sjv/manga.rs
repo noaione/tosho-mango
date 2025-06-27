@@ -48,7 +48,7 @@ pub(crate) async fn sjv_search(
             0
         }
         Err(e) => {
-            console.error(format!("Failed to fetch cached store: {}", e));
+            console.error(format!("Failed to fetch cached store: {e}"));
 
             1
         }
@@ -161,7 +161,7 @@ pub(crate) async fn sjv_title_info(
             if !synopsis.is_empty() {
                 let split_desc = synopsis.split('\n');
                 for desc in split_desc {
-                    console.info(format!("    {}", desc));
+                    console.info(format!("    {desc}"));
                 }
             }
 
@@ -233,7 +233,7 @@ pub(crate) async fn sjv_title_info(
             0
         }
         Err(e) => {
-            console.error(format!("Failed to fetch cached store: {}", e));
+            console.error(format!("Failed to fetch cached store: {e}"));
 
             1
         }

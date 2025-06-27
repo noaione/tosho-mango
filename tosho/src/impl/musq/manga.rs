@@ -83,8 +83,7 @@ pub(crate) async fn musq_search_weekly(
 }
 
 fn format_tags(tags: &[Tag]) -> String {
-    let parsed_tags = tags
-        .iter()
+    tags.iter()
         .map(|tag| {
             let tag_url = format!("https://{}/genre/{}", &*BASE_HOST, tag.id());
             let linked = linkify!(&tag_url, &tag.name());
@@ -92,8 +91,7 @@ fn format_tags(tags: &[Tag]) -> String {
             cformat!("<p(244),reverse,bold>{}</>", linked)
         })
         .collect::<Vec<String>>()
-        .join(", ");
-    parsed_tags
+        .join(", ")
 }
 
 pub(crate) async fn musq_title_info(
@@ -132,7 +130,7 @@ pub(crate) async fn musq_title_info(
             console.info(cformat!("  <s>Summary</>"));
             let split_desc = result.description().split('\n');
             for desc in split_desc {
-                console.info(format!("    {}", desc));
+                console.info(format!("    {desc}"));
             }
 
             if !result.warning().is_empty() {
@@ -187,7 +185,7 @@ pub(crate) async fn musq_title_info(
                 console.info(cformat!("  <s>Copyright</>: {}", copyrights[0]));
 
                 for copyr in copyrights.iter().skip(1) {
-                    console.info(format!("             {}", copyr));
+                    console.info(format!("             {copyr}"));
                 }
             }
 

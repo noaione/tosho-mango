@@ -640,7 +640,7 @@ mod tests {
         fn to_proto(&self) -> ChapterV2 {
             let mut ch = ChapterV2::default();
             ch.set_price(self.price);
-            ch.set_consumption(self.consumption.clone());
+            ch.set_consumption(self.consumption);
             ch
         }
     }
@@ -682,10 +682,7 @@ mod tests {
         if let ToshoError::ParseError(ToshoParseError::ExpectedResponse(msg)) = err {
             assert_eq!(msg, "valid consumption type (got code -1 instead)");
         } else {
-            panic!(
-                "Expected ToshoError::ParseError with ExpectedResponse, got: {:?}",
-                err
-            );
+            panic!("Expected ToshoError::ParseError with ExpectedResponse, got: {err:?}");
         }
     }
 

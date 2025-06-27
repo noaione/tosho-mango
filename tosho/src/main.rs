@@ -94,7 +94,7 @@ async fn main() {
     match entrypoint(_cli).await {
         Ok(exit_code) => std::process::exit(exit_code.try_into().unwrap_or(1_i32)),
         Err(e) => {
-            eprintln!("Error: {}", e);
+            eprintln!("Error: {e}");
             std::process::exit(1);
         }
     }
@@ -108,7 +108,7 @@ async fn entrypoint(cli: ToshoCli) -> anyhow::Result<ExitCode> {
         Some(proxy) => match reqwest::Proxy::all(proxy) {
             Ok(proxy) => Some(proxy),
             Err(e) => {
-                t.warn(format!("Unable to parse proxy: {}", e));
+                t.warn(format!("Unable to parse proxy: {e}"));
                 return Ok(1);
             }
         },
@@ -116,7 +116,7 @@ async fn entrypoint(cli: ToshoCli) -> anyhow::Result<ExitCode> {
     };
 
     check_for_update(&t).await.unwrap_or_else(|e| {
-        t.warn(format!("Failed to check for update: {}", e));
+        t.warn(format!("Failed to check for update: {e}"));
     });
 
     match cli.command {
@@ -989,7 +989,7 @@ async fn entrypoint(cli: ToshoCli) -> anyhow::Result<ExitCode> {
         ToshoCommands::Update => match updater::perform_update(&t).await {
             Ok(_) => Ok(0),
             Err(e) => {
-                t.error(format!("Failed to update: {}", e));
+                t.error(format!("Failed to update: {e}"));
                 Ok(1)
             }
         },

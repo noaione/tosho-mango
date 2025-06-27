@@ -337,9 +337,8 @@ impl SJClient {
             .get(response)
             .header(
                 reqwest::header::HOST,
-                reqwest::header::HeaderValue::from_str(host).map_err(|_| {
-                    ToshoClientError::HeaderParseError(format!("Host for {}", host))
-                })?,
+                reqwest::header::HeaderValue::from_str(host)
+                    .map_err(|_| ToshoClientError::HeaderParseError(format!("Host for {host}")))?,
             )
             .send()
             .await?;
@@ -391,9 +390,8 @@ impl SJClient {
             .get(url)
             .header(
                 reqwest::header::HOST,
-                reqwest::header::HeaderValue::from_str(host).map_err(|_| {
-                    ToshoClientError::HeaderParseError(format!("Host for {}", host))
-                })?,
+                reqwest::header::HeaderValue::from_str(host)
+                    .map_err(|_| ToshoClientError::HeaderParseError(format!("Host for {host}")))?,
             )
             .send()
             .await?;

@@ -33,7 +33,7 @@ impl ValueEnum for DeviceKind {
         };
         match s.as_str() {
             "android" => Ok(DeviceKind::Android),
-            _ => Err(format!("Invalid device kind: {}", s)),
+            _ => Err(format!("Invalid device kind: {s}")),
         }
     }
 }
@@ -110,13 +110,13 @@ pub(crate) async fn mplus_auth_session(
                     1
                 }
                 Err(e) => {
-                    console.error(format!("Authentication failed: {}", e));
+                    console.error(format!("Authentication failed: {e}"));
                     1
                 }
             }
         }
         Err(e) => {
-            console.error(format!("Failed to create client: {}", e));
+            console.error(format!("Failed to create client: {e}"));
             1
         }
     }
@@ -222,7 +222,7 @@ pub async fn mplus_account_info(
             1
         }
         Err(e) => {
-            console.error(format!("Failed to fetch account info: {}", e));
+            console.error(format!("Failed to fetch account info: {e}"));
             1
         }
     }
@@ -252,7 +252,7 @@ pub(crate) fn mplus_account_revoke(account: &Config, console: &crate::term::Term
             0
         }
         Err(err) => {
-            console.error(format!("Failed to delete account: {}", err));
+            console.error(format!("Failed to delete account: {err}"));
             1
         }
     }

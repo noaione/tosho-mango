@@ -323,8 +323,7 @@ fn pretty_name_fmt(name: &str, sep: &str) -> String {
     let mut merge_back = splitted_name.join(sep);
     let some_words = &["The", "A", "An"];
     some_words.iter().for_each(|&word| {
-        merge_back =
-            merge_back.replace(&format!(" {}", word), &format!(" {}", word.to_lowercase()));
+        merge_back = merge_back.replace(&format!(" {word}"), &format!(" {}", word.to_lowercase()));
     });
 
     if splitted_name.len() > 1 {

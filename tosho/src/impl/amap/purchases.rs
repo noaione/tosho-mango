@@ -82,7 +82,7 @@ pub(crate) async fn amap_purchase(
                             chapter.info().id(),
                             err
                         ));
-                        failed_claimed.push((chapter.info().clone(), format!("Error: {}", err)));
+                        failed_claimed.push((chapter.info().clone(), format!("Error: {err}")));
                         continue;
                     }
                 }

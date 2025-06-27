@@ -36,7 +36,7 @@ impl ValueEnum for DownloadImageQuality {
             "low" => Ok(Self::Low),
             "normal" | "middle" | "standard" => Ok(Self::Normal),
             "super_high" | "high_quality" | "high" => Ok(Self::High),
-            _ => Err(format!("Invalid image quality: {}", input)),
+            _ => Err(format!("Invalid image quality: {input}")),
         }
     }
 
@@ -108,7 +108,7 @@ fn get_output_directory(
     create_folder: bool,
 ) -> PathBuf {
     let mut pathing = output_dir.to_path_buf();
-    pathing.push(format!("MP_{}", title_id));
+    pathing.push(format!("MP_{title_id}"));
 
     if let Some(chapter_id) = chapter_id {
         pathing.push(chapter_id.to_string());
@@ -166,13 +166,12 @@ fn do_chapter_select(
                 .iter()
                 .map(|x| {
                     let ch_id = x.name.parse::<u64>().unwrap();
-                    let ch = flat_chapters
+
+                    flat_chapters
                         .iter()
                         .find(|&ch| ch.chapter_id() == ch_id)
                         .unwrap()
-                        .clone();
-
-                    ch
+                        .clone()
                 })
                 .collect();
 
@@ -218,7 +217,7 @@ async fn mplus_actual_downloader(
     match node.client.stream_download(node.image.url(), writer).await {
         Ok(_) => {}
         Err(err) => {
-            console.error(format!("    Failed to download image: {}", err));
+            console.error(format!("    Failed to download image: {err}"));
             // silent delete the file
             tokio::fs::remove_file(&img_dl_path).await?;
         }
@@ -320,7 +319,7 @@ pub(crate) async fn mplus_download(
                     .await;
 
                 if let Err(e) = view_req {
-                    console.error(format!("Failed to get viewer info: {}", e));
+                    console.error(format!("Failed to get viewer info: {e}"));
                     return 1;
                 }
 
@@ -387,7 +386,7 @@ pub(crate) async fn mplus_download(
                                 {
                                     Ok(_) => {}
                                     Err(e) => {
-                                        cnsl.error(format!("    Failed to download image: {}", e));
+                                        cnsl.error(format!("    Failed to download image: {e}"));
                                     }
                                 }
                             })
@@ -412,7 +411,7 @@ pub(crate) async fn mplus_download(
                         {
                             Ok(_) => {}
                             Err(e) => {
-                                console.error(format!("    Failed to download image: {}", e));
+                                console.error(format!("    Failed to download image: {e}"));
                             }
                         }
                     }
@@ -428,7 +427,7 @@ pub(crate) async fn mplus_download(
             1
         }
         Err(e) => {
-            console.error(format!("Unable to connect to M+: {}", e));
+            console.error(format!("Unable to connect to M+: {e}"));
             1
         }
     }

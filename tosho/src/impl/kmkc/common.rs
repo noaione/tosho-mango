@@ -41,9 +41,9 @@ pub(super) fn do_print_search_information(
 
         match with_number {
             true => term.info(format!("{}[{:02}] {}", pre_space, idx + 1, text_data)),
-            false => term.info(format!("{}{}", pre_space, text_data)),
+            false => term.info(format!("{pre_space}{text_data}")),
         }
-        term.info(format!("{}{}", pre_space_url, manga_url))
+        term.info(format!("{pre_space_url}{manga_url}"))
     }
 }
 
@@ -53,7 +53,7 @@ pub(super) fn parse_netscape_cookies(cookie_path: PathBuf) -> KMConfigWeb {
     let read_cookie = match std::fs::read_to_string(cookie_path) {
         Ok(read_cookie) => read_cookie,
         Err(e) => {
-            term.error(format!("Failed to read cookie file: {}", e));
+            term.error(format!("Failed to read cookie file: {e}"));
             std::process::exit(1);
         }
     };
@@ -61,7 +61,7 @@ pub(super) fn parse_netscape_cookies(cookie_path: PathBuf) -> KMConfigWeb {
     let config: KMConfigWeb = match read_cookie.try_into() {
         Ok(config) => config,
         Err(e) => {
-            term.error(format!("Failed to parse cookie file: {}", e));
+            term.error(format!("Failed to parse cookie file: {e}"));
             std::process::exit(1);
         }
     };
@@ -94,7 +94,7 @@ pub(super) async fn common_purchase_select(
     ));
     let user_point = client.get_user_point().await;
     if let Err(error) = user_point {
-        console.error(format!("Unable to get user point: {}", error));
+        console.error(format!("Unable to get user point: {error}"));
         return (Err(error), None, vec![], None);
     }
     let user_point = user_point.unwrap();
@@ -105,7 +105,7 @@ pub(super) async fn common_purchase_select(
     ));
     let results = client.get_titles(vec![title_id]).await;
     if let Err(error) = results {
-        console.error(format!("Failed to get title information: {}", error));
+        console.error(format!("Failed to get title information: {error}"));
         return (Err(error), None, vec![], None);
     }
 
@@ -128,7 +128,7 @@ pub(super) async fn common_purchase_select(
     ));
     let ticket_entry = client.get_title_ticket(result.id()).await;
     if let Err(error) = ticket_entry {
-        console.error(format!("Failed to get title ticket: {}", error));
+        console.error(format!("Failed to get title ticket: {error}"));
         return (Err(error), Some(result.clone()), vec![], None);
     }
 
@@ -144,7 +144,7 @@ pub(super) async fn common_purchase_select(
         let chapters = client.get_episodes(episodes.to_vec()).await;
 
         if let Err(error) = chapters {
-            console.error(format!("Failed to get chapters: {}", error));
+            console.error(format!("Failed to get chapters: {error}"));
             return (
                 Err(error),
                 Some(result.clone()),
@@ -251,13 +251,12 @@ pub(super) async fn common_purchase_select(
                 .iter()
                 .map(|ch| {
                     let ch_id = ch.name.parse::<i32>().unwrap();
-                    let ch = chapters_entry
+
+                    chapters_entry
                         .iter()
                         .find(|ch| ch.id() == ch_id)
                         .unwrap()
-                        .clone();
-
-                    ch
+                        .clone()
                 })
                 .collect();
 

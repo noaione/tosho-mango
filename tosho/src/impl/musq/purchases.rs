@@ -80,7 +80,7 @@ pub(crate) async fn musq_purchase(
                 claimed_total += 1;
             }
 
-            console.stop_status_msg(format!("Purchased {} chapters!", claimed_total));
+            console.stop_status_msg(format!("Purchased {claimed_total} chapters!"));
             if !failed_claimed.is_empty() {
                 console.warn(format!(
                     "We failed to purchase {} chapters, you might want to retry",

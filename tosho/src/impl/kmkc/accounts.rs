@@ -48,7 +48,7 @@ impl ValueEnum for DeviceKind {
             "web" => Ok(DeviceKind::Web),
             "android" => Ok(DeviceKind::Android),
             "ios" => Ok(DeviceKind::Apple),
-            _ => Err(format!("Invalid device kind: {}", s)),
+            _ => Err(format!("Invalid device kind: {s}")),
         }
     }
 }
@@ -126,14 +126,14 @@ pub(crate) async fn kmkc_account_login_web(
                     0
                 }
                 Err(err) => {
-                    console.error(format!("Failed to authenticate your account: {}", err));
+                    console.error(format!("Failed to authenticate your account: {err}"));
 
                     1
                 }
             }
         }
         Err(err) => {
-            console.error(format!("Failed to create client: {}", err));
+            console.error(format!("Failed to create client: {err}"));
             1
         }
     }
@@ -209,14 +209,14 @@ pub(crate) async fn kmkc_account_login_mobile(
                     0
                 }
                 Err(err) => {
-                    console.error(format!("Failed to authenticate your account: {}", err));
+                    console.error(format!("Failed to authenticate your account: {err}"));
 
                     1
                 }
             }
         }
         Err(err) => {
-            console.error(format!("Failed to create client: {}", err));
+            console.error(format!("Failed to create client: {err}"));
             1
         }
     }
@@ -294,7 +294,7 @@ pub async fn kmkc_account_login(
             0
         }
         Err(err) => {
-            console.error(format!("Failed to authenticate your account: {}", err));
+            console.error(format!("Failed to authenticate your account: {err}"));
 
             1
         }
@@ -378,14 +378,14 @@ pub async fn kmkc_account_login_adapt(
                             0
                         }
                         Err(err) => {
-                            console.error(format!("Failed to authenticate your account: {}", err));
+                            console.error(format!("Failed to authenticate your account: {err}"));
 
                             1
                         }
                     }
                 }
                 Err(err) => {
-                    console.error(format!("Failed to create client: {}", err));
+                    console.error(format!("Failed to create client: {err}"));
                     1
                 }
             }
@@ -469,7 +469,7 @@ pub(crate) async fn kmkc_account_info(
             0
         }
         Err(err) => {
-            console.error(format!("Failed to fetch account info: {}", err));
+            console.error(format!("Failed to fetch account info: {err}"));
             1
         }
     }
@@ -488,7 +488,7 @@ pub(crate) async fn kmkc_balance(
     let balance = client.get_user_point().await;
     match balance {
         Err(err) => {
-            console.error(format!("Failed to fetch balance: {}", err));
+            console.error(format!("Failed to fetch balance: {err}"));
             1
         }
         Ok(balance) => {
@@ -543,7 +543,7 @@ pub(crate) fn kmkc_account_revoke(account: &Config, console: &crate::term::Termi
             0
         }
         Err(err) => {
-            console.error(format!("Failed to delete account: {}", err));
+            console.error(format!("Failed to delete account: {err}"));
             1
         }
     }

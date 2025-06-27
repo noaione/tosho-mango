@@ -33,7 +33,7 @@ pub(crate) async fn amap_my_favorites(
             0
         }
         Err(err) => {
-            console.error(format!("Failed to fetch favorites: {}", err));
+            console.error(format!("Failed to fetch favorites: {err}"));
 
             1
         }

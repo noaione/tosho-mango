@@ -50,9 +50,9 @@ pub(super) fn do_print_search_information(
         if with_number {
             term.info(format!("{}[{:02}] {}", pre_space, idx + 1, text_data));
         } else {
-            term.info(format!("{}{}", pre_space, text_data));
+            term.info(format!("{pre_space}{text_data}"));
         }
-        term.info(format!("{}{}", pre_space_url, manga_url));
+        term.info(format!("{pre_space_url}{manga_url}"));
     }
 }
 

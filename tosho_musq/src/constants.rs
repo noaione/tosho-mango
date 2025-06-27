@@ -61,13 +61,9 @@ pub static APPLE_CONSTANTS: LazyLock<Constants> = LazyLock::new(|| {
     let ios_app_build = "202411251121";
 
     Constants {
-        image_ua: format!(
-            "{}/{} CFNetwork/1410.0.3 Darwin/22.6.0",
-            ios_app_pre, ios_app_build
-        ),
+        image_ua: format!("{ios_app_pre}/{ios_app_build} CFNetwork/1410.0.3 Darwin/22.6.0"),
         api_ua: format!(
-            "{}/{} ({}; build:{}; iOS 16.7.0) {}",
-            ios_app_pre, ios_app_ver, ios_app, ios_app_build, ios_app_post
+            "{ios_app_pre}/{ios_app_ver} ({ios_app}; build:{ios_app_build}; iOS 16.7.0) {ios_app_post}"
         ),
         os_ver: "16.7",
         app_ver: ios_app_ver.to_string(),

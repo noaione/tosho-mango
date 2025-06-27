@@ -57,7 +57,7 @@ fn get_output_directory(
     create_folder: bool,
 ) -> PathBuf {
     let mut pathing = output_dir.to_path_buf();
-    pathing.push(format!("SJV_{}", title_id));
+    pathing.push(format!("SJV_{title_id}"));
 
     if let Some(chapter_id) = chapter_id {
         pathing.push(chapter_id.to_string());
@@ -121,13 +121,12 @@ fn do_chapter_select(
                 .iter()
                 .map(|x| {
                     let ch_id = x.name.parse::<u32>().unwrap();
-                    let ch = chapters_entry
+
+                    chapters_entry
                         .iter()
                         .find(|ch| ch.id() == ch_id)
                         .unwrap()
-                        .clone();
-
-                    ch
+                        .clone()
                 })
                 .collect();
 
@@ -179,7 +178,7 @@ async fn sjv_actual_downloader(
     match node.client.stream_download(&download_url, writer).await {
         Ok(_) => {}
         Err(err) => {
-            console.error(format!("    Failed to download image: {}", err));
+            console.error(format!("    Failed to download image: {err}"));
             // silent delete the file
             tokio::fs::remove_file(&img_dl_path).await?;
         }
@@ -212,7 +211,7 @@ pub(crate) async fn sjv_download(
     let results = get_cached_store_data(client).await;
 
     if let Err(e) = results {
-        console.error(format!("Failed to fetch cached store: {}", e));
+        console.error(format!("Failed to fetch cached store: {e}"));
         return 1;
     }
 
@@ -232,7 +231,7 @@ pub(crate) async fn sjv_download(
     console.info("Fetching subscription info...");
     let subs_resp = client.get_entitlements().await;
     if let Err(e) = subs_resp {
-        console.error(format!("Failed to fetch subscription info: {}", e));
+        console.error(format!("Failed to fetch subscription info: {e}"));
         return 1;
     }
 
@@ -355,13 +354,13 @@ pub(crate) async fn sjv_download(
 
                 let view_req = client.verify_chapter(chapter.id()).await;
                 if let Err(e) = view_req {
-                    console.error(format!("Failed to verify chapter: {}", e));
+                    console.error(format!("Failed to verify chapter: {e}"));
                     continue;
                 }
 
                 let ch_metadata = client.get_chapter_metadata(chapter.id()).await;
                 if let Err(e) = ch_metadata {
-                    console.error(format!("Failed to fetch chapter metadata: {}", e));
+                    console.error(format!("Failed to fetch chapter metadata: {e}"));
                     continue;
                 }
 
@@ -402,10 +401,7 @@ pub(crate) async fn sjv_download(
                                 {
                                     Ok(_) => {}
                                     Err(e) => {
-                                        cnsl.error(format!(
-                                            "    Failed to download chapter: {}",
-                                            e
-                                        ));
+                                        cnsl.error(format!("    Failed to download chapter: {e}"));
                                     }
                                 }
                             })
@@ -430,7 +426,7 @@ pub(crate) async fn sjv_download(
                         {
                             Ok(_) => {}
                             Err(e) => {
-                                console.error(format!("    Failed to download chapter: {}", e));
+                                console.error(format!("    Failed to download chapter: {e}"));
                             }
                         }
                     }
@@ -441,7 +437,7 @@ pub(crate) async fn sjv_download(
             0
         }
         Err(e) => {
-            console.error(format!("Failed to fetch chapters: {}", e));
+            console.error(format!("Failed to fetch chapters: {e}"));
             1
         }
     }

@@ -152,7 +152,7 @@ impl ValueEnum for MPlusLanguage {
             "de" => Ok(MPlusLanguage::German),
             // "it" => Ok(MPlusLanguage::Italian),
             "vi" => Ok(MPlusLanguage::Vietnamese),
-            _ => Err(format!("Invalid language: {}", s)),
+            _ => Err(format!("Invalid language: {s}")),
         }
     }
 }

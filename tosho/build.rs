@@ -14,7 +14,7 @@ fn main() {
         res.set("ProductVersion", version);
         res.set("FileVersion", version);
         res.set("FileDescription", description);
-        res.set("OriginalFilename", &format!("{}.exe", name).to_uppercase());
+        res.set("OriginalFilename", &format!("{name}.exe").to_uppercase());
         res.set("LegalCopyright", "Copyright © 2023-present noaione");
         res.compile().unwrap();
     }

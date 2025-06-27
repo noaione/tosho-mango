@@ -48,10 +48,10 @@ pub(super) fn do_print_search_information(
         if with_number {
             term.info(format!("{}[{:02}] {}", pre_space, idx + 1, text_data))
         } else {
-            term.info(format!("{}{}", pre_space, text_data))
+            term.info(format!("{pre_space}{text_data}"))
         }
 
-        term.info(format!("{}{}", pre_space_url, manga_url))
+        term.info(format!("{pre_space_url}{manga_url}"))
     }
 }
 
@@ -143,7 +143,7 @@ pub(super) async fn get_cached_titles_data(client: &MPClient) -> anyhow::Result<
 
     let titles = client.get_all_titles().await;
     if let Err(e) = titles {
-        term.error(format!("Failed to fetch data from server: {}", e));
+        term.error(format!("Failed to fetch data from server: {e}"));
         anyhow::bail!("Failed to fetch data from server: {}", e);
     }
 

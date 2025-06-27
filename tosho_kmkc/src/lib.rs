@@ -934,10 +934,10 @@ fn create_request_hash(
             let birth_expire_hash = hash_kv(birthday, &expires);
 
             let merged_hash = <Sha512 as Digest>::digest(
-                format!("{:x}{}", qi_s_hashed, birth_expire_hash).as_bytes(),
+                format!("{qi_s_hashed:x}{birth_expire_hash}").as_bytes(),
             );
 
-            Ok(format!("{:x}", merged_hash))
+            Ok(format!("{merged_hash:x}"))
         }
         KMConfig::Mobile(mobile) => {
             let mut hasher = <Sha256 as Digest>::new();
@@ -954,13 +954,13 @@ fn create_request_hash(
                     make_error!("Key {} not found when hashing query params", key)
                 })?;
                 let hashed_value = <Md5 as Digest>::digest(value.as_bytes());
-                let hash_digest = format!("{:x}", hashed_value);
+                let hash_digest = format!("{hashed_value:x}");
 
                 hasher.update(hash_digest);
             }
 
             let hashed = hasher.finalize();
-            Ok(format!("{:x}", hashed))
+            Ok(format!("{hashed:x}"))
         }
     }
 }
@@ -974,7 +974,7 @@ fn hash_kv(key: &str, value: &str) -> String {
     let hasher256 = <Sha256 as Digest>::digest(key);
     let hasher512 = <Sha512 as Digest>::digest(value);
 
-    format!("{:x}_{:x}", hasher256, hasher512)
+    format!("{hasher256:x}_{hasher512:x}")
 }
 
 #[cfg(test)]

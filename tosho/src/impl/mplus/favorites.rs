@@ -40,7 +40,7 @@ pub(crate) async fn mplus_my_favorites(
             1
         }
         Err(e) => {
-            console.error(format!("Unable to connect to M+: {}", e));
+            console.error(format!("Unable to connect to M+: {e}"));
             1
         }
     }

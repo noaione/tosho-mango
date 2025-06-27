@@ -59,7 +59,7 @@ pub(crate) async fn amap_discovery(
             0
         }
         Err(e) => {
-            console.error(format!("Failed to fetch home discovery: {}", e));
+            console.error(format!("Failed to fetch home discovery: {e}"));
 
             1
         }

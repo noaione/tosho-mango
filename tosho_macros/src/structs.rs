@@ -376,6 +376,6 @@ fn make_field_comment(field: &syn::Field, option_mode: bool) -> String {
     } else {
         let if_it_exists = if option_mode { " if it exists" } else { "" };
 
-        format!("Get the value of `{}`{}", ident, if_it_exists)
+        format!("Get the value of `{ident}`{if_it_exists}")
     }
 }

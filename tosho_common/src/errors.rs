@@ -291,7 +291,7 @@ impl From<image::ImageError> for ToshoError {
                 let fmt_hint = match hint.format_hint() {
                     image::error::ImageFormatHint::Exact(fmt) => fmt.to_mime_type().to_string(),
                     image::error::ImageFormatHint::Name(name) => name,
-                    image::error::ImageFormatHint::PathExtension(ext) => format!("{:?}", ext),
+                    image::error::ImageFormatHint::PathExtension(ext) => format!("{ext:?}"),
                     image::error::ImageFormatHint::Unknown => "Unknown".to_string(),
                     _ => "Unknown Error Handled".to_string(),
                 };
@@ -302,7 +302,7 @@ impl From<image::ImageError> for ToshoError {
                 let fmt_hint = match hint.format_hint() {
                     image::error::ImageFormatHint::Exact(fmt) => fmt.to_mime_type().to_string(),
                     image::error::ImageFormatHint::Name(name) => name,
-                    image::error::ImageFormatHint::PathExtension(ext) => format!("{:?}", ext),
+                    image::error::ImageFormatHint::PathExtension(ext) => format!("{ext:?}"),
                     image::error::ImageFormatHint::Unknown => "Unknown".to_string(),
                     _ => "Unknown Error Handled".to_string(),
                 };
@@ -352,13 +352,13 @@ impl From<ToshoClientError> for ToshoError {
 impl std::fmt::Display for ToshoError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ToshoError::CommonError(msg) => write!(f, "{}", msg),
-            ToshoError::RequestError(e) => write!(f, "Request error: {}", e),
-            ToshoError::ParseError(e) => write!(f, "Failed to parse response, {}", e),
-            ToshoError::ImageError(e) => write!(f, "Image error: {}", e),
-            ToshoError::IOError(e) => write!(f, "IO error: {}", e),
-            ToshoError::ClientError(e) => write!(f, "Client error: {}", e),
-            ToshoError::AuthError(e) => write!(f, "Authentication error: {}", e),
+            ToshoError::CommonError(msg) => write!(f, "{msg}"),
+            ToshoError::RequestError(e) => write!(f, "Request error: {e}"),
+            ToshoError::ParseError(e) => write!(f, "Failed to parse response, {e}"),
+            ToshoError::ImageError(e) => write!(f, "Image error: {e}"),
+            ToshoError::IOError(e) => write!(f, "IO error: {e}"),
+            ToshoError::ClientError(e) => write!(f, "Client error: {e}"),
+            ToshoError::AuthError(e) => write!(f, "Authentication error: {e}"),
         }
     }
 }
@@ -367,20 +367,19 @@ impl std::fmt::Display for ToshoParseError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             #[cfg(feature = "serde")]
-            ToshoParseError::SerdeDetailedError(e) => write!(f, "{}", e),
+            ToshoParseError::SerdeDetailedError(e) => write!(f, "{e}"),
             #[cfg(feature = "serde")]
-            ToshoParseError::SerdeFailableError(e) => write!(f, "{}", e),
+            ToshoParseError::SerdeFailableError(e) => write!(f, "{e}"),
             #[cfg(feature = "serde")]
-            ToshoParseError::SerdeMinimalError(e) => write!(f, "failed to decode JSON data: {}", e),
+            ToshoParseError::SerdeMinimalError(e) => write!(f, "failed to decode JSON data: {e}"),
             #[cfg(feature = "protobuf")]
-            ToshoParseError::ProstError(e) => write!(f, "{}", e),
+            ToshoParseError::ProstError(e) => write!(f, "{e}"),
             ToshoParseError::EmptyResponse => write!(f, "empty response received"),
             ToshoParseError::ExpectedResponse(e) => write!(
                 f,
-                "invalid response: expected {} but got empty/unknown response",
-                e
+                "invalid response: expected {e} but got empty/unknown response"
             ),
-            ToshoParseError::InvalidStatusCode(code) => write!(f, "invalid status code: {}", code),
+            ToshoParseError::InvalidStatusCode(code) => write!(f, "invalid status code: {code}"),
         }
     }
 }
@@ -389,12 +388,12 @@ impl std::fmt::Display for ToshoImageError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             ToshoImageError::ConversionError(e) => {
-                write!(f, "An error occured while tyring to convert number: {}", e)
+                write!(f, "An error occured while tyring to convert number: {e}")
             }
             #[cfg(feature = "image")]
-            ToshoImageError::ImageError(e) => write!(f, "{}", e),
-            ToshoImageError::ReadError(e) => write!(f, "Failed to read image: {}", e),
-            ToshoImageError::WriteError(e) => write!(f, "Failed to write image: {}", e),
+            ToshoImageError::ImageError(e) => write!(f, "{e}"),
+            ToshoImageError::ReadError(e) => write!(f, "Failed to read image: {e}"),
+            ToshoImageError::WriteError(e) => write!(f, "Failed to write image: {e}"),
         }
     }
 }
@@ -403,11 +402,11 @@ impl std::fmt::Display for ToshoAuthError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             ToshoAuthError::InvalidCredentials(reason) => {
-                write!(f, "Invalid credentials, reason: {}", reason)
+                write!(f, "Invalid credentials, reason: {reason}")
             }
             ToshoAuthError::InvalidSession => write!(f, "Invalid session"),
             ToshoAuthError::UnknownSession => write!(f, "Unknown session"),
-            ToshoAuthError::CommonError(e) => write!(f, "{}", e),
+            ToshoAuthError::CommonError(e) => write!(f, "{e}"),
         }
     }
 }
@@ -415,8 +414,8 @@ impl std::fmt::Display for ToshoAuthError {
 impl std::fmt::Display for ToshoClientError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ToshoClientError::BuildError(e) => write!(f, "Failed to build client: {}", e),
-            ToshoClientError::HeaderParseError(e) => write!(f, "Failed to parse headers: {}", e),
+            ToshoClientError::BuildError(e) => write!(f, "Failed to build client: {e}"),
+            ToshoClientError::HeaderParseError(e) => write!(f, "Failed to parse headers: {e}"),
         }
     }
 }

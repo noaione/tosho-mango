@@ -40,7 +40,7 @@ impl ValueEnum for CLIDownloadFormat {
         match input.as_str() {
             "jpeg" | "jpg" => Ok(CLIDownloadFormat::Jpeg),
             "webp" => Ok(CLIDownloadFormat::Webp),
-            _ => Err(format!("Invalid download format option: {}", input)),
+            _ => Err(format!("Invalid download format option: {input}")),
         }
     }
 
@@ -82,7 +82,7 @@ impl ValueEnum for CLIDownloadQuality {
             "medium" | "standard" => Ok(CLIDownloadQuality::Medium),
             "high" => Ok(CLIDownloadQuality::High),
             "hi-res" | "hires" | "highest" => Ok(CLIDownloadQuality::Highest),
-            _ => Err(format!("Invalid download quality option: {}", input)),
+            _ => Err(format!("Invalid download quality option: {input}")),
         }
     }
 
@@ -147,7 +147,7 @@ fn get_output_directory(
     create_folder: bool,
 ) -> PathBuf {
     let mut pathing = output_dir.to_path_buf();
-    pathing.push(format!("RB_{}", title_id));
+    pathing.push(format!("RB_{title_id}"));
 
     if let Some(chapter_id) = chapter_id {
         pathing.push(clean_filename(&chapter_id));
@@ -314,7 +314,7 @@ async fn rbean_actual_downloader(
     match node.client.stream_download(&download_url, writer).await {
         Ok(_) => {}
         Err(err) => {
-            console.error(format!("    Failed to download image: {}", err));
+            console.error(format!("    Failed to download image: {err}"));
             // silent delete the file
             tokio::fs::remove_file(&img_dl_path).await?;
         }
@@ -340,7 +340,7 @@ pub(crate) async fn rbean_download(
 
     let acc_info = client.get_user().await;
     if let Err(e) = acc_info {
-        console.error(format!("Failed to fetch user information: {}", e));
+        console.error(format!("Failed to fetch user information: {e}"));
         return 1;
     }
 
@@ -355,7 +355,7 @@ pub(crate) async fn rbean_download(
     let result = client.get_manga(uuid).await;
 
     if let Err(e) = result {
-        console.error(format!("Failed to fetch manga: {}", e));
+        console.error(format!("Failed to fetch manga: {e}"));
         return 1;
     }
 
@@ -370,7 +370,7 @@ pub(crate) async fn rbean_download(
     let chapter_meta = client.get_chapter_list(uuid).await;
 
     if let Err(e) = chapter_meta {
-        console.error(format!("Failed to fetch chapters: {}", e));
+        console.error(format!("Failed to fetch chapters: {e}"));
         return 1;
     }
 
@@ -531,7 +531,7 @@ pub(crate) async fn rbean_download(
                         {
                             Ok(_) => {}
                             Err(e) => {
-                                cnsl.error(format!("Failed to download image: {}", e));
+                                cnsl.error(format!("Failed to download image: {e}"));
                             }
                         }
                     })
@@ -560,7 +560,7 @@ pub(crate) async fn rbean_download(
                 {
                     Ok(_) => {}
                     Err(e) => {
-                        console.error(format!("Failed to download image: {}", e));
+                        console.error(format!("Failed to download image: {e}"));
                     }
                 }
             }

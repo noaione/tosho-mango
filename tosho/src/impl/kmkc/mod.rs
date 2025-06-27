@@ -158,7 +158,7 @@ pub(crate) enum KMKCCommands {
 const KMKC_RANKING_LIMIT_RANGE: RangeInclusive<usize> = 1..=100;
 
 fn kmkc_ranking_limit_range(s: &str) -> Result<Option<u32>, String> {
-    let s: usize = s.parse().map_err(|_| format!("Invalid limit: {}", s))?;
+    let s: usize = s.parse().map_err(|_| format!("Invalid limit: {s}"))?;
 
     if KMKC_RANKING_LIMIT_RANGE.contains(&s) {
         Ok(Some(s as u32))

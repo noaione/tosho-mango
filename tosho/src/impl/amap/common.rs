@@ -55,12 +55,12 @@ pub(super) fn do_print_search_information(
 
         match with_number {
             true => term.info(format!("{}[{:02}] {}", pre_space, idx + 1, text_data)),
-            false => term.info(format!("{}{}", pre_space, text_data)),
+            false => term.info(format!("{pre_space}{text_data}")),
         }
         if let Some(last_upd) = last_upd {
-            term.info(format!("{}{}", pre_space_lupd, last_upd));
+            term.info(format!("{pre_space_lupd}{last_upd}"));
         }
-        term.info(format!("{}{}", pre_space_url, manga_url));
+        term.info(format!("{pre_space_url}{manga_url}"));
     }
 }
 

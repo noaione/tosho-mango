@@ -330,7 +330,7 @@ impl RBClient {
 
         self.request(
             reqwest::Method::GET,
-            &format!("/mangas/v1?{}", query_param),
+            &format!("/mangas/v1?{query_param}"),
             None,
         )
         .await
@@ -387,7 +387,7 @@ impl RBClient {
             }
         };
 
-        let hi_res = format!("2000.{}", extension);
+        let hi_res = format!("2000.{extension}");
         let new_path = format!("{}/{}", path_split.join("/"), hi_res);
         parsed_url.set_path(&new_path);
 

@@ -29,7 +29,7 @@ pub(super) fn do_print_search_information(
 
         match with_number {
             true => term.info(format!("{}[{:02}] {}", pre_space, idx + 1, text_data)),
-            false => term.info(format!("{}{}", pre_space, text_data)),
+            false => term.info(format!("{pre_space}{text_data}")),
         }
         let updated_at = result.updated_at().format("%Y-%m-%d").to_string();
         term.info(cformat!(
@@ -37,7 +37,7 @@ pub(super) fn do_print_search_information(
             pre_space_lupd,
             updated_at
         ));
-        term.info(format!("{}{}", pre_space_url, manga_url));
+        term.info(format!("{pre_space_url}{manga_url}"));
     }
 }
 
@@ -145,7 +145,7 @@ pub(super) async fn get_cached_store_data(client: &SJClient) -> anyhow::Result<W
         tosho_sjv::SJPlatform::Web => "web",
     };
 
-    let filename = format!("sjv_store_cache_{}_{}.json", mode_name, plat_name);
+    let filename = format!("sjv_store_cache_{mode_name}_{plat_name}.json");
     let cache_path = base_path.join(filename);
     if cache_path.exists() {
         let read_data = tokio::fs::read(&cache_path).await;
@@ -167,7 +167,7 @@ pub(super) async fn get_cached_store_data(client: &SJClient) -> anyhow::Result<W
     }
 
     let cache_store = client.get_store_cache().await.map_err(|e| {
-        term.error(format!("Failed to get store cache: {}", e));
+        term.error(format!("Failed to get store cache: {e}"));
         anyhow::anyhow!("Failed to get store cache: {}", e)
     })?;
     let wrapped = WrappedStoreCache::from(cache_store);

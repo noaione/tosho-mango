@@ -94,7 +94,7 @@ pub async fn sjv_account_login(
             0
         }
         Err(e) => {
-            console.error(format!("Failed to authenticate: {}", e));
+            console.error(format!("Failed to authenticate: {e}"));
             1
         }
     }
@@ -197,7 +197,7 @@ pub(crate) async fn sjv_account_subscriptions(
             0
         }
         Err(e) => {
-            console.error(format!("Failed to get subscriptions: {}", e));
+            console.error(format!("Failed to get subscriptions: {e}"));
             1
         }
     }
@@ -227,7 +227,7 @@ pub(crate) fn sjv_account_revoke(account: &Config, console: &crate::term::Termin
             0
         }
         Err(err) => {
-            console.error(format!("Failed to delete account: {}", err));
+            console.error(format!("Failed to delete account: {err}"));
             1
         }
     }

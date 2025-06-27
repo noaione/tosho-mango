@@ -131,11 +131,7 @@ pub fn descramble_image(
                     let e_img = ToshoDetailedImageError::new(
                         e,
                         format!(
-                            "Failed to copy from source image to canvas. source_x: {}, source_y: {}, dest_x: {}, dest_y: {}",
-                            source_x,
-                            source_y,
-                            dest_x,
-                            dest_y
+                            "Failed to copy from source image to canvas. source_x: {source_x}, source_y: {source_y}, dest_x: {dest_x}, dest_y: {dest_y}"
                         ),
                     );
                     ToshoImageError::ImageError(e_img)

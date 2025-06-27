@@ -3,7 +3,7 @@ use color_print::cformat;
 use std::path::{Path, PathBuf};
 
 fn glob_cache(prefix: &str, base_path: &Path) -> Vec<PathBuf> {
-    let glob_path = base_path.join(format!("{}*", prefix));
+    let glob_path = base_path.join(format!("{prefix}*"));
 
     let mut matched_files = vec![];
     for entry in glob::glob(glob_path.to_str().unwrap())

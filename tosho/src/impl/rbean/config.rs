@@ -42,7 +42,7 @@ impl ValueEnum for DeviceType {
             "android" => Ok(Self::Android),
             "apple" => Ok(Self::Apple),
             "web" => Ok(Self::Web),
-            _ => Err(format!("Invalid RB device mode: {}", input)),
+            _ => Err(format!("Invalid RB device mode: {input}")),
         }
     }
 }

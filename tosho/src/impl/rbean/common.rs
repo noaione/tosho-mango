@@ -24,7 +24,7 @@ pub(super) fn do_print_single_information(
 
     match with_number {
         true => term.info(format!("{}[{:02}] {}", pre_space, index + 1, text_data)),
-        false => term.info(format!("{}{}", pre_space, text_data)),
+        false => term.info(format!("{pre_space}{text_data}")),
     }
     let updated_at = result.last_updated().format("%Y-%m-%d").to_string();
     term.info(cformat!(
@@ -32,7 +32,7 @@ pub(super) fn do_print_single_information(
         pre_space_lupd,
         updated_at
     ));
-    term.info(format!("{}{}", pre_space_url, manga_url));
+    term.info(format!("{pre_space_url}{manga_url}"));
 
     if let Some(chapter_info) = result.latest_chapters() {
         println!();
@@ -45,7 +45,7 @@ pub(super) fn do_print_single_information(
             );
             let linked = linkify!(&chapter_url, &format!("Chapter {}", chapter.chapter()));
             term.info(cformat!("{}<s>Chapter</s>: {}", pre_space_lupd, linked));
-            term.info(format!("{}{}", pre_space_url, chapter_url));
+            term.info(format!("{pre_space_url}{chapter_url}"));
         }
         println!();
     }

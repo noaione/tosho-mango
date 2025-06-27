@@ -114,7 +114,7 @@ impl Chapter {
     pub fn as_chapter_title(&self) -> String {
         let base_title = self.title.clone();
         if let Some(subtitle) = self.subtitle.clone() {
-            format!("{} — {}", base_title, subtitle)
+            format!("{base_title} — {subtitle}")
         } else {
             base_title
         }

@@ -106,12 +106,10 @@ fn format_tag_name(tag_name: &str) -> String {
 }
 
 fn format_tags(tags: &[GenreNode]) -> String {
-    let parsed_tags = tags
-        .iter()
+    tags.iter()
         .map(|tag| cformat!("<p(244),reverse,bold>{}</>", format_tag_name(tag.name())))
         .collect::<Vec<String>>()
-        .join(", ");
-    parsed_tags
+        .join(", ")
 }
 
 pub(crate) async fn kmkc_title_info(
@@ -202,7 +200,7 @@ pub(crate) async fn kmkc_title_info(
             }
             let split_desc: Vec<&str> = result.description().split('\n').collect();
             for desc in split_desc {
-                console.info(format!("    {}", desc));
+                console.info(format!("    {desc}"));
             }
 
             if !result.notice().is_empty() {

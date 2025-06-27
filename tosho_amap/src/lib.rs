@@ -604,7 +604,7 @@ fn make_header(
     let formulae = format!("{}{}{}", config.token(), current_unix, av);
 
     let formulae_hashed = <Sha256 as Digest>::digest(formulae.as_bytes());
-    let formulae_hashed = format!("{:x}", formulae_hashed);
+    let formulae_hashed = format!("{formulae_hashed:x}");
 
     req_headers.insert(
         HEADER_NAMES.s.as_str(),

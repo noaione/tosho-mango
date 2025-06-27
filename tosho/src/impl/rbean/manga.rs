@@ -33,7 +33,7 @@ impl ValueEnum for CLISortOption {
             "alphabetical" => Ok(CLISortOption::Alphabetical),
             "popular" => Ok(CLISortOption::Popular),
             "recent" => Ok(CLISortOption::Recent),
-            _ => Err(format!("Invalid sort option: {}", input)),
+            _ => Err(format!("Invalid sort option: {input}")),
         }
     }
 
@@ -97,7 +97,7 @@ pub(crate) async fn rbean_search(
             0
         }
         Err(e) => {
-            console.error(format!("Failed to search: {}", e));
+            console.error(format!("Failed to search: {e}"));
 
             1
         }
@@ -118,7 +118,7 @@ fn format_named_vec(items: Vec<String>) -> String {
         let mut items = items.clone();
         let last = items.pop().unwrap();
         let first = items.join(", ");
-        format!("{}, and {}", first, last)
+        format!("{first}, and {last}")
     } else {
         // Author 1 and Author 2
         items.join(" and ")
@@ -140,7 +140,7 @@ pub(crate) async fn rbean_title_info(
     let result = client.get_manga(uuid).await;
 
     if let Err(e) = result {
-        console.error(format!("Failed to fetch manga: {}", e));
+        console.error(format!("Failed to fetch manga: {e}"));
         return 1;
     }
 
@@ -158,7 +158,7 @@ pub(crate) async fn rbean_title_info(
         let fetch_chapters = client.get_chapter_list(uuid).await;
 
         if let Err(e) = fetch_chapters {
-            console.error(format!("Failed to fetch chapters: {}", e));
+            console.error(format!("Failed to fetch chapters: {e}"));
             return 1;
         }
 
@@ -308,7 +308,7 @@ pub(crate) async fn rbean_title_info(
                             chapters.last().unwrap()
                         );
 
-                        let vol_url_link = format!("{}/volumes", manga_url);
+                        let vol_url_link = format!("{manga_url}/volumes");
                         let vol_url_linked = linkify!(&vol_url_link, volume.short_title());
 
                         console.info(cformat!("     <s>{}</>: {}", vol_url_linked, first_last));

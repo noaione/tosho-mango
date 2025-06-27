@@ -17,7 +17,7 @@ pub(crate) fn select_single_account(
             return Some(config.clone());
         }
 
-        term.warn(format!("Account ID {} not found!", account_id));
+        term.warn(format!("Account ID {account_id} not found!"));
     }
 
     let all_configs = get_all_config(&implementation, None);

@@ -81,7 +81,7 @@ pub async fn rbean_account_login(
             0
         }
         Err(e) => {
-            console.error(format!("Failed to authenticate: {}", e));
+            console.error(format!("Failed to authenticate: {e}"));
             1
         }
     }
@@ -147,7 +147,7 @@ pub(crate) async fn rbean_account_info(
             0
         }
         Err(e) => {
-            console.error(format!("Failed to get account info: {}", e));
+            console.error(format!("Failed to get account info: {e}"));
             1
         }
     }
@@ -177,7 +177,7 @@ pub(crate) fn rbean_account_revoke(account: &Config, console: &crate::term::Term
             0
         }
         Err(err) => {
-            console.error(format!("Failed to delete account: {}", err));
+            console.error(format!("Failed to delete account: {err}"));
             1
         }
     }

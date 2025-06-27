@@ -302,10 +302,9 @@ pub(crate) fn impl_prost_enum_unrecognized(ast: &syn::DeriveInput) -> proc_macro
         }
     }
 
-    let valid_doc = format!("Returns `true` if `value` is a variant of `{}`", name,);
+    let valid_doc = format!("Returns `true` if `value` is a variant of `{name}`",);
     let from_i32_doc = format!(
-        "Converts an `i32` value to the corresponding `{}` enum variant, returning the `{}::{}` variant if it doesn't match any variant.",
-        name, name, invalid_ident,
+        "Converts an `i32` value to the corresponding `{name}` enum variant, returning the `{name}::{invalid_ident}` variant if it doesn't match any variant.",
     );
 
     let default = regular_variants[0].0.clone();
