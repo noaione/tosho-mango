@@ -6,6 +6,7 @@ Starting from Rust port of the project, all changes will be put into this file.
 ### Changes
 - `SJ/M`: Use `i32` for account archive limit instead of `u32`
 - `SJ/M`: Make `copyright` field optional
+- Unblock `self_update` blocking tokio runtime
 
 ### Build
 - Bump dependencies to latest version

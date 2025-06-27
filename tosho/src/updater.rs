@@ -47,10 +47,16 @@ pub(crate) async fn check_for_update(console: &crate::term::Terminal) -> anyhow:
         return Ok(());
     }
 
-    let updater = create_updater(console.is_debug())?;
-
-    let latest_version = updater.get_latest_release()?;
-    let current_version = updater.current_version();
+    let is_debug = console.is_debug();
+    let (latest_version, current_version) =
+        tokio::task::spawn_blocking(move || match create_updater(is_debug) {
+            Ok(updater) => match updater.get_latest_release() {
+                Ok(latest) => Ok((latest, updater.current_version())),
+                Err(e) => Err(e),
+            },
+            Err(e) => Err(e),
+        })
+        .await??;
 
     if self_update::version::bump_is_greater(&current_version, &latest_version.version)? {
         console.info(cformat!(
@@ -70,7 +76,12 @@ pub(crate) async fn check_for_update(console: &crate::term::Terminal) -> anyhow:
 pub(crate) async fn perform_update(console: &crate::term::Terminal) -> anyhow::Result<()> {
     console.info("Checking for update...");
 
-    let status = create_updater(console.is_debug())?.update()?;
+    let is_debug = console.is_debug();
+    let status = tokio::task::spawn_blocking(move || match create_updater(is_debug) {
+        Ok(updater) => updater.update(),
+        Err(e) => Err(e),
+    })
+    .await??;
 
     match status {
         self_update::Status::UpToDate(v) => {
