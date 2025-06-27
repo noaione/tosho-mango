@@ -2,6 +2,9 @@
 //!
 //! This module contains all the error types used in the library.
 
+#[cfg(feature = "serde")]
+use std::collections::HashMap;
+
 /// The result type used in the library
 pub type ToshoResult<T> = Result<T, ToshoError>;
 
@@ -45,8 +48,8 @@ impl ToshoError {
 pub struct ToshoDetailedParseError {
     inner: serde_json::Error,
     status_code: reqwest::StatusCode,
-    headers: reqwest::header::HeaderMap,
-    url: reqwest::Url,
+    headers: HashMap<String, String>,
+    url: String,
     raw_text: String,
 }
 
@@ -60,11 +63,15 @@ impl ToshoDetailedParseError {
         url: &reqwest::Url,
         raw_text: impl Into<String>,
     ) -> Self {
+        let mapped_headers = headers
+            .iter()
+            .map(|(k, v)| (k.as_str().to_string(), v.to_str().unwrap_or("").to_string()))
+            .collect();
         Self {
             inner,
             status_code,
-            headers: headers.clone(),
-            url: url.clone(),
+            headers: mapped_headers,
+            url: url.to_string(),
             raw_text: raw_text.into(),
         }
     }
