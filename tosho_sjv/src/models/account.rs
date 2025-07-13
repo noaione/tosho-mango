@@ -102,21 +102,21 @@ pub struct AccountArchive {
     subscription_type: SubscriptionType,
     /// Read limit
     #[serde(rename = "archive_limit")]
-    read_limit: u32,
+    read_limit: i32,
     /// Next read limit reset in seconds
     #[serde(rename = "archive_reset_seconds")]
-    read_reset: u32,
+    read_reset: i32,
     /// Download limit
-    download_limit: u32,
+    download_limit: i32,
     /// Download expiry in seconds
     #[serde(rename = "download_expire_seconds")]
-    download_expire: u32,
+    download_expire: i32,
     /// The next reset for free reading
     #[serde(rename = "next_reset_epoch")]
     next_reset: i64,
     /// The remaining number for free reading
     #[serde(rename = "num_remaining")]
-    remaining: u32,
+    remaining: i32,
 }
 
 /// A response for account entitlements.
