@@ -11,14 +11,17 @@ use crate::r#impl::Implementations;
 macro_rules! config_reader {
     (
         $($name:literal)*,
-        $($rimpl:ident)*
+        $($rimpl:ident)*,
+        $($struct:ident)*
     ) => {
         $(
-            ::paste::paste! {
+            struct $struct;
+
+            impl $struct {
                 #[doc = "Read a single config file for "]
                 #[doc = $name]
                 #[doc = " source."]
-                fn [<read_ $rimpl _config>](user_conf: PathBuf) -> Option<$crate::r#impl::$rimpl::config::Config> {
+                fn read_config(user_conf: PathBuf) -> Option<$crate::r#impl::$rimpl::config::Config> {
                     if !user_conf.exists() {
                         None
                     } else {
@@ -33,7 +36,7 @@ macro_rules! config_reader {
                 #[doc = "Get a single config file for "]
                 #[doc = $name]
                 #[doc = " source."]
-                fn [<get_config_ $rimpl>](
+                fn get_config(
                     id: &str,
                     user_path: PathBuf,
                 ) -> Option<$crate::r#impl::$rimpl::config::Config> {
@@ -44,7 +47,7 @@ macro_rules! config_reader {
                         id
                     ));
 
-                    [<read_ $rimpl _config>](user_conf)
+                    $struct::read_config(user_conf)
                 }
             }
         )*
@@ -106,7 +109,7 @@ macro_rules! config_match_expand {
     (
         $id:expr_2021, $user_path:expr_2021, $base_impl:expr_2021,
         $($handlebar:ident)*,
-        $($get_conf:ident)*
+        $($get_conf:path)*
     ) => {
         match $base_impl {
             $(
@@ -121,7 +124,7 @@ macro_rules! config_match_expand {
     (
         $entry:expr_2021, $base_impl:expr_2021,
         $($handlebar:ident)*,
-        $($read_conf:ident)*
+        $($read_conf:path)*
     ) => {
         match $base_impl {
             $(
@@ -196,7 +199,8 @@ config_to_configimpl!(
 // Create config reader functions
 config_reader!(
     "KM by KC" "MU! by SQ" "AM by AP" "SJ/M by V" "小豆 by KRKR" "M+ by S",
-    kmkc musq amap sjv rbean mplus
+    kmkc musq amap sjv rbean mplus,
+    KMConfRead MUConfRead AMConfRead SJVConfRead RBeanConfRead MPlusConfRead
 );
 
 pub fn get_config(
@@ -209,7 +213,7 @@ pub fn get_config(
     config_match_expand!(
         id, user_path, r#impl,
         Kmkc Musq Amap Sjv Rbean Mplus,
-        get_config_kmkc get_config_musq get_config_amap get_config_sjv get_config_rbean get_config_mplus
+        KMConfRead::get_config MUConfRead::get_config AMConfRead::get_config SJVConfRead::get_config RBeanConfRead::get_config MPlusConfRead::get_config
     )
 }
 
@@ -235,7 +239,7 @@ pub fn get_all_config(r#impl: &Implementations, user_path: Option<PathBuf>) -> V
             config_match_expand!(
                 entry, r#impl,
                 Kmkc Musq Amap Sjv Rbean Mplus,
-                read_kmkc_config read_musq_config read_amap_config read_sjv_config read_rbean_config read_mplus_config
+                KMConfRead::read_config MUConfRead::read_config AMConfRead::read_config SJVConfRead::read_config RBeanConfRead::read_config MPlusConfRead::read_config
             )
         })
         .collect()

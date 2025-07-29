@@ -11,6 +11,8 @@ Starting from Rust port of the project, all changes will be put into this file.
 
 ### Build
 - Bump dependencies to latest version
+- Remove `paste` dependency
+- Move almost all dependencies to `workspace` section
 
 ## [0.8.0] (2025-05-31)
 ### Changes

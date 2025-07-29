@@ -5,6 +5,7 @@ env/
 *.egg-info/
 build/
 dist/
+.DS_Store
 
 .coverage
 coverage.*

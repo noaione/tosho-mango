@@ -35,20 +35,45 @@ prost = "0.14.1"
 anyhow = "1"
 base64 = "0.22.1"
 sha2 = "0.10.9"
+time = "0.3.41"
 chrono = { version = "0.4.41", default-features = false, features = ["clock", "std"] }
 rand = "0.9.2"
+md-5 = "0.10.6"
+uuid = { version = "1.17.0", features = ["v4", "fast-rng"] }
+num-format = "0.4.4"
+regex = "1.11.1"
+aho-corasick = "1.1.3"
+secular = "1.0.1"
 
 # HTTP related
 reqwest = { version = "0.12.22", default-features = false, features = ["rustls-tls", "charset", "http2", "macos-system-configuration", "socks", "stream"] }
 reqwest_cookie_store = "0.8.2"
+urlencoding = "2.1.3"
 
 # Image
 image = { version = "0.25.6", default-features = false, features = ["jpeg", "png"] }
 kamadak-exif = "0.6.1"
 
+# Filesystem related
+mime_guess = "2.0.5"
+glob = "0.3.2"
+directories = "6.0.0"
+
 # AES related
 aes = "0.8.4"
 cbc = "0.1.2"
+
+# CLI related
+clap = { version = "4.5.41", features = ["derive"] }
+anstream = "0.6.19"
+color-print = "0.3.7"
+inquire = "0.7.5"
+indicatif = "0.18.0"
+supports-hyperlinks = "3.1.0"
+self_update = { version = "0.42.0", default-features = false, features = ["rustls", "archive-tar", "archive-zip", "compression-flate2", "compression-zip-deflate"] }
+
+# Windows deps
+windows-sys = { version = "0.60.2", features = ["Win32_Foundation", "Win32_System_Console"] }
 
 # CI build profile, very optimized
 [profile.ci]
