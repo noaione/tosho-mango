@@ -6,23 +6,25 @@ pub(crate) fn get_field_comment(attrs: &[Attribute]) -> Option<String> {
         .iter()
         .filter_map(|attr| {
             if attr.path().is_ident("doc") {
-                if let syn::Meta::NameValue(name_val) = &attr.meta {
-                    if let syn::Expr::Lit(doc_lit) = &name_val.value {
-                        if let syn::Lit::Str(doc_str) = &doc_lit.lit {
-                            let doc_val = doc_str.value();
+                if let syn::Meta::NameValue(name_val) = &attr.meta
+                    && let syn::Expr::Lit(doc_lit) = &name_val.value
+                    && let syn::Lit::Str(doc_str) = &doc_lit.lit
+                {
+                    let doc_val = doc_str.value();
 
-                            let doc_val_fix = if doc_val.trim() == "" {
-                                "\n".to_string()
-                            } else {
-                                format!("{}\n", doc_val.trim())
-                            };
+                    let doc_val_fix = if doc_val.trim() == "" {
+                        "\n".to_string()
+                    } else {
+                        format!("{}\n", doc_val.trim())
+                    };
 
-                            return Some(doc_val_fix);
-                        }
-                    }
+                    Some(doc_val_fix)
+                } else {
+                    None
                 }
+            } else {
+                None
             }
-            None
         })
         .collect();
 

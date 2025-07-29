@@ -127,11 +127,11 @@ pub(crate) async fn kmkc_download(
     account: &Config,
     console: &mut crate::term::Terminal,
 ) -> ExitCode {
-    if let (Some(start), Some(end)) = (dl_config.start_from, dl_config.end_at) {
-        if start > end {
-            console.error("Start chapter is greater than end chapter!");
-            return 1;
-        }
+    if let (Some(start), Some(end)) = (dl_config.start_from, dl_config.end_at)
+        && start > end
+    {
+        console.error("Start chapter is greater than end chapter!");
+        return 1;
     }
 
     let (results, title_detail, all_chapters, user_point) = common_purchase_select(
@@ -327,15 +327,15 @@ pub(crate) async fn kmkc_download(
                             continue;
                         }
 
-                        if let Some(count) = check_downloaded_image_count(&image_dir, "png") {
-                            if count >= web.pages().len() {
-                                console.warn(cformat!(
-                                    "   Chapter <m,s>{}</> (<s>{}</>) already downloaded, skipping",
-                                    chapter.title(),
-                                    chapter.id()
-                                ));
-                                continue;
-                            }
+                        if let Some(count) = check_downloaded_image_count(&image_dir, "png")
+                            && count <= web.pages().len()
+                        {
+                            console.warn(cformat!(
+                                "   Chapter <m,s>{}</> (<s>{}</>) already downloaded, skipping",
+                                chapter.title(),
+                                chapter.id()
+                            ));
+                            continue;
                         }
 
                         if console.is_debug() {
@@ -352,15 +352,15 @@ pub(crate) async fn kmkc_download(
                             continue;
                         }
 
-                        if let Some(count) = check_downloaded_image_count(&image_dir, "jpg") {
-                            if count >= mobile.pages().len() {
-                                console.warn(cformat!(
-                                    "   Chapter <m,s>{}</> (<s>{}</>) already downloaded, skipping",
-                                    chapter.title(),
-                                    chapter.id()
-                                ));
-                                continue;
-                            }
+                        if let Some(count) = check_downloaded_image_count(&image_dir, "jpg")
+                            && count >= mobile.pages().len()
+                        {
+                            console.warn(cformat!(
+                                "   Chapter <m,s>{}</> (<s>{}</>) already downloaded, skipping",
+                                chapter.title(),
+                                chapter.id()
+                            ));
+                            continue;
                         }
                     }
                 };

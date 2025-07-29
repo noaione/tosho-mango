@@ -129,10 +129,10 @@ impl RBClient {
     /// if the token is expired.
     pub async fn refresh_token(&mut self) -> ToshoResult<()> {
         // If the expiry time is set and it's not expired, return early
-        if let Some(expiry_at) = self.expiry_at {
-            if expiry_at > chrono::Utc::now().timestamp() {
-                return Ok(());
-            }
+        if let Some(expiry_at) = self.expiry_at
+            && expiry_at > chrono::Utc::now().timestamp()
+        {
+            return Ok(());
         }
 
         let json_data = json!({

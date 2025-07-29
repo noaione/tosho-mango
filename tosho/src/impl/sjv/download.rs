@@ -196,11 +196,11 @@ pub(crate) async fn sjv_download(
     client: &SJClient,
     console: &mut crate::term::Terminal,
 ) -> ExitCode {
-    if let (Some(start), Some(end)) = (dl_config.start_from, dl_config.end_at) {
-        if start > end {
-            console.error("Start chapter is greater than end chapter!");
-            return 1;
-        }
+    if let (Some(start), Some(end)) = (dl_config.start_from, dl_config.end_at)
+        && start > end
+    {
+        console.error("Start chapter is greater than end chapter!");
+        return 1;
     }
 
     console.info(cformat!(
@@ -341,15 +341,15 @@ pub(crate) async fn sjv_download(
                     _ => "jpg",
                 };
 
-                if let Some(count) = check_downloaded_image_count(&image_dir, image_ext) {
-                    if count >= chapter.pages() as usize {
-                        console.warn(cformat!(
-                            "   Chapter <m,s>{}</> (<s>{}</>) has been downloaded, skipping",
-                            chapter.pretty_title(),
-                            chapter.id()
-                        ));
-                        continue;
-                    }
+                if let Some(count) = check_downloaded_image_count(&image_dir, image_ext)
+                    && count >= chapter.pages() as usize
+                {
+                    console.warn(cformat!(
+                        "   Chapter <m,s>{}</> (<s>{}</>) has been downloaded, skipping",
+                        chapter.pretty_title(),
+                        chapter.id()
+                    ));
+                    continue;
                 }
 
                 let view_req = client.verify_chapter(chapter.id()).await;

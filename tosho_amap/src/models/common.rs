@@ -42,12 +42,13 @@ impl FailableResponse for StatusResult {
     /// Try to unwrap the body into [`ErrorBody`] and return the error message.
     fn format_error(&self) -> String {
         // try to unwrap the body into ErrorBody
-        if let Some(body) = &self.body {
-            if let Ok(error_body) = serde_json::from_value::<ErrorBody>(body.clone()) {
-                return error_body.messages.join(", ");
-            }
+        if let Some(body) = &self.body
+            && let Ok(error_body) = serde_json::from_value::<ErrorBody>(body.clone())
+        {
+            error_body.messages.join(", ")
+        } else {
+            "Unknown error occured".to_string()
         }
-        "Unknown error occured".to_string()
     }
 
     /// Raise/return an error if the response code is not 0.

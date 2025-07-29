@@ -453,15 +453,15 @@ pub(crate) async fn rbean_download(
         let view_req = view_req.unwrap();
         save_session_config(client, account);
 
-        if let Some(count) = check_downloaded_image_count(&image_dir, image_ext) {
-            if count >= view_req.data().pages().len() {
-                console.warn(cformat!(
-                    "   Chapter <m,s>{}</> (<s>{}</>) has been downloaded, skipping",
-                    chapter.formatted_title(),
-                    chapter.uuid()
-                ));
-                continue;
-            }
+        if let Some(count) = check_downloaded_image_count(&image_dir, image_ext)
+            && count >= view_req.data().pages().len()
+        {
+            console.warn(cformat!(
+                "   Chapter <m,s>{}</> (<s>{}</>) has been downloaded, skipping",
+                chapter.formatted_title(),
+                chapter.uuid()
+            ));
+            continue;
         }
 
         // create chapter dir

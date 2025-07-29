@@ -210,16 +210,16 @@ impl ChapterMessage {
     pub fn is_active(&self) -> bool {
         let now = chrono::Utc::now();
 
-        if let Some(show_from) = self.show_from {
-            if now < show_from {
-                return false;
-            }
+        if let Some(show_from) = self.show_from
+            && now < show_from
+        {
+            return false;
         }
 
-        if let Some(show_to) = self.show_to {
-            if now > show_to {
-                return false;
-            }
+        if let Some(show_to) = self.show_to
+            && now > show_to
+        {
+            return false;
         }
 
         true

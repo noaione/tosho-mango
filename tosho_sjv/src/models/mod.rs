@@ -35,10 +35,10 @@ impl FailableResponse for SimpleResponse {
     }
 
     fn raise_for_status(&self) -> tosho_common::ToshoResult<()> {
-        if let Some(error) = &self.error {
-            if self.ok != IntBool::True {
-                return Err(tosho_common::make_error!("{}", error));
-            }
+        if let Some(error) = &self.error
+            && self.ok != IntBool::True
+        {
+            return Err(tosho_common::make_error!("{}", error));
         }
         Ok(())
     }

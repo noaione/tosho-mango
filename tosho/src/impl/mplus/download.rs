@@ -235,11 +235,11 @@ pub(crate) async fn mplus_download(
     client: &MPClient,
     console: &mut crate::term::Terminal,
 ) -> ExitCode {
-    if let (Some(start), Some(end)) = (dl_config.start_from, dl_config.end_at) {
-        if start > end {
-            console.error("Start chapter is greater than end chapter!");
-            return 1;
-        }
+    if let (Some(start), Some(end)) = (dl_config.start_from, dl_config.end_at)
+        && start > end
+    {
+        console.error("Start chapter is greater than end chapter!");
+        return 1;
     }
 
     console.info(cformat!(
@@ -341,15 +341,15 @@ pub(crate) async fn mplus_download(
                 let image_dir =
                     get_output_directory(&output_dir, title_id, Some(chapter.chapter_id()), false);
 
-                if let Some(count) = check_downloaded_image_count(&image_dir, "webp") {
-                    if count >= chapter_images.len() {
-                        console.warn(cformat!(
-                            "   Chapter <m,s>{}</> (<s>{}</>) has been downloaded, skipping",
-                            chapter.as_chapter_title(),
-                            chapter.chapter_id()
-                        ));
-                        continue;
-                    }
+                if let Some(count) = check_downloaded_image_count(&image_dir, "webp")
+                    && count >= chapter_images.len()
+                {
+                    console.warn(cformat!(
+                        "   Chapter <m,s>{}</> (<s>{}</>) has been downloaded, skipping",
+                        chapter.as_chapter_title(),
+                        chapter.chapter_id()
+                    ));
+                    continue;
                 }
 
                 // create chapter dir

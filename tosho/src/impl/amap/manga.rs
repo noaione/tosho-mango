@@ -123,10 +123,10 @@ pub(crate) async fn amap_title_info(
                     {
                         console.info(cformat!("     Published at: <s>{}</>", update_at));
                     }
-                    if let Some(expiry_time) = episode.info().expiry_time() {
-                        if let Some(expiry_time) = unix_timestamp_to_string(expiry_time as i64) {
-                            console.info(cformat!("      Expires at: <s>{}</>", expiry_time));
-                        }
+                    if let Some(expiry_time) = episode.info().expiry_time()
+                        && let Some(expiry_time_str) = unix_timestamp_to_string(expiry_time as i64)
+                    {
+                        console.info(cformat!("      Expires at: <s>{}</>", expiry_time_str));
                     }
                 }
             }

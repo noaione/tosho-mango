@@ -272,15 +272,15 @@ pub(crate) async fn amap_download(
 
                 let ch_pages = ch_view.info().pages();
                 let ch_dir = get_output_directory(&output_dir, title_id, Some(info.id()), false);
-                if let Some(count) = check_downloaded_image_count(&ch_dir, "jpg") {
-                    if count >= ch_pages.len() {
-                        console.warn(cformat!(
-                            "   Chapter <m,s>{}</> (<s>{}</>) has been downloaded, skipping",
-                            info.title(),
-                            info.id(),
-                        ));
-                        continue;
-                    }
+                if let Some(count) = check_downloaded_image_count(&ch_dir, "jpg")
+                    && count >= ch_pages.len()
+                {
+                    console.warn(cformat!(
+                        "   Chapter <m,s>{}</> (<s>{}</>) has been downloaded, skipping",
+                        info.title(),
+                        info.id(),
+                    ));
+                    continue;
                 }
 
                 // create folder

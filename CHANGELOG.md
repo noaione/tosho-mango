@@ -8,9 +8,11 @@ Starting from Rust port of the project, all changes will be put into this file.
 - `SJ/M`: Make `copyright` field optional
 - Unblock `self_update` blocking tokio runtime
 - Minimize some struct size
+- Migrate some `let` block to use the new let-chains syntax
 
 ### Build
 - Bump dependencies to latest version
+- Bump MSRV to 1.88.0
 - Remove `paste` dependency
 - Move almost all dependencies to `workspace` section
 

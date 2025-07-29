@@ -361,15 +361,15 @@ pub(crate) async fn musq_download(
                 }
 
                 let ch_dir = get_output_directory(&output_dir, title_id, Some(chapter.id()), false);
-                if let Some(count) = check_downloaded_image_count(&ch_dir, "avif") {
-                    if count >= image_blocks.len() {
-                        console.warn(cformat!(
-                            "   Chapter <m,s>{}</> (<s>{}</>) has been downloaded, skipping",
-                            chapter.title(),
-                            chapter.id()
-                        ));
-                        continue;
-                    }
+                if let Some(count) = check_downloaded_image_count(&ch_dir, "avif")
+                    && count >= image_blocks.len()
+                {
+                    console.warn(cformat!(
+                        "   Chapter <m,s>{}</> (<s>{}</>) has been downloaded, skipping",
+                        chapter.title(),
+                        chapter.id()
+                    ));
+                    continue;
                 }
 
                 // create folder

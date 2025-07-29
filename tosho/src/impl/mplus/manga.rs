@@ -190,10 +190,10 @@ pub(crate) async fn mplus_title_info(
                 println!();
             }
 
-            if title_info.next_update() > 0 {
-                if let Some(next_upd_fmt) = unix_timestamp_to_string(title_info.next_update()) {
-                    console.info(cformat!("  <s>Next Update</>: {}", next_upd_fmt));
-                }
+            if title_info.next_update() > 0
+                && let Some(next_upd_fmt) = unix_timestamp_to_string(title_info.next_update())
+            {
+                console.info(cformat!("  <s>Next Update</>: {}", next_upd_fmt));
             }
 
             console.info(cformat!("  <s>Your Plan</>: {}", user_plan.to_name()));

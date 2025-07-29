@@ -42,20 +42,21 @@ pub(super) fn do_print_search_information(
 
         let mut add_url_pre = 1;
         let mut last_upd: Option<String> = None;
-        if let Some(last_update) = result.update_date() {
-            if let Some(last_update) = unix_timestamp_to_string(last_update as i64) {
-                last_upd = Some(cformat!("Last update: <s>{}</>", last_update));
-                add_url_pre += 1;
-            }
+        if let Some(last_update_prev) = result.update_date()
+            && let Some(last_update) = unix_timestamp_to_string(last_update_prev as i64)
+        {
+            last_upd = Some(cformat!("Last update: <s>{}</>", last_update));
+            add_url_pre += 1;
         }
 
         let pre_space = " ".repeat(spacing);
         let pre_space_lupd = " ".repeat(spacing + 1);
         let pre_space_url = " ".repeat(spacing + add_url_pre);
 
-        match with_number {
-            true => term.info(format!("{}[{:02}] {}", pre_space, idx + 1, text_data)),
-            false => term.info(format!("{pre_space}{text_data}")),
+        if with_number {
+            term.info(format!("{}[{:02}] {}", pre_space, idx + 1, text_data))
+        } else {
+            term.info(format!("{pre_space}{text_data}"))
         }
         if let Some(last_upd) = last_upd {
             term.info(format!("{pre_space_lupd}{last_upd}"));

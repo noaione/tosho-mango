@@ -31,15 +31,10 @@ fn get_autogetter_attr(attrs: Vec<Attribute>) -> Result<AutoGetterAttr, syn::Err
                 if let Meta::NameValue(nameval) = meta {
                     if nameval.path.is_ident("unref") {
                         // Is a boolean
-                        if let Expr::Lit(lit) = nameval.value {
-                            if let Lit::Bool(val) = lit.lit {
-                                unref = val.value;
-                            } else {
-                                return Err(syn::Error::new_spanned(
-                                    lit,
-                                    "Expected a boolean value for `unref`",
-                                ));
-                            }
+                        if let Expr::Lit(lit) = &nameval.value
+                            && let Lit::Bool(val) = &lit.lit
+                        {
+                            unref = val.value;
                         } else {
                             return Err(syn::Error::new_spanned(
                                 nameval.value,
@@ -301,14 +296,11 @@ fn get_inner_type_of_x<'a>(ty: &'a syn::Type, x: &'a str) -> Option<&'a syn::Typ
         // Check if it's a path type, and the first segment of the path is "x"
         for segment in &type_path.path.segments {
             // If we found "x", ensure that the argument is "AngleBracketed"
-            if segment.ident == x {
-                if let syn::PathArguments::AngleBracketed(angle_bracketed) = &segment.arguments {
-                    if let Some(syn::GenericArgument::Type(inner_type)) =
-                        angle_bracketed.args.first()
-                    {
-                        return Some(inner_type);
-                    }
-                }
+            if segment.ident == x
+                && let syn::PathArguments::AngleBracketed(angle_bracketed) = &segment.arguments
+                && let Some(syn::GenericArgument::Type(inner_type)) = angle_bracketed.args.first()
+            {
+                return Some(inner_type);
             }
         }
     }
@@ -328,12 +320,11 @@ fn has_inner_type_with_x(ty: &syn::Type, x: &str) -> bool {
         // Check if it's a path type, and the first segment of the path is "x"
         for segment in &type_path.path.segments {
             // If we found "x", ensure that the argument is "AngleBracketed"
-            if segment.ident == x {
-                if let syn::PathArguments::AngleBracketed(angle_bracketed) = &segment.arguments {
-                    if let Some(syn::GenericArgument::Type(_)) = angle_bracketed.args.first() {
-                        return true;
-                    }
-                }
+            if segment.ident == x
+                && let syn::PathArguments::AngleBracketed(angle_bracketed) = &segment.arguments
+                && let Some(syn::GenericArgument::Type(_)) = angle_bracketed.args.first()
+            {
+                return true;
             }
         }
     }
@@ -351,12 +342,10 @@ fn is_copy_able_field(ty: &syn::Type) -> bool {
 
 fn is_string_field(ty: &syn::Type) -> bool {
     // If Path, get the last segment and check if the Ident is "String"
-    if let syn::Type::Path(type_path) = ty {
-        if let Some(last_segment) = type_path.path.segments.last() {
-            last_segment.ident == "String"
-        } else {
-            false
-        }
+    if let syn::Type::Path(type_path) = ty
+        && let Some(last_segment) = type_path.path.segments.last()
+    {
+        last_segment.ident == "String"
     } else {
         false
     }
