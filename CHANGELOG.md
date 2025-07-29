@@ -7,6 +7,9 @@ Starting from Rust port of the project, all changes will be put into this file.
 - `SJ/M`: Use `i32` for account archive limit instead of `u32`
 - `SJ/M`: Make `copyright` field optional
 
+### Build
+- Bump dependencies to latest version
+
 ## [0.8.0] (2025-05-31)
 ### Changes
 - `KM`: Revert back constants
