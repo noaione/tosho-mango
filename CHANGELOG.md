@@ -3,6 +3,10 @@
 Starting from Rust port of the project, all changes will be put into this file.
 
 ## Unreleased
+### Changes
+- `SJ/M`: Use `i32` for account archive limit instead of `u32`
+- `SJ/M`: Make `copyright` field optional
+
 ## [0.8.0] (2025-05-31)
 ### Changes
 - `KM`: Revert back constants

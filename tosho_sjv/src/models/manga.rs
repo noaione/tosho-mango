@@ -132,7 +132,7 @@ pub struct MangaDetail {
     #[serde(rename = "vanityurl")]
     slug: String,
     /// Series copyright info
-    copyright: String,
+    copyright: Option<String>,
     /// Series rating
     #[copyable]
     rating: MangaRating,

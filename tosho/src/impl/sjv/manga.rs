@@ -149,7 +149,9 @@ pub(crate) async fn sjv_title_info(
             }
 
             console.info(cformat!("  <s>Rating</>: {}", result.rating().to_name()));
-            console.info(cformat!("  <s>Copyright</>: {}", result.copyright()));
+            if let Some(copyright) = result.copyright() {
+                console.info(cformat!("  <s>Copyright</>: {}", copyright));
+            }
             let synopsis = result.synopsis().replace("\r\n", "\n");
             console.info(cformat!("  <s>Summary</>"));
             if let Some(tagline) = result.tagline() {
