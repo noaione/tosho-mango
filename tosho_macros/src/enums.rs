@@ -14,8 +14,9 @@ pub(crate) fn impl_enumname_derive(ast: &syn::DeriveInput) -> TokenStream {
     let mut arms = Vec::new();
     for variant in variants {
         let ident = &variant.ident;
+        let ident_str = ident.to_string();
         arms.push(quote::quote! {
-            Self::#ident => stringify!(#ident),
+            Self::#ident => #ident_str,
         });
     }
 
@@ -64,11 +65,12 @@ pub(crate) fn impl_enumu32_derive(ast: &syn::DeriveInput, with_default: bool) ->
     let mut match_arms = vec![];
     for variant in variants {
         let variant_name = &variant.ident;
+        let variant_str = variant_name.to_string();
         // convert from u32 to enum
         let value = if let Some((_, expr)) = &variant.discriminant {
             quote::quote! { #expr }
         } else {
-            quote::quote! { stringify!(#variant_name).parse().unwrap() }
+            quote::quote! { #variant_str.parse().unwrap() }
         };
 
         match_arms.push(quote::quote! {
@@ -76,6 +78,7 @@ pub(crate) fn impl_enumu32_derive(ast: &syn::DeriveInput, with_default: bool) ->
         });
     }
 
+    let name_str = name.to_string();
     match with_default {
         true => {
             match_arms.push(quote::quote! {
@@ -83,7 +86,7 @@ pub(crate) fn impl_enumu32_derive(ast: &syn::DeriveInput, with_default: bool) ->
             });
         }
         false => match_arms.push(quote::quote! {
-            _ => panic!("Invalid value for {}: {}", stringify!(#name), value)
+            _ => panic!("Invalid value for {}: {}", #name_str, value)
         }),
     }
 
