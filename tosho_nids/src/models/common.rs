@@ -21,10 +21,6 @@ pub struct ImageUrl {
 pub struct ImageReaderUrl {
     /// The original image URL
     url: String,
-    /// Medium sized image URL
-    medium_url: String,
-    /// Small sized image URL
-    small_url: String,
     /// Thumbnail sized image URL
     thumbnail_url: String,
     /// Mobile sized image URL
@@ -96,4 +92,17 @@ pub struct Imprint {
     imprint_type: String,
     /// Imprint image icon
     image: Option<ImageUrl>,
+}
+
+/// The refreshed auth token
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
+pub struct RefreshedToken {
+    /// The new access token
+    access_token: String,
+    /// The new refresh token
+    refresh_token: String,
+    /// When the access token expires (in seconds)
+    expires_in: u64,
+    /// When the access token expires at
+    expires_at: i64,
 }

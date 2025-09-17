@@ -33,6 +33,9 @@ pub const BASE_API: &str = comptime_b64!("aHR0cHM6Ly9td2FwaS5uZW9uaWNoaWJhbi5jb2
 pub const BASE_IMG: &str = comptime_b64!("aHR0cHM6Ly9hc3NldHMubmVvbmljaGliYW4uY29t");
 /// The base website URL used for website requests.
 pub const BASE_WEB: &str = comptime_b64!("aHR0cHM6Ly9uZW9uaWNoaWJhbi5jb20=");
+/// The base secure image URL used for protected image requests.
+pub const BASE_SECURE_IMG: &str =
+    comptime_b64!("aHR0cHM6Ly9zZWN1cmUtYXNzZXRzLm5lb25pY2hpYmFuLmNvbQ==");
 
 /// The base host used for overall requests.
 pub const BASE_HOST: &str = comptime_b64!("d3d3Lm5lb25pY2hpYmFuLmNvbQ==");
@@ -40,6 +43,8 @@ pub const BASE_HOST: &str = comptime_b64!("d3d3Lm5lb25pY2hpYmFuLmNvbQ==");
 pub const API_HOST: &str = comptime_b64!("bXdhcGkubmVvbmljaGliYW4uY29t");
 /// The image host used for image requests.
 pub const IMAGE_HOST: &str = comptime_b64!("YXNzZXRzLm5lb25pY2hpYmFuLmNvbQ==");
+/// The secure image host used for protected image requests.
+pub const SECURE_IMAGE_HOST: &str = comptime_b64!("c2VjdXJlLWFzc2V0cy5uZW9uaWNoaWJhbi5jb20=");
 
 /// Returns the constants for the given device type.
 ///

@@ -1,13 +1,19 @@
 #![warn(missing_docs, clippy::empty_docs, rustdoc::broken_intra_doc_links)]
 #![doc = include_str!("../README.md")]
 
+use crate::constants::SECURE_IMAGE_HOST;
 use std::collections::HashMap;
 
-use tosho_common::{ToshoClientError, ToshoResult, bail_on_error, parse_json_response_failable};
+use futures_util::TryStreamExt;
+use tokio::io::{self, AsyncWriteExt};
+use tosho_common::{
+    ToshoAuthError, ToshoClientError, ToshoResult, bail_on_error, parse_json_response_failable,
+};
 
 use crate::{constants::BASE_API, models::ErrorResponse};
 
 pub mod constants;
+pub mod filters;
 pub mod models;
 
 /// Main client for interacting with the NI API.
@@ -46,7 +52,7 @@ impl NidsClient {
     /// * `token` - JWT token for download requests, if `None` you will only be able to make non-authenticated requests.
     /// * `constants` - Constants to use for the client, see [`crate::constants::get_constants`].
     pub fn new(
-        token: Option<impl AsRef<str>>,
+        token: Option<impl Into<String>>,
         constants: &'static crate::constants::Constants,
     ) -> ToshoResult<Self> {
         Self::make_client(token, constants, None)
@@ -63,7 +69,7 @@ impl NidsClient {
     }
 
     fn make_client(
-        token: Option<impl AsRef<str>>,
+        token: Option<impl Into<String>>,
         constants: &'static crate::constants::Constants,
         proxy: Option<reqwest::Proxy>,
     ) -> ToshoResult<Self> {
@@ -84,15 +90,6 @@ impl NidsClient {
             reqwest::header::HOST,
             reqwest::header::HeaderValue::from_static(crate::constants::API_HOST),
         );
-        let token_data: Option<&str> = token.as_ref().map(|t| t.as_ref());
-        if let Some(t) = token_data {
-            headers.insert(
-                reqwest::header::AUTHORIZATION,
-                reqwest::header::HeaderValue::from_str(t).map_err(|_| {
-                    ToshoClientError::HeaderParseError("Failed to parse token value".into())
-                })?,
-            );
-        }
 
         let client = reqwest::Client::builder()
             .http2_adaptive_window(true)
@@ -110,8 +107,35 @@ impl NidsClient {
         Ok(Self {
             inner: client,
             constants,
-            token: token_data.map(|s| s.to_string()),
+            token: token.map(Into::into),
         })
+    }
+
+    /// Create an authenticated headers map.
+    ///
+    /// Has `prefix_bearer` to prefix the token with `Bearer ` since most endpoints does not require it.
+    fn auth_headers(&self, prefix_bearer: bool) -> ToshoResult<reqwest::header::HeaderMap> {
+        let token = self
+            .token
+            .as_deref()
+            .ok_or(ToshoAuthError::UnknownSession)?;
+
+        let header_token = if prefix_bearer {
+            format!("Bearer {}", token)
+        } else {
+            token.to_string()
+        };
+        let mut headers = reqwest::header::HeaderMap::new();
+        headers.insert(
+            reqwest::header::AUTHORIZATION,
+            reqwest::header::HeaderValue::from_str(&header_token).map_err(|_| {
+                ToshoClientError::HeaderParseError(
+                    "Invalid bearer token provided to client".to_string(),
+                )
+            })?,
+        );
+
+        Ok(headers)
     }
 
     /// Make an authenticated request to the API.
@@ -124,23 +148,30 @@ impl NidsClient {
     /// * `endpoint` - The endpoint to request (e.g. `/list`) - without the `/api/v1` prefix
     /// * `data` - The data to send in the request body (as form data)
     /// * `params` - The query params to send in the request
-    #[expect(dead_code)]
+    /// * `authenticated` - Whether to make an authenticated request or not
     async fn request<T>(
         &self,
         method: reqwest::Method,
         endpoint: &str,
         data: Option<HashMap<String, String>>,
         params: Option<HashMap<String, String>>,
+        headers: Option<reqwest::header::HeaderMap>,
     ) -> ToshoResult<T>
     where
         T: serde::de::DeserializeOwned,
     {
         let endpoint = format!("{}/api/v1{}", BASE_API, endpoint);
+        let mut extend_headers = reqwest::header::HeaderMap::new();
+        // Check ir provided a custom headers
+        if let Some(hdrs) = headers {
+            for (key, value) in hdrs.iter() {
+                extend_headers.insert(key, value.clone());
+            }
+        }
 
         let request = match (data.clone(), params.clone()) {
-            (None, None) => self.inner.request(method, endpoint),
+            (None, None) => self.inner.request(method, endpoint).headers(extend_headers),
             (Some(data), None) => {
-                let mut extend_headers = reqwest::header::HeaderMap::new();
                 extend_headers.insert(
                     reqwest::header::CONTENT_TYPE,
                     reqwest::header::HeaderValue::from_static("application/json"),
@@ -158,4 +189,368 @@ impl NidsClient {
 
         parse_json_response_failable::<T, ErrorResponse>(request.send().await?).await
     }
+
+    /// Get the list of issues
+    ///
+    /// # Arguments
+    /// * `filter` - The filter to apply to the request
+    pub async fn get_issues(
+        &self,
+        filters: filters::Filter,
+    ) -> ToshoResult<models::IssueListResponse> {
+        let params = filters.to_params();
+        self.request(reqwest::Method::GET, "/issues", None, Some(params), None)
+            .await
+    }
+
+    /// Get single issue detail
+    ///
+    /// # Arguments
+    /// * `issue_id` - The issue UUID to get the detail for
+    pub async fn get_issue(&self, issue_id: u32) -> ToshoResult<models::IssueDetailResponse> {
+        self.request(
+            reqwest::Method::GET,
+            &format!("/issues/{}", issue_id),
+            None,
+            None,
+            None,
+        )
+        .await
+    }
+
+    /// Get the list of series runs
+    ///
+    /// # Arguments
+    /// * `filter` - The filter to apply to the request
+    pub async fn get_series_runs(
+        &self,
+        filters: filters::Filter,
+    ) -> ToshoResult<models::series::SeriesRunList> {
+        let params = filters.to_params();
+        self.request(
+            reqwest::Method::GET,
+            "/series_run",
+            None,
+            Some(params),
+            None,
+        )
+        .await
+    }
+
+    /// Get single series run detail via ID
+    ///
+    /// # Arguments
+    /// * `series_run_id` - The series run ID to get the detail for
+    pub async fn get_series_run(
+        &self,
+        series_run_id: u32,
+    ) -> ToshoResult<models::series::SeriesRunWithEditions> {
+        let resp = self
+            .request::<models::series::SeriesRunWithEditionsResponse>(
+                reqwest::Method::GET,
+                &format!("/series_run/{}", series_run_id),
+                None,
+                None,
+                None,
+            )
+            .await?;
+
+        Ok(resp.data())
+    }
+
+    /// Get the list of publishers
+    ///
+    /// # Arguments
+    /// * `filter` - The filter to apply to the request
+    pub async fn get_publishers(
+        &self,
+        filters: Option<filters::Filter>,
+    ) -> ToshoResult<models::others::PublishersList> {
+        let params = filters
+            .unwrap_or(
+                filters::Filter::default()
+                    .with_order(filters::SortBy::Name, filters::SortOrder::ASC)
+                    .with_per_page(25),
+            )
+            .to_params();
+
+        self.request(
+            reqwest::Method::GET,
+            "/publishers",
+            None,
+            Some(params),
+            None,
+        )
+        .await
+    }
+
+    /// Get single publisher detail via slug
+    ///
+    /// # Arguments
+    /// * `publisher_slug` - The publisher slug to get the detail for
+    pub async fn get_publisher(
+        &self,
+        publisher_slug: impl Into<String>,
+    ) -> ToshoResult<models::common::Publisher> {
+        let resp = self
+            .request::<models::others::PublisherDetailResponse>(
+                reqwest::Method::GET,
+                &format!("/publishers/{}", publisher_slug.into()),
+                None,
+                None,
+                None,
+            )
+            .await?;
+
+        Ok(resp.data())
+    }
+
+    /// Get the list of books/issues sold in the marketplace
+    ///
+    /// # Arguments
+    /// * `filter` - The filter to apply to the request
+    pub async fn get_marketplace_books(
+        &self,
+        filters: Option<filters::Filter>,
+    ) -> ToshoResult<models::others::MarketplaceBooksList> {
+        let params = filters
+            .unwrap_or(
+                filters::Filter::default()
+                    .with_order(filters::SortBy::FullTitle, filters::SortOrder::ASC)
+                    .with_per_page(25),
+            )
+            .to_params();
+
+        self.request(
+            reqwest::Method::GET,
+            "/marketplace/books",
+            None,
+            Some(params),
+            None,
+        )
+        .await
+    }
+
+    /// Get the list of editions sold for an issue in the marketplace
+    ///
+    /// # Arguments
+    /// * `issue_id` - The issue UUID to get the editions for
+    /// * `filter` - The filter to apply to the request
+    pub async fn get_marketplace_editions(
+        &self,
+        issue_id: impl Into<String>,
+        filters: Option<filters::Filter>,
+    ) -> ToshoResult<models::others::MarketplaceEditionsList> {
+        let mut params = filters
+            .unwrap_or(
+                filters::Filter::default()
+                    .clear_filters()
+                    .with_order(filters::SortBy::BookIndex, filters::SortOrder::ASC),
+            )
+            .to_params();
+        params.insert("book_id".to_string(), issue_id.into());
+
+        self.request(
+            reqwest::Method::GET,
+            "/marketplace/editions",
+            None,
+            Some(params),
+            None,
+        )
+        .await
+    }
+
+    /// Get the list of series run in your collections
+    ///
+    /// This needs authentication.
+    ///
+    /// # Arguments
+    /// * `filter` - The filter to apply to the request
+    pub async fn get_series_run_collections(
+        &self,
+        filters: Option<filters::Filter>,
+    ) -> ToshoResult<models::series::SeriesRunList> {
+        let params = filters
+            .unwrap_or(
+                filters::Filter::default()
+                    .with_order(filters::SortBy::Title, filters::SortOrder::ASC)
+                    .with_per_page(18),
+            )
+            .to_params();
+
+        let headers = self.auth_headers(false)?;
+        self.request(
+            reqwest::Method::GET,
+            "/collection/series_run",
+            None,
+            Some(params),
+            Some(headers),
+        )
+        .await
+    }
+
+    /// Get the list of issues in your collection
+    ///
+    /// This needs authentication.
+    ///
+    /// # Arguments
+    /// * `filter` - The filter to apply to the request
+    pub async fn get_issue_collections(
+        &self,
+        filters: filters::Filter,
+    ) -> ToshoResult<models::PurchasedIssuesResponse> {
+        let params = filters.to_params();
+
+        let headers = self.auth_headers(false)?;
+        self.request(
+            reqwest::Method::GET,
+            "/collection/books",
+            None,
+            Some(params),
+            Some(headers),
+        )
+        .await
+    }
+
+    /// Get the list of editions for an issue in your collection
+    ///
+    /// This needs authentication.
+    ///
+    /// # Arguments
+    /// * `issue_id` - The issue UUID to get the editions for
+    pub async fn get_issue_editions_collections(
+        &self,
+        issue_id: impl Into<String>,
+    ) -> ToshoResult<models::others::CollectedEditionList> {
+        let headers = self.auth_headers(false)?;
+        self.request(
+            reqwest::Method::GET,
+            &format!("/collection/books/{}/editions", issue_id.into()),
+            None,
+            None,
+            Some(headers),
+        )
+        .await
+    }
+
+    /// Get issue reader information
+    ///
+    /// This needs authentication.
+    ///
+    /// # Arguments
+    /// * `issue_id` - The issue ID to get the reader info for
+    pub async fn get_issue_reader(
+        &self,
+        issue_id: u32,
+    ) -> ToshoResult<models::reader::ReaderPagesWithMeta> {
+        let headers = self.auth_headers(false)?;
+
+        let response = self
+            .request::<models::reader::ReaderPagesResponse>(
+                reqwest::Method::GET,
+                &format!("/reader/issue/{}", issue_id),
+                None,
+                None,
+                Some(headers),
+            )
+            .await?;
+
+        // Instant deref clone
+        Ok(response.data())
+    }
+
+    /// Stream download the image from the given URL.
+    ///
+    /// The URL can be obtained from [`get_issue_reader`].
+    ///
+    /// # Parameters
+    /// * `url` - The URL to download the image from.
+    /// * `writer` - The writer to write the image to.
+    pub async fn stream_download(
+        &self,
+        url: impl AsRef<str>,
+        mut writer: impl io::AsyncWrite + Unpin,
+    ) -> ToshoResult<()> {
+        let res = self
+            .inner
+            .get(url.as_ref())
+            .headers({
+                let mut headers = reqwest::header::HeaderMap::new();
+                headers.insert(
+                    "Host",
+                    reqwest::header::HeaderValue::from_static(SECURE_IMAGE_HOST),
+                );
+                headers.insert(
+                    "User-Agent",
+                    reqwest::header::HeaderValue::from_static(self.constants.image_ua),
+                );
+                headers
+            })
+            .send()
+            .await?;
+
+        // bail if not success
+        if !res.status().is_success() {
+            Err(tosho_common::ToshoError::from(res.status()))
+        } else {
+            let mut stream = res.bytes_stream();
+            while let Some(item) = stream.try_next().await? {
+                writer.write_all(&item).await?;
+                writer.flush().await?;
+            }
+
+            Ok(())
+        }
+    }
+
+    /// Get the customer profile
+    ///
+    /// This needs authentication.
+    pub async fn get_profile(&self) -> ToshoResult<models::others::CustomerDetail> {
+        let headers = self.auth_headers(true)?;
+
+        let resp = self
+            .request::<models::others::CustomerDetailResponse>(
+                reqwest::Method::GET,
+                "/customer",
+                None,
+                None,
+                Some(headers),
+            )
+            .await?;
+
+        Ok(resp.data())
+    }
+
+    /// Refresh the JWT token
+    ///
+    /// This needs authentication and needs refresh token
+    ///
+    /// # Arguments
+    /// * `refresh_token` - The refresh token to use for refreshing the JWT token
+    pub async fn refresh_token(
+        &self,
+        refresh_token: impl Into<String>,
+    ) -> ToshoResult<models::common::RefreshedToken> {
+        let mut data = HashMap::new();
+        data.insert("refresh_token".to_string(), refresh_token.into());
+
+        let headers = self.auth_headers(true)?;
+
+        self.request(
+            reqwest::Method::POST,
+            "/auth/refresh_token",
+            Some(data),
+            None,
+            Some(headers),
+        )
+        .await
+    }
+}
+
+/// Format a price in USD from the API format to a human-readable format.
+///
+/// This follows the Stripe currency convention (i.e. 199 = $1.99).
+pub fn format_price(price: u64) -> f64 {
+    (price as f64) / 100.0
 }

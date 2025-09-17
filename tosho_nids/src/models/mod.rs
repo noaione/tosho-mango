@@ -7,10 +7,14 @@
 pub mod common;
 pub(crate) mod datetime;
 pub mod issues;
+pub mod others;
+pub mod reader;
 pub mod series;
 
 pub use common::*;
 pub use issues::*;
+pub use others::*;
+pub use reader::*;
 pub use series::*;
 
 use serde::Deserialize;
