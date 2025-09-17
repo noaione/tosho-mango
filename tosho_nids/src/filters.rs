@@ -16,7 +16,7 @@ pub enum SortOrder {
 }
 
 /// The field to sort by.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SortBy {
     /// Sort by ID
     Id,
@@ -35,12 +35,12 @@ pub enum SortBy {
     /// Sort by publication date
     PublicationDate,
     /// Any other field
-    Any(&'static str),
+    Any(String),
 }
 
 impl SortBy {
     /// Get the string representation of the sort by field.
-    pub fn as_str(&self) -> &'static str {
+    pub fn as_str(&self) -> &str {
         match self {
             SortBy::Id => "id",
             SortBy::Title => "title",
@@ -50,13 +50,30 @@ impl SortBy {
             SortBy::BookIndex => "book_index",
             SortBy::ReleaseDate => "release_date",
             SortBy::PublicationDate => "original_publication_date",
-            SortBy::Any(field) => field,
+            SortBy::Any(field) => field.as_ref(),
+        }
+    }
+
+    /// From string to [`SortBy`] enum
+    pub fn from_str(s: impl AsRef<str>) -> Self {
+        let s = s.as_ref();
+        match s {
+            "id" => SortBy::Id,
+            "title" => SortBy::Title,
+            "name" => SortBy::Name,
+            "full_title" => SortBy::FullTitle,
+            "issue_number" => SortBy::IssueNumber,
+            "book_index" => SortBy::BookIndex,
+            "release_date" => SortBy::ReleaseDate,
+            "publication_date" => SortBy::PublicationDate,
+            "original_publication_date" => SortBy::PublicationDate,
+            other => SortBy::Any(other.to_string()),
         }
     }
 }
 
 /// Some common filter types used in various endpoints.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum FilterType {
     /// Filter by ID
     Id,
@@ -81,12 +98,12 @@ pub enum FilterType {
     /// Filter by publisher slug
     PublisherSlug,
     /// Filter by any arbitrary string key-value pair
-    Any(&'static str),
+    Any(String),
 }
 
 impl FilterType {
     /// Get the string representation of the filter type.
-    pub fn as_str(&self) -> &'static str {
+    pub fn as_str(&self) -> &str {
         match self {
             FilterType::Id => "id",
             FilterType::Uuid => "uuid",
@@ -98,7 +115,25 @@ impl FilterType {
             FilterType::ImprintId => "publisher_imprint_id",
             FilterType::PublisherId => "publisher_id",
             FilterType::PublisherSlug => "publisher_slug",
-            FilterType::Any(key) => key,
+            FilterType::Any(key) => key.as_ref(),
+        }
+    }
+
+    /// From string to [`FilterType`] enum
+    pub fn from_str(s: impl AsRef<str>) -> Self {
+        let s = s.as_ref();
+        match s {
+            "id" => FilterType::Id,
+            "uuid" => FilterType::Uuid,
+            "format" => FilterType::Format,
+            "series_run_id" => FilterType::SeriesRunId,
+            "release_date_start" => FilterType::ReleaseDateStart,
+            "release_date_end" => FilterType::ReleaseDateEnd,
+            "genre_id" => FilterType::GenreId,
+            "publisher_imprint_id" => FilterType::ImprintId,
+            "publisher_id" => FilterType::PublisherId,
+            "publisher_slug" => FilterType::PublisherSlug,
+            other => FilterType::Any(other.to_string()),
         }
     }
 }
@@ -200,7 +235,7 @@ impl Filter {
             query.insert("direction".to_string(), direction.to_name().to_string());
         }
 
-        if let Some(order_by) = self.order_by {
+        if let Some(order_by) = &self.order_by {
             query.insert("order_by".to_string(), order_by.as_str().to_string());
         }
 
