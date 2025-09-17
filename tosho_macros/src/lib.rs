@@ -206,6 +206,21 @@ pub fn enum_error(item: TokenStream) -> TokenStream {
     enums::impl_enum_error(&input)
 }
 
+/// Create a decoded base64 string at compile time.
+///
+/// # Example
+/// ```rust
+/// # use tosho_macros::base64_decode;
+///
+/// let decoded = base64_decode!("SGVsbG8sIFdvcmxkIQ==");
+/// assert_eq!(decoded, "Hello, World!");
+/// ```
+#[proc_macro]
+pub fn comptime_b64(item: TokenStream) -> TokenStream {
+    let input = syn::parse_macro_input!(item as common::CompTimeBase64Input);
+    common::impl_base64_decode(&input)
+}
+
 /// Derive the `AutoGetter` macro for a struct
 ///
 /// Automatically expand each field into their own getter function for all private field.
