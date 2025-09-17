@@ -10,7 +10,7 @@
 
 use std::sync::LazyLock;
 
-use base64::{Engine as _, engine::general_purpose};
+use tosho_macros::comptime_b64;
 
 /// A struct containing constants used in the library.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -28,21 +28,14 @@ pub struct Constants {
 /// A struct containing the header names used in the library.
 #[derive(Debug, Clone)]
 pub struct HeaderMapping {
-    pub(crate) i: String,
-    pub(crate) t: String,
-    pub(crate) s: String,
-    pub(crate) n: String,
+    pub(crate) i: &'static str,
+    pub(crate) t: &'static str,
+    pub(crate) s: &'static str,
+    pub(crate) n: &'static str,
 }
 
 /// The name of the application.
-pub static APP_NAME: LazyLock<String> = LazyLock::new(|| {
-    String::from_utf8(
-        general_purpose::STANDARD
-            .decode("QWxwaGFNYW5nYQ==")
-            .expect("Failed to decode base64 APP_NAME"),
-    )
-    .expect("Invalid base64 string (APP_NAME)")
-});
+pub const APP_NAME: &str = comptime_b64!("QWxwaGFNYW5nYQ==");
 
 /// The constants used for Android devices.
 pub static ANDROID_CONSTANTS: LazyLock<Constants> = LazyLock::new(|| {
@@ -50,7 +43,7 @@ pub static ANDROID_CONSTANTS: LazyLock<Constants> = LazyLock::new(|| {
 
     let main_ua: String = format!(
         "Dalvik/2.1.0 (Linux; U; Android 11; SM-S908E Build/TP1A.220624.014) {}/{}",
-        *APP_NAME, app_version
+        APP_NAME, app_version
     );
 
     Constants {
@@ -62,94 +55,30 @@ pub static ANDROID_CONSTANTS: LazyLock<Constants> = LazyLock::new(|| {
 });
 
 /// The base API used for overall requests.
-pub static BASE_API: LazyLock<String> = LazyLock::new(|| {
-    String::from_utf8(
-        general_purpose::STANDARD
-            .decode("aHR0cHM6Ly9hcGkuYWxwaGEtbWFuZ2EuY29tL2FwaS9lbg==")
-            .expect("Failed to decode base64 BASE_API"),
-    )
-    .expect("Invalid base64 string (BASE_API)")
-});
+pub const BASE_API: &str =
+    tosho_macros::comptime_b64!("aHR0cHM6Ly9hcGkuYWxwaGEtbWFuZ2EuY29tL2FwaS9lbg==");
 /// The base image URL used for image requests.
-pub static BASE_IMG: LazyLock<String> = LazyLock::new(|| {
-    String::from_utf8(
-        general_purpose::STANDARD
-            .decode("aHR0cHM6Ly9pbWFnZS1lbi5hbHBoYS1tYW5nYS5jb20=")
-            .expect("Failed to decode base64 BASE_IMG"),
-    )
-    .expect("Invalid base64 string (BASE_IMG)")
-});
+pub const BASE_IMG: &str = comptime_b64!("aHR0cHM6Ly9pbWFnZS1lbi5hbHBoYS1tYW5nYS5jb20=");
 
 /// The base host used for overall requests.
-pub static BASE_HOST: LazyLock<String> = LazyLock::new(|| {
-    String::from_utf8(
-        general_purpose::STANDARD
-            .decode("YWxwaGEtbWFuZ2EuY29t")
-            .expect("Failed to decode base64 BASE_HOST"),
-    )
-    .expect("Invalid base64 string (BASE_HOST)")
-});
+pub const BASE_HOST: &str = comptime_b64!("YWxwaGEtbWFuZ2EuY29t");
 /// The API host used for API requests.
-pub static API_HOST: LazyLock<String> = LazyLock::new(|| {
-    String::from_utf8(
-        general_purpose::STANDARD
-            .decode("YXBpLmFscGhhLW1hbmdhLmNvbQ==")
-            .expect("Failed to decode base64 API_HOST"),
-    )
-    .expect("Invalid base64 string (API_HOST)")
-});
+pub const API_HOST: &str = comptime_b64!("YXBpLmFscGhhLW1hbmdhLmNvbQ==");
 /// The image host used for image requests.
-pub static IMAGE_HOST: LazyLock<String> = LazyLock::new(|| {
-    String::from_utf8(
-        general_purpose::STANDARD
-            .decode("aW1hZ2UtZW4uYWxwaGEtbWFuZ2EuY29t")
-            .expect("Failed to decode base64 IMAGE_HOST"),
-    )
-    .expect("Invalid base64 string (IMAGE_HOST)")
-});
+pub const IMAGE_HOST: &str = comptime_b64!("aW1hZ2UtZW4uYWxwaGEtbWFuZ2EuY29t");
 
 /// Constants used for header names.
 pub(crate) static HEADER_NAMES: LazyLock<HeaderMapping> = LazyLock::new(|| {
-    let i = String::from_utf8(
-        general_purpose::STANDARD
-            .decode("YXAtYXV0aC1pZGVudGlmaWVy")
-            .expect("Failed to decode base64 HEADER_NAME_I"),
-    )
-    .expect("Invalid base64 string (HEADER_NAME_I)");
-
-    let t = String::from_utf8(
-        general_purpose::STANDARD
-            .decode("YXAtYXV0aC10b2tlbg==")
-            .expect("Failed to decode base64 HEADER_NAME_T"),
-    )
-    .expect("Invalid base64 string (HEADER_NAME_T)");
-
-    let s = String::from_utf8(
-        general_purpose::STANDARD
-            .decode("YXAtYXV0aC1zZWNyZXQ=")
-            .expect("Failed to decode base64 HEADER_NAME_S"),
-    )
-    .expect("Invalid base64 string (HEADER_NAME_S)");
-
-    let n = String::from_utf8(
-        general_purpose::STANDARD
-            .decode("YXAtYXV0aC1ub25jZQ==")
-            .expect("Failed to decode base64 HEADER_NAME_N"),
-    )
-    .expect("Invalid base64 string (HEADER_NAME_N)");
+    let i = comptime_b64!("YXAtYXV0aC1pZGVudGlmaWVy");
+    let t = comptime_b64!("YXAtYXV0aC10b2tlbg==");
+    let s = comptime_b64!("YXAtYXV0aC1zZWNyZXQ=");
+    let n = comptime_b64!("YXAtYXV0aC1ub25jZQ==");
 
     HeaderMapping { i, t, s, n }
 });
 
 /// The login route used for login requests.
-pub(crate) static MASKED_LOGIN: LazyLock<String> = LazyLock::new(|| {
-    String::from_utf8(
-        general_purpose::STANDARD
-            .decode("bG9naW4vYWxwaGFwb2xpcy5qc29u")
-            .expect("Failed to decode base64 MASKED_LOGIN"),
-    )
-    .expect("Invalid base64 string (MASKED_LOGIN)")
-});
+pub(crate) const MASKED_LOGIN: &str = comptime_b64!("bG9naW4vYWxwaGFwb2xpcy5qc29u");
 
 /// Returns the constants for the given device type.
 ///
