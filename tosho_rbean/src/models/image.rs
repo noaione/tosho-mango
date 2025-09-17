@@ -71,7 +71,7 @@ impl ImageSource {
 
 impl PartialOrd for ImageSource {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.height.cmp(&other.height))
+        Some(self.cmp(other))
     }
 
     fn lt(&self, other: &Self) -> bool {
