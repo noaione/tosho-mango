@@ -975,7 +975,7 @@ async fn entrypoint(cli: ToshoCli) -> anyhow::Result<ExitCode> {
             subcommand,
         } => {
             let clean_client =
-                tosho_nids::NIClient::new::<String>(None, tosho_nids::constants::get_constants(1))?;
+                tosho_nids::NIClient::new(None, tosho_nids::constants::get_constants(1))?;
             let clean_client = if let Some(proxy) = &parsed_proxy {
                 clean_client.with_proxy(proxy.clone())?
             } else {
