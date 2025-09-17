@@ -129,7 +129,7 @@ impl KMConfigWebKV {
         let name: String = name.into();
 
         Ok(RawCookie::build((name.clone(), binding))
-            .domain(&*BASE_HOST)
+            .domain(BASE_HOST)
             .secure(true)
             .http_only(false)
             .path("/")
@@ -221,8 +221,8 @@ impl TryFrom<KMConfigWeb> for reqwest_cookie_store::CookieStore {
 
     fn try_from(value: KMConfigWeb) -> Result<Self, Self::Error> {
         let mut store = reqwest_cookie_store::CookieStore::default();
-        let base_host_url = Url::parse(&format!("https://{}", &*BASE_HOST))
-            .map_err(|e| make_error!("Failed to parse base host url of {}: {}", &*BASE_HOST, e))?;
+        let base_host_url = Url::parse(&format!("https://{}", BASE_HOST))
+            .map_err(|e| make_error!("Failed to parse base host url of {}: {}", BASE_HOST, e))?;
 
         let birthday_cookie = value.birthday.try_to_cookie("birthday")?;
         let tos_adult_cookie = value.tos_adult.try_to_cookie("terms_of_service_adult")?;
@@ -261,7 +261,7 @@ impl TryFrom<KMConfigWeb> for reqwest_cookie_store::CookieStore {
 
         if !value.uwt.is_empty() {
             let uwt = RawCookie::build(("uwt", value.uwt))
-                .domain(&*BASE_HOST)
+                .domain(BASE_HOST)
                 .secure(true)
                 .http_only(true)
                 .path("/")

@@ -2453,7 +2453,6 @@ dependencies = [
 name = "tosho-kmkc"
 version = "0.7.0"
 dependencies = [
- "base64",
  "chrono",
  "futures-util",
  "image",

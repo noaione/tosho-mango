@@ -93,13 +93,13 @@ impl KMClient {
         );
         headers.insert(
             reqwest::header::HOST,
-            reqwest::header::HeaderValue::from_static(&API_HOST),
+            reqwest::header::HeaderValue::from_static(API_HOST),
         );
         match config {
             KMConfig::Web(web) => {
                 headers.insert(
                     reqwest::header::USER_AGENT,
-                    reqwest::header::HeaderValue::from_static(&WEB_CONSTANTS.ua),
+                    reqwest::header::HeaderValue::from_static(WEB_CONSTANTS.ua),
                 );
 
                 let cookie_store = CookieStoreMutex::try_from(web.clone())?;
@@ -131,7 +131,7 @@ impl KMClient {
                 let consts = get_constants(mobile.platform() as u8);
                 headers.insert(
                     reqwest::header::USER_AGENT,
-                    reqwest::header::HeaderValue::from_static(&consts.ua),
+                    reqwest::header::HeaderValue::from_static(consts.ua),
                 );
 
                 let cookie_store = CookieStoreMutex::default();
@@ -207,12 +207,11 @@ impl KMClient {
     where
         T: serde::de::DeserializeOwned,
     {
-        let endpoint = format!("{}{}", &*BASE_API, endpoint);
+        let endpoint = format!("{}{}", BASE_API, endpoint);
         let mut extend_headers = match headers {
             Some(headers) => headers,
             None => reqwest::header::HeaderMap::new(),
         };
-        let hash_header = self.constants.hash.as_str();
 
         let hash_value = match data.clone() {
             Some(mut data) => self.format_request(&mut data)?,
@@ -227,13 +226,13 @@ impl KMClient {
         let empty_hash = self.format_request(&mut empty_params)?;
 
         empty_headers.insert(
-            hash_header,
+            self.constants.hash,
             empty_hash
                 .parse()
                 .map_err(|e| make_error!("Failed to parse empty hash header: {}", e))?,
         );
         extend_headers.insert(
-            hash_header,
+            self.constants.hash,
             hash_value
                 .parse()
                 .map_err(|e| make_error!("Failed to parse value hash header: {}", e))?,
@@ -756,11 +755,11 @@ impl KMClient {
                 let mut headers = reqwest::header::HeaderMap::new();
                 headers.insert(
                     reqwest::header::USER_AGENT,
-                    reqwest::header::HeaderValue::from_static(&self.constants.image_ua),
+                    reqwest::header::HeaderValue::from_static(self.constants.image_ua),
                 );
                 headers.insert(
                     reqwest::header::HOST,
-                    reqwest::header::HeaderValue::from_static(&IMAGE_HOST),
+                    reqwest::header::HeaderValue::from_static(IMAGE_HOST),
                 );
                 headers
             })
@@ -821,11 +820,11 @@ impl KMClient {
         );
         headers.insert(
             reqwest::header::HOST,
-            reqwest::header::HeaderValue::from_static(&API_HOST),
+            reqwest::header::HeaderValue::from_static(API_HOST),
         );
         headers.insert(
             reqwest::header::USER_AGENT,
-            reqwest::header::HeaderValue::from_static(&WEB_CONSTANTS.ua),
+            reqwest::header::HeaderValue::from_static(WEB_CONSTANTS.ua),
         );
 
         let default_web = KMConfigWeb::default();
@@ -857,13 +856,13 @@ impl KMClient {
             reqwest::header::HeaderValue::from_static("application/x-www-form-urlencoded"),
         );
         extend_headers.insert(
-            WEB_CONSTANTS.hash.as_str(),
+            WEB_CONSTANTS.hash,
             req_hash
                 .parse()
                 .map_err(|e| make_error!("Failed to parse hash header: {}", e))?,
         );
         let response = client
-            .post(format!("{}/web/user/login", &*BASE_API))
+            .post(format!("{}/web/user/login", BASE_API))
             .form(&req_data)
             .headers(extend_headers)
             .send()
