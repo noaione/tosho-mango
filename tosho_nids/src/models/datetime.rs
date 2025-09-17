@@ -53,6 +53,7 @@ where
     }
 }
 
+/// Serialize an optional [`DateTime`] into a YYYY-MM-DD string that the API use.
 pub fn serialize_opt_yyyymmdd<S>(
     date: &Option<DateTime<FixedOffset>>,
     serializer: S,
@@ -69,6 +70,7 @@ where
     }
 }
 
+/// Deserialize an optional YYYY-MM-DD string into [`DateTime`].
 pub fn deserialize_opt_yyyymmdd<'de, D>(
     deserializer: D,
 ) -> Result<Option<DateTime<FixedOffset>>, D::Error>

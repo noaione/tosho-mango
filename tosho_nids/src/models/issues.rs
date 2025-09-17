@@ -173,3 +173,64 @@ pub struct IssueSummary {
     /// The total variants of this issue
     variants_count: u32,
 }
+
+/// The list of purchased issues detail
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
+pub struct PurchasedIssue {
+    /// The issue ID
+    id: u32,
+    /// The issue UUID
+    uuid: String,
+    /// The issue slug
+    slug: String,
+    /// The series title
+    title: String,
+    /// The series + issue full title
+    full_title: String,
+    /// The series cover
+    cover: super::common::ImageUrl,
+    /// The series run information of this issue
+    series_run: SeriesRunIssue,
+    /// The total edition owned for this issue
+    #[serde(rename = "owned_editions_count")]
+    total_editions: u32,
+}
+
+/// The paginated response for issues listing.
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
+pub struct IssueListResponse {
+    /// Total pages available using the current page size
+    #[serde(rename = "pages_count")]
+    pages: u32,
+    /// Total issues available
+    #[serde(rename = "total_items")]
+    count: u64,
+    /// Country code of the request (e.g. "US", "JP", etc.)
+    country: String,
+    /// The list of issues in the current page
+    #[serde(rename = "issues")]
+    data: Vec<IssueSummary>,
+    // TODO: `available_filters` field
+}
+
+/// The response for a single issue detail request.
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
+pub struct IssueDetailResponse {
+    /// The actual issue information
+    #[serde(rename = "issue")]
+    data: IssueDetail,
+}
+
+/// The response for the purchased issues list request.
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
+pub struct PurchasedIssuesResponse {
+    /// Total pages available using the current page size
+    #[serde(rename = "pages_count")]
+    pages: u32,
+    /// Total purchased issues available
+    #[serde(rename = "total_items")]
+    count: u64,
+    /// The list of purchased issues
+    #[serde(rename = "books")]
+    data: Vec<PurchasedIssue>,
+}
