@@ -55,7 +55,7 @@ impl SortBy {
     }
 
     /// From string to [`SortBy`] enum
-    pub fn from_str(s: impl AsRef<str>) -> Self {
+    pub fn from_string(s: impl AsRef<str>) -> Self {
         let s = s.as_ref();
         match s {
             "id" => SortBy::Id,
@@ -120,7 +120,7 @@ impl FilterType {
     }
 
     /// From string to [`FilterType`] enum
-    pub fn from_str(s: impl AsRef<str>) -> Self {
+    pub fn from_string(s: impl AsRef<str>) -> Self {
         let s = s.as_ref();
         match s {
             "id" => FilterType::Id,

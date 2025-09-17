@@ -161,6 +161,6 @@ pub(crate) fn make_nids_client(
 ) -> ToshoResult<tosho_nids::NIClient> {
     let constants = tosho_nids::constants::get_constants(config.r#type() as u8);
 
-    let token_data = Some(&config.session);
+    let token_data = Some(config.session.as_ref());
     tosho_nids::NIClient::new(token_data, constants)
 }

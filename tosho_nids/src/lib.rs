@@ -16,16 +16,21 @@ pub mod constants;
 pub mod filters;
 pub mod models;
 
+pub use filters::*;
+
 /// Main client for interacting with the NI API.
 ///
 /// # Examples
 /// ```rust,no_run
-/// use tosho_nids::NIClient;
+/// use tosho_nids::{Filter, NIClient};
 ///
 /// #[tokio::main]
 /// async fn main() {
 ///     let constants = tosho_nids::constants::get_constants(1); // Web
-///     let client = NidsClient::new(None, constants);
+///     let client = NIClient::new(None, constants).unwrap();
+///
+///     let issues = client.get_issues(Filter::default().with_per_page(18)).await.unwrap();
+///     println!("Issues: {:?}", issues);
 /// }
 /// ```
 #[derive(Clone)]
@@ -51,8 +56,8 @@ impl NIClient {
     /// # Parameters
     /// * `token` - JWT token for download requests, if `None` you will only be able to make non-authenticated requests.
     /// * `constants` - Constants to use for the client, see [`crate::constants::get_constants`].
-    pub fn new<T: Into<String>>(
-        token: Option<T>,
+    pub fn new(
+        token: Option<&str>,
         constants: &'static crate::constants::Constants,
     ) -> ToshoResult<Self> {
         Self::make_client(token, constants, None)
