@@ -71,7 +71,7 @@ impl MUClient {
         proxy: Option<reqwest::Proxy>,
     ) -> ToshoResult<Self> {
         let mut headers = reqwest::header::HeaderMap::new();
-        headers.insert("Host", reqwest::header::HeaderValue::from_static(&API_HOST));
+        headers.insert("Host", reqwest::header::HeaderValue::from_static(API_HOST));
         headers.insert(
             "User-Agent",
             reqwest::header::HeaderValue::from_static(&constants.api_ua),
@@ -228,10 +228,10 @@ impl MUClient {
     /// Build and merge URL into a full API url
     fn build_url(&self, path: &str) -> String {
         if path.starts_with('/') {
-            return format!("{}{}", &*BASE_API, path);
+            return format!("{}{}", BASE_API, path);
         }
 
-        format!("{}/{}", &*BASE_API, path)
+        format!("{}/{}", BASE_API, path)
     }
 
     /// Create an empty params
@@ -492,10 +492,10 @@ impl MUClient {
         let url = url.as_ref();
         match ::reqwest::Url::parse(url) {
             Ok(mut parsed_url) => {
-                let valid_host = ::reqwest::Url::parse(
-                    format!("https://{}", &*IMAGE_HOST).as_str(),
-                )
-                .map_err(|e| make_error!("Failed to parse image host: {}: {}", &*IMAGE_HOST, e))?;
+                let valid_host = ::reqwest::Url::parse(format!("https://{}", IMAGE_HOST).as_str())
+                    .map_err(|e| {
+                        make_error!("Failed to parse image host: {}: {}", IMAGE_HOST, e)
+                    })?;
                 let host_name = valid_host
                     .host_str()
                     .ok_or_else(|| make_error!("Failed to get host from: {}", &valid_host))?;
@@ -503,7 +503,7 @@ impl MUClient {
                     make_error!(
                         "Failed to replace image host: {} with {}: {}",
                         url,
-                        &*IMAGE_HOST,
+                        IMAGE_HOST,
                         e
                     )
                 })?;
@@ -512,9 +512,9 @@ impl MUClient {
             }
             Err(_) => {
                 // parse url failed, assume it's a relative path
-                let full_url = format!("https://{}{}", &*IMAGE_HOST, url);
+                let full_url = format!("https://{}{}", IMAGE_HOST, url);
                 let parse_url = ::reqwest::Url::parse(full_url.as_str()).map_err(|e| {
-                    make_error!("Failed to parse image host: {}: {}", &*IMAGE_HOST, e)
+                    make_error!("Failed to parse image host: {}: {}", IMAGE_HOST, e)
                 })?;
                 Ok(parse_url)
             }
@@ -542,7 +542,7 @@ impl MUClient {
                 let mut headers = reqwest::header::HeaderMap::new();
                 headers.insert(
                     "Host",
-                    reqwest::header::HeaderValue::from_static(&IMAGE_HOST),
+                    reqwest::header::HeaderValue::from_static(IMAGE_HOST),
                 );
                 headers.insert(
                     "User-Agent",

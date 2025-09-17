@@ -10,7 +10,7 @@
 
 use std::sync::LazyLock;
 
-use base64::{Engine as _, engine::general_purpose};
+use tosho_macros::comptime_b64;
 
 /// A struct containing constants used in the library.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -38,24 +38,9 @@ pub static ANDROID_CONSTANTS: LazyLock<Constants> = LazyLock::new(|| {
 });
 /// The constants used for Apple/iOS devices.
 pub static APPLE_CONSTANTS: LazyLock<Constants> = LazyLock::new(|| {
-    let ios_app = String::from_utf8(
-        general_purpose::STANDARD
-            .decode("Y29tLnNxdWFyZS1lbml4Lk1hbmdhVVB3")
-            .expect("Failed to decode base64 IOS_APP"),
-    )
-    .expect("Invalid base64 string (IOS_APP)");
-    let ios_app_pre = String::from_utf8(
-        general_purpose::STANDARD
-            .decode("R2xlbndvb2RfUHJvZA==")
-            .expect("Failed to decode base64 IOS_APP_PRE"),
-    )
-    .expect("Invalid base64 string (IOS_APP_PRE)");
-    let ios_app_post = String::from_utf8(
-        general_purpose::STANDARD
-            .decode("QWxhbW9maXJlLzUuNy4x")
-            .expect("Failed to decode base64 IOS_APP_POST"),
-    )
-    .expect("Invalid base64 string (IOS_APP_POST)");
+    let ios_app = comptime_b64!("Y29tLnNxdWFyZS1lbml4Lk1hbmdhVVB3");
+    let ios_app_pre = comptime_b64!("R2xlbndvb2RfUHJvZA==");
+    let ios_app_post = comptime_b64!("QWxhbW9maXJlLzUuNy4x");
 
     let ios_app_ver = "2.6.1";
     let ios_app_build = "202411251121";
@@ -80,51 +65,16 @@ pub static WEB_CONSTANTS: LazyLock<Constants> = LazyLock::new(|| Constants {
 });
 
 /// The base API used for overall requests.
-pub static BASE_API: LazyLock<String> = LazyLock::new(|| {
-    String::from_utf8(
-        general_purpose::STANDARD
-            .decode("aHR0cHM6Ly9nbG9iYWwtYXBpLm1hbmdhLXVwLmNvbS9hcGk=")
-            .expect("Failed to decode base64 BASE_API"),
-    )
-    .expect("Invalid base64 string (BASE_API)")
-});
+pub const BASE_API: &str = comptime_b64!("aHR0cHM6Ly9nbG9iYWwtYXBpLm1hbmdhLXVwLmNvbS9hcGk=");
 /// The base image URL used for image requests.
-pub static BASE_IMG: LazyLock<String> = LazyLock::new(|| {
-    String::from_utf8(
-        general_purpose::STANDARD
-            .decode("aHR0cHM6Ly9nbG9iYWwtaW1nLm1hbmdhLXVwLmNvbQ==")
-            .expect("Failed to decode base64 BASE_IMG"),
-    )
-    .expect("Invalid base64 string (BASE_IMG)")
-});
+pub const BASE_IMG: &str = comptime_b64!("aHR0cHM6Ly9nbG9iYWwtaW1nLm1hbmdhLXVwLmNvbQ==");
 
 /// The base host used for overall requests.
-pub static BASE_HOST: LazyLock<String> = LazyLock::new(|| {
-    String::from_utf8(
-        general_purpose::STANDARD
-            .decode("Z2xvYmFsLm1hbmdhLXVwLmNvbQ==")
-            .expect("Failed to decode base64 BASE_HOST"),
-    )
-    .expect("Invalid base64 string (BASE_HOST)")
-});
+pub const BASE_HOST: &str = comptime_b64!("Z2xvYmFsLm1hbmdhLXVwLmNvbQ==");
 /// The API host used for API requests.
-pub static API_HOST: LazyLock<String> = LazyLock::new(|| {
-    String::from_utf8(
-        general_purpose::STANDARD
-            .decode("Z2xvYmFsLWFwaS5tYW5nYS11cC5jb20=")
-            .expect("Failed to decode base64 API_HOST"),
-    )
-    .expect("Invalid base64 string (API_HOST)")
-});
+pub const API_HOST: &str = comptime_b64!("Z2xvYmFsLWFwaS5tYW5nYS11cC5jb20=");
 /// The image host used for image requests.
-pub static IMAGE_HOST: LazyLock<String> = LazyLock::new(|| {
-    String::from_utf8(
-        general_purpose::STANDARD
-            .decode("Z2xvYmFsLWltZy5tYW5nYS11cC5jb20=")
-            .expect("Failed to decode base64 IMAGE_HOST"),
-    )
-    .expect("Invalid base64 string (IMAGE_HOST)")
-});
+pub const IMAGE_HOST: &str = comptime_b64!("Z2xvYmFsLWltZy5tYW5nYS11cC5jb20=");
 
 /// Returns the constants for the given device type.
 ///

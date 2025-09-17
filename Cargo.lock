@@ -2501,7 +2501,6 @@ name = "tosho-musq"
 version = "0.7.0"
 dependencies = [
  "aes",
- "base64",
  "cbc",
  "chrono",
  "futures-util",
