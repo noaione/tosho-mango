@@ -206,7 +206,7 @@ pub struct CustomerDetail {
     /// The customer email
     email: String,
     /// The customer user name
-    username: String,
+    username: Option<String>,
     /// The customer first name
     first_name: Option<String>,
     /// The customer last name
