@@ -53,6 +53,8 @@
 
 use std::path::PathBuf;
 
+use crate::cli::{ToshoCli, max_threads};
+use crate::r#impl::nids::NIDSCommands;
 use clap::Parser;
 use cli::{ExitCode, ToshoCommands};
 use r#impl::Implementations;
@@ -78,7 +80,6 @@ pub(crate) mod term;
 #[cfg(feature = "with-updater")]
 pub(crate) mod updater;
 pub(crate) mod win_term;
-use crate::cli::{ToshoCli, max_threads};
 pub(crate) use term::macros::linkify;
 
 fn get_default_download_dir() -> PathBuf {
@@ -965,6 +966,143 @@ async fn entrypoint(cli: ToshoCli) -> anyhow::Result<ExitCode> {
                 MPlusCommands::Search { query } => {
                     r#impl::mplus::manga::mplus_search(query.as_str(), &client, &t).await
                 }
+            };
+
+            Ok(exit_code)
+        }
+        ToshoCommands::Nids {
+            account_id,
+            subcommand,
+        } => {
+            let clean_client =
+                tosho_nids::NIClient::new::<String>(None, tosho_nids::constants::get_constants(1))?;
+            let clean_client = if let Some(proxy) = &parsed_proxy {
+                clean_client.with_proxy(proxy.clone())?
+            } else {
+                clean_client
+            };
+            let early_exit = match subcommand.clone() {
+                NIDSCommands::Auth {
+                    session_token,
+                    r#type,
+                } => {
+                    Some(r#impl::nids::accounts::nids_auth_session(session_token, r#type, &t).await)
+                }
+                NIDSCommands::Accounts => Some(r#impl::nids::accounts::nids_accounts(&t)),
+                #[expect(unused_variables)]
+                NIDSCommands::Issue {
+                    issue_id,
+                    with_marketplace,
+                } => {
+                    // TODO: STUB!
+                    t.warn("Not implemented yet!");
+                    Some(0)
+                }
+                #[expect(unused_variables)]
+                NIDSCommands::Issues {
+                    filters,
+                    limit,
+                    page,
+                    sort_by,
+                    direction,
+                    scope,
+                } => {
+                    // TODO: STUB!
+                    t.warn("Not implemented yet!");
+                    Some(0)
+                }
+                #[expect(unused_variables)]
+                NIDSCommands::Marketplace { limit, page } => {
+                    // TODO: STUB!
+                    t.warn("Not implemented yet!");
+                    Some(0)
+                }
+                NIDSCommands::Publishers => {
+                    // TODO: STUB!
+                    t.warn("Not implemented yet!");
+                    Some(0)
+                }
+                #[expect(unused_variables)]
+                NIDSCommands::SeriesRun { series_run_id } => {
+                    // TODO: STUB!
+                    t.warn("Not implemented yet!");
+                    Some(0)
+                }
+                #[expect(unused_variables)]
+                NIDSCommands::SeriesRuns {
+                    filters,
+                    limit,
+                    page,
+                    sort_by,
+                    direction,
+                } => {
+                    // TODO: STUB!
+                    t.warn("Not implemented yet!");
+                    Some(0)
+                }
+                _ => None,
+            };
+
+            // early exit
+            if let Some(early_exit) = early_exit {
+                drop(clean_client);
+                return Ok(early_exit);
+            }
+
+            let config = select_single_account(account_id.as_deref(), Implementations::Mplus, &t);
+            let config = match config {
+                Some(config) => match config {
+                    config::ConfigImpl::Nids(c) => c,
+                    _ => unreachable!(),
+                },
+                None => {
+                    t.warn("Aborted!");
+                    return Ok(1);
+                }
+            };
+
+            let client = r#impl::client::make_nids_client(&config)?;
+            let client = if let Some(proxy) = parsed_proxy {
+                client.with_proxy(proxy)?
+            } else {
+                client
+            };
+
+            let exit_code = match subcommand {
+                NIDSCommands::Auth { .. } => 0,
+                NIDSCommands::Account => {
+                    r#impl::nids::accounts::nids_account_info(&client, &config, &t).await
+                }
+                NIDSCommands::Accounts => 0,
+                #[expect(unused_variables)]
+                NIDSCommands::Download { issue_id, output } => {
+                    // TODO: STUB!
+                    t.warn("Not implemented yet!");
+                    0
+                }
+                NIDSCommands::Issue { .. } => 0,
+                NIDSCommands::Issues { .. } => 0,
+                NIDSCommands::Marketplace { .. } => 0,
+                NIDSCommands::Publishers => 0,
+                #[expect(unused_variables)]
+                NIDSCommands::PurchasedIssues {
+                    series_run_id,
+                    limit,
+                    page,
+                } => {
+                    // TODO: STUB!
+                    t.warn("Not implemented yet!");
+                    0
+                }
+                #[expect(unused_variables)]
+                NIDSCommands::PurchasedSeries { limit, page } => {
+                    // TODO: STUB!
+                    t.warn("Not implemented yet!");
+                    0
+                }
+                NIDSCommands::Revoke => r#impl::nids::accounts::nids_account_revoke(&config, &t),
+                NIDSCommands::SeriesRun { .. } => 0,
+                NIDSCommands::SeriesRuns { .. } => 0,
             };
 
             Ok(exit_code)

@@ -158,6 +158,7 @@ pub enum ConfigImpl {
     Sjv(crate::r#impl::sjv::config::Config),
     Rbean(crate::r#impl::rbean::config::Config),
     Mplus(crate::r#impl::mplus::config::Config),
+    Nids(crate::r#impl::nids::config::Config),
 }
 
 // Adapt web/mobile
@@ -192,15 +193,15 @@ pub(crate) fn get_user_path() -> std::path::PathBuf {
 
 // Implement Config -> ConfigImpl
 config_to_configimpl!(
-    kmkc musq amap sjv rbean mplus,
-    Kmkc Musq Amap Sjv Rbean Mplus
+    kmkc musq amap sjv rbean mplus nids,
+    Kmkc Musq Amap Sjv Rbean Mplus Nids
 );
 
 // Create config reader functions
 config_reader!(
-    "KM by KC" "MU! by SQ" "AM by AP" "SJ/M by V" "小豆 by KRKR" "M+ by S",
-    kmkc musq amap sjv rbean mplus,
-    KMConfRead MUConfRead AMConfRead SJVConfRead RBeanConfRead MPlusConfRead
+    "KM by KC" "MU! by SQ" "AM by AP" "SJ/M by V" "小豆 by KRKR" "M+ by S" "NI by DS",
+    kmkc musq amap sjv rbean mplus nids,
+    KMConfRead MUConfRead AMConfRead SJVConfRead RBeanConfRead MPlusConfRead NIDSConfRead
 );
 
 pub fn get_config(
@@ -212,8 +213,8 @@ pub fn get_config(
 
     config_match_expand!(
         id, user_path, r#impl,
-        Kmkc Musq Amap Sjv Rbean Mplus,
-        KMConfRead::get_config MUConfRead::get_config AMConfRead::get_config SJVConfRead::get_config RBeanConfRead::get_config MPlusConfRead::get_config
+        Kmkc Musq Amap Sjv Rbean Mplus Nids,
+        KMConfRead::get_config MUConfRead::get_config AMConfRead::get_config SJVConfRead::get_config RBeanConfRead::get_config MPlusConfRead::get_config NIDSConfRead::get_config
     )
 }
 
@@ -228,8 +229,8 @@ pub fn get_all_config(r#impl: &Implementations, user_path: Option<PathBuf>) -> V
     let mut glob_path = user_path.clone();
     let prefix = config_match_expand!(
         r#impl,
-        Kmkc Musq Amap Sjv Rbean Mplus,
-        kmkc musq amap sjv rbean mplus
+        Kmkc Musq Amap Sjv Rbean Mplus Nids,
+        kmkc musq amap sjv rbean mplus nids
     );
     glob_path.push(format!("{prefix}.*.tmconf"));
 
@@ -238,8 +239,8 @@ pub fn get_all_config(r#impl: &Implementations, user_path: Option<PathBuf>) -> V
         .filter_map(|entry| {
             config_match_expand!(
                 entry, r#impl,
-                Kmkc Musq Amap Sjv Rbean Mplus,
-                KMConfRead::read_config MUConfRead::read_config AMConfRead::read_config SJVConfRead::read_config RBeanConfRead::read_config MPlusConfRead::read_config
+                Kmkc Musq Amap Sjv Rbean Mplus Nids,
+                KMConfRead::read_config MUConfRead::read_config AMConfRead::read_config SJVConfRead::read_config RBeanConfRead::read_config MPlusConfRead::read_config NIDSConfRead::read_config
             )
         })
         .collect()
@@ -254,8 +255,8 @@ pub fn save_config(config: ConfigImpl, user_path: Option<PathBuf>) {
 
     save_config_impl!(
         user_path, config,
-        Kmkc Musq Amap Sjv Rbean Mplus,
-        kmkc musq amap sjv rbean mplus
+        Kmkc Musq Amap Sjv Rbean Mplus Nids,
+        kmkc musq amap sjv rbean mplus nids
     )
 }
 
@@ -269,8 +270,8 @@ pub fn try_remove_config(
     let mut user_conf = user_path.clone();
     let prefix = config_match_expand!(
         r#impl,
-        Kmkc Musq Amap Sjv Rbean Mplus,
-        kmkc musq amap sjv rbean mplus
+        Kmkc Musq Amap Sjv Rbean Mplus Nids,
+        kmkc musq amap sjv rbean mplus nids
     );
     user_conf.push(format!("{prefix}.{id}.tmconf"));
 
