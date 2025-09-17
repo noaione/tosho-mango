@@ -210,15 +210,15 @@ pub fn enum_error(item: TokenStream) -> TokenStream {
 ///
 /// # Example
 /// ```rust
-/// # use tosho_macros::base64_decode;
+/// # use tosho_macros::comptime_b64;
 ///
-/// let decoded = base64_decode!("SGVsbG8sIFdvcmxkIQ==");
+/// let decoded = comptime_b64!("SGVsbG8sIFdvcmxkIQ==");
 /// assert_eq!(decoded, "Hello, World!");
 /// ```
 #[proc_macro]
 pub fn comptime_b64(item: TokenStream) -> TokenStream {
     let input = syn::parse_macro_input!(item as common::CompTimeBase64Input);
-    common::impl_base64_decode(&input)
+    common::impl_comptime_b64(&input)
 }
 
 /// Derive the `AutoGetter` macro for a struct

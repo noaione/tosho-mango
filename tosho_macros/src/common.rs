@@ -51,7 +51,7 @@ impl syn::parse::Parse for CompTimeBase64Input {
     }
 }
 
-pub(crate) fn impl_base64_decode(input: &CompTimeBase64Input) -> proc_macro::TokenStream {
+pub(crate) fn impl_comptime_b64(input: &CompTimeBase64Input) -> proc_macro::TokenStream {
     let base64_str = &input.base64_str;
     let base64_as_str = base64_str.value();
     let decoded_bytes = match base64::engine::general_purpose::STANDARD.decode(base64_as_str) {
