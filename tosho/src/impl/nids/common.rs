@@ -112,10 +112,13 @@ pub(super) fn parse_filter_pairs(s: &str) -> Result<FilterPairInput, String> {
     }
 
     let filtered = alphabetical_filter(parts[0])?;
-    Ok((FilterType::from_str(filtered), parts[1].trim().to_string()))
+    Ok((
+        FilterType::from_string(filtered),
+        parts[1].trim().to_string(),
+    ))
 }
 
 pub(super) fn parse_sort_by(s: &str) -> Result<SortByInput, String> {
     let filtered = alphabetical_filter(s)?;
-    Ok(tosho_nids::filters::SortBy::from_str(filtered))
+    Ok(tosho_nids::filters::SortBy::from_string(filtered))
 }
