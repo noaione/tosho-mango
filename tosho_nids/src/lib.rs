@@ -20,7 +20,7 @@ pub mod models;
 ///
 /// # Examples
 /// ```rust,no_run
-/// use tosho_nids::NidsClient;
+/// use tosho_nids::NIClient;
 ///
 /// #[tokio::main]
 /// async fn main() {
@@ -29,15 +29,15 @@ pub mod models;
 /// }
 /// ```
 #[derive(Clone)]
-pub struct NidsClient {
+pub struct NIClient {
     inner: reqwest::Client,
     constants: &'static crate::constants::Constants,
     token: Option<String>,
 }
 
-impl std::fmt::Debug for NidsClient {
+impl std::fmt::Debug for NIClient {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("NidsClient")
+        f.debug_struct("NIClient")
             .field("inner", &"reqwest::Client")
             .field("constants", &self.constants)
             .field("token", &self.token.as_deref().map(|_| "****"))
@@ -45,7 +45,7 @@ impl std::fmt::Debug for NidsClient {
     }
 }
 
-impl NidsClient {
+impl NIClient {
     /// Create a new client instance.
     ///
     /// # Parameters
