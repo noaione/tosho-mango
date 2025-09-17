@@ -6,25 +6,15 @@
 //! let config = AMConfig::new("123", "abcxyz", "xyz987abc");
 //! ```
 
-use std::sync::LazyLock;
-
-use base64::{Engine as _, engine::general_purpose};
 use reqwest::Url;
 use reqwest_cookie_store::{CookieStoreMutex, RawCookie};
 use tosho_common::{ToshoError, make_error};
-use tosho_macros::AutoGetter;
+use tosho_macros::{AutoGetter, comptime_b64};
 
 use crate::constants::BASE_HOST;
 
 /// The cookie name used for session_v2, lazy static.
-pub static SESSION_COOKIE_NAME: LazyLock<String> = LazyLock::new(|| {
-    String::from_utf8(
-        general_purpose::STANDARD
-            .decode("YWxwbF92Ml9lbl9zZXNzaW9u")
-            .expect("Failed to decode base64 SESSION_COOKIE_NAME"),
-    )
-    .expect("Invalid base64 string (SESSION_COOKIE_NAME)")
-});
+pub const SESSION_COOKIE_NAME: &str = comptime_b64!("YWxwbF92Ml9lbl9zZXNzaW9u");
 
 /// Represents the configuration for the client.
 #[derive(Debug, Clone, AutoGetter)]
@@ -57,16 +47,16 @@ impl TryFrom<AMConfig> for reqwest_cookie_store::CookieStore {
 
     fn try_from(value: AMConfig) -> Result<Self, Self::Error> {
         let mut store = reqwest_cookie_store::CookieStore::default();
-        let base_host_url = Url::parse(&format!("https://{}", &*BASE_HOST)).map_err(|e| {
+        let base_host_url = Url::parse(&format!("https://{}", BASE_HOST)).map_err(|e| {
             make_error!(
                 "Failed to parse base host URL of https://{}: {}",
-                &*BASE_HOST,
+                BASE_HOST,
                 e
             )
         })?;
 
-        let session_cookie = RawCookie::build((&*SESSION_COOKIE_NAME, value.session_v2))
-            .domain(&*BASE_HOST)
+        let session_cookie = RawCookie::build((SESSION_COOKIE_NAME, value.session_v2))
+            .domain(BASE_HOST)
             .secure(true)
             .path("/")
             .build();

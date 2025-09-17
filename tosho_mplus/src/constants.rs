@@ -10,7 +10,7 @@
 
 use std::sync::LazyLock;
 
-use base64::{Engine as _, engine::general_purpose};
+use tosho_macros::comptime_b64;
 
 /// A struct containing constants used in the library.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -39,51 +39,16 @@ pub static ANDROID_CONSTANTS: LazyLock<Constants> = LazyLock::new(|| {
 });
 
 /// The base API used for overall requests.
-pub static BASE_API: LazyLock<String> = LazyLock::new(|| {
-    String::from_utf8(
-        general_purpose::STANDARD
-            .decode("aHR0cHM6Ly9qdW1wZy1hcGkudG9reW8tY2RuLmNvbS9hcGk=")
-            .expect("Failed to decode base64 BASE_API"),
-    )
-    .expect("Invalid base64 string (BASE_API)")
-});
+pub const BASE_API: &str = comptime_b64!("aHR0cHM6Ly9qdW1wZy1hcGkudG9reW8tY2RuLmNvbS9hcGk=");
 /// The base image URL used for image requests.
-pub static BASE_IMG: LazyLock<String> = LazyLock::new(|| {
-    String::from_utf8(
-        general_purpose::STANDARD
-            .decode("aHR0cHM6Ly9qdW1wZy1hc3NldHMudG9reW8tY2RuLmNvbQ==")
-            .expect("Failed to decode base64 BASE_IMG"),
-    )
-    .expect("Invalid base64 string (BASE_IMG)")
-});
+pub const BASE_IMG: &str = comptime_b64!("aHR0cHM6Ly9qdW1wZy1hc3NldHMudG9reW8tY2RuLmNvbQ==");
 
 /// The base host used for overall requests.
-pub static BASE_HOST: LazyLock<String> = LazyLock::new(|| {
-    String::from_utf8(
-        general_purpose::STANDARD
-            .decode("bWFuZ2FwbHVzLnNodWVpc2hhLmNvLmpw")
-            .expect("Failed to decode base64 BASE_HOST"),
-    )
-    .expect("Invalid base64 string (BASE_HOST)")
-});
+pub const BASE_HOST: &str = comptime_b64!("bWFuZ2FwbHVzLnNodWVpc2hhLmNvLmpw");
 /// The API host used for API requests.
-pub static API_HOST: LazyLock<String> = LazyLock::new(|| {
-    String::from_utf8(
-        general_purpose::STANDARD
-            .decode("anVtcGctYXBpLnRva3lvLWNkbi5jb20=")
-            .expect("Failed to decode base64 API_HOST"),
-    )
-    .expect("Invalid base64 string (API_HOST)")
-});
+pub const API_HOST: &str = comptime_b64!("anVtcGctYXBpLnRva3lvLWNkbi5jb20=");
 /// The image host used for image requests.
-pub static IMAGE_HOST: LazyLock<String> = LazyLock::new(|| {
-    String::from_utf8(
-        general_purpose::STANDARD
-            .decode("anVtcGctYXNzZXRzLnRva3lvLWNkbi5jb20=")
-            .expect("Failed to decode base64 IMAGE_HOST"),
-    )
-    .expect("Invalid base64 string (IMAGE_HOST)")
-});
+pub const IMAGE_HOST: &str = comptime_b64!("anVtcGctYXNzZXRzLnRva3lvLWNkbi5jb20=");
 
 /// Returns the constants for the given device type.
 ///

@@ -32,7 +32,7 @@ pub(super) fn do_print_search_information(
     for (idx, result) in results.iter().enumerate() {
         let result = result.info();
         let id = result.id();
-        let manga_url = format!("https://{}/manga/{}", &*BASE_HOST, id);
+        let manga_url = format!("https://{}/manga/{}", BASE_HOST, id);
         let linked = linkify!(&manga_url, result.title());
         let mut text_data = cformat!("<s>{}</s> ({})", linked, id);
 
@@ -212,7 +212,7 @@ pub(super) fn save_session_config(client: &AMClient, config: &Config) {
 
     let session = store
         .iter_any()
-        .find(|&cookie| cookie.name() == *SESSION_COOKIE_NAME);
+        .find(|&cookie| cookie.name() == SESSION_COOKIE_NAME);
 
     if let Some(session) = session {
         config.session = session.value().to_string();

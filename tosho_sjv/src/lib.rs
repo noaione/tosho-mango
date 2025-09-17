@@ -79,7 +79,7 @@ impl SJClient {
         );
         headers.insert(
             reqwest::header::HOST,
-            reqwest::header::HeaderValue::from_static(&API_HOST),
+            reqwest::header::HeaderValue::from_static(API_HOST),
         );
         let referer = match mode {
             SJMode::VM => &constants.vm_name,
@@ -90,9 +90,9 @@ impl SJClient {
             reqwest::header::HeaderValue::from_static(referer),
         );
 
-        let x_header = format!("{} {}", constants.app_ver, &*VALUE_PIECE);
+        let x_header = format!("{} {}", constants.app_ver, VALUE_PIECE);
         headers.insert(
-            reqwest::header::HeaderName::from_static(&HEADER_PIECE),
+            reqwest::header::HeaderName::from_static(HEADER_PIECE),
             reqwest::header::HeaderValue::from_str(&x_header).map_err(|_| {
                 ToshoClientError::HeaderParseError(format!("Header piece of {}", &x_header))
             })?,
@@ -149,7 +149,7 @@ impl SJClient {
     where
         T: serde::de::DeserializeOwned,
     {
-        let endpoint = format!("{}{}", &*BASE_API, endpoint);
+        let endpoint = format!("{}{}", BASE_API, endpoint);
 
         let request = match (data.clone(), params.clone()) {
             (None, None) => self.inner.request(method, endpoint),
@@ -287,7 +287,7 @@ impl SJClient {
                 // web didn't return JSON response but direct URL
                 let response = self
                     .inner
-                    .post(format!("{}/manga/get_manga_url", &*BASE_API))
+                    .post(format!("{}/manga/get_manga_url", BASE_API))
                     .form(&data)
                     .send()
                     .await?;
@@ -458,7 +458,7 @@ impl SJClient {
         );
         headers.insert(
             reqwest::header::HOST,
-            reqwest::header::HeaderValue::from_static(&API_HOST),
+            reqwest::header::HeaderValue::from_static(API_HOST),
         );
         let referer = match mode {
             SJMode::VM => &constants.vm_name,
@@ -469,9 +469,9 @@ impl SJClient {
             reqwest::header::HeaderValue::from_static(referer),
         );
 
-        let x_header = format!("{} {}", constants.app_ver, &*VALUE_PIECE);
+        let x_header = format!("{} {}", constants.app_ver, VALUE_PIECE);
         headers.insert(
-            reqwest::header::HeaderName::from_static(&HEADER_PIECE),
+            reqwest::header::HeaderName::from_static(HEADER_PIECE),
             reqwest::header::HeaderValue::from_str(&x_header).map_err(|_| {
                 ToshoClientError::HeaderParseError(format!("Header piece of {}", &x_header))
             })?,
@@ -499,7 +499,7 @@ impl SJClient {
         };
 
         let response = client
-            .post(format!("{}/manga/try_manga_login", &*BASE_API))
+            .post(format!("{}/manga/try_manga_login", BASE_API))
             .form(&data)
             .header(
                 reqwest::header::CONTENT_TYPE,
@@ -539,7 +539,7 @@ fn common_data_hashmap(
     data.insert("version".to_string(), LIB_VERSION.to_string());
     data.insert(DATA_APP_ID.to_string(), app_id.to_string());
     if let Some(version_body) = &constants.version_body {
-        data.insert(version_body.clone(), constants.app_ver.to_string());
+        data.insert(version_body.to_string(), constants.app_ver.to_string());
     }
     data
 }

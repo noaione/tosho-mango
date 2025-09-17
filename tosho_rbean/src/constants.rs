@@ -10,7 +10,7 @@
 
 use std::sync::LazyLock;
 
-use base64::{Engine as _, engine::general_purpose};
+use tosho_macros::comptime_b64;
 
 /// A struct containing constants used in the library.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -20,27 +20,16 @@ pub struct Constants {
     /// The user agent string used for image requests.
     pub(crate) image_ua: &'static str,
     /// Public key used for authentication.
-    pub(crate) public: String,
+    pub(crate) public: &'static str,
 }
 
 /// Token used for authentication.
-pub(crate) static TOKEN_AUTH: LazyLock<String> = LazyLock::new(|| {
-    String::from_utf8(
-        general_purpose::STANDARD
-            .decode("QUl6YVN5RHR5bjg0U2J1ZFptOWFoZkgwNnYtaUppV0JZWVp1c1lrDQo=")
-            .expect("Failed to decode base64 TOKEN_AUTH"),
-    )
-    .expect("Invalid base64 string (TOKEN_AUTH)")
-});
+pub(crate) const TOKEN_AUTH: &str =
+    comptime_b64!("QUl6YVN5RHR5bjg0U2J1ZFptOWFoZkgwNnYtaUppV0JZWVp1c1lr");
 
 /// The constants used for Android devices.
 pub static ANDROID_CONSTANTS: LazyLock<Constants> = LazyLock::new(|| {
-    let public = String::from_utf8(
-        general_purpose::STANDARD
-            .decode("TVA2d2J1WkF3Mm5UTTlQUVQ4R2ZGNGZz")
-            .expect("Failed to decode base64 ANDROID_PUBLIC"),
-    )
-    .expect("Invalid base64 string (ANDROID_PUBLIC)");
+    let public = comptime_b64!("TVA2d2J1WkF3Mm5UTTlQUVQ4R2ZGNGZz");
 
     Constants {
         ua: "okhttp/4.9.0",
@@ -50,61 +39,20 @@ pub static ANDROID_CONSTANTS: LazyLock<Constants> = LazyLock::new(|| {
 });
 
 /// The base API used for overall requests.
-pub static BASE_API: LazyLock<String> = LazyLock::new(|| {
-    String::from_utf8(
-        general_purpose::STANDARD
-            .decode("aHR0cHM6Ly9wcm9kdWN0aW9uLmFwaS5henVraS5jbw==")
-            .expect("Failed to decode base64 BASE_API"),
-    )
-    .expect("Invalid base64 string (BASE_API)")
-});
+pub const BASE_API: &str = comptime_b64!("aHR0cHM6Ly9wcm9kdWN0aW9uLmFwaS5henVraS5jbw==");
 /// The base image URL used for image requests.
-pub static BASE_IMG: LazyLock<String> = LazyLock::new(|| {
-    String::from_utf8(
-        general_purpose::STANDARD
-            .decode("aHR0cHM6Ly9wcm9kdWN0aW9uLmltYWdlLWNvbnRlbnQuYXp1a2kuY28=")
-            .expect("Failed to decode base64 BASE_IMG"),
-    )
-    .expect("Invalid base64 string (BASE_IMG)")
-});
+pub const BASE_IMG: &str =
+    comptime_b64!("aHR0cHM6Ly9wcm9kdWN0aW9uLmltYWdlLWNvbnRlbnQuYXp1a2kuY28=");
 
 /// The base host used for overall requests.
-pub static BASE_HOST: LazyLock<String> = LazyLock::new(|| {
-    String::from_utf8(
-        general_purpose::STANDARD
-            .decode("d3d3LmF6dWtpLmNv")
-            .expect("Failed to decode base64 BASE_HOST"),
-    )
-    .expect("Invalid base64 string (BASE_HOST)")
-});
+pub const BASE_HOST: &str = comptime_b64!("d3d3LmF6dWtpLmNv");
 /// The API host used for API requests.
-pub static API_HOST: LazyLock<String> = LazyLock::new(|| {
-    String::from_utf8(
-        general_purpose::STANDARD
-            .decode("cHJvZHVjdGlvbi5hcGkuYXp1a2kuY28=")
-            .expect("Failed to decode base64 API_HOST"),
-    )
-    .expect("Invalid base64 string (API_HOST)")
-});
+pub const API_HOST: &str = comptime_b64!("cHJvZHVjdGlvbi5hcGkuYXp1a2kuY28=");
 /// The image host used for image requests.
-pub static IMAGE_HOST: LazyLock<String> = LazyLock::new(|| {
-    String::from_utf8(
-        general_purpose::STANDARD
-            .decode("cHJvZHVjdGlvbi5pbWFnZS1jb250ZW50LmF6dWtpLmNv")
-            .expect("Failed to decode base64 IMAGE_HOST"),
-    )
-    .expect("Invalid base64 string (IMAGE_HOST)")
-});
+pub const IMAGE_HOST: &str = comptime_b64!("cHJvZHVjdGlvbi5pbWFnZS1jb250ZW50LmF6dWtpLmNv");
 
 /// The X-DRM-HEADER used for API requests.
-pub(crate) static X_DRM_HEADER: LazyLock<String> = LazyLock::new(|| {
-    String::from_utf8(
-        general_purpose::STANDARD
-            .decode("WC1BWlVLSS1EUk0=")
-            .expect("Failed to decode base64 X_DRM_HEADER"),
-    )
-    .expect("Invalid base64 string (X_DRM_HEADER)")
-});
+pub(crate) const X_DRM_HEADER: &str = comptime_b64!("WC1BWlVLSS1EUk0=");
 
 /// Returns the constants for the given device type.
 ///

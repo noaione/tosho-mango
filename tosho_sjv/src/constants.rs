@@ -10,7 +10,7 @@
 
 use std::sync::LazyLock;
 
-use base64::{Engine as _, engine::general_purpose};
+use tosho_macros::comptime_b64;
 
 /// A struct containing constants used in the library.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -18,15 +18,15 @@ pub struct Constants {
     /// The user agent string used for requests.
     pub(crate) ua: &'static str,
     /// The app name used for Manga requests
-    pub(crate) vm_name: String,
+    pub(crate) vm_name: &'static str,
     /// The app name used for Jump requests
-    pub(crate) sj_name: String,
+    pub(crate) sj_name: &'static str,
     /// The app version string used for API requests.
     pub(crate) app_ver: &'static str,
     /// Device ID used for requests
     pub(crate) device_id: &'static str,
     /// Version body name used for requests
-    pub(crate) version_body: Option<String>,
+    pub(crate) version_body: Option<&'static str>,
 }
 
 /// App ID for VM
@@ -38,26 +38,9 @@ pub const LIB_VERSION: &str = "9";
 
 /// The constants used for Android devices.
 pub static ANDROID_CONSTANTS: LazyLock<Constants> = LazyLock::new(|| {
-    let vm_android_name = String::from_utf8(
-        general_purpose::STANDARD
-            .decode("Y29tLnZpem1hbmdhLmFuZHJvaWQ=")
-            .expect("Failed to decode base64 VM_ANDROID_NAME"),
-    )
-    .expect("Invalid base64 string (VM_ANDROID_NAME)");
-    let sj_android_name = String::from_utf8(
-        general_purpose::STANDARD
-            .decode("Y29tLnZpei53c2ouYW5kcm9pZA==")
-            .expect("Failed to decode base64 SJ_ANDROID_NAME"),
-    )
-    .expect("Invalid base64 string (SJ_ANDROID_NAME)");
-    let android_version_body: String = {
-        String::from_utf8(
-            general_purpose::STANDARD
-                .decode("YW5kcm9pZF9hcHBfdmVyc2lvbl9jb2Rl")
-                .expect("Failed to decode base64 ANDROID_VERSION_BODY"),
-        )
-        .expect("Invalid base64 string (ANDROID_VERSION_BODY)")
-    };
+    let vm_android_name = comptime_b64!("Y29tLnZpem1hbmdhLmFuZHJvaWQ=");
+    let sj_android_name = comptime_b64!("Y29tLnZpei53c2ouYW5kcm9pZA==");
+    let android_version_body = comptime_b64!("YW5kcm9pZF9hcHBfdmVyc2lvbl9jb2Rl");
 
     Constants {
         ua: "Dalvik/2.1.0 (Linux; U; Android 12; SM-G935F Build/SQ3A.220705.004)",
@@ -70,18 +53,8 @@ pub static ANDROID_CONSTANTS: LazyLock<Constants> = LazyLock::new(|| {
 });
 /// The constants used for Apple devices.
 pub static APPLE_CONSTANTS: LazyLock<Constants> = LazyLock::new(|| {
-    let vm_apple_name = String::from_utf8(
-        general_purpose::STANDARD
-            .decode("Y29tLnZpem1hbmdhLmFwcGxl")
-            .expect("Failed to decode base64 VM_APPLE_NAME"),
-    )
-    .expect("Invalid base64 string (VM_APPLE_NAME)");
-    let sj_apple_name = String::from_utf8(
-        general_purpose::STANDARD
-            .decode("Y29tLnZpei53c2ouYXBwbGU=")
-            .expect("Failed to decode base64 SJ_APPLE_NAME"),
-    )
-    .expect("Invalid base64 string (SJ_APPLE_NAME)");
+    let vm_apple_name = comptime_b64!("Y29tLnZpem1hbmdhLmFwcGxl");
+    let sj_apple_name = comptime_b64!("Y29tLnZpei53c2ouYXBwbGU=");
 
     Constants {
         ua: "Alamofire/5.7.1/202307211728 CFNetwork/1410.0.3 Darwin/22.6.0",
@@ -95,16 +68,11 @@ pub static APPLE_CONSTANTS: LazyLock<Constants> = LazyLock::new(|| {
 });
 /// The constants used for Web devices.
 pub static WEB_CONSTANTS: LazyLock<Constants> = LazyLock::new(|| {
-    let common_web_name = String::from_utf8(
-        general_purpose::STANDARD
-            .decode("aHR0cHM6Ly92aXouY29t")
-            .expect("Failed to decode base64 COMMON_WEB_NAME"),
-    )
-    .expect("Invalid base64 string (COMMON_WEB_NAME)");
+    let common_web_name = comptime_b64!("aHR0cHM6Ly92aXouY29t");
 
     Constants {
         ua: "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:122.0) Gecko/20100101 Firefox/122.0",
-        vm_name: common_web_name.clone(),
+        vm_name: common_web_name,
         sj_name: common_web_name,
         app_ver: "180",
         device_id: "3",
@@ -113,81 +81,25 @@ pub static WEB_CONSTANTS: LazyLock<Constants> = LazyLock::new(|| {
 });
 
 /// The base API used for overall requests.
-pub static BASE_API: LazyLock<String> = LazyLock::new(|| {
-    String::from_utf8(
-        general_purpose::STANDARD
-            .decode("aHR0cHM6Ly9hcGkudml6LmNvbQ==")
-            .expect("Failed to decode base64 BASE_API"),
-    )
-    .expect("Invalid base64 string (BASE_API)")
-});
+pub const BASE_API: &str = comptime_b64!("aHR0cHM6Ly9hcGkudml6LmNvbQ==");
 
 /// The base host used for overall requests.
-pub static BASE_HOST: LazyLock<String> = LazyLock::new(|| {
-    String::from_utf8(
-        general_purpose::STANDARD
-            .decode("dml6LmNvbQ==")
-            .expect("Failed to decode base64 BASE_HOST"),
-    )
-    .expect("Invalid base64 string (BASE_HOST)")
-});
+pub const BASE_HOST: &str = comptime_b64!("dml6LmNvbQ==");
 /// The API host used for API requests.
-pub static API_HOST: LazyLock<String> = LazyLock::new(|| {
-    String::from_utf8(
-        general_purpose::STANDARD
-            .decode("YXBpLnZpei5jb20=")
-            .expect("Failed to decode base64 API_HOST"),
-    )
-    .expect("Invalid base64 string (API_HOST)")
-});
+pub const API_HOST: &str = comptime_b64!("YXBpLnZpei5jb20=");
 
 /// The header name for the one piece reference.
-pub(crate) static HEADER_PIECE: LazyLock<String> = LazyLock::new(|| {
-    String::from_utf8(
-        general_purpose::STANDARD
-            .decode("eC1kZXZpbC1mcnVpdA==")
-            .expect("Failed to decode base64 HEADER_PIECE"),
-    )
-    .expect("Invalid base64 string (HEADER_PIECE)")
-});
+pub(crate) const HEADER_PIECE: &str = comptime_b64!("eC1kZXZpbC1mcnVpdA==");
 /// The header value for the one piece reference.
-pub(crate) static VALUE_PIECE: LazyLock<String> = LazyLock::new(|| {
-    String::from_utf8(
-        general_purpose::STANDARD
-            .decode("ZmxhbWUtZmxhbWUgZnJ1aXRz")
-            .expect("Failed to decode base64 VALUE_PIECE"),
-    )
-    .expect("Invalid base64 string (VALUE_PIECE)")
-});
+pub(crate) const VALUE_PIECE: &str = comptime_b64!("ZmxhbWUtZmxhbWUgZnJ1aXRz");
 
 /// Data name for specific app ID
-pub(crate) static DATA_APP_ID: LazyLock<String> = LazyLock::new(|| {
-    String::from_utf8(
-        general_purpose::STANDARD
-            .decode("dml6X2FwcF9pZA==")
-            .expect("Failed to decode base64 DATA_APP_ID"),
-    )
-    .expect("Invalid base64 string (DATA_APP_ID)")
-});
+pub(crate) const DATA_APP_ID: &str = comptime_b64!("dml6X2FwcF9pZA==");
 
 /// Expanded `VM` app name
-pub static EXPAND_VM_NAME: LazyLock<String> = LazyLock::new(|| {
-    String::from_utf8(
-        general_purpose::STANDARD
-            .decode("dml6bWFuZ2E=")
-            .expect("Failed to decode base64 EXPAND_VM_NAME"),
-    )
-    .expect("Invalid base64 string (EXPAND_VM_NAME)")
-});
+pub const EXPAND_VM_NAME: &str = comptime_b64!("dml6bWFuZ2E=");
 /// Expanded `SJ` app name
-pub static EXPAND_SJ_NAME: LazyLock<String> = LazyLock::new(|| {
-    String::from_utf8(
-        general_purpose::STANDARD
-            .decode("c2hvbmVuanVtcA==")
-            .expect("Failed to decode base64 EXPAND_SJ_NAME"),
-    )
-    .expect("Invalid base64 string (EXPAND_SJ_NAME)")
-});
+pub const EXPAND_SJ_NAME: &str = comptime_b64!("c2hvbmVuanVtcA==");
 
 /// Returns the constants for the given device type.
 ///

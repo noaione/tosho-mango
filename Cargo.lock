@@ -2425,7 +2425,6 @@ dependencies = [
 name = "tosho-amap"
 version = "0.7.0"
 dependencies = [
- "base64",
  "chrono",
  "futures-util",
  "reqwest",
@@ -2454,7 +2453,6 @@ dependencies = [
 name = "tosho-kmkc"
 version = "0.7.0"
 dependencies = [
- "base64",
  "chrono",
  "futures-util",
  "image",
@@ -2475,6 +2473,7 @@ dependencies = [
 name = "tosho-macros"
 version = "0.5.0"
 dependencies = [
+ "base64",
  "proc-macro2",
  "prost",
  "quote",
@@ -2486,7 +2485,6 @@ dependencies = [
 name = "tosho-mplus"
 version = "0.4.0"
 dependencies = [
- "base64",
  "chrono",
  "futures-util",
  "prost",
@@ -2502,7 +2500,6 @@ name = "tosho-musq"
 version = "0.7.0"
 dependencies = [
  "aes",
- "base64",
  "cbc",
  "chrono",
  "futures-util",
@@ -2518,7 +2515,6 @@ dependencies = [
 name = "tosho-rbean"
 version = "0.5.0"
 dependencies = [
- "base64",
  "chrono",
  "futures-util",
  "reqwest",

@@ -79,11 +79,11 @@ impl RBClient {
         );
         headers.insert(
             reqwest::header::HOST,
-            reqwest::header::HeaderValue::from_static(&API_HOST),
+            reqwest::header::HeaderValue::from_static(API_HOST),
         );
         headers.insert(
             "public",
-            reqwest::header::HeaderValue::from_static(&constants.public),
+            reqwest::header::HeaderValue::from_static(constants.public),
         );
         headers.insert(
             "x-user-token",
@@ -196,7 +196,7 @@ impl RBClient {
     {
         self.refresh_token().await?;
 
-        let endpoint = format!("{}{}", &*BASE_API, url);
+        let endpoint = format!("{}{}", BASE_API, url);
 
         let request = match json_body {
             Some(json_body) => self.inner.request(method, endpoint).json(&json_body),
@@ -418,7 +418,7 @@ impl RBClient {
                 );
                 headers.insert(
                     reqwest::header::HOST,
-                    reqwest::header::HeaderValue::from_static(&IMAGE_HOST),
+                    reqwest::header::HeaderValue::from_static(IMAGE_HOST),
                 );
                 headers
             })
@@ -429,8 +429,7 @@ impl RBClient {
             Err(ToshoError::from(res.status()))
         } else {
             // Check if we need to decrypt
-            let header_name = &crate::constants::X_DRM_HEADER;
-            let x_drm = res.headers().get(header_name.as_str());
+            let x_drm = res.headers().get(crate::constants::X_DRM_HEADER);
             let is_drm = match x_drm {
                 Some(x_drm) => x_drm == "true",
                 None => false,
@@ -471,7 +470,7 @@ impl RBClient {
                 );
                 headers.insert(
                     reqwest::header::HOST,
-                    reqwest::header::HeaderValue::from_static(&IMAGE_HOST),
+                    reqwest::header::HeaderValue::from_static(IMAGE_HOST),
                 );
                 headers
             })
@@ -602,7 +601,7 @@ impl RBClient {
 
         // Step 4: Auth with 小豆
         let request = client
-            .get(format!("{}/user/v0", &*BASE_API))
+            .get(format!("{}/user/v0", BASE_API))
             .headers({
                 let mut headers = reqwest::header::HeaderMap::new();
                 headers.insert(
@@ -611,7 +610,7 @@ impl RBClient {
                 );
                 headers.insert(
                     "public",
-                    reqwest::header::HeaderValue::from_static(&constants.public),
+                    reqwest::header::HeaderValue::from_static(constants.public),
                 );
                 headers.insert(
                     "x-user-token",

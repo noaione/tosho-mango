@@ -16,6 +16,8 @@ syn = "2.0"
 quote = "1.0"
 proc-macro2 = "1.0"
 
+base64.workspace = true
+
 [dev-dependencies]
 serde.workspace = true
 prost.workspace = true

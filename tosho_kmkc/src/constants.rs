@@ -10,15 +10,17 @@
 
 use std::sync::LazyLock;
 
-use base64::{Engine as _, engine::general_purpose};
+use tosho_macros::comptime_b64;
+
+const HASH_HEADER_MOBILE: &str = comptime_b64!("eC1tZ3BrLWhhc2g=");
 
 /// A struct containing constants used in the library.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Constants {
     /// The user agent string used for API requests.
-    pub(crate) ua: String,
+    pub(crate) ua: &'static str,
     /// The user agent string used for image requests.
-    pub(crate) image_ua: String,
+    pub(crate) image_ua: &'static str,
     /// The platform string used for API requests.
     pub(crate) platform: &'static str,
     /// The version string used for API requests.
@@ -26,7 +28,7 @@ pub struct Constants {
     /// Display version?
     pub(crate) display_version: Option<&'static str>,
     /// The hash header used for API requests.
-    pub(crate) hash: String,
+    pub(crate) hash: &'static str,
 }
 
 /// A ranking tab for KM.
@@ -47,44 +49,22 @@ impl RankingTab {
 }
 
 /// The constants used for Android devices.
-pub static ANDROID_CONSTANTS: LazyLock<Constants> = LazyLock::new(|| {
-    let hash_header = String::from_utf8(
-        general_purpose::STANDARD
-            .decode("eC1tZ3BrLWhhc2g=")
-            .expect("Failed to decode base64 ANDROID_HASH_HEADER"),
-    )
-    .expect("Invalid base64 string");
-
-    Constants {
-        ua: "okhttp/4.9.3".to_string(),
-        image_ua: "okhttp/4.9.3".to_string(),
-        platform: "2",
-        version: "6.1.0",
-        display_version: Some("2.1.5"),
-        hash: hash_header,
-    }
+pub static ANDROID_CONSTANTS: LazyLock<Constants> = LazyLock::new(|| Constants {
+    ua: "okhttp/4.9.3",
+    image_ua: "okhttp/4.9.3",
+    platform: "2",
+    version: "6.1.0",
+    display_version: Some("2.1.5"),
+    hash: HASH_HEADER_MOBILE,
 });
 /// The constants used for iOS devices.
 pub static APPLE_CONSTANTS: LazyLock<Constants> = LazyLock::new(|| {
-    let hash_header = String::from_utf8(
-        general_purpose::STANDARD
-            .decode("eC1tZ3BrLWhhc2g=")
-            .expect("Failed to decode base64 IOS_HASH_HEADER"),
-    )
-    .expect("Invalid base64 string");
+    let hash_header = comptime_b64!("eC1tZ3BrLWhhc2g=");
 
-    let api_ua = String::from_utf8(
-        general_purpose::STANDARD
-            .decode("bWFnZTItZW4vMS4yLjUgKGNvbS5rb2RhbnNoYS5rbWFuZ2E7IGJ1aWxkOjEuMi41OyBpT1MgMTcuMS4yKSBBbGFtb2ZpcmUvMS4yLjU=")
-            .expect("Failed to decode base64 IOS_API_UA"),
-    )
-    .expect("Invalid base64 string");
-    let image_ua = String::from_utf8(
-        general_purpose::STANDARD
-            .decode("bWFnZTItZW4vMS4yLjUgQ0ZOZXR3b3JrLzE0ODUgRGFyd2luLzIzLjEuMA==")
-            .expect("Failed to decode base64 IOS_IMAGE_UA"),
-    )
-    .expect("Invalid base64 string");
+    let api_ua = comptime_b64!(
+        "bWFnZTItZW4vMS4yLjUgKGNvbS5rb2RhbnNoYS5rbWFuZ2E7IGJ1aWxkOjEuMi41OyBpT1MgMTcuMS4yKSBBbGFtb2ZpcmUvMS4yLjU="
+    );
+    let image_ua = comptime_b64!("bWFnZTItZW4vMS4yLjUgQ0ZOZXR3b3JrLzE0ODUgRGFyd2luLzIzLjEuMA==");
 
     Constants {
         ua: api_ua,
@@ -97,17 +77,11 @@ pub static APPLE_CONSTANTS: LazyLock<Constants> = LazyLock::new(|| {
 });
 /// The constants used for web devices.
 pub static WEB_CONSTANTS: LazyLock<Constants> = LazyLock::new(|| {
-    let hash_header = String::from_utf8(
-        general_purpose::STANDARD
-            .decode("WC1LbWFuZ2EtSGFzaA==")
-            .expect("Failed to decode base64 WEB_HASH_HEADER"),
-    )
-    .expect("Invalid base64 string");
-
-    let chrome_ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36".to_string();
+    let hash_header = comptime_b64!("WC1LbWFuZ2EtSGFzaA==");
+    let chrome_ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36";
 
     Constants {
-        ua: chrome_ua.clone(),
+        ua: chrome_ua,
         image_ua: chrome_ua,
         platform: "3",
         version: "6.0.0",
@@ -117,51 +91,16 @@ pub static WEB_CONSTANTS: LazyLock<Constants> = LazyLock::new(|| {
 });
 
 /// The base API used for overall requests.
-pub static BASE_API: LazyLock<String> = LazyLock::new(|| {
-    String::from_utf8(
-        general_purpose::STANDARD
-            .decode("aHR0cHM6Ly9hcGkua21hbmdhLmtvZGFuc2hhLmNvbQ==")
-            .expect("Failed to decode base64 BASE_API"),
-    )
-    .expect("Invalid base64 string (BASE_API)")
-});
+pub const BASE_API: &str = comptime_b64!("aHR0cHM6Ly9hcGkua21hbmdhLmtvZGFuc2hhLmNvbQ==");
 /// The base image URL used for image requests.
-pub static BASE_IMG: LazyLock<String> = LazyLock::new(|| {
-    String::from_utf8(
-        general_purpose::STANDARD
-            .decode("aHR0cHM6Ly9jZG4ua21hbmdhLmtvZGFuc2hhLmNvbQ==")
-            .expect("Failed to decode base64 BASE_IMG"),
-    )
-    .expect("Invalid base64 string (BASE_IMG)")
-});
+pub const BASE_IMG: &str = comptime_b64!("aHR0cHM6Ly9jZG4ua21hbmdhLmtvZGFuc2hhLmNvbQ==");
 
 /// The base host used for overall requests.
-pub static BASE_HOST: LazyLock<String> = LazyLock::new(|| {
-    String::from_utf8(
-        general_purpose::STANDARD
-            .decode("a21hbmdhLmtvZGFuc2hhLmNvbQ==")
-            .expect("Failed to decode base64 BASE_HOST"),
-    )
-    .expect("Invalid base64 string (BASE_HOST)")
-});
+pub const BASE_HOST: &str = comptime_b64!("a21hbmdhLmtvZGFuc2hhLmNvbQ==");
 /// The API host used for API requests.
-pub static API_HOST: LazyLock<String> = LazyLock::new(|| {
-    String::from_utf8(
-        general_purpose::STANDARD
-            .decode("YXBpLmttYW5nYS5rb2RhbnNoYS5jb20=")
-            .expect("Failed to decode base64 API_HOST"),
-    )
-    .expect("Invalid base64 string (API_HOST)")
-});
+pub const API_HOST: &str = comptime_b64!("YXBpLmttYW5nYS5rb2RhbnNoYS5jb20=");
 /// The image host used for image requests.
-pub static IMAGE_HOST: LazyLock<String> = LazyLock::new(|| {
-    String::from_utf8(
-        general_purpose::STANDARD
-            .decode("Y2RuLmttYW5nYS5rb2RhbnNoYS5jb20=")
-            .expect("Failed to decode base64 IMAGE_HOST"),
-    )
-    .expect("Invalid base64 string (IMAGE_HOST)")
-});
+pub const IMAGE_HOST: &str = comptime_b64!("Y2RuLmttYW5nYS5rb2RhbnNoYS5jb20=");
 
 /// The ranking tabs used for the ranking endpoint.
 ///

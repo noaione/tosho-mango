@@ -26,7 +26,6 @@ serde_json.workspace = true
 
 reqwest = { workspace = true, features = ["json"] }
 
-base64.workspace = true
 chrono.workspace = true
 
 image.workspace = true
@@ -34,3 +33,6 @@ kamadak-exif.workspace = true
 
 tosho-macros = { path = "../tosho_macros", version = "0.5" }
 tosho-common = { path = "../tosho_common", version = "=0.2.0", features = ["serde", "image", "id-gen"] }
+
+[dev-dependencies]
+base64.workspace = true

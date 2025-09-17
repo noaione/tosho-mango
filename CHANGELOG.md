@@ -4,6 +4,9 @@ Starting from Rust port of the project, all changes will be put into this file.
 
 ## Unreleased
 ### Changes
+- **Breaking Changes**: Change all base64 decoding on all source crates to use `tosho_macros::comptime_b64!()`
+  - This is a breaking change since the type signature is changed from `LazyLock<String>>` to `&'static str`.
+  - It also change from `static` to `const`
 - `SJ/M`: Use `i32` for account archive limit instead of `u32`
 - `SJ/M`: Make `copyright` field optional
 - Unblock `self_update` blocking tokio runtime
