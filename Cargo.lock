@@ -2414,6 +2414,7 @@ dependencies = [
  "tosho-macros",
  "tosho-mplus",
  "tosho-musq",
+ "tosho-nids",
  "tosho-rbean",
  "tosho-sjv",
  "uuid",

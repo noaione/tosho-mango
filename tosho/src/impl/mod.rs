@@ -5,6 +5,7 @@ pub(crate) mod kmkc;
 pub(crate) mod models;
 pub(crate) mod mplus;
 pub(crate) mod musq;
+pub(crate) mod nids;
 pub(super) mod parser;
 pub(crate) mod rbean;
 pub(crate) mod sjv;
@@ -24,6 +25,8 @@ pub enum Implementations {
     Rbean,
     /// M+ by S
     Mplus,
+    /// NI by DS
+    Nids,
 }
 
 const WINDOWS_RESERVED: [&str; 22] = [

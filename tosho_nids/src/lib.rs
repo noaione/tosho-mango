@@ -51,8 +51,8 @@ impl NIClient {
     /// # Parameters
     /// * `token` - JWT token for download requests, if `None` you will only be able to make non-authenticated requests.
     /// * `constants` - Constants to use for the client, see [`crate::constants::get_constants`].
-    pub fn new(
-        token: Option<impl Into<String>>,
+    pub fn new<T: Into<String>>(
+        token: Option<T>,
         constants: &'static crate::constants::Constants,
     ) -> ToshoResult<Self> {
         Self::make_client(token, constants, None)
