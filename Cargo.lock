@@ -2486,7 +2486,6 @@ dependencies = [
 name = "tosho-mplus"
 version = "0.4.0"
 dependencies = [
- "base64",
  "chrono",
  "futures-util",
  "prost",

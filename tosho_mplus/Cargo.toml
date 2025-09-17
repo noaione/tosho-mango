@@ -22,7 +22,6 @@ prost.workspace = true
 
 reqwest.workspace = true
 
-base64.workspace = true
 chrono.workspace = true
 
 tosho-macros = { path = "../tosho_macros", version = "0.5" }

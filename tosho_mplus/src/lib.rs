@@ -90,7 +90,7 @@ impl MPClient {
         proxy: Option<reqwest::Proxy>,
     ) -> ToshoResult<Self> {
         let mut headers = reqwest::header::HeaderMap::new();
-        headers.insert("Host", reqwest::header::HeaderValue::from_static(&API_HOST));
+        headers.insert("Host", reqwest::header::HeaderValue::from_static(API_HOST));
         headers.insert(
             "User-Agent",
             reqwest::header::HeaderValue::from_static(&constants.api_ua),
@@ -146,10 +146,10 @@ impl MPClient {
 
     fn build_url(&self, path: &str) -> String {
         if path.starts_with('/') {
-            return format!("{}{}", *BASE_API, path);
+            return format!("{}{}", BASE_API, path);
         }
 
-        format!("{}/{}", *BASE_API, path)
+        format!("{}/{}", BASE_API, path)
     }
 
     fn empty_params(&self, with_lang: bool) -> Vec<(String, String)> {
@@ -546,7 +546,7 @@ impl MPClient {
                 let mut headers = reqwest::header::HeaderMap::new();
                 headers.insert(
                     "Host",
-                    reqwest::header::HeaderValue::from_static(&IMAGE_HOST),
+                    reqwest::header::HeaderValue::from_static(IMAGE_HOST),
                 );
                 headers.insert(
                     "User-Agent",
