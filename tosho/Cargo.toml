@@ -26,6 +26,7 @@ tosho-amap = { path = "../tosho_amap", version = "=0.7.0" }
 tosho-sjv = { path = "../tosho_sjv", version = "=0.7.0" }
 tosho-rbean = { path = "../tosho_rbean", version = "=0.5.0" }
 tosho-mplus = { path = "../tosho_mplus", version = "=0.4.0" }
+tosho-nids = { path = "../tosho_nids", version = "=0.1.0" }
 tosho-macros = { path = "../tosho_macros", version = "0.5" }
 
 # External deps

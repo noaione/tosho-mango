@@ -73,6 +73,10 @@ pub(crate) fn select_single_account(
                     format!("{} [{}]", c.id, c.r#type().to_name())
                 },
             },
+            crate::config::ConfigImpl::Nids(c) => ConsoleChoice {
+                name: c.id.clone(),
+                value: format!("{} [{}]", c.id, c.r#type().to_name()),
+            },
         })
         .collect();
 
@@ -101,6 +105,7 @@ pub(crate) fn select_single_account(
                     crate::config::ConfigImpl::Sjv(c) => c.id == selected.name,
                     crate::config::ConfigImpl::Rbean(c) => c.id == selected.name,
                     crate::config::ConfigImpl::Mplus(c) => c.id == selected.name,
+                    crate::config::ConfigImpl::Nids(c) => c.id == selected.name,
                 })
                 .unwrap();
 
@@ -149,4 +154,13 @@ pub(crate) fn make_mplus_client(
     let constants = tosho_mplus::constants::get_constants(config.r#type() as u8);
 
     tosho_mplus::MPClient::new(&config.session, language, constants)
+}
+
+pub(crate) fn make_nids_client(
+    config: &super::nids::config::Config,
+) -> ToshoResult<tosho_nids::NIClient> {
+    let constants = tosho_nids::constants::get_constants(config.r#type() as u8);
+
+    let token_data = Some(&config.session);
+    tosho_nids::NIClient::new(token_data, constants)
 }
