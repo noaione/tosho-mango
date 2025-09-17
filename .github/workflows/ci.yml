@@ -28,6 +28,11 @@ on:
         required: true
         type: boolean
         default: false
+      no_updater:
+        description: 'Build without the self-updater feature'
+        required: false
+        type: boolean
+        default: false
 
 env:
   CARGO_TERM_COLOR: always
@@ -112,7 +117,13 @@ jobs:
       - name: Build (Nightly)
         if: env.BUILD_PROFILE == 'debug'
         run: |
-          cargo build --locked --verbose --all --target ${{ matrix.os[1] }} --profile ci
+          if [ ${{ inputs.no_updater == true }} = true ]; then
+            echo "Building without self-updater feature"
+            cargo build --locked --verbose --bin tosho --target ${{ matrix.os[1] }} --profile ci --no-default-features
+          else
+            echo "Building with self-updater feature"
+            cargo build --locked --verbose --bin tosho --target ${{ matrix.os[1] }} --profile ci
+          fi
         shell: bash
 
       - name: Permissions (Nightly)
@@ -133,7 +144,13 @@ jobs:
       - name: Build (Release)
         if: env.BUILD_PROFILE == 'release'
         run: |
-          cargo build --locked --verbose --all --target ${{ matrix.os[1] }} --profile ci
+          if [ ${{ inputs.no_updater == true }} = true ]; then
+            echo "Building without self-updater feature"
+            cargo build --locked --verbose --bin tosho --target ${{ matrix.os[1] }} --profile ci --no-default-features
+          else
+            echo "Building with self-updater feature"
+            cargo build --locked --verbose --bin tosho --target ${{ matrix.os[1] }} --profile ci
+          fi
         shell: bash
         env:
           RELEASE: true

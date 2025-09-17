@@ -70,12 +70,12 @@ use r#impl::tools::ToolsCommands;
 use r#impl::{kmkc::KMKCCommands, musq::MUSQCommands};
 use r#impl::{kmkc::download::KMDownloadCliConfig, musq::download::MUDownloadCliConfig};
 use tosho_musq::WeeklyCode;
-use updater::check_for_update;
 
 mod cli;
 pub(crate) mod config;
 pub(crate) mod r#impl;
 pub(crate) mod term;
+#[cfg(feature = "with-updater")]
 pub(crate) mod updater;
 pub(crate) mod win_term;
 use crate::cli::ToshoCli;
@@ -115,9 +115,14 @@ async fn entrypoint(cli: ToshoCli) -> anyhow::Result<ExitCode> {
         None => None,
     };
 
-    check_for_update(&t).await.unwrap_or_else(|e| {
-        t.warn(format!("Failed to check for update: {e}"));
-    });
+    #[cfg(feature = "with-updater")]
+    {
+        crate::updater::check_for_update(&t)
+            .await
+            .unwrap_or_else(|e| {
+                t.warn(format!("Failed to check for update: {e}"));
+            });
+    }
 
     match cli.command {
         ToshoCommands::Musq {
@@ -986,6 +991,7 @@ async fn entrypoint(cli: ToshoCli) -> anyhow::Result<ExitCode> {
 
             Ok(exit_code)
         }
+        #[cfg(feature = "with-updater")]
         ToshoCommands::Update => match updater::perform_update(&t).await {
             Ok(_) => Ok(0),
             Err(e) => {

@@ -111,6 +111,7 @@ pub(crate) enum ToshoCommands {
         subcommand: ToolsCommands,
     },
     /// Update tosho to the latest version
+    #[cfg(feature = "with-updater")]
     Update,
 }
 
