@@ -85,7 +85,7 @@ pub(crate) async fn musq_search_weekly(
 fn format_tags(tags: &[Tag]) -> String {
     tags.iter()
         .map(|tag| {
-            let tag_url = format!("https://{}/genre/{}", &*BASE_HOST, tag.id());
+            let tag_url = format!("https://{}/genre/{}", BASE_HOST, tag.id());
             let linked = linkify!(&tag_url, &tag.name());
 
             cformat!("<p(244),reverse,bold>{}</>", linked)
@@ -114,7 +114,7 @@ pub(crate) async fn musq_title_info(
             1
         }
         Ok(result) => {
-            let manga_url = format!("https://{}/manga/{}", &*BASE_HOST, title_id);
+            let manga_url = format!("https://{}/manga/{}", BASE_HOST, title_id);
             let linked = linkify!(&manga_url, &result.title());
 
             console.info(cformat!(

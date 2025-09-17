@@ -172,7 +172,7 @@ pub(crate) async fn kmkc_title_info(
                 }
             }
 
-            let manga_url = format!("https://{}/title/{}", &*BASE_HOST, title_id);
+            let manga_url = format!("https://{}/title/{}", BASE_HOST, title_id);
             let linked = linkify!(&manga_url, result.title());
 
             console.info(cformat!(

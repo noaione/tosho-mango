@@ -53,7 +53,7 @@ fn format_other_languages(title_lang: &[TitleLanguages]) -> String {
     title_lang
         .iter()
         .map(|lang| {
-            let lang_url = format!("https://{}/titles/{}", &*BASE_HOST, lang.id());
+            let lang_url = format!("https://{}/titles/{}", BASE_HOST, lang.id());
             let linked = linkify!(&lang_url, &lang.language().pretty_name());
             cformat!("<p(244),reverse,bold>{}</>", linked)
         })
@@ -78,7 +78,7 @@ pub(crate) async fn mplus_title_info(
     match result {
         Ok(tosho_mplus::APIResponse::Success(title_info)) => {
             let title = title_info.title().unwrap();
-            let manga_url = format!("https://{}/titles/{}", &*BASE_HOST, title.id());
+            let manga_url = format!("https://{}/titles/{}", BASE_HOST, title.id());
             let linked = linkify!(manga_url, title.title());
 
             console.info(cformat!(
@@ -162,7 +162,7 @@ pub(crate) async fn mplus_title_info(
 
             if show_chapters && !all_chapters.is_empty() {
                 for chapter in all_chapters {
-                    let ch_url = format!("https://{}/viewer/{}", &*BASE_HOST, chapter.chapter_id());
+                    let ch_url = format!("https://{}/viewer/{}", BASE_HOST, chapter.chapter_id());
                     let linked_ch = linkify!(ch_url, chapter.title());
                     let mut base_txt =
                         cformat!("    <s>{}</> ({})", linked_ch, chapter.chapter_id());

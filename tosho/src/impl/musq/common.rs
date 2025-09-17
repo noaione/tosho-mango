@@ -21,7 +21,7 @@ pub(super) fn do_print_search_information(
     let spacing = spacing.unwrap_or(2);
 
     for (idx, result) in results.iter().enumerate() {
-        let manga_url = format!("https://{}/manga/{}", &*BASE_HOST, result.id());
+        let manga_url = format!("https://{}/manga/{}", BASE_HOST, result.id());
         let linked = linkify!(&manga_url, result.title());
         let mut text_data = color_print::cformat!("<s>{}</s> ({})", linked, result.id());
 

@@ -14,7 +14,7 @@ pub(super) fn do_print_single_information(
     let term = get_console(0);
     let spacing = spacing.unwrap_or(2);
 
-    let manga_url = format!("https://{}/series/{}", &*BASE_HOST, result.slug());
+    let manga_url = format!("https://{}/series/{}", BASE_HOST, result.slug());
     let linked = linkify!(&manga_url, &result.title());
     let text_data = cformat!("<s>{}</s> ({})", linked, result.uuid());
 
@@ -39,7 +39,7 @@ pub(super) fn do_print_single_information(
         for chapter in chapter_info.iter() {
             let chapter_url = format!(
                 "https://{}/series/{}/chapter/{}",
-                &*BASE_HOST,
+                BASE_HOST,
                 result.slug(),
                 chapter.uuid()
             );

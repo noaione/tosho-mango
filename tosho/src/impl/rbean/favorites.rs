@@ -33,7 +33,7 @@ pub(crate) async fn rbean_read_list(
                 if let Some(chapter) = result.chapter() {
                     let linked_ch = format!(
                         "https://{}/series/{}/read/{}",
-                        &*BASE_HOST,
+                        BASE_HOST,
                         manga.slug(),
                         chapter.uuid()
                     );
