@@ -310,6 +310,46 @@ impl NIClient {
         Ok(resp.data())
     }
 
+    /// Get the list of genres
+    ///
+    /// # Arguments
+    /// * `filter` - The filter to apply to the request
+    pub async fn get_genres(
+        &self,
+        filters: Option<filters::Filter>,
+    ) -> ToshoResult<models::others::GenresList> {
+        let params = filters
+            .unwrap_or(
+                filters::Filter::default()
+                    .with_order(filters::SortBy::Name, filters::SortOrder::ASC)
+                    .with_per_page(100),
+            )
+            .to_params();
+
+        self.request(reqwest::Method::GET, "/genres", None, Some(params), None)
+            .await
+    }
+
+    /// Get the list of creators
+    ///
+    /// # Arguments
+    /// * `filter` - The filter to apply to the request
+    pub async fn get_creators(
+        &self,
+        filters: Option<filters::Filter>,
+    ) -> ToshoResult<models::others::CreatorsList> {
+        let params = filters
+            .unwrap_or(
+                filters::Filter::default()
+                    .with_order(filters::SortBy::DisplayName, filters::SortOrder::ASC)
+                    .with_per_page(25),
+            )
+            .to_params();
+
+        self.request(reqwest::Method::GET, "/creators", None, Some(params), None)
+            .await
+    }
+
     /// Get the list of books/issues sold in the marketplace
     ///
     /// # Arguments
