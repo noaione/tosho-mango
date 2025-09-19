@@ -38,7 +38,7 @@ pub const BASE_SECURE_IMG: &str =
     comptime_b64!("aHR0cHM6Ly9zZWN1cmUtYXNzZXRzLm5lb25pY2hpYmFuLmNvbQ==");
 
 /// The base host used for overall requests.
-pub const BASE_HOST: &str = comptime_b64!("d3d3Lm5lb25pY2hpYmFuLmNvbQ==");
+pub const BASE_HOST: &str = comptime_b64!("bmVvbmljaGliYW4uY29t");
 /// The API host used for API requests.
 pub const API_HOST: &str = comptime_b64!("bXdhcGkubmVvbmljaGliYW4uY29t");
 /// The image host used for image requests.
