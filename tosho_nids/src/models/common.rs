@@ -13,6 +13,7 @@ pub struct ImageUrl {
     /// Mobile sized URL
     mobile_url: String,
     /// Thumbnail sized URL
+    #[serde(rename = "medium_url")]
     thumbnail_url: String,
 }
 
@@ -52,6 +53,17 @@ pub struct Genre {
     name: String,
 }
 
+/// A collection of publisher icon URLs in different sizes.
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
+pub struct PublisherIcon {
+    /// Original sized URL
+    original_url: String,
+    /// Mobile sized URL
+    mobile_url: String,
+    /// Thumbnail sized URL
+    thumbnail_url: String,
+}
+
 /// The publisher information
 #[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
 pub struct Publisher {
@@ -65,7 +77,7 @@ pub struct Publisher {
     slug: String,
     /// Publisher image icon
     #[serde(default)]
-    image: Option<ImageUrl>,
+    image: Option<PublisherIcon>,
     /// The total issues count for this publisher
     #[serde(default)]
     issues_count: Option<u64>,
