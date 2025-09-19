@@ -42,3 +42,10 @@ impl FailableResponse for ErrorResponse {
             .unwrap_or_else(|| "Unknown error".to_string())
     }
 }
+
+/// A simple acknowledgement response from the API.
+#[derive(Debug, Clone, AutoGetter, Deserialize)]
+pub struct AckResponse {
+    /// The acknowledgement message.
+    message: String,
+}

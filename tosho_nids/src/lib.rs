@@ -158,7 +158,7 @@ impl NIClient {
         &self,
         method: reqwest::Method,
         endpoint: &str,
-        data: Option<HashMap<String, String>>,
+        data: Option<serde_json::Value>,
         params: Option<HashMap<String, String>>,
         headers: Option<reqwest::header::HeaderMap>,
     ) -> ToshoResult<T>
@@ -478,6 +478,21 @@ impl NIClient {
         .await
     }
 
+    /// Get your reading history list
+    ///
+    /// This needs authentication.
+    pub async fn get_reading_history(&self) -> ToshoResult<models::others::ReadingHistoryList> {
+        let headers = self.auth_headers(false)?;
+        self.request(
+            reqwest::Method::GET,
+            "/collection/books/bookmarked",
+            None,
+            None,
+            Some(headers),
+        )
+        .await
+    }
+
     /// Get issue reader information
     ///
     /// This needs authentication.
@@ -502,6 +517,36 @@ impl NIClient {
 
         // Instant deref clone
         Ok(response.data())
+    }
+
+    /// Report a page as being viewed/read
+    ///
+    /// This needs authentication.
+    ///
+    /// # Arguments
+    /// * `issue_uuid` - The issue UUID to report the page for
+    /// * `page_number` - The page number to report as being viewed/read, this is 1-based from the pages list
+    pub async fn report_page_view(
+        &self,
+        issue_uuid: impl Into<String>,
+        page_number: u32,
+    ) -> ToshoResult<models::AckResponse> {
+        let data = serde_json::json!({
+            "book": {
+                "page": page_number,
+            }
+        });
+
+        let headers = self.auth_headers(true)?;
+
+        self.request(
+            reqwest::Method::PATCH,
+            &format!("/collection/books/{}/bookmark", issue_uuid.into()),
+            Some(data),
+            None,
+            Some(headers),
+        )
+        .await
     }
 
     /// Stream download the image from the given URL.
@@ -577,9 +622,10 @@ impl NIClient {
         &self,
         refresh_token: impl Into<String>,
     ) -> ToshoResult<models::common::RefreshedToken> {
-        let mut data = HashMap::new();
-        data.insert("refresh_token".to_string(), refresh_token.into());
-
+        let refresh_tok: String = refresh_token.into();
+        let data = serde_json::json!({
+            "refresh_token": refresh_tok
+        });
         let headers = self.auth_headers(true)?;
 
         self.request(
