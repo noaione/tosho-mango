@@ -122,3 +122,34 @@ pub(super) fn parse_sort_by(s: &str) -> Result<SortByInput, String> {
     let filtered = alphabetical_filter(s)?;
     Ok(tosho_nids::filters::SortBy::from_string(filtered))
 }
+
+pub(super) fn fmt_date(date: &chrono::DateTime<chrono::FixedOffset>) -> String {
+    // Mon DD, YYYY
+    date.format("%b %d, %Y").to_string()
+}
+
+pub(crate) fn get_scope_dates() -> (String, String) {
+    let now = chrono::Utc::now();
+    // get maximum time in current day
+    let end_of_day = now
+        .date_naive()
+        .and_hms_opt(23, 59, 59)
+        .unwrap_or_else(|| now.naive_utc());
+    let start_of_day = now
+        .date_naive()
+        .and_hms_opt(0, 0, 0)
+        .unwrap_or_else(|| now.naive_utc());
+    // minus start_of_day by 7 days
+    let start_date = start_of_day - chrono::Duration::days(7);
+    // format as RFC3339
+    (
+        start_date
+            .and_local_timezone(chrono::Utc)
+            .unwrap()
+            .to_rfc3339(),
+        end_of_day
+            .and_local_timezone(chrono::Utc)
+            .unwrap()
+            .to_rfc3339(),
+    )
+}

@@ -998,18 +998,39 @@ async fn entrypoint(cli: ToshoCli) -> anyhow::Result<ExitCode> {
                     t.warn("Not implemented yet!");
                     Some(0)
                 }
-                #[expect(unused_variables)]
                 NIDSCommands::Issues {
                     filters,
                     limit,
-                    page,
                     sort_by,
                     direction,
                     scope,
                 } => {
-                    // TODO: STUB!
-                    t.warn("Not implemented yet!");
-                    Some(0)
+                    let base_filter = tosho_nids::Filter::new()
+                        .with_per_page(limit)
+                        .with_order(sort_by, direction.into());
+                    let merged_filters = filters
+                        .unwrap_or_default()
+                        .into_iter()
+                        .fold(base_filter, |acc, (filt_type, filt_data)| {
+                            acc.add_filter(filt_type, filt_data)
+                        });
+                    let full_filters = match scope {
+                        Some(s) => {
+                            let with_scope = merged_filters.with_scope(s.into());
+                            // add release_date_start and release_date_end manually
+                            let (start_time, end_time) =
+                                crate::r#impl::nids::common::get_scope_dates();
+                            with_scope
+                                .add_filter(tosho_nids::FilterType::ReleaseDateStart, start_time)
+                                .add_filter(tosho_nids::FilterType::ReleaseDateEnd, end_time)
+                        }
+                        None => merged_filters,
+                    };
+
+                    Some(
+                        r#impl::nids::issues::nids_get_issues(full_filters, &clean_client, &t)
+                            .await,
+                    )
                 }
                 #[expect(unused_variables)]
                 NIDSCommands::Marketplace { limit, page } => {
