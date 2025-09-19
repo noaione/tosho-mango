@@ -12,7 +12,7 @@ pub struct PublishersList {
     #[serde(rename = "pages_count")]
     pages: u32,
     /// Total publishers available
-    #[serde(rename = "total_items")]
+    #[serde(rename = "total_count")]
     count: u64,
     /// List of publishers
     #[serde(rename = "publishers")]
@@ -68,7 +68,7 @@ pub struct MarketplaceBooksList {
     #[serde(rename = "pages_count")]
     pages: u32,
     /// Total books available in marketplace
-    #[serde(rename = "total_items")]
+    #[serde(rename = "total_count")]
     count: u64,
     /// List of books in marketplace
     #[serde(rename = "books")]
@@ -128,7 +128,7 @@ pub struct MarketplaceEditionsList {
     #[serde(rename = "pages_count")]
     pages: u32,
     /// Total editions available in marketplace
-    #[serde(rename = "total_items")]
+    #[serde(rename = "total_count")]
     count: u64,
     /// List of editions in marketplace
     #[serde(rename = "editions")]
@@ -158,7 +158,7 @@ pub struct CollectedEditionList {
     #[serde(rename = "pages_count")]
     pages: u32,
     /// Total editions owned
-    #[serde(rename = "total_items")]
+    #[serde(rename = "total_count")]
     count: u64,
     /// List of collected editions
     #[serde(rename = "editions")]
