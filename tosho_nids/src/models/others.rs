@@ -19,6 +19,34 @@ pub struct PublishersList {
     data: Vec<super::common::Publisher>,
 }
 
+/// Response for genres list
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
+pub struct GenresList {
+    /// Total pages available using the current page size
+    #[serde(rename = "pages_count")]
+    pages: u32,
+    /// Total genres available
+    #[serde(rename = "total_count")]
+    count: u64,
+    /// List of genres
+    #[serde(rename = "genres")]
+    data: Vec<super::common::Genre>,
+}
+
+/// Response for creators list
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
+pub struct CreatorsList {
+    /// Total pages available using the current page size
+    #[serde(rename = "pages_count")]
+    pages: u32,
+    /// Total creators available
+    #[serde(rename = "total_count")]
+    count: u64,
+    /// List of creators
+    #[serde(rename = "creators")]
+    data: Vec<super::common::Creator>,
+}
+
 /// Marketplace books information
 #[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
 pub struct MarketplaceBook {

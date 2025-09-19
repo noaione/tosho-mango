@@ -40,6 +40,10 @@ pub struct Creator {
     slug: String,
     /// Creator UUID
     uuid: String,
+    // TODO: image which is null right now
+    /// The user available roles in all the issues exist in the site
+    #[serde(default)]
+    roles: Option<Vec<String>>,
 }
 
 /// Genre/tag information of the book/volume.
@@ -51,6 +55,11 @@ pub struct Genre {
     uuid: String,
     /// Genre name
     name: String,
+    /// The "full-er" name of the genre
+    ///
+    /// Although right now it's just adding `COMICS & GRAPHICS NOVELS` prefix
+    #[serde(default, rename = "bisac_name")]
+    full_name: Option<String>,
 }
 
 /// A collection of publisher icon URLs in different sizes.

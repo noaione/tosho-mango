@@ -26,6 +26,10 @@ pub enum SortBy {
     FullTitle,
     /// Sort by name
     Name,
+    /// Sort by display name
+    ///
+    /// Alternative to `Name` (used sometimes in creators)
+    DisplayName,
     /// Sort by issue number
     IssueNumber,
     /// Sort by book index (similar to issue number)
@@ -45,6 +49,7 @@ impl SortBy {
             SortBy::Id => "id",
             SortBy::Title => "title",
             SortBy::Name => "name",
+            SortBy::DisplayName => "display_name",
             SortBy::FullTitle => "full_title",
             SortBy::IssueNumber => "issue_number",
             SortBy::BookIndex => "book_index",
@@ -61,6 +66,7 @@ impl SortBy {
             "id" => SortBy::Id,
             "title" => SortBy::Title,
             "name" => SortBy::Name,
+            "display_name" => SortBy::DisplayName,
             "full_title" => SortBy::FullTitle,
             "issue_number" => SortBy::IssueNumber,
             "book_index" => SortBy::BookIndex,
