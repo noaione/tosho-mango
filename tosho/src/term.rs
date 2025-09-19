@@ -24,6 +24,16 @@ pub struct ConsoleChoice {
     pub value: String,
 }
 
+impl ConsoleChoice {
+    /// Create a new console choice
+    pub fn new(name: impl Into<String>, value: impl Into<String>) -> Self {
+        Self {
+            name: name.into(),
+            value: value.into(),
+        }
+    }
+}
+
 impl std::fmt::Display for ConsoleChoice {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.value)
@@ -257,6 +267,21 @@ impl Terminal {
         #[cfg(not(windows))]
         {
             true
+        }
+    }
+
+    /// Clear the terminal screen
+    pub fn clear_screen(&self) {
+        if self.is_modern() {
+            print!("\x1B[2J\x1B[1;1H");
+            print!("\x1B[3J");
+            use std::io::{self, Write};
+            let _ = io::stdout().flush();
+        } else {
+            // Fallback for older terminals - print enough newlines to "clear" screen
+            for _ in 0..50 {
+                println!();
+            }
         }
     }
 }
