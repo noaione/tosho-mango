@@ -158,6 +158,7 @@ impl FilterScope {
 }
 
 /// Filter handler
+#[derive(Clone)]
 pub struct Filter {
     filters: Vec<(FilterType, String)>,
     direction: Option<SortOrder>,

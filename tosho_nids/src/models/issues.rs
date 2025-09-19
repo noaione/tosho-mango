@@ -203,10 +203,10 @@ pub struct IssueListResponse {
     #[serde(rename = "pages_count")]
     pages: u32,
     /// Total issues available
-    #[serde(rename = "total_items")]
+    #[serde(rename = "total_count")]
     count: u64,
     /// Country code of the request (e.g. "US", "JP", etc.)
-    country: String,
+    country_code: String,
     /// The list of issues in the current page
     #[serde(rename = "issues")]
     data: Vec<IssueSummary>,
@@ -228,7 +228,7 @@ pub struct PurchasedIssuesResponse {
     #[serde(rename = "pages_count")]
     pages: u32,
     /// Total purchased issues available
-    #[serde(rename = "total_items")]
+    #[serde(rename = "total_count")]
     count: u64,
     /// The list of purchased issues
     #[serde(rename = "books")]

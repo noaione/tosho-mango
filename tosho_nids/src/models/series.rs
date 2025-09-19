@@ -156,7 +156,7 @@ pub struct SeriesRunList {
     #[serde(rename = "pages_count")]
     pages: u32,
     /// Total series runs available
-    #[serde(rename = "total_items")]
+    #[serde(rename = "total_count")]
     count: u64,
     /// List of series runs
     #[serde(rename = "series_run")]
