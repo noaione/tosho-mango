@@ -83,6 +83,17 @@ pub struct IssueDetail {
         deserialize_with = "super::datetime::deserialize_opt"
     )]
     end_date: Option<chrono::DateTime<chrono::FixedOffset>>,
+    /// The currently read page number if any
+    #[serde(default)]
+    bookmark_page: Option<u32>,
+    /// The timestamp of the last time this issue was read/viewed
+    #[serde(
+        default,
+        rename = "bookmark_timestamp",
+        serialize_with = "super::datetime::serialize_opt",
+        deserialize_with = "super::datetime::deserialize_opt"
+    )]
+    last_read: Option<chrono::DateTime<chrono::FixedOffset>>,
 }
 
 /// Information about creator on the issues
