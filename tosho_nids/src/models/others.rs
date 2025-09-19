@@ -265,3 +265,126 @@ pub struct CustomerDetailResponse {
     #[deref_clone]
     data: CustomerDetail,
 }
+
+/// The collected editions information
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
+pub struct CollectedEditionDetailed {
+    /// The edition ID
+    id: String,
+    /// The book index
+    #[serde(rename = "book_index")]
+    index: u32,
+    /// The issue UUID
+    book_id: String,
+    /// The issue full title
+    full_title: String,
+    /// Is in marketplace?
+    in_marketplace: bool,
+    /// The original cover image URL
+    original_url: String,
+    /// The mobile cover image URL
+    mobile_url: String,
+    /// The thumbnail cover image URL
+    thumbnail_url: String,
+    /// Variant identifier (e.g. "standard", "variant-1", "A", etc.)
+    #[serde(rename = "variant_identifier")]
+    variant_id: String,
+    /// Variant description (e.g. "Standard Edition", "Variant Cover A", etc.)
+    variant_description: String,
+    /// Is this edition signable/remarqueable?
+    signable: bool,
+    /// Is this edition resellable in marketplace?
+    resellable: bool,
+    /// Is this edition downloadable?
+    downloadable: bool,
+    /// The age rating of the issue (e.g. "13+")
+    age_rating: String,
+    /// The language of the issue (e.g. "eng", "jpn", etc.)
+    language: String,
+    /// The release date of the issue in ISO 8601 format
+    #[serde(with = "super::datetime")]
+    release_date: chrono::DateTime<chrono::FixedOffset>,
+    /// Total pages in the issue
+    total_pages: u32,
+    /// The genres/tags associated with this issue
+    #[serde(default, rename = "categories")]
+    genres: Vec<super::common::Genre>,
+    /// The creators involved in this issue
+    #[serde(default)]
+    creators: Vec<super::issues::IssueCreator>,
+    /// Does this edition have signature/remarque?
+    #[serde(rename = "sig")]
+    has_signature: bool,
+    // TODO: `rmq_plate_url` and `remarqued_watermark_cover_url` fields
+}
+
+/// An information about an series run from reading history
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
+pub struct ReadingHistorySeries {
+    /// The series UUID
+    id: String,
+    /// The series title
+    title: String,
+    /// The series description
+    description: Option<String>,
+    /// The series URL slug
+    slug: String,
+    /// The series creation time in the system
+    #[serde(with = "super::datetime")]
+    created_at: chrono::DateTime<chrono::FixedOffset>,
+}
+
+/// The information for user reading history
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
+pub struct ReadingHistory {
+    /// The issue ID
+    id: String,
+    /// The issue UUID
+    uuid: String,
+    /// The series title
+    title: String,
+    /// The issue full title
+    full_title: String,
+    /// The issue URL slug
+    slug: String,
+    /// The issue description
+    description: Option<String>,
+    /// The issue cover image original URL
+    original_url: String,
+    /// The issue cover image mobile URL
+    mobile_url: String,
+    /// The issue cover image thumbnail URL
+    thumbnail_url: String,
+    /// The series run information for this issue
+    series_run: ReadingHistorySeries,
+    /// The list of owned editions of this issue
+    #[serde(rename = "owned_editions")]
+    editions: Vec<CollectedEditionDetailed>,
+    /// Total pages in this issue
+    total_pages: u32,
+    /// The currently read page number if any
+    #[serde(default)]
+    bookmark_page: Option<u32>,
+    /// The timestamp of the last time this issue was read/viewed
+    #[serde(
+        default,
+        rename = "bookmark_timestamp",
+        serialize_with = "super::datetime::serialize_opt",
+        deserialize_with = "super::datetime::deserialize_opt"
+    )]
+    last_read: Option<chrono::DateTime<chrono::FixedOffset>>,
+}
+
+/// The paginated response for user reading history listing.
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
+pub struct ReadingHistoryList {
+    /// Total pages available using the current page size
+    #[serde(rename = "pages_count")]
+    pages: u32,
+    // /// Total history items available
+    // #[serde(rename = "total_count")]
+    // count: u64,
+    /// List of reading history items
+    #[serde(rename = "books")]
+    data: Vec<ReadingHistory>,
+}
