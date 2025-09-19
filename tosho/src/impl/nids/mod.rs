@@ -10,6 +10,7 @@ use crate::r#impl::nids::common::{
 pub(crate) mod accounts;
 pub(crate) mod common;
 pub(crate) mod config;
+pub(crate) mod issues;
 
 #[derive(Subcommand, Clone)]
 pub(crate) enum NIDSCommands {
@@ -49,15 +50,15 @@ pub(crate) enum NIDSCommands {
         filters: Option<Vec<FilterPairInput>>,
         /// Maximum number of issues to return
         #[arg(short = 'l', long = "limit", default_value_t = 20)]
-        limit: usize,
-        /// Page number to return (starts from 1)
-        #[arg(short = 'p', long = "page", default_value_t = 1)]
-        page: usize,
+        limit: u32,
+        // /// Page number to return (starts from 1)
+        // #[arg(short = 'p', long = "page", default_value_t = 1)]
+        // page: usize,
         /// What field to use for sorting
         ///
         /// Some examples: `id`, `title`, `full_title`, `issue_number`, `book_index`, `release_date`, `publication-date`
         #[arg(short = 's', long = "sort", default_value = "full_title", value_parser = parse_sort_by)]
-        sort_by: Option<SortByInput>,
+        sort_by: SortByInput,
         /// The direction of the sort order
         #[arg(short = 'd', long = "direction", default_value = "asc")]
         direction: SortOrderInput,
@@ -117,7 +118,7 @@ pub(crate) enum NIDSCommands {
         page: usize,
         /// What field to use for sorting
         ///
-        /// Some examples: `id`, `title`, `full_title`, `issue_number`, `book_index`, `release_date`, `publication-date`
+        /// Some examples: `id`, `title`, `full_title`, `issue_number`, `book_index`, `release_date`, `publication_date`
         #[arg(short = 's', long = "sort", default_value = "title", value_parser = parse_sort_by)]
         sort_by: Option<SortByInput>,
         /// The direction of the sort order
