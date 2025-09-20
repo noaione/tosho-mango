@@ -44,6 +44,7 @@ impl ValueEnum for SortOrderInput {
 pub(crate) enum FilterScopeInput {
     Frontlist,
     Backlist,
+    OnSale,
 }
 
 impl ValueEnum for FilterScopeInput {
@@ -51,11 +52,16 @@ impl ValueEnum for FilterScopeInput {
         match self {
             FilterScopeInput::Frontlist => Some(clap::builder::PossibleValue::new("frontlist")),
             FilterScopeInput::Backlist => Some(clap::builder::PossibleValue::new("backlist")),
+            FilterScopeInput::OnSale => Some(clap::builder::PossibleValue::new("on-sale")),
         }
     }
 
     fn value_variants<'a>() -> &'a [Self] {
-        &[FilterScopeInput::Frontlist, FilterScopeInput::Backlist]
+        &[
+            FilterScopeInput::Frontlist,
+            FilterScopeInput::Backlist,
+            FilterScopeInput::OnSale,
+        ]
     }
 
     fn from_str(s: &str, ignore_case: bool) -> Result<Self, String> {
@@ -67,6 +73,7 @@ impl ValueEnum for FilterScopeInput {
         match s.as_str() {
             "frontlist" => Ok(FilterScopeInput::Frontlist),
             "backlist" => Ok(FilterScopeInput::Backlist),
+            "on-sale" | "onsale" | "on_sale" => Ok(FilterScopeInput::OnSale),
             _ => Err(format!("Invalid scope: {s}")),
         }
     }
@@ -77,6 +84,7 @@ impl From<FilterScopeInput> for tosho_nids::filters::FilterScope {
         match value {
             FilterScopeInput::Frontlist => tosho_nids::filters::FilterScope::Frontlist,
             FilterScopeInput::Backlist => tosho_nids::filters::FilterScope::Backlist,
+            FilterScopeInput::OnSale => tosho_nids::filters::FilterScope::OnSale,
         }
     }
 }
@@ -152,4 +160,48 @@ pub(crate) fn get_scope_dates() -> (String, String) {
             .unwrap()
             .to_rfc3339(),
     )
+}
+
+pub(super) enum PaginateAction {
+    Next,
+    Previous,
+    Exit(u32),
+}
+
+pub(super) async fn pagination_helper(
+    current_page: u32,
+    maximum_pages: u32,
+    console: &crate::term::Terminal,
+) -> PaginateAction {
+    let mut options = vec![];
+    if current_page > 1 {
+        options.push(crate::term::ConsoleChoice::new(
+            "prev",
+            format!("Previous Page ({}/{})", current_page - 1, maximum_pages),
+        ));
+    }
+    if current_page < maximum_pages {
+        options.push(crate::term::ConsoleChoice::new(
+            "next",
+            format!("Next Page ({}/{})", current_page + 1, maximum_pages),
+        ));
+    }
+    options.push(crate::term::ConsoleChoice::new("exit", "Exit Pagination"));
+
+    let selection = console.choice("What do you want to do?", options);
+    match selection {
+        Some(choice) => match choice.name.as_str() {
+            "next" => PaginateAction::Next,
+            "prev" => PaginateAction::Previous,
+            "exit" => PaginateAction::Exit(0),
+            _ => {
+                console.warn("Invalid choice, exiting.");
+                PaginateAction::Exit(1)
+            }
+        },
+        None => {
+            console.warn("Aborted by user, exiting.");
+            PaginateAction::Exit(0)
+        }
+    }
 }
