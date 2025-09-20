@@ -75,16 +75,15 @@ jobs:
           # Linux (x64)
           - [ubuntu-24.04, x86_64-unknown-linux-gnu]
           # Linux (ARM64)
-          # >> See: https://github.com/rust-lang/rust/issues/135867#issuecomment-2608638344
-          - [ubuntu-22.04-arm, aarch64-unknown-linux-gnu]
-          # macOS Apple Silicon (cross-compile to x64)
-          - [macos-14, x86_64-apple-darwin]
-          # macOS Apple Silicon (ARM64)
-          - [macos-14, aarch64-apple-darwin]
+          - [ubuntu-24.04-arm, aarch64-unknown-linux-gnu]
+          # macOS Apple Intel (Sonoma)
+          - [macos-15-intel, x86_64-apple-darwin]
+          # macOS Apple Silicon (Tahoe)
+          - [macos-26, aarch64-apple-darwin]
           # Windows Server 2025 (x64)
           - [windows-2025, x86_64-pc-windows-msvc]
-          # Windows Server 2025 (ARM64)
-          - [windows-2025, aarch64-pc-windows-msvc]
+          # Windows 11 ARM (ARM64)
+          - [windows-11-arm, aarch64-pc-windows-msvc]
       fail-fast: false
 
     runs-on: ${{ matrix.os[0] }}
