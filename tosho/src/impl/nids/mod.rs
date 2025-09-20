@@ -38,10 +38,10 @@ pub(crate) enum NIDSCommands {
     /// Get single issue information by the ID
     Issue {
         /// Issue ID to get
-        issue_id: u64,
+        issue_id: u32,
 
         /// Get with marketplace editions
-        #[arg(short = 'm', long = "marketplaces", default_value_t = false)]
+        #[arg(short = 'm', long = "with-marketplace", default_value_t = false)]
         with_marketplace: bool,
     },
     /// Get a list of issues depending on the filters
