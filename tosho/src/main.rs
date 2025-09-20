@@ -1014,7 +1014,7 @@ async fn entrypoint(cli: ToshoCli) -> anyhow::Result<ExitCode> {
                         .fold(base_filter, |acc, (filt_type, filt_data)| {
                             acc.add_filter(filt_type, filt_data)
                         });
-                    let full_filters = match scope {
+                    let mut full_filters = match scope {
                         Some(s) => {
                             let with_scope = merged_filters.with_scope(s.into());
                             // add release_date_start and release_date_end manually
@@ -1028,7 +1028,7 @@ async fn entrypoint(cli: ToshoCli) -> anyhow::Result<ExitCode> {
                     };
 
                     Some(
-                        r#impl::nids::issues::nids_get_issues(full_filters, &clean_client, &t)
+                        r#impl::nids::issues::nids_get_issues(&mut full_filters, &clean_client, &t)
                             .await,
                     )
                 }
@@ -1038,10 +1038,20 @@ async fn entrypoint(cli: ToshoCli) -> anyhow::Result<ExitCode> {
                     t.warn("Not implemented yet!");
                     Some(0)
                 }
+                NIDSCommands::Publisher {
+                    publisher_slug,
+                    with_imprints,
+                } => Some(
+                    r#impl::nids::publishers::nids_get_publisher(
+                        &publisher_slug,
+                        with_imprints,
+                        &clean_client,
+                        &t,
+                    )
+                    .await,
+                ),
                 NIDSCommands::Publishers => {
-                    // TODO: STUB!
-                    t.warn("Not implemented yet!");
-                    Some(0)
+                    Some(r#impl::nids::publishers::nids_get_publishers(&clean_client, &t).await)
                 }
                 #[expect(unused_variables)]
                 NIDSCommands::SeriesRun { series_run_id } => {
@@ -1104,6 +1114,7 @@ async fn entrypoint(cli: ToshoCli) -> anyhow::Result<ExitCode> {
                 NIDSCommands::Issue { .. } => 0,
                 NIDSCommands::Issues { .. } => 0,
                 NIDSCommands::Marketplace { .. } => 0,
+                NIDSCommands::Publisher { .. } => 0,
                 NIDSCommands::Publishers => 0,
                 #[expect(unused_variables)]
                 NIDSCommands::PurchasedIssues {
