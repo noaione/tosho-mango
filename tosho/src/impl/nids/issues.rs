@@ -19,10 +19,24 @@ fn print_issue_summary(issue: &tosho_nids::models::IssueSummary, console: &crate
         issue.id(),
         issue.uuid()
     );
+
+    let pubs_text = if let Some(imprint) = issue.imprint()
+        && let Some(imprint_type) = imprint.imprint_type()
+        && imprint_type != "primary"
+    {
+        cformat!(
+            "<s>{}</s> / <s>{}</s>",
+            issue.publisher().name(),
+            imprint.name()
+        )
+    } else {
+        cformat!("<s>{}</s>", issue.publisher().name())
+    };
+
     let title_smol_info = cformat!(
-        "<b,s>{}</b,s> | <s>{}</s> | <g,s>$</g,s>{:.2}",
+        "<b,s>{}</b,s> | {} | <g,s>$</g,s>{:.2}",
         fmt_date(issue.release_date()),
-        issue.publisher().name(),
+        pubs_text,
         tosho_nids::format_price(issue.price_usd())
     );
 
