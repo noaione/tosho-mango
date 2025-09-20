@@ -989,15 +989,18 @@ async fn entrypoint(cli: ToshoCli) -> anyhow::Result<ExitCode> {
                     Some(r#impl::nids::accounts::nids_auth_session(session_token, r#type, &t).await)
                 }
                 NIDSCommands::Accounts => Some(r#impl::nids::accounts::nids_accounts(&t)),
-                #[expect(unused_variables)]
                 NIDSCommands::Issue {
                     issue_id,
                     with_marketplace,
-                } => {
-                    // TODO: STUB!
-                    t.warn("Not implemented yet!");
-                    Some(0)
-                }
+                } => Some(
+                    r#impl::nids::issues::nids_get_issue(
+                        issue_id,
+                        with_marketplace,
+                        &clean_client,
+                        &t,
+                    )
+                    .await,
+                ),
                 NIDSCommands::Issues {
                     filters,
                     limit,
