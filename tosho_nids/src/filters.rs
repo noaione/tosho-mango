@@ -151,6 +151,8 @@ pub enum FilterScope {
     Frontlist,
     /// Backlog collection
     Backlist,
+    /// On sale collection (both frontlist and backlist)
+    OnSale,
 }
 
 impl FilterScope {
@@ -159,6 +161,7 @@ impl FilterScope {
         match self {
             FilterScope::Frontlist => "frontlist",
             FilterScope::Backlist => "backlist",
+            FilterScope::OnSale => "on_sale",
         }
     }
 }
@@ -193,8 +196,21 @@ impl Filter {
         self
     }
 
+    /// Add a filter in place
+    pub fn add_filter_mut(&mut self, filter_type: FilterType, value: impl ToString) -> &mut Self {
+        self.filters.push((filter_type, value.to_string()));
+        self
+    }
+
     /// Set the sort order
     pub fn with_order(mut self, order_by: SortBy, direction: SortOrder) -> Self {
+        self.order_by = Some(order_by);
+        self.direction = Some(direction);
+        self
+    }
+
+    /// Set the sort order in place
+    pub fn set_order(&mut self, order_by: SortBy, direction: SortOrder) -> &mut Self {
         self.order_by = Some(order_by);
         self.direction = Some(direction);
         self
@@ -206,8 +222,20 @@ impl Filter {
         self
     }
 
+    /// Set the page number in place
+    pub fn set_page(&mut self, page: u32) -> &mut Self {
+        self.page = Some(page);
+        self
+    }
+
     /// Set the number of items per page
     pub fn with_per_page(mut self, per_page: u32) -> Self {
+        self.per_page = Some(per_page);
+        self
+    }
+
+    /// Set the number of items per page in place
+    pub fn set_per_page(&mut self, per_page: u32) -> &mut Self {
         self.per_page = Some(per_page);
         self
     }
@@ -223,8 +251,25 @@ impl Filter {
         self
     }
 
+    /// Clear all filters in place
+    pub fn clear_filters_mut(&mut self) -> &mut Self {
+        self.filters.clear();
+        self.per_page = None;
+        self.page = None;
+        self.direction = None;
+        self.order_by = None;
+        self.scope = None;
+        self
+    }
+
     /// Set the scope of the filter (only for issues endpoint)
     pub fn with_scope(mut self, scope: FilterScope) -> Self {
+        self.scope = Some(scope);
+        self
+    }
+
+    /// Set the scope of the filter in place (only for issues endpoint)
+    pub fn set_scope(&mut self, scope: FilterScope) -> &mut Self {
         self.scope = Some(scope);
         self
     }
