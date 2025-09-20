@@ -310,6 +310,25 @@ impl NIClient {
         Ok(resp.data())
     }
 
+    /// Get a list of publisher imprints for a publisher
+    ///
+    /// # Arguments
+    /// * `publisher_slug` - The publisher slug to get the imprints for
+    pub async fn get_publisher_imprints(
+        &self,
+        publisher_slug: impl Into<String>,
+    ) -> ToshoResult<models::others::ImprintsList> {
+        let params = HashMap::from([("slug".to_string(), publisher_slug.into())]);
+        self.request(
+            reqwest::Method::GET,
+            "/publisher_imprints",
+            None,
+            Some(params),
+            None,
+        )
+        .await
+    }
+
     /// Get the list of genres
     ///
     /// # Arguments
