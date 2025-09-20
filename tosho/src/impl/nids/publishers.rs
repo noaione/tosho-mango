@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::{
     cli::ExitCode,
     r#impl::nids::common::{PaginateAction, pagination_helper},
@@ -72,7 +74,9 @@ pub async fn nids_get_publishers(
         // Do paginated response
         let mut current_page: u32 = 1;
         let mut maximum_pages: u32 = publishers.pages();
-        let mut correct_data = publishers.data().to_vec();
+        let mut collected_issues: HashMap<u32, Vec<tosho_nids::models::Publisher>> =
+            HashMap::from([(1, publishers.data().to_vec())]);
+        let mut correct_data = collected_issues.get(&1).expect("Somehow missing page 1");
 
         loop {
             console.info(cformat!(
@@ -105,21 +109,29 @@ pub async fn nids_get_publishers(
             }
 
             // Fetch new stuff
-            console.info(cformat!("Loading page <m,s>{}</m,s>...", current_page));
             filters.set_page(current_page);
-            let new_pubs = match client.get_publishers(Some(&filters)).await {
-                Ok(issues) => issues,
-                Err(e) => {
-                    console.error(format!("Failed to get issues: {}", e));
-                    stop_code = 1;
-                    break;
-                }
-            };
+            if let Some(pubs) = collected_issues.get(&current_page) {
+                correct_data = pubs;
+                console.clear_screen();
+            } else {
+                console.info(cformat!("Loading page <m,s>{}</m,s>...", current_page));
+                let new_pubs = match client.get_publishers(Some(&filters)).await {
+                    Ok(issues) => issues,
+                    Err(e) => {
+                        console.error(format!("Failed to get issues: {}", e));
+                        stop_code = 1;
+                        break;
+                    }
+                };
 
-            console.clear_screen();
+                console.clear_screen();
 
-            maximum_pages = new_pubs.pages();
-            correct_data = new_pubs.data().to_vec();
+                maximum_pages = new_pubs.pages();
+                collected_issues.insert(current_page, new_pubs.data().to_vec());
+                correct_data = collected_issues
+                    .get(&current_page)
+                    .expect("Somehow missing page after insert");
+            }
         }
     } else {
         // Print all publishers
