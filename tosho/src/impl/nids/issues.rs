@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::{
     cli::ExitCode,
     r#impl::nids::common::{PaginateAction, fmt_date, format_series_run, pagination_helper},
@@ -54,7 +56,10 @@ pub async fn nids_get_issues(
         // Do paginated response
         let mut current_page: u32 = 1;
         let mut maximum_pages: u32 = issues.pages();
-        let mut correct_data = issues.data().to_vec();
+        let mut collected_issues: HashMap<u32, Vec<tosho_nids::models::IssueSummary>> =
+            HashMap::from([(1, issues.data().to_vec())]);
+        let mut correct_data = collected_issues.get(&1).expect("Somehow missing page 1");
+
         loop {
             console.info(cformat!(
                 "Showing page <magenta,bold>{}</> of <magenta,bold>{}</>:",
@@ -84,21 +89,30 @@ pub async fn nids_get_issues(
             }
 
             // Fetch new stuff
-            console.info(cformat!("Loading page <m,s>{}</m,s>...", current_page));
             base_filter.set_page(current_page);
-            let new_issues = match client.get_issues(base_filter).await {
-                Ok(issues) => issues,
-                Err(e) => {
-                    console.error(format!("Failed to get issues: {}", e));
-                    stop_code = 1;
-                    break;
-                }
-            };
+            if let Some(issues) = collected_issues.get(&current_page) {
+                correct_data = issues;
+                console.clear_screen();
+            } else {
+                console.info(cformat!("Loading page <m,s>{}</m,s>...", current_page));
+                let new_issues = match client.get_issues(base_filter).await {
+                    Ok(issues) => issues,
+                    Err(e) => {
+                        console.error(format!("Failed to get issues: {}", e));
+                        stop_code = 1;
+                        break;
+                    }
+                };
 
-            console.clear_screen();
+                console.clear_screen();
 
-            maximum_pages = new_issues.pages();
-            correct_data = new_issues.data().to_vec();
+                maximum_pages = new_issues.pages();
+                // add correct data to collected_issues
+                collected_issues.insert(current_page, new_issues.data().to_vec());
+                correct_data = collected_issues
+                    .get(&current_page)
+                    .expect("Somehow missing page after insert");
+            }
         }
     } else {
         // Print all issues
