@@ -125,7 +125,7 @@ jobs:
         shell: bash
 
       - name: Permissions (Nightly)
-        if: env.BUILD_PROFILE == 'debug' && matrix.os[0] != 'windows-2025'
+        if: env.BUILD_PROFILE == 'debug' && runner.os != 'Windows'
         run: |
           chmod +x target/${{ matrix.os[1] }}/ci/tosho
         shell: bash
@@ -154,7 +154,7 @@ jobs:
           RELEASE: true
 
       - name: Prepare release
-        if: env.BUILD_PROFILE == 'release' && matrix.os[0] != 'windows-2025'
+        if: env.BUILD_PROFILE == 'release' && runner.os != 'Windows'
         shell: bash
         run: |
           cd target/${{ matrix.os[1] }}/ci
@@ -164,7 +164,7 @@ jobs:
           cd ../../..
 
       - name: Prepare release (Win32)
-        if: env.BUILD_PROFILE == 'release' && matrix.os[0] == 'windows-2025'
+        if: env.BUILD_PROFILE == 'release' && runner.os == 'Windows'
         run: |
           cd target/${{ matrix.os[1] }}/ci
           Compress-Archive -Path tosho.exe -DestinationPath tosho-${{ matrix.os[1] }}.zip
