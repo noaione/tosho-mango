@@ -19,6 +19,20 @@ pub struct PublishersList {
     data: Vec<super::common::Publisher>,
 }
 
+/// Response for publisher imprints list
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
+pub struct ImprintsList {
+    /// Total pages available using the current page size
+    #[serde(rename = "pages_count")]
+    pages: u32,
+    /// Total imprints available
+    #[serde(rename = "total_count")]
+    count: u64,
+    /// List of imprints
+    #[serde(rename = "publisher_imprints")]
+    data: Vec<super::common::Imprint>,
+}
+
 /// Response for genres list
 #[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
 pub struct GenresList {

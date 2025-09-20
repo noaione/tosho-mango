@@ -110,7 +110,8 @@ pub struct Imprint {
     /// Imprint URL slug
     slug: String,
     /// The type of imprint (e.g. "primary", "secondary", etc.)
-    imprint_type: String,
+    #[serde(default)]
+    imprint_type: Option<String>,
     /// Imprint image icon
     image: Option<ImageUrl>,
 }
