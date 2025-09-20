@@ -212,15 +212,18 @@ impl NIClient {
     ///
     /// # Arguments
     /// * `issue_id` - The issue UUID to get the detail for
-    pub async fn get_issue(&self, issue_id: u32) -> ToshoResult<models::IssueDetailResponse> {
-        self.request(
-            reqwest::Method::GET,
-            &format!("/issues/{}", issue_id),
-            None,
-            None,
-            None,
-        )
-        .await
+    pub async fn get_issue(&self, issue_id: u32) -> ToshoResult<models::IssueDetail> {
+        let resp = self
+            .request::<models::IssueDetailResponse>(
+                reqwest::Method::GET,
+                &format!("/issues/{}", issue_id),
+                None,
+                None,
+                None,
+            )
+            .await?;
+
+        Ok(resp.data())
     }
 
     /// Get the list of series runs

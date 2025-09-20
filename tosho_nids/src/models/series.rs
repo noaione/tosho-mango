@@ -30,13 +30,13 @@ pub struct SeriesRunIssue {
         serialize_with = "super::datetime::serialize_opt_yyyymmdd",
         deserialize_with = "super::datetime::deserialize_opt_yyyymmdd"
     )]
-    start_date: Option<chrono::DateTime<chrono::FixedOffset>>,
+    start_date: Option<chrono::NaiveDate>,
     /// The end date of the series in simple YYYY-MM-DD format
     #[serde(
         serialize_with = "super::datetime::serialize_opt_yyyymmdd",
         deserialize_with = "super::datetime::deserialize_opt_yyyymmdd"
     )]
-    end_date: Option<chrono::DateTime<chrono::FixedOffset>>,
+    end_date: Option<chrono::NaiveDate>,
 }
 
 /// A detailed information about the series run in an issue
@@ -61,13 +61,13 @@ pub struct SeriesRunDetailed {
         serialize_with = "super::datetime::serialize_opt_yyyymmdd",
         deserialize_with = "super::datetime::deserialize_opt_yyyymmdd"
     )]
-    start_date: Option<chrono::DateTime<chrono::FixedOffset>>,
+    start_date: Option<chrono::NaiveDate>,
     /// The end date of the series in simple YYYY-MM-DD format
     #[serde(
         serialize_with = "super::datetime::serialize_opt_yyyymmdd",
         deserialize_with = "super::datetime::deserialize_opt_yyyymmdd"
     )]
-    end_date: Option<chrono::DateTime<chrono::FixedOffset>>,
+    end_date: Option<chrono::NaiveDate>,
 }
 
 /// A range of issues in a series run edition
@@ -140,13 +140,13 @@ pub struct SeriesRunWithEditions {
         serialize_with = "super::datetime::serialize_opt_yyyymmdd",
         deserialize_with = "super::datetime::deserialize_opt_yyyymmdd"
     )]
-    start_date: Option<chrono::DateTime<chrono::FixedOffset>>,
+    start_date: Option<chrono::NaiveDate>,
     /// The end date of the series in simple YYYY-MM-DD format
     #[serde(
         serialize_with = "super::datetime::serialize_opt_yyyymmdd",
         deserialize_with = "super::datetime::deserialize_opt_yyyymmdd"
     )]
-    end_date: Option<chrono::DateTime<chrono::FixedOffset>>,
+    end_date: Option<chrono::NaiveDate>,
 }
 
 /// Response for series run list

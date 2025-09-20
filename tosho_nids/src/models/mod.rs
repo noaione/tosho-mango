@@ -6,12 +6,14 @@
 
 pub mod common;
 pub(crate) mod datetime;
+pub mod enums;
 pub mod issues;
 pub mod others;
 pub mod reader;
 pub mod series;
 
 pub use common::*;
+pub use enums::*;
 pub use issues::*;
 pub use others::*;
 pub use reader::*;
