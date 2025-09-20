@@ -201,7 +201,7 @@ impl NIClient {
     /// * `filter` - The filter to apply to the request
     pub async fn get_issues(
         &self,
-        filters: filters::Filter,
+        filters: &filters::Filter,
     ) -> ToshoResult<models::IssueListResponse> {
         let params = filters.to_params();
         self.request(reqwest::Method::GET, "/issues", None, Some(params), None)
@@ -229,7 +229,7 @@ impl NIClient {
     /// * `filter` - The filter to apply to the request
     pub async fn get_series_runs(
         &self,
-        filters: filters::Filter,
+        filters: &filters::Filter,
     ) -> ToshoResult<models::series::SeriesRunList> {
         let params = filters.to_params();
         self.request(
@@ -269,15 +269,15 @@ impl NIClient {
     /// * `filter` - The filter to apply to the request
     pub async fn get_publishers(
         &self,
-        filters: Option<filters::Filter>,
+        filters: Option<&filters::Filter>,
     ) -> ToshoResult<models::others::PublishersList> {
-        let params = filters
-            .unwrap_or(
-                filters::Filter::default()
-                    .with_order(filters::SortBy::Name, filters::SortOrder::ASC)
-                    .with_per_page(25),
-            )
-            .to_params();
+        let params = match filters {
+            Some(f) => f.to_params(),
+            None => filters::Filter::default()
+                .with_order(filters::SortBy::Name, filters::SortOrder::ASC)
+                .with_per_page(25)
+                .to_params(),
+        };
 
         self.request(
             reqwest::Method::GET,
@@ -335,15 +335,15 @@ impl NIClient {
     /// * `filter` - The filter to apply to the request
     pub async fn get_genres(
         &self,
-        filters: Option<filters::Filter>,
+        filters: Option<&filters::Filter>,
     ) -> ToshoResult<models::others::GenresList> {
-        let params = filters
-            .unwrap_or(
-                filters::Filter::default()
-                    .with_order(filters::SortBy::Name, filters::SortOrder::ASC)
-                    .with_per_page(100),
-            )
-            .to_params();
+        let params = match filters {
+            Some(f) => f.to_params(),
+            None => filters::Filter::default()
+                .with_order(filters::SortBy::Name, filters::SortOrder::ASC)
+                .with_per_page(100)
+                .to_params(),
+        };
 
         self.request(reqwest::Method::GET, "/genres", None, Some(params), None)
             .await
@@ -355,15 +355,15 @@ impl NIClient {
     /// * `filter` - The filter to apply to the request
     pub async fn get_creators(
         &self,
-        filters: Option<filters::Filter>,
+        filters: Option<&filters::Filter>,
     ) -> ToshoResult<models::others::CreatorsList> {
-        let params = filters
-            .unwrap_or(
-                filters::Filter::default()
-                    .with_order(filters::SortBy::DisplayName, filters::SortOrder::ASC)
-                    .with_per_page(25),
-            )
-            .to_params();
+        let params = match filters {
+            Some(f) => f.to_params(),
+            None => filters::Filter::default()
+                .with_order(filters::SortBy::DisplayName, filters::SortOrder::ASC)
+                .with_per_page(25)
+                .to_params(),
+        };
 
         self.request(reqwest::Method::GET, "/creators", None, Some(params), None)
             .await
@@ -375,15 +375,15 @@ impl NIClient {
     /// * `filter` - The filter to apply to the request
     pub async fn get_marketplace_books(
         &self,
-        filters: Option<filters::Filter>,
+        filters: Option<&filters::Filter>,
     ) -> ToshoResult<models::others::MarketplaceBooksList> {
-        let params = filters
-            .unwrap_or(
-                filters::Filter::default()
-                    .with_order(filters::SortBy::FullTitle, filters::SortOrder::ASC)
-                    .with_per_page(25),
-            )
-            .to_params();
+        let params = match filters {
+            Some(f) => f.to_params(),
+            None => filters::Filter::default()
+                .with_order(filters::SortBy::FullTitle, filters::SortOrder::ASC)
+                .with_per_page(25)
+                .to_params(),
+        };
 
         self.request(
             reqwest::Method::GET,
@@ -403,15 +403,15 @@ impl NIClient {
     pub async fn get_marketplace_editions(
         &self,
         issue_id: impl Into<String>,
-        filters: Option<filters::Filter>,
+        filters: Option<&filters::Filter>,
     ) -> ToshoResult<models::others::MarketplaceEditionsList> {
-        let mut params = filters
-            .unwrap_or(
-                filters::Filter::default()
-                    .clear_filters()
-                    .with_order(filters::SortBy::BookIndex, filters::SortOrder::ASC),
-            )
-            .to_params();
+        let mut params = match filters {
+            Some(f) => f.to_params(),
+            None => filters::Filter::default()
+                .clear_filters()
+                .with_order(filters::SortBy::BookIndex, filters::SortOrder::ASC)
+                .to_params(),
+        };
         params.insert("book_id".to_string(), issue_id.into());
 
         self.request(
@@ -432,15 +432,15 @@ impl NIClient {
     /// * `filter` - The filter to apply to the request
     pub async fn get_series_run_collections(
         &self,
-        filters: Option<filters::Filter>,
+        filters: Option<&filters::Filter>,
     ) -> ToshoResult<models::series::SeriesRunList> {
-        let params = filters
-            .unwrap_or(
-                filters::Filter::default()
-                    .with_order(filters::SortBy::Title, filters::SortOrder::ASC)
-                    .with_per_page(18),
-            )
-            .to_params();
+        let params = match filters {
+            Some(f) => f.to_params(),
+            None => filters::Filter::default()
+                .with_order(filters::SortBy::Title, filters::SortOrder::ASC)
+                .with_per_page(18)
+                .to_params(),
+        };
 
         let headers = self.auth_headers(false)?;
         self.request(
@@ -461,7 +461,7 @@ impl NIClient {
     /// * `filter` - The filter to apply to the request
     pub async fn get_issue_collections(
         &self,
-        filters: filters::Filter,
+        filters: &filters::Filter,
     ) -> ToshoResult<models::PurchasedIssuesResponse> {
         let params = filters.to_params();
 
