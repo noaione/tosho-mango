@@ -5,7 +5,9 @@
 use serde::{Deserialize, Serialize};
 use tosho_macros::AutoGetter;
 
-use crate::models::SeriesRunIssue;
+use crate::models::{SaleStatus, SeriesRunIssue};
+
+/// The status of the issue in the marketplace
 
 /// A detailed information about an issues.
 #[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
@@ -68,7 +70,8 @@ pub struct IssueDetail {
     /// The status of the issue (e.g. "for-sale")
     ///
     /// Although right now, this is either "for-sale", or "post-sale" (marketplace only)
-    status: String,
+    #[copyable]
+    status: SaleStatus,
     /// Is this issue "active" or "available"
     active: bool,
     /// If this issue is resellable, when can this be resold again
@@ -140,7 +143,8 @@ pub struct IssueVariant {
     /// The status of the issue (e.g. "for-sale")
     ///
     /// Although right now, this is either "for-sale", or "post-sale" (marketplace only)
-    status: String,
+    #[copyable]
+    status: SaleStatus,
     /// Is this issue "active" or "available"
     active: bool,
     /// The sale end date of the issue in ISO 8601 format
@@ -229,6 +233,7 @@ pub struct IssueListResponse {
 pub struct IssueDetailResponse {
     /// The actual issue information
     #[serde(rename = "issue")]
+    #[deref_clone]
     data: IssueDetail,
 }
 

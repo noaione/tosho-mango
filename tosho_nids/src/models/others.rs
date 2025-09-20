@@ -139,6 +139,7 @@ pub struct MarketplaceEdition {
     /// Marketplace edition ID
     id: String,
     /// The issue UUID
+    #[serde(rename = "book_id")]
     issue_uuid: String,
     /// The issue index number
     #[serde(rename = "book_index")]
