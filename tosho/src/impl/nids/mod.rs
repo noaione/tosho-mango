@@ -11,6 +11,7 @@ pub(crate) mod accounts;
 pub(crate) mod common;
 pub(crate) mod config;
 pub(crate) mod issues;
+pub(crate) mod publishers;
 
 #[derive(Subcommand, Clone)]
 pub(crate) enum NIDSCommands {
@@ -74,6 +75,15 @@ pub(crate) enum NIDSCommands {
         /// Page number to return (starts from 1)
         #[arg(short = 'p', long = "page", default_value_t = 1)]
         page: usize,
+    },
+    /// Get a information about a publisher
+    Publisher {
+        /// Publisher slug to get
+        publisher_slug: String,
+
+        /// Get with imprints
+        #[arg(short = 'l', long = "imprints", default_value_t = false)]
+        with_imprints: bool,
     },
     /// Get a list of publishers
     Publishers,
