@@ -7,8 +7,6 @@ use tosho_macros::AutoGetter;
 
 use crate::models::{SaleStatus, SeriesRunIssue};
 
-/// The status of the issue in the marketplace
-
 /// A detailed information about an issues.
 #[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
 pub struct IssueDetail {
