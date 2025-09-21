@@ -1062,17 +1062,29 @@ async fn entrypoint(cli: ToshoCli) -> anyhow::Result<ExitCode> {
                     t.warn("Not implemented yet!");
                     Some(0)
                 }
-                #[expect(unused_variables)]
                 NIDSCommands::SeriesRuns {
                     filters,
                     limit,
-                    page,
                     sort_by,
                     direction,
                 } => {
-                    // TODO: STUB!
-                    t.warn("Not implemented yet!");
-                    Some(0)
+                    let base_filter = tosho_nids::Filter::new()
+                        .with_per_page(limit)
+                        .with_order(sort_by, direction.into());
+                    let mut merged_filters = filters
+                        .unwrap_or_default()
+                        .into_iter()
+                        .fold(base_filter, |acc, (filt_type, filt_data)| {
+                            acc.add_filter(filt_type, filt_data)
+                        });
+                    Some(
+                        r#impl::nids::series::nids_get_series(
+                            &mut merged_filters,
+                            &clean_client,
+                            &t,
+                        )
+                        .await,
+                    )
                 }
                 _ => None,
             };

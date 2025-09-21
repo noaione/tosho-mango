@@ -207,31 +207,36 @@ pub(super) async fn pagination_helper(
     }
 }
 
+pub(super) fn format_series_run_date(
+    start_date: Option<&chrono::NaiveDate>,
+    end_date: Option<&chrono::NaiveDate>,
+) -> Option<String> {
+    match (start_date, end_date) {
+        (Some(start), Some(end)) => {
+            // Do year only if same year, else do month, year formatting
+            if start.year() == end.year() {
+                Some(format!("{} – {}", start.format("%Y"), end.format("%Y")))
+            } else {
+                Some(format!(
+                    "{} – {}",
+                    start.format("%b %Y"),
+                    end.format("%b %Y")
+                ))
+            }
+        }
+        (Some(start), None) => Some(format!("{} – Present", start.format("%b %Y"))),
+        (None, Some(end)) => Some(format!("Unknown – {}", end.format("%b %Y"))),
+        (None, None) => None,
+    }
+}
+
 pub(super) fn format_series_run(
     title: &str,
     start_date: Option<&chrono::NaiveDate>,
     end_date: Option<&chrono::NaiveDate>,
 ) -> String {
-    match (start_date, end_date) {
-        (Some(start), Some(end)) => {
-            // Do year only if same year, else do month, year formatting
-            if start.year() == end.year() {
-                format!("{} ({} – {})", title, start.format("%Y"), end.format("%Y"))
-            } else {
-                format!(
-                    "{} ({} – {})",
-                    title,
-                    start.format("%b %Y"),
-                    end.format("%b %Y")
-                )
-            }
-        }
-        (Some(start), None) => {
-            format!("{} ({} – Present)", title, start.format("%b %Y"))
-        }
-        (None, Some(end)) => {
-            format!("{} (Unknown – {})", title, end.format("%b %Y"))
-        }
-        (None, None) => title.to_string(),
+    match format_series_run_date(start_date, end_date) {
+        Some(date_str) => format!("{} ({})", title, date_str),
+        None => title.to_string(),
     }
 }
