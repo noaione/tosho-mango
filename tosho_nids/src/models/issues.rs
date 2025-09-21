@@ -45,8 +45,11 @@ pub struct IssueDetail {
     #[serde(with = "super::datetime")]
     release_date: chrono::DateTime<chrono::FixedOffset>,
     /// The original publication date of the issue in ISO 8601 format
-    #[serde(with = "super::datetime")]
-    original_publication_date: chrono::DateTime<chrono::FixedOffset>,
+    #[serde(
+        serialize_with = "super::datetime::serialize_opt",
+        deserialize_with = "super::datetime::deserialize_opt"
+    )]
+    original_publication_date: Option<chrono::DateTime<chrono::FixedOffset>>,
     /// The age rating of the issue
     age_rating: String,
     /// The total number of pages in the issue
