@@ -295,7 +295,7 @@ impl ChapterPage {
 
     /// Internal function to convert the hex data to bytes.
     fn to_hex_data(&self, hex_data: &str, when: &str) -> ToshoResult<Vec<u8>> {
-        if hex_data.len() % 2 != 0 {
+        if !hex_data.len().is_multiple_of(2) {
             tosho_common::bail_on_error!("Invalid {} length, must be even", when)
         }
 
