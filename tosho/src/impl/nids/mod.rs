@@ -111,7 +111,11 @@ pub(crate) enum NIDSCommands {
     /// Get specific series run information by ID
     SeriesRun {
         /// Series run ID to get
-        series_run_id: u64,
+        series_run_id: u32,
+
+        /// Get with marketplace editions
+        #[arg(short = 'm', long = "with-marketplace", default_value_t = false)]
+        with_marketplace: bool,
     },
     /// Get a list of series runs
     SeriesRuns {
