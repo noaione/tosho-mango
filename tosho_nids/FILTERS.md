@@ -16,6 +16,8 @@ On the books endpoint, both marketplace and your collection, you can use:
 
 On the series run page, you can use:
 - `publisher_slug`: Filter series runs by publisher slug.
+- `first_letter`: Filter series runs by the starting letter of the title.
+- `title`: Filter series runs by title.
 
 There is also something called `scope` that you could use in the issues endpoint:
 - `Frontlist`/`frontlist`: Recently released issues.
