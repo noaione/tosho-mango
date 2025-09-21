@@ -220,7 +220,7 @@ pub async fn nids_get_issue(
         issue_detail.series_run().end_date(),
     );
     console.info(cformat!(
-        "  <s>Series</s>: {} ({} / {})",
+        "  <s>Series</s>: {} (<dim>{}</dim> / <dim>{}</dim>)",
         series_text,
         issue_detail.series_run().id(),
         issue_detail.series_run().uuid()
