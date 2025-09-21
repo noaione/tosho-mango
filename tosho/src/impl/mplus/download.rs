@@ -75,6 +75,8 @@ pub(crate) struct MPDownloadCliConfig {
 
     /// Parallel download
     pub(crate) parallel: bool,
+    /// Threads to use for parallel download
+    pub(crate) threads: usize,
     /// The start chapter range.
     ///
     /// Used only when `no_input` is `true`.
@@ -359,6 +361,8 @@ pub(crate) async fn mplus_download(
                     console.make_progress_arc(chapter_images.len() as u64, Some("Downloading"));
 
                 if dl_config.parallel {
+                    let semaphore = Arc::new(tokio::sync::Semaphore::new(dl_config.threads));
+
                     let tasks: Vec<_> = chapter_images
                         .iter()
                         .enumerate()
@@ -369,8 +373,11 @@ pub(crate) async fn mplus_download(
                             let cnsl = console.clone();
                             let image = image.clone();
                             let progress = Arc::clone(&progress);
+                            let semaphore = Arc::clone(&semaphore);
 
                             tokio::spawn(async move {
+                                let _permit = semaphore.acquire().await.unwrap();
+
                                 match mplus_actual_downloader(
                                     MPDownloadNode {
                                         client: wrap_client,

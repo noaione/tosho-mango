@@ -29,6 +29,8 @@ pub(crate) struct SJDownloadCliConfig {
 
     /// Parallel download
     pub(crate) parallel: bool,
+    /// Number of threads to use for parallel download
+    pub(crate) threads: usize,
     /// The start chapter range.
     ///
     /// Used only when `no_input` is `true`.
@@ -377,6 +379,8 @@ pub(crate) async fn sjv_download(
                     console.make_progress_arc(total_image_count as u64, Some("Downloading"));
 
                 if dl_config.parallel {
+                    let semaphore = Arc::new(tokio::sync::Semaphore::new(dl_config.threads));
+
                     let tasks: Vec<_> = (0..total_image_count)
                         .map(|page| {
                             // wrap function in async block
@@ -385,7 +389,11 @@ pub(crate) async fn sjv_download(
                             let cnsl = console.clone();
                             let progress = Arc::clone(&progress);
                             let chapter_id = chapter.id();
+                            let semaphore = Arc::clone(&semaphore);
+
                             tokio::spawn(async move {
+                                let _permit = semaphore.acquire().await.unwrap();
+
                                 match sjv_actual_downloader(
                                     DownloadNode {
                                         client: wrap_client,

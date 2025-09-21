@@ -84,6 +84,14 @@ pub(crate) enum KMKCCommands {
         /// Enable parallel download
         #[arg(short = 'p', long = "parallel")]
         parallel: bool,
+        /// Number of threads to use for parallel download
+        ///
+        /// Please note that this would be capped to your system's available CPU threads.
+        /// I recommend not using more than 4 to avoid getting rate limited.
+        ///
+        /// Needs to be used with `--parallel` flag.
+        #[arg(short = 't', long = "threads", default_value = "4")]
+        threads: usize,
     },
     /// Get your account point balance
     Balance,
@@ -106,6 +114,14 @@ pub(crate) enum KMKCCommands {
         /// Enable parallel download
         #[arg(short = 'x', long = "parallel")]
         parallel: bool,
+        /// Number of threads to use for parallel download
+        ///
+        /// Please note that this would be capped to your system's available CPU threads.
+        /// I recommend not using more than 4 to avoid getting rate limited.
+        ///
+        /// Needs to be used with `--parallel` flag.
+        #[arg(short = 't', long = "threads", default_value = "4")]
+        threads: usize,
     },
     /// Get your account favorites list
     Favorites,

@@ -29,6 +29,8 @@ pub(crate) struct KMDownloadCliConfig {
 
     /// Parallel download
     pub(crate) parallel: bool,
+    /// Number of threads to use for parallel download
+    pub(crate) threads: usize,
 
     /// The start chapter range.
     ///
@@ -389,6 +391,8 @@ pub(crate) async fn kmkc_download(
                 let progress = console.make_progress_arc(total_image_count, Some("Downloading"));
 
                 if dl_config.parallel {
+                    let semaphore = Arc::new(tokio::sync::Semaphore::new(dl_config.threads));
+
                     let tasks: Vec<_> = image_blocks
                         .iter()
                         .enumerate()
@@ -399,8 +403,11 @@ pub(crate) async fn kmkc_download(
                             let cnsl = console.clone();
                             let image = image.clone();
                             let progress = Arc::clone(&progress);
+                            let semaphore = Arc::clone(&semaphore);
 
                             tokio::spawn(async move {
+                                let _permit = semaphore.acquire().await.unwrap();
+
                                 match kmkc_actual_downloader(
                                     KMKCDownloadNode {
                                         client: wrap_client,

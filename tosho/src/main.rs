@@ -78,7 +78,7 @@ pub(crate) mod term;
 #[cfg(feature = "with-updater")]
 pub(crate) mod updater;
 pub(crate) mod win_term;
-use crate::cli::ToshoCli;
+use crate::cli::{ToshoCli, max_threads};
 pub(crate) use term::macros::linkify;
 
 fn get_default_download_dir() -> PathBuf {
@@ -355,6 +355,7 @@ async fn entrypoint(cli: ToshoCli) -> anyhow::Result<ExitCode> {
                     no_point,
                     output,
                     parallel,
+                    threads,
                 } => {
                     let main_config = KMDownloadCliConfig {
                         auto_purchase: !no_purchase,
@@ -364,6 +365,7 @@ async fn entrypoint(cli: ToshoCli) -> anyhow::Result<ExitCode> {
                         no_point,
                         no_ticket,
                         parallel,
+                        threads: max_threads(threads),
                         ..Default::default()
                     };
 
@@ -387,12 +389,14 @@ async fn entrypoint(cli: ToshoCli) -> anyhow::Result<ExitCode> {
                     auto_purchase,
                     output,
                     parallel,
+                    threads,
                 } => {
                     let main_config = KMDownloadCliConfig {
                         auto_purchase,
                         show_all,
                         chapter_ids: chapters.unwrap_or_default(),
                         parallel,
+                        threads: max_threads(threads),
                         ..Default::default()
                     };
 
@@ -639,12 +643,14 @@ async fn entrypoint(cli: ToshoCli) -> anyhow::Result<ExitCode> {
                     end_until,
                     output,
                     parallel,
+                    threads,
                 } => {
                     let dl_config = SJDownloadCliConfig {
                         start_from,
                         end_at: end_until,
                         no_input: true,
                         parallel,
+                        threads: max_threads(threads),
                         ..Default::default()
                     };
 
@@ -662,10 +668,12 @@ async fn entrypoint(cli: ToshoCli) -> anyhow::Result<ExitCode> {
                     chapters,
                     output,
                     parallel,
+                    threads,
                 } => {
                     let dl_config = SJDownloadCliConfig {
                         chapter_ids: chapters.unwrap_or_default(),
                         parallel,
+                        threads: max_threads(threads),
                         ..Default::default()
                     };
 
@@ -755,12 +763,14 @@ async fn entrypoint(cli: ToshoCli) -> anyhow::Result<ExitCode> {
                     format,
                     quality,
                     parallel,
+                    threads,
                 } => {
                     let dl_config = RBDownloadConfigCli {
                         no_input: true,
                         format,
                         parallel,
                         quality,
+                        threads: max_threads(threads),
                         ..Default::default()
                     };
                     r#impl::rbean::download::rbean_download(
@@ -780,12 +790,14 @@ async fn entrypoint(cli: ToshoCli) -> anyhow::Result<ExitCode> {
                     format,
                     quality,
                     parallel,
+                    threads,
                 } => {
                     let dl_config = RBDownloadConfigCli {
                         format,
                         chapter_ids: chapters.unwrap_or_default(),
                         parallel,
                         quality,
+                        threads: max_threads(threads),
                         ..Default::default()
                     };
                     r#impl::rbean::download::rbean_download(

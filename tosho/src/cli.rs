@@ -132,3 +132,11 @@ fn app_version() -> &'static str {
         None => base_ver,
     }
 }
+
+pub(crate) fn max_threads(prefer_thread: usize) -> usize {
+    let max_threads = std::thread::available_parallelism()
+        .map(|n| n.get())
+        .unwrap_or(prefer_thread);
+
+    prefer_thread.min(max_threads).max(1)
+}

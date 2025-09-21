@@ -121,6 +121,8 @@ pub(crate) struct RBDownloadConfigCli {
 
     /// Parallel download
     pub(crate) parallel: bool,
+    // Threads to use for parallel download
+    pub(crate) threads: usize,
 }
 
 fn create_chapters_info(title: &Manga, chapters: &[Chapter]) -> MangaDetailDump {
@@ -502,6 +504,8 @@ pub(crate) async fn rbean_download(
         let progress = console.make_progress_arc(total_img_count, Some("Downloading"));
 
         if dl_config.parallel {
+            let semaphore = Arc::new(tokio::sync::Semaphore::new(dl_config.threads));
+
             let tasks: Vec<_> = pages_data
                 .iter()
                 .enumerate()
@@ -513,7 +517,11 @@ pub(crate) async fn rbean_download(
                     let cnsl = console.clone();
                     let dl_config = dl_config.clone();
                     let progress = Arc::clone(&progress);
+                    let semaphore = Arc::clone(&semaphore);
+
                     tokio::spawn(async move {
+                        let _permit = semaphore.acquire().await.unwrap();
+
                         match rbean_actual_downloader(
                             DownloadNode {
                                 client: wrap_client,
