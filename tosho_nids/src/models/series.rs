@@ -74,9 +74,9 @@ pub struct SeriesRunDetailed {
 #[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
 pub struct SeriesRunEditionIssueRange {
     /// The starting issue number in the range
-    min: String,
+    min: Option<String>,
     /// The ending issue number in the range
-    max: String,
+    max: Option<String>,
 }
 
 /// A edition information in a series run

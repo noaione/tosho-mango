@@ -1056,12 +1056,18 @@ async fn entrypoint(cli: ToshoCli) -> anyhow::Result<ExitCode> {
                 NIDSCommands::Publishers => {
                     Some(r#impl::nids::publishers::nids_get_publishers(&clean_client, &t).await)
                 }
-                #[expect(unused_variables)]
-                NIDSCommands::SeriesRun { series_run_id } => {
-                    // TODO: STUB!
-                    t.warn("Not implemented yet!");
-                    Some(0)
-                }
+                NIDSCommands::SeriesRun {
+                    series_run_id,
+                    with_marketplace,
+                } => Some(
+                    r#impl::nids::series::nids_get_series_info(
+                        series_run_id,
+                        with_marketplace,
+                        &clean_client,
+                        &t,
+                    )
+                    .await,
+                ),
                 NIDSCommands::SeriesRuns {
                     filters,
                     limit,
