@@ -11,10 +11,54 @@ pub struct ImageUrl {
     /// Original sized URL
     original_url: String,
     /// Mobile sized URL
-    mobile_url: String,
+    #[serde(default)]
+    #[skip_field]
+    mobile_url: Option<String>,
     /// Thumbnail sized URL
-    #[serde(rename = "medium_url")]
-    thumbnail_url: String,
+    #[serde(default)]
+    #[skip_field]
+    thumbnail_url: Option<String>,
+    /// Medium sized URL
+    #[serde(default)]
+    #[skip_field]
+    medium_url: Option<String>,
+}
+
+impl ImageUrl {
+    /// Get the thumbnail URL, would fallback to either mobile or medium
+    pub fn thumbnail_url(&self) -> Option<&str> {
+        if let Some(url) = &self.thumbnail_url {
+            Some(url)
+        } else if let Some(url) = &self.mobile_url {
+            Some(url)
+        } else if let Some(url) = &self.medium_url {
+            Some(url)
+        } else {
+            None
+        }
+    }
+
+    /// Get the mobile URL, would fallback to medium
+    pub fn mobile_url(&self) -> Option<&str> {
+        if let Some(url) = &self.mobile_url {
+            Some(url)
+        } else if let Some(url) = &self.medium_url {
+            Some(url)
+        } else {
+            None
+        }
+    }
+
+    /// Get the medium URL, would fallback to mobile
+    pub fn medium_url(&self) -> Option<&str> {
+        if let Some(url) = &self.medium_url {
+            Some(url)
+        } else if let Some(url) = &self.mobile_url {
+            Some(url)
+        } else {
+            None
+        }
+    }
 }
 
 /// A collection of URL for the reader.
