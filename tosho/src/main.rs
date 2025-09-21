@@ -1018,6 +1018,8 @@ async fn entrypoint(cli: ToshoCli) -> anyhow::Result<ExitCode> {
                             acc.add_filter(filt_type, filt_data)
                         });
                     let mut full_filters = match scope {
+                        // For on-sale, we don't need to add any date filters
+                        Some(r#impl::nids::common::FilterScopeInput::OnSale) => merged_filters,
                         Some(s) => {
                             let with_scope = merged_filters.with_scope(s.into());
                             // add release_date_start and release_date_end manually
