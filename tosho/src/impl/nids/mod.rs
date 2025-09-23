@@ -76,7 +76,7 @@ pub(crate) enum NIDSCommands {
         limit: u32,
         /// What field to use for sorting
         ///
-        /// Some examples: `id`, `title`, `full_title`, `issue_number`, `book_index`, `release_date`, `publication-date`
+        /// Some examples: `id`, `title`, `full_title`, `issue_number`, `book_index`, `release_date`, `publication_date`
         #[arg(short = 's', long = "sort", default_value = "full_title", value_parser = parse_sort_by)]
         sort_by: SortByInput,
         /// The direction of the sort order
