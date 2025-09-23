@@ -624,7 +624,7 @@ impl NIClient {
         let resp = self
             .request::<models::others::CustomerDetailResponse>(
                 reqwest::Method::GET,
-                "/customer",
+                "/profile",
                 None,
                 None,
                 Some(headers),
