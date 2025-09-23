@@ -34,6 +34,12 @@ pub enum SortBy {
     IssueNumber,
     /// Sort by book index (similar to issue number)
     BookIndex,
+    /// Issues count
+    IssuesCount,
+    /// Sort by the minimum price of editions in the marketplace
+    ///
+    /// Used in books marketplace endpoint
+    EditionPriceMin,
     /// Sort by release date
     ReleaseDate,
     /// Sort by publication date
@@ -53,8 +59,10 @@ impl SortBy {
             SortBy::FullTitle => "full_title",
             SortBy::IssueNumber => "issue_number",
             SortBy::BookIndex => "book_index",
+            SortBy::IssuesCount => "issues_count",
             SortBy::ReleaseDate => "release_date",
             SortBy::PublicationDate => "original_publication_date",
+            SortBy::EditionPriceMin => "edition_price_min",
             SortBy::Any(field) => field.as_ref(),
         }
     }
@@ -70,9 +78,10 @@ impl SortBy {
             "full_title" => SortBy::FullTitle,
             "issue_number" => SortBy::IssueNumber,
             "book_index" => SortBy::BookIndex,
+            "issues_count" => SortBy::IssuesCount,
             "release_date" => SortBy::ReleaseDate,
-            "publication_date" => SortBy::PublicationDate,
-            "original_publication_date" => SortBy::PublicationDate,
+            "publication_date" | "original_publication_date" => SortBy::PublicationDate,
+            "edition_price_min" => SortBy::EditionPriceMin,
             other => SortBy::Any(other.to_string()),
         }
     }
