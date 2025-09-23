@@ -96,7 +96,12 @@ pub enum FilterType {
     Uuid,
     /// Filter by format
     ///
-    /// Example: issue,ashcan
+    /// Can be combined with commas for multiple formats
+    ///
+    /// Example:
+    /// - `issue` -> Only show issues
+    /// - `volume` -> Only show volumes
+    /// - `ashcan` -> ????
     Format,
     /// Filter by title
     Title,
@@ -107,13 +112,36 @@ pub enum FilterType {
     /// Filter by release date end (ISO 8601 format)
     ReleaseDateEnd,
     /// Filter by genre ID
+    ///
+    /// Can be combined with commas for multiple genres
     GenreId,
     /// Filter by imprint ID
     ImprintId,
+    /// Filter by creator ID
+    ///
+    /// Can be combined with commas for multiple creators
+    CreatorId,
     /// Filter by publisher ID
+    ///
+    /// Can be combined with commas for multiple publishers
     PublisherId,
     /// Filter by publisher slug
     PublisherSlug,
+    /// Filter by the series run status
+    ///
+    /// Should be either `ongoing` or `completed`
+    SeriesStatus,
+    /// The style of the issues
+    ///
+    /// Can be combined with commas for multiple styles
+    ///
+    /// Can be either `manga` or `comic`
+    SeriesCategory,
+    /// Filter by only showing issue with remarques
+    ///
+    /// The value should be either `true` or `false`
+    HasRemarques,
+    /// Filter by
     /// Filter by any arbitrary string key-value pair
     Any(String),
 }
@@ -131,8 +159,12 @@ impl FilterType {
             FilterType::ReleaseDateEnd => "release_date_end",
             FilterType::GenreId => "genre_id",
             FilterType::ImprintId => "publisher_imprint_id",
+            FilterType::CreatorId => "creator_id",
             FilterType::PublisherId => "publisher_id",
             FilterType::PublisherSlug => "publisher_slug",
+            FilterType::SeriesStatus => "series_status",
+            FilterType::SeriesCategory => "series_category",
+            FilterType::HasRemarques => "remarqued",
             FilterType::Any(key) => key.as_ref(),
         }
     }
@@ -149,9 +181,15 @@ impl FilterType {
             "release_date_start" => FilterType::ReleaseDateStart,
             "release_date_end" => FilterType::ReleaseDateEnd,
             "genre_id" => FilterType::GenreId,
-            "publisher_imprint_id" => FilterType::ImprintId,
+            "imprint_id" | "publisher_imprint_id" => FilterType::ImprintId,
+            "creator_id" => FilterType::CreatorId,
             "publisher_id" => FilterType::PublisherId,
             "publisher_slug" => FilterType::PublisherSlug,
+            "status" | "series_status" => FilterType::SeriesStatus,
+            "category" | "series_category" => FilterType::SeriesCategory,
+            "remarqued" | "remarque" | "has_remarque" | "has_remarques" | "is_remarqued" => {
+                FilterType::HasRemarques
+            }
             other => FilterType::Any(other.to_string()),
         }
     }
