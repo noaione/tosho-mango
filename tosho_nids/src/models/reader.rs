@@ -33,6 +33,9 @@ pub struct ReaderPages {
     ///
     /// TODO: Change to enum
     reading_direction: String,
+    /// Cover image of the issue
+    #[serde(rename = "cover_image")]
+    cover: super::common::ImageReaderUrl,
     /// The full title of the issue
     #[serde(rename = "full_title")]
     title: String,
