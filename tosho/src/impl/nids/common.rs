@@ -1,6 +1,10 @@
 use chrono::Datelike;
 use clap::ValueEnum;
-use tosho_nids::filters::FilterType;
+use color_print::cformat;
+use num_format::{Locale, ToFormattedString};
+use tosho_nids::{constants::BASE_HOST, filters::FilterType};
+
+use crate::linkify;
 
 pub(super) type FilterPairInput = (FilterType, String);
 pub(super) type SortByInput = tosho_nids::filters::SortBy;
@@ -253,4 +257,45 @@ pub(super) fn format_series_run(
         Some(date_str) => format!("{} ({})", title, date_str),
         None => title.to_string(),
     }
+}
+
+pub(super) fn print_series_summary(
+    series: &tosho_nids::models::SeriesRunDetailed,
+    console: &crate::term::Terminal,
+    is_owned: bool,
+) {
+    let item_url = if is_owned {
+        format!("https://{}/mycollection/{}", BASE_HOST, series.uuid())
+    } else {
+        format!(
+            "https://{}/series/{}/{}",
+            BASE_HOST,
+            series.id(),
+            series.slug()
+        )
+    };
+
+    let linked_title = linkify!(&item_url, series.title());
+    let id_pair = if is_owned {
+        cformat!("<m,s>{}</m,s> / {}", series.uuid(), series.id())
+    } else {
+        cformat!("<m,s>{}</m,s> / {}", series.id(), series.uuid())
+    };
+
+    console.info(&cformat!("  <s>{}</s> ({})", linked_title, id_pair));
+    let mut series_smols = vec![cformat!("<b,s>{}</b,s>", series.publisher().name())];
+    if let Some(run) = format_series_run_date(series.start_date(), series.end_date()) {
+        series_smols.push(cformat!("<s,dim>{}</s,dim>", run));
+    }
+    match series.issues_count() {
+        0 => {}
+        1 => series_smols.push(cformat!("<s>1</s> issue")),
+        n => series_smols.push(cformat!(
+            "<s>{}</s> issues",
+            n.to_formatted_string(&Locale::en)
+        )),
+    };
+
+    console.info(&format!("   {}", item_url));
+    console.info(&format!("   {}", series_smols.join(" | ")));
 }
