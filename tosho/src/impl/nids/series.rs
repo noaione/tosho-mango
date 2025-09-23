@@ -70,7 +70,7 @@ pub async fn nids_get_series(
         let mut maximum_pages: u32 = series.pages();
         let mut collected_issues: HashMap<u32, Vec<tosho_nids::models::SeriesRunDetailed>> =
             HashMap::from([(1, series.data().to_vec())]);
-        let mut correct_data = collected_issues.get(&1).expect("We just inserted this");
+        let mut current_data = collected_issues.get(&1).expect("We just inserted this");
 
         loop {
             console.info(cformat!(
@@ -79,11 +79,11 @@ pub async fn nids_get_series(
                 maximum_pages.to_formatted_string(&Locale::en)
             ));
 
-            for series in correct_data.iter() {
+            for series in current_data.iter() {
                 print_series_summary(series, console);
             }
 
-            if correct_data.is_empty() {
+            if current_data.is_empty() {
                 console.info("No series found on this page.");
             }
 
@@ -105,7 +105,7 @@ pub async fn nids_get_series(
             // Fetch new stuff
             base_filter.set_page(current_page);
             if let Some(series) = collected_issues.get(&current_page) {
-                correct_data = series;
+                current_data = series;
                 console.clear_screen();
             } else {
                 console.info(cformat!("Loading page <m,s>{}</>...", current_page));
@@ -123,7 +123,7 @@ pub async fn nids_get_series(
                 maximum_pages = new_series.pages();
                 // add correct data to collected_issues
                 collected_issues.insert(current_page, new_series.data().to_vec());
-                correct_data = collected_issues
+                current_data = collected_issues
                     .get(&current_page)
                     .expect("Somehow missing page after insert");
             }
