@@ -29,7 +29,10 @@ pub use filters::*;
 ///     let constants = tosho_nids::constants::get_constants(1); // Web
 ///     let client = NIClient::new(None, constants).unwrap();
 ///
-///     let issues = client.get_issues(Filter::default().with_per_page(18)).await.unwrap();
+///     let filter = Filter::default()
+///        .add_filter(tosho_nids::FilterType::Title, "Attack on Titan")
+///        .with_per_page(18);
+///     let issues = client.get_issues(&filter).await.unwrap();
 ///     println!("Issues: {:?}", issues);
 /// }
 /// ```
