@@ -10,6 +10,7 @@ use crate::r#impl::nids::common::{
 pub(crate) mod accounts;
 pub(crate) mod common;
 pub(crate) mod config;
+pub(crate) mod download;
 pub(crate) mod issues;
 pub(crate) mod publishers;
 pub(crate) mod purchases;
@@ -32,10 +33,26 @@ pub(crate) enum NIDSCommands {
     /// Download an issue by the ID
     Download {
         /// Issue ID to download
-        issue_id: u64,
+        issue_id: u32,
         /// Output directory to use
         #[arg(short = 'o', long = "output", default_value = None)]
         output: Option<PathBuf>,
+        /// Enable parallel download
+        #[arg(short = 'p', long = "parallel")]
+        parallel: bool,
+        /// Number of threads to use for parallel download
+        ///
+        /// Please note that this would be capped to your system's available CPU threads.
+        /// I recommend not using more than 4 to avoid getting rate limited.
+        ///
+        /// Needs to be used with `--parallel` flag.
+        #[arg(short = 't', long = "threads", default_value = "4")]
+        threads: usize,
+        /// Do not report page viewing progress to the server
+        ///
+        /// This is not recommended
+        #[arg(long = "no-report", default_value_t = false)]
+        no_report: bool,
     },
     /// Get single issue information by the ID
     Issue {
