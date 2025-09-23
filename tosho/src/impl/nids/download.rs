@@ -3,13 +3,47 @@ use std::{
     sync::Arc,
 };
 
+use clap::ValueEnum;
 use color_print::cformat;
 use num_format::{Locale, ToFormattedString};
 use tosho_nids::NIClient;
 
 use crate::cli::ExitCode;
 
-// DOWNLOADS/{seriesSlug}/{volumeSlug}
+#[derive(Debug, Clone, Default)]
+pub(crate) enum DownloadImageQuality {
+    /// Desktop quality (full resolution)
+    #[default]
+    Desktop,
+    /// Mobile quality (smaller)
+    Mobile,
+}
+
+impl ValueEnum for DownloadImageQuality {
+    fn from_str(input: &str, ignore_case: bool) -> Result<Self, String> {
+        let input = if ignore_case {
+            input.to_lowercase()
+        } else {
+            input.to_string()
+        };
+        match input.as_str() {
+            "desktop" | "high" => Ok(Self::Desktop),
+            "mobile" | "normal" => Ok(Self::Mobile),
+            _ => Err(format!("Invalid image quality: {input}")),
+        }
+    }
+
+    fn to_possible_value(&self) -> Option<clap::builder::PossibleValue> {
+        match self {
+            Self::Desktop => Some(clap::builder::PossibleValue::new("desktop").alias("high")),
+            Self::Mobile => Some(clap::builder::PossibleValue::new("mobile").alias("normal")),
+        }
+    }
+
+    fn value_variants<'a>() -> &'a [Self] {
+        &[Self::Desktop, Self::Mobile]
+    }
+}
 
 fn get_output_directory(
     output_dir: &Path,
@@ -89,6 +123,8 @@ async fn nids_actual_downloader(
 
 #[derive(Clone, Debug)]
 pub(crate) struct NIDownloadCliConfig {
+    /// Quality of images to download
+    pub(crate) quality: DownloadImageQuality,
     /// Parallel download
     pub(crate) parallel: bool,
     /// Number of threads to use for parallel download
@@ -106,6 +142,7 @@ impl Default for NIDownloadCliConfig {
             threads: 4,
             output: None,
             no_report: false,
+            quality: DownloadImageQuality::Desktop,
         }
     }
 }
@@ -191,7 +228,10 @@ pub(crate) async fn nids_download(
     ));
 
     // Try downloading cover
-    let cover_url = pages_meta.pages().cover().url();
+    let cover_url = match dl_config.quality {
+        DownloadImageQuality::Desktop => pages_meta.pages().cover().url(),
+        DownloadImageQuality::Mobile => pages_meta.pages().cover().mobile_url(),
+    };
     let cover_ext = extract_extensions_from_url(cover_url).unwrap_or("webp".to_string());
     let cover_path = output_dir.join(format!("cover.{}", cover_ext));
     let cover_file = match tokio::fs::File::create(&cover_path).await {
@@ -238,7 +278,10 @@ pub(crate) async fn nids_download(
                 let cnsl = console.clone();
                 let progress = Arc::clone(&progress);
                 let semaphore = Arc::clone(&semaphore);
-                let page_url = page.image().url().to_string();
+                let page_url = match dl_config.quality {
+                    DownloadImageQuality::Desktop => page.image().url().to_string(),
+                    DownloadImageQuality::Mobile => page.image().mobile_url().to_string(),
+                };
 
                 tokio::spawn(async move {
                     let _permit = semaphore.acquire().await.unwrap();
