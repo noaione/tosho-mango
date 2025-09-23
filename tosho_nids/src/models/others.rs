@@ -303,7 +303,7 @@ pub struct CollectedEditionDetailed {
     thumbnail_url: String,
     /// Variant identifier (e.g. "standard", "variant-1", "A", etc.)
     #[serde(rename = "variant_identifier")]
-    variant_id: String,
+    variant_id: Option<String>,
     /// Variant description (e.g. "Standard Edition", "Variant Cover A", etc.)
     variant_description: String,
     /// Is this edition signable/remarqueable?
