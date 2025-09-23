@@ -29,7 +29,7 @@ pub struct IssueDetail {
     /// The issue variant identifier (e.g. "A" for Cover A, "Special Ed.", etc.)
     ///
     /// Can be an empty string if there's no variant.
-    variant_identifier: String,
+    variant_identifier: Option<String>,
     /// The publisher information
     publisher: super::common::Publisher,
     /// The imprint information
@@ -128,7 +128,7 @@ pub struct IssueVariant {
     /// The issue variant identifier (e.g. "A" for Cover A, "Special Ed.", etc.)
     ///
     /// Can be an empty string if there's no variant.
-    variant_identifier: String,
+    variant_identifier: Option<String>,
     /// The cover page image URLs
     cover: super::common::ImageUrl,
     /// The price of the issue in USD

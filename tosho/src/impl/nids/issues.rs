@@ -207,11 +207,10 @@ pub async fn nids_get_issue(
         issue_detail.id(),
         issue_detail.uuid()
     ));
-    if !issue_detail.variant_identifier().is_empty() {
-        console.info(cformat!(
-            "  <s>Variant</s>: {}",
-            issue_detail.variant_identifier()
-        ));
+    if let Some(identifier) = issue_detail.variant_identifier()
+        && !identifier.is_empty()
+    {
+        console.info(cformat!("  <s>Variant</s>: {}", identifier));
     }
 
     let series_text = format_series_run(
@@ -320,7 +319,7 @@ pub async fn nids_get_issue(
                 variant.id(),
                 variant.slug()
             );
-            let var_text = format!("Variant {}", variant.variant_identifier());
+            let var_text = format!("Variant {}", variant.variant_identifier().unwrap_or("N/A"));
             let link_variant = linkify!(&variant_url, var_text);
             console.info(cformat!(
                 "   - <s>{}</s> (<m,s>{}</m,s> / {})",
