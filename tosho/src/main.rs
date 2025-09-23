@@ -1103,7 +1103,7 @@ async fn entrypoint(cli: ToshoCli) -> anyhow::Result<ExitCode> {
                 return Ok(early_exit);
             }
 
-            let config = select_single_account(account_id.as_deref(), Implementations::Mplus, &t);
+            let config = select_single_account(account_id.as_deref(), Implementations::Nids, &t);
             let config = match config {
                 Some(config) => match config {
                     config::ConfigImpl::Nids(c) => c,
