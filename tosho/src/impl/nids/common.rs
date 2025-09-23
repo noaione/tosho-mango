@@ -282,7 +282,7 @@ pub(super) fn print_series_summary(
         cformat!("<m,s>{}</m,s> / {}", series.id(), series.uuid())
     };
 
-    console.info(&cformat!("  <s>{}</s> ({})", linked_title, id_pair));
+    console.info(cformat!("  <s>{}</s> ({})", linked_title, id_pair));
     let mut series_smols = vec![cformat!("<b,s>{}</b,s>", series.publisher().name())];
     if let Some(run) = format_series_run_date(series.start_date(), series.end_date()) {
         series_smols.push(cformat!("<s,dim>{}</s,dim>", run));
@@ -296,6 +296,6 @@ pub(super) fn print_series_summary(
         )),
     };
 
-    console.info(&format!("   {}", item_url));
-    console.info(&format!("   {}", series_smols.join(" | ")));
+    console.info(format!("   {}", item_url));
+    console.info(format!("   {}", series_smols.join(" | ")));
 }

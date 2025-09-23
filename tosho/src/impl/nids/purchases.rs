@@ -26,10 +26,10 @@ pub async fn nids_get_purchased_series(
         username
     ));
 
-    let purchased_series = match client.get_series_run_collections(Some(&base_filters)).await {
+    let purchased_series = match client.get_series_run_collections(Some(base_filters)).await {
         Ok(series) => series,
         Err(err) => {
-            console.error(&format!("Failed to fetch series: {err}"));
+            console.error(format!("Failed to fetch series: {err}"));
             return 1;
         }
     };
@@ -85,11 +85,10 @@ pub async fn nids_get_purchased_series(
                 console.clear_screen();
             } else {
                 console.info(cformat!("Loading page <m,s>{}</>...", current_page));
-                let new_series = match client.get_series_run_collections(Some(&base_filters)).await
-                {
+                let new_series = match client.get_series_run_collections(Some(base_filters)).await {
                     Ok(series) => series,
                     Err(err) => {
-                        console.error(&format!("Failed to fetch series: {err}"));
+                        console.error(format!("Failed to fetch series: {err}"));
                         stop_code = 1;
                         break;
                     }
@@ -165,10 +164,10 @@ pub async fn nids_get_purchased_issues(
         username
     ));
 
-    let purchased_issues = match client.get_issue_collections(&base_filters).await {
+    let purchased_issues = match client.get_issue_collections(base_filters).await {
         Ok(issues) => issues,
         Err(err) => {
-            console.error(&format!("Failed to fetch issues: {err}"));
+            console.error(format!("Failed to fetch issues: {err}"));
             return 1;
         }
     };
@@ -224,10 +223,10 @@ pub async fn nids_get_purchased_issues(
                 console.clear_screen();
             } else {
                 console.info(cformat!("Loading page <m,s>{}</>...", current_page));
-                let new_issues = match client.get_issue_collections(&base_filters).await {
+                let new_issues = match client.get_issue_collections(base_filters).await {
                     Ok(series) => series,
                     Err(err) => {
-                        console.error(&format!("Failed to fetch series: {err}"));
+                        console.error(format!("Failed to fetch series: {err}"));
                         stop_code = 1;
                         break;
                     }

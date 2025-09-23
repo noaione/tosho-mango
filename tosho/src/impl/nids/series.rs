@@ -17,10 +17,10 @@ pub async fn nids_get_series(
     console: &crate::term::Terminal,
 ) -> ExitCode {
     console.info("Fetching initial series with provided filters...");
-    let series = match client.get_series_runs(&base_filter).await {
+    let series = match client.get_series_runs(base_filter).await {
         Ok(series) => series,
         Err(err) => {
-            console.error(&format!("Failed to fetch series: {err}"));
+            console.error(format!("Failed to fetch series: {err}"));
             return 1;
         }
     };
@@ -76,10 +76,10 @@ pub async fn nids_get_series(
                 console.clear_screen();
             } else {
                 console.info(cformat!("Loading page <m,s>{}</>...", current_page));
-                let new_series = match client.get_series_runs(&base_filter).await {
+                let new_series = match client.get_series_runs(base_filter).await {
                     Ok(series) => series,
                     Err(err) => {
-                        console.error(&format!("Failed to fetch series: {err}"));
+                        console.error(format!("Failed to fetch series: {err}"));
                         stop_code = 1;
                         break;
                     }
@@ -307,9 +307,9 @@ pub async fn nids_get_series_info(
                 tosho_nids::format_price(issue.price_usd())
             );
 
-            console.info(&format!("   - {}", title_text));
-            console.info(&format!("     {}", item_url));
-            console.info(&format!("     {}", title_smol_info));
+            console.info(format!("   - {}", title_text));
+            console.info(format!("     {}", item_url));
+            console.info(format!("     {}", title_smol_info));
         }
     }
 
@@ -367,9 +367,9 @@ pub async fn nids_get_series_info(
                 ));
             }
 
-            console.info(&format!("   - {}", title_text));
-            console.info(&format!("     {}", book_url));
-            console.info(&format!("     {}", smol_infos.join(" | ")));
+            console.info(format!("   - {}", title_text));
+            console.info(format!("     {}", book_url));
+            console.info(format!("     {}", smol_infos.join(" | ")));
         }
     } else if with_marketplace {
         console.info("  <s>Marketplace Editions</s>: <dim,s>None</dim,s>");
