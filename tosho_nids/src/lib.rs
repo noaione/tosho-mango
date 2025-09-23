@@ -534,7 +534,7 @@ impl NIClient {
         let response = self
             .request::<models::reader::ReaderPagesResponse>(
                 reqwest::Method::GET,
-                &format!("/reader/issue/{}", issue_id),
+                &format!("/frameflow/{}", issue_id),
                 None,
                 None,
                 Some(headers),
