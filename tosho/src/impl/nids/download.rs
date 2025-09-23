@@ -182,7 +182,7 @@ pub(crate) async fn nids_download(
     };
 
     console.info(cformat!(
-        "Fetched reader for issue <m,s>{}</m,s> (<m,s>{}</m,s>)",
+        "Fetching reader for issue <m,s>{}</m,s> (<m,s>{}</m,s>)",
         results.full_title(),
         results.id()
     ));
@@ -197,7 +197,7 @@ pub(crate) async fn nids_download(
 
     let total_pages = pages_meta.total_pages().to_formatted_string(&Locale::en);
     console.info(cformat!(
-        "  Downloading issue <m,s>{}</m,s> with <m,s>{}</m,s> pages...",
+        "Downloading issue <m,s>{}</m,s> with <m,s>{}</m,s> pages...",
         results.full_title(),
         total_pages
     ));
@@ -326,6 +326,7 @@ pub(crate) async fn nids_download(
             }
         }
     }
+
     let end_time = chrono::Local::now();
 
     let duration = end_time - current_time;
