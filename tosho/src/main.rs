@@ -54,7 +54,6 @@
 use std::path::PathBuf;
 
 use crate::cli::{ToshoCli, max_threads};
-use crate::r#impl::nids::NIDSCommands;
 use clap::Parser;
 use cli::{ExitCode, ToshoCommands};
 use r#impl::Implementations;
@@ -63,6 +62,8 @@ use r#impl::amap::download::AMDownloadCliConfig;
 use r#impl::client::select_single_account;
 use r#impl::mplus::MPlusCommands;
 use r#impl::mplus::download::MPDownloadCliConfig;
+use r#impl::nids::NIDSCommands;
+use r#impl::nids::download::NIDownloadCliConfig;
 use r#impl::parser::WeeklyCodeCli;
 use r#impl::rbean::RBeanCommands;
 use r#impl::rbean::download::RBDownloadConfigCli;
@@ -1128,11 +1129,28 @@ async fn entrypoint(cli: ToshoCli) -> anyhow::Result<ExitCode> {
                     r#impl::nids::accounts::nids_account_info(&client, &config, &t).await
                 }
                 NIDSCommands::Accounts => 0,
-                #[expect(unused_variables)]
-                NIDSCommands::Download { issue_id, output } => {
-                    // TODO: STUB!
-                    t.warn("Not implemented yet!");
-                    0
+                NIDSCommands::Download {
+                    issue_id,
+                    output,
+                    parallel,
+                    threads,
+                    no_report,
+                } => {
+                    let dl_config = NIDownloadCliConfig {
+                        output,
+                        parallel,
+                        threads: max_threads(threads),
+                        no_report,
+                    };
+
+                    r#impl::nids::download::nids_download(
+                        issue_id,
+                        dl_config,
+                        get_default_download_dir(),
+                        &client,
+                        &mut t_mut,
+                    )
+                    .await
                 }
                 NIDSCommands::Issue { .. } => 0,
                 NIDSCommands::Issues { .. } => 0,

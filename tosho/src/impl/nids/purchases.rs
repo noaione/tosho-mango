@@ -129,8 +129,8 @@ fn print_purchased_issue_summary(
     console.info(cformat!(
         "  <s>{}</s> (<m,s>{}</m,s> / {})",
         linked_title,
-        item.uuid(),
-        item.id()
+        item.id(),
+        item.uuid()
     ));
 
     // Print owned editions
