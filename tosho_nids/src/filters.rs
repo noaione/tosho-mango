@@ -98,6 +98,8 @@ pub enum FilterType {
     ///
     /// Example: issue,ashcan
     Format,
+    /// Filter by title
+    Title,
     /// Filter by series run ID
     SeriesRunId,
     /// Filter by release date start (ISO 8601 format)
@@ -123,6 +125,7 @@ impl FilterType {
             FilterType::Id => "id",
             FilterType::Uuid => "uuid",
             FilterType::Format => "format",
+            FilterType::Title => "title",
             FilterType::SeriesRunId => "series_run_id",
             FilterType::ReleaseDateStart => "release_date_start",
             FilterType::ReleaseDateEnd => "release_date_end",
@@ -141,6 +144,7 @@ impl FilterType {
             "id" => FilterType::Id,
             "uuid" => FilterType::Uuid,
             "format" => FilterType::Format,
+            "title" => FilterType::Title,
             "series_run_id" => FilterType::SeriesRunId,
             "release_date_start" => FilterType::ReleaseDateStart,
             "release_date_end" => FilterType::ReleaseDateEnd,
