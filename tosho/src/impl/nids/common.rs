@@ -46,6 +46,8 @@ pub(crate) enum FilterScopeInput {
     Frontlist,
     Backlist,
     OnSale,
+    BestSelling,
+    NewReleases,
 }
 
 impl ValueEnum for FilterScopeInput {
@@ -54,6 +56,12 @@ impl ValueEnum for FilterScopeInput {
             FilterScopeInput::Frontlist => Some(clap::builder::PossibleValue::new("frontlist")),
             FilterScopeInput::Backlist => Some(clap::builder::PossibleValue::new("backlist")),
             FilterScopeInput::OnSale => Some(clap::builder::PossibleValue::new("on-sale")),
+            FilterScopeInput::BestSelling => {
+                Some(clap::builder::PossibleValue::new("best-selling"))
+            }
+            FilterScopeInput::NewReleases => {
+                Some(clap::builder::PossibleValue::new("new-releases"))
+            }
         }
     }
 
@@ -62,6 +70,8 @@ impl ValueEnum for FilterScopeInput {
             FilterScopeInput::Frontlist,
             FilterScopeInput::Backlist,
             FilterScopeInput::OnSale,
+            FilterScopeInput::BestSelling,
+            FilterScopeInput::NewReleases,
         ]
     }
 
@@ -75,6 +85,8 @@ impl ValueEnum for FilterScopeInput {
             "frontlist" => Ok(FilterScopeInput::Frontlist),
             "backlist" => Ok(FilterScopeInput::Backlist),
             "on-sale" | "onsale" | "on_sale" => Ok(FilterScopeInput::OnSale),
+            "best-selling" | "bestselling" | "best_selling" => Ok(FilterScopeInput::BestSelling),
+            "new-releases" | "newreleases" | "new_releases" => Ok(FilterScopeInput::NewReleases),
             _ => Err(format!("Invalid scope: {s}")),
         }
     }
@@ -86,6 +98,8 @@ impl From<FilterScopeInput> for tosho_nids::filters::FilterScope {
             FilterScopeInput::Frontlist => tosho_nids::filters::FilterScope::Frontlist,
             FilterScopeInput::Backlist => tosho_nids::filters::FilterScope::Backlist,
             FilterScopeInput::OnSale => tosho_nids::filters::FilterScope::OnSale,
+            FilterScopeInput::BestSelling => tosho_nids::filters::FilterScope::BestSelling,
+            FilterScopeInput::NewReleases => tosho_nids::filters::FilterScope::NewReleases,
         }
     }
 }
