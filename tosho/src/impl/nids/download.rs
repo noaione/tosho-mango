@@ -73,8 +73,8 @@ struct DownloadNode {
 
 fn extract_extensions_from_url(url: &str) -> Option<String> {
     let parsed_url = reqwest::Url::parse(url).ok()?;
-    let path_segments = parsed_url.path_segments()?;
-    let last_segment = path_segments.last()?;
+    let mut path_segments = parsed_url.path_segments()?;
+    let last_segment = path_segments.next_back()?;
     let last_segment_path = PathBuf::from(last_segment);
     let extension = last_segment_path.extension()?.to_str()?;
     Some(extension.to_string())
@@ -211,15 +211,15 @@ pub(crate) async fn nids_download(
     );
     let output_dir = dl_config.output.clone().unwrap_or(default_dir);
 
-    if !output_dir.exists() {
-        if let Err(err) = std::fs::create_dir_all(&output_dir) {
-            console.error(format!(
-                "Failed to create output directory <s>{}</s>: {}",
-                output_dir.display(),
-                err
-            ));
-            return 1;
-        }
+    if !output_dir.exists()
+        && let Err(err) = std::fs::create_dir_all(&output_dir)
+    {
+        console.error(format!(
+            "Failed to create output directory <s>{}</s>: {}",
+            output_dir.display(),
+            err
+        ));
+        return 1;
     }
 
     console.info(cformat!(
@@ -288,7 +288,7 @@ pub(crate) async fn nids_download(
 
                     let node = DownloadNode {
                         client: wrap_client,
-                        page_url: page_url,
+                        page_url,
                         page_name: format!("i_{:04}", idx + 1),
                     };
 
