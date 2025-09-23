@@ -186,7 +186,11 @@ impl NIClient {
                     .json(&data)
                     .headers(extend_headers)
             }
-            (None, Some(params)) => self.inner.request(method, endpoint).query(&params),
+            (None, Some(params)) => self
+                .inner
+                .request(method, endpoint)
+                .headers(extend_headers)
+                .query(&params),
             (Some(_), Some(_)) => {
                 bail_on_error!("Cannot have both data and params")
             }

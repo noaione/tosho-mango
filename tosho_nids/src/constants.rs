@@ -23,8 +23,8 @@ pub struct Constants {
 
 /// The constants used for Web devices.
 pub static WEB_CONSTANTS: LazyLock<Constants> = LazyLock::new(|| Constants {
-    ua: "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:142.0) Gecko/20100101 Firefox/142.0",
-    image_ua: "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:142.0) Gecko/20100101 Firefox/142.0",
+    ua: "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:143.0) Gecko/20100101 Firefox/143.0",
+    image_ua: "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:143.0) Gecko/20100101 Firefox/143.0",
 });
 
 /// The base API used for overall requests.
