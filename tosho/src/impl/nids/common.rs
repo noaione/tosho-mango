@@ -299,3 +299,37 @@ pub(super) fn print_series_summary(
     console.info(format!("   {}", item_url));
     console.info(format!("   {}", series_smols.join(" | ")));
 }
+
+pub(super) fn timedelta_to_humantime(duration: chrono::TimeDelta) -> String {
+    // if secs < 60, show in seconds
+    let num_msecs = duration.num_milliseconds();
+    if num_msecs < 1000 {
+        return format!("{} ms", num_msecs);
+    }
+    let num_secs = duration.num_seconds();
+    if num_secs < 60 {
+        return format!("{}.{:02}s", num_secs, num_msecs % 1000 / 10);
+    }
+    let num_mins = duration.num_minutes();
+    if num_mins < 60 {
+        return format!("{}m {:02}s", num_mins, num_secs % 60);
+    }
+    let num_hours = duration.num_hours();
+    if num_hours < 24 {
+        return format!("{}h {:02}m", num_hours, num_mins % 60);
+    }
+    let num_days = duration.num_days();
+    if num_days < 7 {
+        return format!("{}d {:02}h", num_days, num_hours % 24);
+    }
+    let num_weeks = num_days / 7;
+    if num_weeks < 4 {
+        return format!("{}w {:02}d", num_weeks, num_days % 7);
+    }
+    let num_months = num_days / 30;
+    if num_months < 12 {
+        return format!("{}mo {:02}d", num_months, num_days % 30);
+    }
+    let num_years = num_days / 365;
+    format!("{}y {:02}mo", num_years, num_days % 365 / 30)
+}
