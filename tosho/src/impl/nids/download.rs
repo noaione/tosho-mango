@@ -8,7 +8,7 @@ use color_print::cformat;
 use num_format::{Locale, ToFormattedString};
 use tosho_nids::NIClient;
 
-use crate::cli::ExitCode;
+use crate::{cli::ExitCode, r#impl::nids::common::timedelta_to_humantime};
 
 #[derive(Debug, Clone, Default)]
 pub(crate) enum DownloadImageQuality {
@@ -262,6 +262,7 @@ pub(crate) async fn nids_download(
         }
     }
 
+    let current_time = chrono::Local::now();
     let progress = console.make_progress_arc(pages_meta.total_pages(), Some("Downloading"));
     if dl_config.parallel {
         let semaphore = Arc::new(tokio::sync::Semaphore::new(dl_config.threads));
@@ -302,9 +303,6 @@ pub(crate) async fn nids_download(
 
         futures_util::future::join_all(tasks).await;
     } else {
-        let progress =
-            Arc::new(console.make_progress(pages_meta.total_pages(), Some("Downloading")));
-
         for (idx, page) in pages_meta.pages().pages().iter().enumerate() {
             let node = DownloadNode {
                 client: client.clone(),
@@ -328,8 +326,15 @@ pub(crate) async fn nids_download(
             }
         }
     }
+    let end_time = chrono::Local::now();
 
+    let duration = end_time - current_time;
     progress.finish_with_message("Downloaded");
+    console.info(cformat!(
+        "Downloaded <m,s>{}</m,s> in <m,s>{}</m,s>",
+        results.full_title(),
+        timedelta_to_humantime(duration)
+    ));
 
     0
 }
