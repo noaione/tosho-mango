@@ -222,9 +222,9 @@ pub(crate) async fn nids_download(
         }
     }
 
+    let progress = console.make_progress_arc(pages_meta.total_pages(), Some("Downloading"));
     if dl_config.parallel {
         let semaphore = Arc::new(tokio::sync::Semaphore::new(dl_config.threads));
-        let progress = console.make_progress_arc(pages_meta.total_pages(), Some("Downloading"));
 
         // TODO: Implement page viewing report with pressure
         let tasks: Vec<_> = pages_meta
@@ -285,6 +285,8 @@ pub(crate) async fn nids_download(
             }
         }
     }
+
+    progress.finish_with_message("Downloaded");
 
     0
 }
