@@ -1,6 +1,6 @@
 #![allow(clippy::derive_partial_eq_without_eq)]
 
-use tosho_macros::EnumName;
+use tosho_macros::{AutoGetter, EnumName};
 
 pub const PREFIX: &str = "nids";
 
@@ -14,7 +14,7 @@ pub enum DeviceType {
 }
 
 /// Represents the main config file for the NI by DS app.
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[derive(Clone, PartialEq, AutoGetter, ::prost::Message)]
 pub struct Config {
     /// The UUID of the account/config.
     #[prost(string, tag = "1")]
@@ -27,9 +27,11 @@ pub struct Config {
     pub email: ::prost::alloc::string::String,
     /// The username of the account/config.
     #[prost(string, optional, tag = "4")]
+    #[skip_field]
     pub username: Option<::prost::alloc::string::String>,
     /// The device type of the account/config.
     #[prost(enumeration = "DeviceType", tag = "10")]
+    #[skip_field]
     pub r#type: i32,
 }
 

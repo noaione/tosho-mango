@@ -2,47 +2,14 @@ use std::collections::HashMap;
 
 use crate::{
     cli::ExitCode,
-    r#impl::nids::common::{PaginateAction, fmt_date, format_series_run_date, pagination_helper},
+    r#impl::nids::common::{
+        PaginateAction, fmt_date, format_series_run_date, pagination_helper, print_series_summary,
+    },
     linkify,
 };
 use color_print::cformat;
 use num_format::{Locale, ToFormattedString};
 use tosho_nids::constants::BASE_HOST;
-
-fn print_series_summary(
-    series: &tosho_nids::models::SeriesRunDetailed,
-    console: &crate::term::Terminal,
-) {
-    let item_url = format!(
-        "https://{}/series/{}/{}",
-        BASE_HOST,
-        series.id(),
-        series.slug()
-    );
-    let linked_title = linkify!(&item_url, series.title());
-
-    console.info(&cformat!(
-        "  <s>{}</s> (<m,s>{}</m,s> / {})",
-        linked_title,
-        series.id(),
-        series.uuid()
-    ));
-    let mut series_smols = vec![cformat!("<b,s>{}</b,s>", series.publisher().name())];
-    if let Some(run) = format_series_run_date(series.start_date(), series.end_date()) {
-        series_smols.push(cformat!("<s,dim>{}</s,dim>", run));
-    }
-    match series.issues_count() {
-        0 => {}
-        1 => series_smols.push(cformat!("<s>1</s> issue")),
-        n => series_smols.push(cformat!(
-            "<s>{}</s> issues",
-            n.to_formatted_string(&Locale::en)
-        )),
-    };
-
-    console.info(&format!("   {}", item_url));
-    console.info(&format!("   {}", series_smols.join(" | ")));
-}
 
 pub async fn nids_get_series(
     base_filter: &mut tosho_nids::Filter,
@@ -68,9 +35,9 @@ pub async fn nids_get_series(
         // Do paginated response
         let mut current_page: u32 = 1;
         let mut maximum_pages: u32 = series.pages();
-        let mut collected_issues: HashMap<u32, Vec<tosho_nids::models::SeriesRunDetailed>> =
+        let mut collected_series: HashMap<u32, Vec<tosho_nids::models::SeriesRunDetailed>> =
             HashMap::from([(1, series.data().to_vec())]);
-        let mut current_data = collected_issues.get(&1).expect("We just inserted this");
+        let mut current_data = collected_series.get(&1).expect("We just inserted this");
 
         loop {
             console.info(cformat!(
@@ -80,7 +47,7 @@ pub async fn nids_get_series(
             ));
 
             for series in current_data.iter() {
-                print_series_summary(series, console);
+                print_series_summary(series, console, false);
             }
 
             if current_data.is_empty() {
@@ -104,7 +71,7 @@ pub async fn nids_get_series(
 
             // Fetch new stuff
             base_filter.set_page(current_page);
-            if let Some(series) = collected_issues.get(&current_page) {
+            if let Some(series) = collected_series.get(&current_page) {
                 current_data = series;
                 console.clear_screen();
             } else {
@@ -122,8 +89,8 @@ pub async fn nids_get_series(
 
                 maximum_pages = new_series.pages();
                 // add correct data to collected_issues
-                collected_issues.insert(current_page, new_series.data().to_vec());
-                current_data = collected_issues
+                collected_series.insert(current_page, new_series.data().to_vec());
+                current_data = collected_series
                     .get(&current_page)
                     .expect("Somehow missing page after insert");
             }
@@ -131,7 +98,7 @@ pub async fn nids_get_series(
     } else {
         // print all results
         for series in series.data() {
-            print_series_summary(series, console);
+            print_series_summary(series, console, false);
         }
     }
 
