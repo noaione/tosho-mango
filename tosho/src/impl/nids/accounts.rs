@@ -49,9 +49,10 @@ pub(crate) async fn nids_auth_session(
 
     let all_configs = get_all_config(&crate::r#impl::Implementations::Nids, None);
 
+    let cut_token = session_token.chars().take(8).collect::<String>();
     console.info(cformat!(
-        "Authenticating with session token <m,s>{}</>...",
-        session_token
+        "Authenticating with session token <m,s>{}********</>...",
+        cut_token
     ));
 
     let random_uuid = uuid::Uuid::new_v4().to_string();
