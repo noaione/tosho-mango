@@ -12,6 +12,7 @@ pub(crate) mod common;
 pub(crate) mod config;
 pub(crate) mod issues;
 pub(crate) mod publishers;
+pub(crate) mod purchases;
 pub(crate) mod series;
 
 #[derive(Subcommand, Clone)]
@@ -87,24 +88,18 @@ pub(crate) enum NIDSCommands {
     Publishers,
     /// Get specific purchased issues by series ID
     PurchasedIssues {
-        /// Series ID to get
-        series_run_id: u32,
+        /// Series UUID to get
+        series_run_uuid: String,
 
         /// Maximum number of issues to return
         #[arg(short = 'l', long = "limit", default_value_t = 18)]
-        limit: usize,
-        /// Page number to return (starts from 1)
-        #[arg(short = 'p', long = "page", default_value_t = 1)]
-        page: usize,
+        limit: u32,
     },
     /// Get list of purchased series
     PurchasedSeries {
         /// Maximum number of series to return
         #[arg(short = 'l', long = "limit", default_value_t = 18)]
-        limit: usize,
-        /// Page number to return (starts from 1)
-        #[arg(short = 'p', long = "page", default_value_t = 1)]
-        page: usize,
+        limit: u32,
     },
     /// Revoke or delete an account
     Revoke,

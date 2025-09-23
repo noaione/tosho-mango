@@ -1139,21 +1139,47 @@ async fn entrypoint(cli: ToshoCli) -> anyhow::Result<ExitCode> {
                 NIDSCommands::Marketplace { .. } => 0,
                 NIDSCommands::Publisher { .. } => 0,
                 NIDSCommands::Publishers => 0,
-                #[expect(unused_variables)]
                 NIDSCommands::PurchasedIssues {
-                    series_run_id,
+                    series_run_uuid,
                     limit,
-                    page,
                 } => {
-                    // TODO: STUB!
-                    t.warn("Not implemented yet!");
-                    0
+                    let mut filters = tosho_nids::Filter::new()
+                        .add_filter(
+                            tosho_nids::filters::FilterType::SeriesRunId,
+                            &series_run_uuid,
+                        )
+                        .with_order(
+                            tosho_nids::filters::SortBy::FullTitle,
+                            tosho_nids::filters::SortOrder::ASC,
+                        )
+                        .with_per_page(limit)
+                        .with_page(1);
+
+                    r#impl::nids::purchases::nids_get_purchased_issues(
+                        &series_run_uuid,
+                        &mut filters,
+                        &client,
+                        &config,
+                        &t,
+                    )
+                    .await
                 }
-                #[expect(unused_variables)]
-                NIDSCommands::PurchasedSeries { limit, page } => {
-                    // TODO: STUB!
-                    t.warn("Not implemented yet!");
-                    0
+                NIDSCommands::PurchasedSeries { limit } => {
+                    let mut filters = tosho_nids::Filter::new()
+                        .with_order(
+                            tosho_nids::filters::SortBy::Title,
+                            tosho_nids::filters::SortOrder::ASC,
+                        )
+                        .with_per_page(limit)
+                        .with_page(1);
+
+                    r#impl::nids::purchases::nids_get_purchased_series(
+                        &mut filters,
+                        &client,
+                        &config,
+                        &t,
+                    )
+                    .await
                 }
                 NIDSCommands::Revoke => r#impl::nids::accounts::nids_account_revoke(&config, &t),
                 NIDSCommands::SeriesRun { .. } => 0,
