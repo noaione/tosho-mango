@@ -153,6 +153,10 @@ pub enum FilterScope {
     Backlist,
     /// On sale collection (both frontlist and backlist)
     OnSale,
+    /// Best selling collection
+    BestSelling,
+    /// New releases collection (although unused right now)
+    NewReleases,
 }
 
 impl FilterScope {
@@ -162,6 +166,8 @@ impl FilterScope {
             FilterScope::Frontlist => "frontlist",
             FilterScope::Backlist => "backlist",
             FilterScope::OnSale => "on_sale",
+            FilterScope::BestSelling => "best_selling",
+            FilterScope::NewReleases => "new_releases",
         }
     }
 }
