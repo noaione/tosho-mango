@@ -87,7 +87,7 @@ pub(crate) async fn nids_auth_session(
                         }
 
                         match old_config {
-                            crate::config::ConfigImpl::Musq(c) => {
+                            crate::config::ConfigImpl::Nids(c) => {
                                 config.apply_id(&c.id);
                             }
                             _ => unreachable!(),
