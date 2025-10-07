@@ -168,13 +168,15 @@ pub(crate) fn get_scope_dates() -> (String, String) {
         .unwrap_or_else(|| now.naive_utc());
     // minus start_of_day by 7 days
     let start_date = start_of_day - chrono::Duration::days(7);
+    // plus end_of_day by 1 day to include the entire end day (since sometimes releases are at -4 timezone)
+    let end_date = end_of_day + chrono::Duration::days(1);
     // format as RFC3339
     (
         start_date
             .and_local_timezone(chrono::Utc)
             .unwrap()
             .to_rfc3339(),
-        end_of_day
+        end_date
             .and_local_timezone(chrono::Utc)
             .unwrap()
             .to_rfc3339(),
