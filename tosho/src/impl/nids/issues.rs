@@ -265,7 +265,23 @@ pub async fn nids_get_issue(
     // Show the downloadable/remarquable/resellable status
     let mut status_flags: Vec<String> = Vec::new();
     if issue_detail.is_downloadable() {
-        status_flags.push(cformat!("<g!,s>Downloadable</g!,s>"));
+        let mut download_txt = cformat!("<g!,s>Downloadable</g!,s>");
+        match issue_detail.download_type() {
+            Some(dt) => match dt {
+                tosho_nids::models::DownloadType::Unavailable => {} // Do nothing
+                tosho_nids::models::DownloadType::DRMFree => {
+                    download_txt.push_str(&cformat!(" (<c>DRM-free</c>)"));
+                }
+                tosho_nids::models::DownloadType::Watermarked => {
+                    download_txt.push_str(&cformat!(" (<r!>Visible Watermark)</r!>"));
+                }
+                tosho_nids::models::DownloadType::InvisibleWatermarked => {
+                    download_txt.push_str(&cformat!(" (<r,s>Invisible Watermark</r,s>)"));
+                }
+            },
+            None => {} // Do nothing
+        }
+        status_flags.push(download_txt);
     } else {
         status_flags.push(cformat!("<r!,s>Not Downloadable</r!,s>"));
     }
