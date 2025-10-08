@@ -68,6 +68,9 @@ pub struct IssueDetail {
     is_resellable: bool,
     /// Can this issue be downloaded?
     is_downloadable: bool,
+    /// What type of PDF download is available, if any
+    #[copyable]
+    download_type: Option<super::enums::DownloadType>,
     /// The status of the issue (e.g. "for-sale")
     ///
     /// Although right now, this is either "for-sale", or "post-sale" (marketplace only)
