@@ -1040,11 +1040,36 @@ async fn entrypoint(cli: ToshoCli) -> anyhow::Result<ExitCode> {
                             .await,
                     )
                 }
-                #[expect(unused_variables)]
-                NIDSCommands::Marketplace { limit, page } => {
-                    // TODO: STUB!
-                    t.warn("Not implemented yet!");
-                    Some(0)
+                NIDSCommands::Marketplace {
+                    limit,
+                    direction,
+                    grouped,
+                } => {
+                    let base_filter = tosho_nids::Filter::new().with_per_page(limit);
+                    let mut base_filter = if grouped {
+                        base_filter
+                            .with_order(tosho_nids::SortBy::EditionPriceMin, direction.into())
+                    } else {
+                        base_filter
+                            .with_order(tosho_nids::SortBy::MarketplacePrice, direction.into())
+                    };
+
+                    let exit_code = if grouped {
+                        r#impl::nids::marketplace::nids_get_marketplace_grouped(
+                            &mut base_filter,
+                            &clean_client,
+                            &t,
+                        )
+                        .await
+                    } else {
+                        r#impl::nids::marketplace::nids_get_marketplace_ungrouped(
+                            &mut base_filter,
+                            &clean_client,
+                            &t,
+                        )
+                        .await
+                    };
+                    Some(exit_code)
                 }
                 NIDSCommands::Publisher {
                     publisher_slug,

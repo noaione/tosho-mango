@@ -40,6 +40,8 @@ pub enum SortBy {
     ///
     /// Used in books marketplace endpoint
     EditionPriceMin,
+    /// Sort by marketplace pricing
+    MarketplacePrice,
     /// Sort by release date
     ReleaseDate,
     /// Sort by publication date
@@ -63,6 +65,7 @@ impl SortBy {
             SortBy::ReleaseDate => "release_date",
             SortBy::PublicationDate => "original_publication_date",
             SortBy::EditionPriceMin => "edition_price_min",
+            SortBy::MarketplacePrice => "marketplace_price",
             SortBy::Any(field) => field.as_ref(),
         }
     }
@@ -82,6 +85,7 @@ impl SortBy {
             "release_date" => SortBy::ReleaseDate,
             "publication_date" | "original_publication_date" => SortBy::PublicationDate,
             "edition_price_min" => SortBy::EditionPriceMin,
+            "marketplace_price" => SortBy::MarketplacePrice,
             other => SortBy::Any(other.to_string()),
         }
     }
