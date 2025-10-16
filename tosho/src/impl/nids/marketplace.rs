@@ -108,7 +108,7 @@ pub async fn nids_get_marketplace_ungrouped(
     console: &crate::term::Terminal,
 ) -> ExitCode {
     console.info("Fetching initial marketplace with provided filters");
-    let marketplace_editions = match client.get_marketplace_editions(Some(&base_filter)).await {
+    let marketplace_editions = match client.get_marketplace_editions(Some(base_filter)).await {
         Ok(editions) => editions,
         Err(err) => {
             console.error(format!("Failed to fetch editions: {err}"));
@@ -167,7 +167,7 @@ pub async fn nids_get_marketplace_ungrouped(
                 console.clear_screen();
             } else {
                 console.info(cformat!("Loading page <m,s>{}</m,s>...", current_page));
-                let new_editions = match client.get_marketplace_editions(Some(&base_filter)).await {
+                let new_editions = match client.get_marketplace_editions(Some(base_filter)).await {
                     Ok(issues) => issues,
                     Err(e) => {
                         console.error(format!("Failed to get editions: {}", e));
@@ -201,7 +201,7 @@ pub async fn nids_get_marketplace_grouped(
     console: &crate::term::Terminal,
 ) -> ExitCode {
     console.info("Fetching initial marketplace with provided filters");
-    let marketplace_books = match client.get_marketplace_books(Some(&base_filter)).await {
+    let marketplace_books = match client.get_marketplace_books(Some(base_filter)).await {
         Ok(editions) => editions,
         Err(err) => {
             console.error(format!("Failed to fetch books: {err}"));
@@ -258,7 +258,7 @@ pub async fn nids_get_marketplace_grouped(
                 console.clear_screen();
             } else {
                 console.info(cformat!("Loading page <m,s>{}</m,s>...", current_page));
-                let new_books = match client.get_marketplace_books(Some(&base_filter)).await {
+                let new_books = match client.get_marketplace_books(Some(base_filter)).await {
                     Ok(issues) => issues,
                     Err(e) => {
                         console.error(format!("Failed to get books: {}", e));

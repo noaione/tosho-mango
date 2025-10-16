@@ -276,8 +276,8 @@ pub async fn nids_get_issue(
     }
     if issue_detail.is_downloadable() {
         let mut download_txt = cformat!("<g!,s>Downloadable</g!,s>");
-        match issue_detail.download_type() {
-            Some(dt) => match dt {
+        if let Some(dt) = issue_detail.download_type() {
+            match dt {
                 tosho_nids::models::DownloadType::Unavailable => {} // Do nothing
                 tosho_nids::models::DownloadType::DRMFree => {
                     download_txt.push_str(&cformat!(" (<c>DRM-free</c>)"));
@@ -288,8 +288,7 @@ pub async fn nids_get_issue(
                 tosho_nids::models::DownloadType::InvisibleWatermarked => {
                     download_txt.push_str(&cformat!(" (<r,s>Invisible Watermark</r,s>)"));
                 }
-            },
-            None => {} // Do nothing
+            }
         }
         status_flags.push(download_txt);
     } else {
