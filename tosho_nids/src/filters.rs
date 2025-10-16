@@ -251,6 +251,11 @@ impl Filter {
         }
     }
 
+    /// Check if a filter exists
+    pub fn has_filter(&self, filter_type: &FilterType) -> bool {
+        self.filters.iter().any(|(ft, _)| ft == filter_type)
+    }
+
     /// Add a filter
     pub fn add_filter(mut self, filter_type: FilterType, value: impl ToString) -> Self {
         self.filters.push((filter_type, value.to_string()));

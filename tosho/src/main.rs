@@ -1028,9 +1028,19 @@ async fn entrypoint(cli: ToshoCli) -> anyhow::Result<ExitCode> {
                             // add release_date_start and release_date_end manually
                             let (start_time, end_time) =
                                 crate::r#impl::nids::common::get_scope_dates();
-                            with_scope
-                                .add_filter(tosho_nids::FilterType::ReleaseDateStart, start_time)
-                                .add_filter(tosho_nids::FilterType::ReleaseDateEnd, end_time)
+                            if with_scope.has_filter(&tosho_nids::FilterType::ReleaseDateStart)
+                                || with_scope.has_filter(&tosho_nids::FilterType::ReleaseDateEnd)
+                            {
+                                // if user already specify either one of the date filters, we won't override it
+                                with_scope
+                            } else {
+                                with_scope
+                                    .add_filter(
+                                        tosho_nids::FilterType::ReleaseDateStart,
+                                        start_time,
+                                    )
+                                    .add_filter(tosho_nids::FilterType::ReleaseDateEnd, end_time)
+                            }
                         }
                         None => merged_filters,
                     };
