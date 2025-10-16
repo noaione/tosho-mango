@@ -58,12 +58,12 @@ impl std::fmt::Display for SaleStatus {
 /// ```rust
 /// use tosho_nids::models::DownloadType;
 ///
-/// let dt = DownloadType::ForSale;
-/// assert_eq!(dt.to_string(), "for-sale");
-/// assert_eq!(dt.to_name(), "ForSale");
+/// let dt = DownloadType::DRMFree;
+/// assert_eq!(dt.to_string(), "drm-free");
+/// assert_eq!(dt.to_name(), "DRMFree");
 ///
-/// let parsed = "post-sale".parse::<SaleStatus>().unwrap();
-/// assert_eq!(parsed, SaleStatus::PostSale);
+/// let parsed = "visible-watermark".parse::<DownloadType>().unwrap();
+/// assert_eq!(parsed, DownloadType::Watermarked);
 /// ```
 #[derive(Debug, Clone, Copy, PartialEq, SerializeEnum, DeserializeEnum, EnumName)]
 pub enum DownloadType {
