@@ -390,7 +390,7 @@ impl NIClient {
         let params = match filters {
             Some(f) => f.to_params(),
             None => filters::Filter::default()
-                .with_order(filters::SortBy::FullTitle, filters::SortOrder::ASC)
+                .with_order(filters::SortBy::EditionPriceMin, filters::SortOrder::ASC)
                 .with_per_page(25)
                 .to_params(),
         };
@@ -405,12 +405,38 @@ impl NIClient {
         .await
     }
 
+    /// Get the list of editions in the marketplaces
+    ///
+    /// # Arguments
+    /// * `filters` - The filter to apply to the request
+    pub async fn get_marketplace_editions(
+        &self,
+        filters: Option<&filters::Filter>,
+    ) -> ToshoResult<models::others::MarketplaceDetailedEditionsList> {
+        let params = match filters {
+            Some(f) => f.to_params(),
+            None => filters::Filter::default()
+                .with_order(filters::SortBy::MarketplacePrice, filters::SortOrder::ASC)
+                .with_per_page(25)
+                .to_params(),
+        };
+
+        self.request(
+            reqwest::Method::GET,
+            "/marketplace/editions",
+            None,
+            Some(params),
+            None,
+        )
+        .await
+    }
+
     /// Get the list of editions sold for an issue in the marketplace
     ///
     /// # Arguments
     /// * `issue_id` - The issue UUID to get the editions for
     /// * `filter` - The filter to apply to the request
-    pub async fn get_marketplace_editions(
+    pub async fn get_marketplace_book_editions(
         &self,
         issue_id: impl Into<String>,
         filters: Option<&filters::Filter>,

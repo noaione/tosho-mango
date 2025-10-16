@@ -177,7 +177,7 @@ pub async fn nids_get_issue(
     let marketplace_editions = if with_marketplace {
         console.info("Fetching marketplace editions...");
         match client
-            .get_marketplace_editions(issue_detail.uuid(), None)
+            .get_marketplace_book_editions(issue_detail.uuid(), None)
             .await
         {
             Ok(editions) => Some(editions.data().to_vec()),
@@ -264,6 +264,16 @@ pub async fn nids_get_issue(
 
     // Show the downloadable/remarquable/resellable status
     let mut status_flags: Vec<String> = Vec::new();
+    if issue_detail.is_resellable() {
+        status_flags.push(cformat!("<g!,s>Resellable</g!,s>"));
+    } else {
+        status_flags.push(cformat!("<r!,s>Not Resellable</r!,s>"));
+    }
+    if issue_detail.is_remarquable() {
+        status_flags.push(cformat!("<g!,s>Remarquable</g!,s>"));
+    } else {
+        status_flags.push(cformat!("<r!,s>Not Remarquable</r!,s>"));
+    }
     if issue_detail.is_downloadable() {
         let mut download_txt = cformat!("<g!,s>Downloadable</g!,s>");
         match issue_detail.download_type() {
@@ -284,16 +294,6 @@ pub async fn nids_get_issue(
         status_flags.push(download_txt);
     } else {
         status_flags.push(cformat!("<r!,s>Not Downloadable</r!,s>"));
-    }
-    if issue_detail.is_remarquable() {
-        status_flags.push(cformat!("<g!,s>Remarquable</g!,s>"));
-    } else {
-        status_flags.push(cformat!("<r!,s>Not Remarquable</r!,s>"));
-    }
-    if issue_detail.is_resellable() {
-        status_flags.push(cformat!("<g!,s>Resellable</g!,s>"));
-    } else {
-        status_flags.push(cformat!("<r!,s>Not Resellable</r!,s>"));
     }
     console.info(format!("  {}", status_flags.join(" | ")));
 

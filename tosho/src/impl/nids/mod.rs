@@ -12,6 +12,7 @@ pub(crate) mod common;
 pub(crate) mod config;
 pub(crate) mod download;
 pub(crate) mod issues;
+pub(crate) mod marketplace;
 pub(crate) mod publishers;
 pub(crate) mod purchases;
 pub(crate) mod series;
@@ -89,11 +90,14 @@ pub(crate) enum NIDSCommands {
     /// Get a list of currently sold issues in the marketplace
     Marketplace {
         /// Maximum number of issues to return
-        #[arg(short = 'l', long = "limit", default_value_t = 25)]
-        limit: usize,
-        /// Page number to return (starts from 1)
-        #[arg(short = 'p', long = "page", default_value_t = 1)]
-        page: usize,
+        #[arg(short = 'l', long = "limit", default_value_t = 18)]
+        limit: u32,
+        /// The direction of the sort order
+        #[arg(short = 'd', long = "direction", default_value = "asc")]
+        direction: SortOrderInput,
+        /// Do a grouped search
+        #[arg(short = 'g', long = "grouped", default_value_t = false)]
+        grouped: bool,
     },
     /// Get a information about a publisher
     Publisher {

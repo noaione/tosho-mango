@@ -164,6 +164,56 @@ pub struct MarketplaceEdition {
     remarque_cover: Option<String>,
 }
 
+/// Marketplace issue information
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
+pub struct MarketplaceIssue {
+    /// Issue ID
+    id: u32,
+    /// Issue UUID
+    uuid: String,
+    /// The series title
+    title: String,
+    /// The series + issue full title
+    full_title: String,
+    /// The issue URL slug
+    slug: String,
+    /// The publisher information
+    publisher: super::common::Publisher,
+    /// The issue cover URL
+    cover: super::common::ImageUrl,
+}
+
+/// Marketplace detailed edition information
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
+pub struct MarketplaceDetailedEdition {
+    /// Marketplace edition ID
+    id: String,
+    /// The issue information
+    #[serde(rename = "book")]
+    issue: MarketplaceIssue,
+    /// The issue index number
+    #[serde(rename = "book_index")]
+    index: u32,
+    /// The price of the edition in USD
+    #[serde(rename = "marketplace_price")]
+    price_usd: u64,
+    /// Marketplace creation date in ISO 8601 format
+    #[serde(rename = "marketplace_created_at", with = "super::datetime")]
+    created_at: chrono::DateTime<chrono::FixedOffset>,
+    /// The seller information
+    #[serde(rename = "owner")]
+    seller: MarketplaceSeller,
+    /// Seller notes
+    #[serde(rename = "seller_notes")]
+    notes: Option<String>,
+    /// Has signature/remarque
+    #[serde(rename = "sig")]
+    signature: bool,
+    /// The cover URL with the signature/remarque + watermarking
+    #[serde(rename = "remarqued_watermark_cover_url")]
+    remarque_cover: Option<String>,
+}
+
 /// Response for marketplace edition list
 #[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
 pub struct MarketplaceEditionsList {
@@ -176,6 +226,20 @@ pub struct MarketplaceEditionsList {
     /// List of editions in marketplace
     #[serde(rename = "editions")]
     data: Vec<MarketplaceEdition>,
+}
+
+/// Response for marketplace edition list
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
+pub struct MarketplaceDetailedEditionsList {
+    /// Total pages available using the current page size
+    #[serde(rename = "pages_count")]
+    pages: u32,
+    /// Total editions available in marketplace
+    #[serde(rename = "total_count")]
+    count: u64,
+    /// List of editions in marketplace
+    #[serde(rename = "editions")]
+    data: Vec<MarketplaceDetailedEdition>,
 }
 
 /// The collected editions information
