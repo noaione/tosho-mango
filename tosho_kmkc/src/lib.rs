@@ -766,34 +766,31 @@ impl KMClient {
             .send()
             .await?;
 
-        match (&self.config, scramble_seed) {
-            (KMConfig::Mobile(_), _) => {
-                let mut stream = res.bytes_stream();
-                while let Some(bytes) = stream.try_next().await? {
-                    writer.write_all(&bytes).await?;
-                    writer.flush().await?;
-                }
-
-                Ok(())
-            }
-            (KMConfig::Web(_), Some(scramble_seed)) => {
+        match scramble_seed {
+            Some(scramble_seed) => {
                 let image_bytes = res.bytes().await?;
                 let descrambled = tokio::task::spawn_blocking(move || {
-                    imaging::descramble_image(image_bytes.as_ref(), 4, scramble_seed)
+                    imaging::descramble_image(&image_bytes, 4, scramble_seed)
                 })
                 .await
-                .map_err(|e| make_error!("Failed to execute blocking task: {}", e))?;
+                .map_err(|e| make_error!("Failed to execute blocking descrambling task: {}", e))?;
 
                 match descrambled {
                     Ok(descram_bytes) => {
                         writer.write_all(&descram_bytes).await?;
+                        writer.flush().await?;
                         Ok(())
                     }
                     Err(e) => Err(e),
                 }
             }
-            (KMConfig::Web(_), None) => {
-                bail_on_error!("Cannot descramble image without scramble seed")
+            None => {
+                let mut stream = res.bytes_stream();
+                while let Some(bytes) = stream.try_next().await? {
+                    writer.write_all(&bytes).await?;
+                    writer.flush().await?;
+                }
+                Ok(())
             }
         }
     }
