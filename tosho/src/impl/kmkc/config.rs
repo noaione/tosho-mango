@@ -26,6 +26,8 @@ pub enum MobilePlatform {
     Android = 1,
     /// iOS device/Apple.
     Apple = 2,
+    /// Android device using legacy constants
+    AndroidLegacy = 11,
 }
 
 impl From<KMConfigMobilePlatform> for MobilePlatform {
@@ -33,6 +35,7 @@ impl From<KMConfigMobilePlatform> for MobilePlatform {
         match value {
             KMConfigMobilePlatform::Android => MobilePlatform::Android,
             KMConfigMobilePlatform::Apple => MobilePlatform::Apple,
+            KMConfigMobilePlatform::AndroidLegacy => MobilePlatform::AndroidLegacy,
         }
     }
 }
@@ -42,6 +45,7 @@ impl From<MobilePlatform> for KMConfigMobilePlatform {
         match value {
             MobilePlatform::Android => KMConfigMobilePlatform::Android,
             MobilePlatform::Apple => KMConfigMobilePlatform::Apple,
+            MobilePlatform::AndroidLegacy => KMConfigMobilePlatform::AndroidLegacy,
         }
     }
 }
@@ -105,6 +109,9 @@ impl From<&tosho_kmkc::KMConfigMobile> for ConfigMobile {
         let platform_id = match value.platform() {
             tosho_kmkc::config::KMConfigMobilePlatform::Android => MobilePlatform::Android,
             tosho_kmkc::config::KMConfigMobilePlatform::Apple => MobilePlatform::Apple,
+            tosho_kmkc::config::KMConfigMobilePlatform::AndroidLegacy => {
+                MobilePlatform::AndroidLegacy
+            }
         };
         ConfigMobile {
             id,

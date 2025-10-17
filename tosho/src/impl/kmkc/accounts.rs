@@ -21,6 +21,8 @@ pub(crate) enum DeviceKind {
     Web,
     /// Android platform.
     Android,
+    /// Legacy Android platform.
+    LegacyAndroid,
     /// iOS platform.
     Apple,
 }
@@ -30,12 +32,18 @@ impl ValueEnum for DeviceKind {
         match self {
             DeviceKind::Web => Some(clap::builder::PossibleValue::new("web")),
             DeviceKind::Android => Some(clap::builder::PossibleValue::new("android")),
+            DeviceKind::LegacyAndroid => Some(clap::builder::PossibleValue::new("android-legacy")),
             DeviceKind::Apple => Some(clap::builder::PossibleValue::new("ios")),
         }
     }
 
     fn value_variants<'a>() -> &'a [Self] {
-        &[DeviceKind::Web, DeviceKind::Android, DeviceKind::Apple]
+        &[
+            DeviceKind::Web,
+            DeviceKind::Android,
+            DeviceKind::LegacyAndroid,
+            DeviceKind::Apple,
+        ]
     }
 
     fn from_str(s: &str, ignore_case: bool) -> Result<Self, String> {
@@ -47,6 +55,7 @@ impl ValueEnum for DeviceKind {
         match s.as_str() {
             "web" => Ok(DeviceKind::Web),
             "android" => Ok(DeviceKind::Android),
+            "android-legacy" | "android_legacy" => Ok(DeviceKind::LegacyAndroid),
             "ios" => Ok(DeviceKind::Apple),
             _ => Err(format!("Invalid device kind: {s}")),
         }
@@ -265,6 +274,7 @@ pub async fn kmkc_account_login(
         DeviceKind::Web => None,
         DeviceKind::Android => Some(KMConfigMobilePlatform::Android),
         DeviceKind::Apple => Some(KMConfigMobilePlatform::Apple),
+        DeviceKind::LegacyAndroid => Some(KMConfigMobilePlatform::AndroidLegacy),
     };
 
     let config = KMClient::login(&email, &password, mobile_match).await;
