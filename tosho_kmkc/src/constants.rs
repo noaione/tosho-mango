@@ -53,8 +53,8 @@ pub static ANDROID_CONSTANTS: LazyLock<Constants> = LazyLock::new(|| Constants {
     ua: "okhttp/4.9.3",
     image_ua: "okhttp/4.9.3",
     platform: "2",
-    version: "6.1.0",
-    display_version: Some("2.1.5"),
+    version: "6.3.5",
+    display_version: Some("2.3.5"),
     hash: HASH_HEADER_MOBILE,
 });
 /// The constants used for iOS devices.

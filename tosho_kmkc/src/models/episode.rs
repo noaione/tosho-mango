@@ -232,6 +232,9 @@ pub struct MobileEpisodeViewerResponse {
     /// The previous episode ID.
     #[serde(rename = "prev_episode_id", default)]
     prev_id: Option<i32>,
+    /// The scramble seed for the epsiode
+    #[serde(default)]
+    scramble_seed: Option<u32>,
 }
 
 /// Represents the episode view response for web viewer.

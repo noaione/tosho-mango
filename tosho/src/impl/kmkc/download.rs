@@ -378,12 +378,12 @@ pub(crate) async fn kmkc_download(
                         .collect::<Vec<tosho_kmkc::models::ImagePageNode>>(),
                 };
                 let scramble_seed = match &viewer_info {
-                    EpisodeViewerResponse::Mobile(_) => None,
+                    EpisodeViewerResponse::Mobile(mob) => mob.scramble_seed(),
                     EpisodeViewerResponse::Web(web) => Some(web.scramble_seed()),
                 };
-                let force_extensions = match &viewer_info {
-                    EpisodeViewerResponse::Mobile(_) => "jpg",
-                    EpisodeViewerResponse::Web(_) => "png",
+                let force_extensions = match scramble_seed {
+                    Some(_) => "png",
+                    None => "jpg",
                 };
 
                 let total_image_count = image_blocks.len() as u64;
