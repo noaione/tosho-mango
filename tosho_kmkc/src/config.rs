@@ -330,6 +330,8 @@ pub enum KMConfigMobilePlatform {
     Apple = 1,
     /// Android
     Android = 2,
+    /// Android legacy (unscrambled images)
+    AndroidLegacy = 4,
 }
 
 /// Represents the mobile config

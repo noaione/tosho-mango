@@ -57,6 +57,17 @@ pub static ANDROID_CONSTANTS: LazyLock<Constants> = LazyLock::new(|| Constants {
     display_version: Some("2.3.5"),
     hash: HASH_HEADER_MOBILE,
 });
+/// The constants used for legacy Android devices.
+///
+/// This is used for older version that allows unscrambled images.
+pub static ANDROID_LEGACY_CONSTANTS: LazyLock<Constants> = LazyLock::new(|| Constants {
+    ua: "okhttp/4.9.3",
+    image_ua: "okhttp/4.9.3",
+    platform: "2",
+    version: "6.1.0",
+    display_version: Some("2.1.5"),
+    hash: HASH_HEADER_MOBILE,
+});
 /// The constants used for iOS devices.
 pub static APPLE_CONSTANTS: LazyLock<Constants> = LazyLock::new(|| {
     let hash_header = comptime_b64!("eC1tZ3BrLWhhc2g=");
@@ -146,6 +157,7 @@ pub fn get_constants(device_type: u8) -> &'static Constants {
         1 => &APPLE_CONSTANTS,
         2 => &ANDROID_CONSTANTS,
         3 => &WEB_CONSTANTS,
+        4 => &ANDROID_LEGACY_CONSTANTS,
         _ => panic!("Invalid device type"),
     }
 }
