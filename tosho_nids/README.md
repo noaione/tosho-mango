@@ -30,7 +30,7 @@ async fn main() {
 
 ## Authentication
 
-The following sources only have one method of authentication, and that method uses your email and password.
+The following sources use your access token/JWT token to authenticate as the site only have magic link as login access.
 
 ```bash
 $ tosho ni auth <jwtToken>
@@ -45,7 +45,7 @@ use tosho_nids::NIClient;
 async fn main() {
     let constants = tosho_nids::constants::get_constants(1); // Web
     let client = NIClient::new(Some("your_jwt_token_here"), constants).unwrap();
-    
+
     // Now you can make authenticated requests
     let my_series = client.get_series_run_collections(None).await.unwrap();
     println!("My series: {:?}", my_series);

@@ -75,6 +75,7 @@ We support the following platform:
 - [SJ/M by V](https://github.com/noaione/tosho-mango/tree/master/tosho_sjv) (Android, Apple, Web)
 - [小豆 (Red Bean) by KRKR](https://github.com/noaione/tosho-mango/tree/master/tosho_rbean) (Android)
 - [M+ by S](https://github.com/noaione/tosho-mango/tree/master/tosho_mplus) (Android)
+- [NI by DS](https://github.com/noaione/tosho-mango/tree/master/tosho_nids) (Web)
 
 ## License
 
@@ -88,7 +89,7 @@ We're not responsible if your account got deactivated.
 
 ## Acknowledgements
 
-- `neckothy`, provided some help and info for KM.
+- `neck`, provided some help and info for KM.
 - Tachiyomi team, general idea on how to descramble SJ image.
 - myself, created this from scratch
 

@@ -3,12 +3,16 @@
 Starting from Rust port of the project, all changes will be put into this file.
 
 ## Unreleased
+### New Features
+- Add **`NI`** as a new source
+
 ### Changes
 - **Breaking Changes**: Change all base64 decoding on all source crates to use `tosho_macros::comptime_b64!()`
   - This is a breaking change since the type signature is changed from `LazyLock<String>>` to `&'static str`.
   - It also change from `static` to `const`
 - `SJ/M`: Use `i32` for account archive limit instead of `u32`
 - `SJ/M`: Make `copyright` field optional
+- `Macros`: Remove some `stringify!` macro usage when stringifying enum variants
 - Unblock `self_update` blocking tokio runtime
 - Minimize some struct size
 - Migrate some `let` block to use the new let-chains syntax
