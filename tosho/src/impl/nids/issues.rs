@@ -278,7 +278,9 @@ pub async fn nids_get_issue(
         let mut download_txt = cformat!("<g!,s>Downloadable</g!,s>");
         if let Some(dt) = issue_detail.download_type() {
             match dt {
-                tosho_nids::models::DownloadType::Unavailable => {} // Do nothing
+                tosho_nids::models::DownloadType::Unavailable => {
+                    download_txt = cformat!("<r!,s>Not Downloadable</r!,s>");
+                }
                 tosho_nids::models::DownloadType::DRMFree => {
                     download_txt.push_str(&cformat!(" (<c>DRM-free</c>)"));
                 }
