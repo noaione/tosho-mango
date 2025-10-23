@@ -19,7 +19,30 @@ pub struct ReaderPage {
     image: super::common::ImageReaderUrl,
     /// Aspect ratio of the page (width / height)
     aspect_ratio: f64,
-    // TODO: figure out `frames` array field
+    /// The frames in the page for guided reading
+    frames: Vec<ReaderFrame>,
+}
+
+/// Reader frames information
+///
+/// For guided reading mode
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
+pub struct ReaderFrame {
+    /// The frame UUID
+    uuid: String,
+    /// The frame index number (0-based)
+    index: u64,
+    /// The starting X position (0.0 - 1.0)
+    x: f64,
+    /// The starting Y position (0.0 - 1.0)
+    y: f64,
+    /// The width of the box (0.0 - 1.0)
+    width: f64,
+    /// The height of the box (0.0 - 1.0)
+    height: f64,
+    /// The opacity of the outer box (0.0 - 1.0)
+    opacity: f64,
+    // TODO: `transition`, `color` whenever they figured out what they will do with this
 }
 
 /// Response containing the pages information
