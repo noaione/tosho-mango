@@ -121,6 +121,51 @@ async fn nids_actual_downloader(
     Ok(())
 }
 
+#[derive(serde::Serialize)]
+struct FrameWithPage {
+    frame: tosho_nids::models::reader::ReaderFrame,
+    filename: String,
+}
+
+fn dump_reading_frames(
+    output_dir: &Path,
+    images: &[tosho_nids::models::reader::ReaderPage],
+) -> anyhow::Result<()> {
+    let mut frames_with_page = Vec::new();
+    let mut has_any = false;
+    for (idx, page) in images.iter().enumerate() {
+        for frame in page.frames().iter() {
+            has_any = true;
+            let extension = match extract_extensions_from_url(page.image().url()) {
+                Some(ext) => ext,
+                None => {
+                    anyhow::bail!("Failed to determine image extension from URL");
+                }
+            };
+            frames_with_page.push(FrameWithPage {
+                frame: frame.clone(),
+                filename: format!("i_{:04}.{}", idx + 1, extension),
+            });
+        }
+    }
+
+    if has_any {
+        let output_file = output_dir.join("frames.json");
+        match serde_json::to_string_pretty(&frames_with_page) {
+            Ok(json_str) => {
+                if let Err(err) = std::fs::write(&output_file, json_str) {
+                    anyhow::bail!("Failed to write frames.json: {}", err);
+                }
+            }
+            Err(err) => {
+                anyhow::bail!("Failed to serialize frames.json: {}", err);
+            }
+        }
+    }
+
+    Ok(())
+}
+
 #[derive(Clone, Debug)]
 pub(crate) struct NIDownloadCliConfig {
     /// Quality of images to download
@@ -226,6 +271,11 @@ pub(crate) async fn nids_download(
         "  Using output directory <s>{}</s>",
         output_dir.display()
     ));
+
+    // Try doing dumping reading frames
+    if let Err(err) = dump_reading_frames(&output_dir, pages_meta.pages().pages()) {
+        console.error(format!("   Failed to dump reading frames: {}", err));
+    }
 
     // Try downloading cover
     let cover_url = match dl_config.quality {
