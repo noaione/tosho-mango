@@ -160,15 +160,29 @@ pub struct Imprint {
     image: Option<ImageUrl>,
 }
 
-/// The refreshed auth token
+/// The tokens data returned from the API.
 #[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
-pub struct RefreshedToken {
+pub struct TokenData {
     /// The new access token
     access_token: String,
     /// The new refresh token
     refresh_token: String,
     /// When the access token expires (in seconds)
     expires_in: u64,
-    /// When the access token expires at
-    expires_at: i64,
+    /// The type of the token (e.g. "Bearer")
+    token_type: String,
+}
+
+/// The refreshed tokens data returned from the API.
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
+pub struct RefreshedTokenData {
+    /// The tokens data
+    tokens: TokenData,
+}
+
+/// The refreshed token response
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
+pub struct RefreshedTokenResponse {
+    /// The refreshed token data
+    data: RefreshedTokenData,
 }

@@ -5,6 +5,8 @@
 use serde::{Deserialize, Serialize};
 use tosho_macros::AutoGetter;
 
+use crate::models::TokenData;
+
 /// Response for publishers list
 #[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
 pub struct PublishersList {
@@ -466,4 +468,22 @@ pub struct ReadingHistoryList {
     /// List of reading history items
     #[serde(rename = "books")]
     data: Vec<ReadingHistory>,
+}
+
+/// Login data with user info and tokens
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
+pub struct LoginData {
+    /// The user information
+    user: CustomerDetail,
+    /// The access token
+    tokens: TokenData,
+}
+
+/// Login response
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
+pub struct LoginResponse {
+    /// The actual login data
+    #[serde(rename = "data")]
+    #[deref_clone]
+    data: LoginData,
 }

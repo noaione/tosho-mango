@@ -676,7 +676,7 @@ impl NIClient {
     pub async fn refresh_token(
         &self,
         refresh_token: impl Into<String>,
-    ) -> ToshoResult<models::common::RefreshedToken> {
+    ) -> ToshoResult<models::common::RefreshedTokenResponse> {
         let refresh_tok: String = refresh_token.into();
         let data = serde_json::json!({
             "refresh_token": refresh_tok
@@ -689,6 +689,65 @@ impl NIClient {
             Some(data),
             None,
             Some(headers),
+        )
+        .await
+    }
+
+    /// Login to NI and get the auth tokens
+    ///
+    /// # Arguments
+    /// * `email` - The email to use for login
+    /// * `password` - The password to use for login
+    pub async fn login(
+        email: impl Into<String>,
+        password: impl Into<String>,
+        proxy: Option<reqwest::Proxy>,
+    ) -> ToshoResult<models::others::LoginResponse> {
+        let data = serde_json::json!({
+            "customer": {
+                "email": email.into(),
+                "password": password.into(),
+            }
+        });
+
+        let client = reqwest::Client::builder()
+            .http2_adaptive_window(true)
+            .use_rustls_tls()
+            .default_headers({
+                let mut headers = reqwest::header::HeaderMap::new();
+                headers.insert(
+                    reqwest::header::USER_AGENT,
+                    reqwest::header::HeaderValue::from_static(constants::get_constants(1).ua),
+                );
+                headers.insert(
+                    reqwest::header::ORIGIN,
+                    reqwest::header::HeaderValue::from_static(crate::constants::BASE_WEB),
+                );
+                headers.insert(
+                    reqwest::header::REFERER,
+                    reqwest::header::HeaderValue::from_static(crate::constants::BASE_WEB),
+                );
+                headers.insert(
+                    reqwest::header::HOST,
+                    reqwest::header::HeaderValue::from_static(crate::constants::API_HOST),
+                );
+                headers
+            });
+
+        let client = match proxy {
+            Some(proxy) => client
+                .proxy(proxy)
+                .build()
+                .map_err(ToshoClientError::BuildError)?,
+            None => client.build().map_err(ToshoClientError::BuildError)?,
+        };
+
+        let request = client
+            .post(format!("{}/api/v1/auth/login", BASE_API))
+            .json(&data);
+
+        parse_json_response_failable::<models::others::LoginResponse, ErrorResponse>(
+            request.send().await?,
         )
         .await
     }
