@@ -984,6 +984,20 @@ async fn entrypoint(cli: ToshoCli) -> anyhow::Result<ExitCode> {
             };
             let early_exit = match subcommand.clone() {
                 NIDSCommands::Auth {
+                    email,
+                    password,
+                    r#type,
+                } => Some(
+                    r#impl::nids::accounts::nids_auth_email(
+                        email,
+                        password,
+                        r#type,
+                        parsed_proxy.as_ref(),
+                        &t,
+                    )
+                    .await,
+                ),
+                NIDSCommands::AuthToken {
                     session_token,
                     r#type,
                 } => {
@@ -1162,6 +1176,7 @@ async fn entrypoint(cli: ToshoCli) -> anyhow::Result<ExitCode> {
 
             let exit_code = match subcommand {
                 NIDSCommands::Auth { .. } => 0,
+                NIDSCommands::AuthToken { .. } => 0,
                 NIDSCommands::Account => {
                     r#impl::nids::accounts::nids_account_info(&client, &config, &t).await
                 }
@@ -1232,6 +1247,15 @@ async fn entrypoint(cli: ToshoCli) -> anyhow::Result<ExitCode> {
 
                     r#impl::nids::purchases::nids_get_purchased_series(
                         &mut filters,
+                        &client,
+                        &config,
+                        &t,
+                    )
+                    .await
+                }
+                NIDSCommands::Refresh { refresh_token } => {
+                    r#impl::nids::accounts::nids_account_refresh(
+                        refresh_token.as_deref(),
                         &client,
                         &config,
                         &t,

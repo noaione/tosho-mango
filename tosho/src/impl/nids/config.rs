@@ -29,6 +29,10 @@ pub struct Config {
     #[prost(string, optional, tag = "4")]
     #[skip_field]
     pub username: Option<::prost::alloc::string::String>,
+    /// The refresh token of the account/config.
+    #[prost(string, optional, tag = "5")]
+    #[skip_field]
+    pub refresh_token: Option<::prost::alloc::string::String>,
     /// The device type of the account/config.
     #[prost(enumeration = "DeviceType", tag = "10")]
     #[skip_field]
@@ -48,6 +52,7 @@ impl Config {
         Self {
             id,
             session: session.to_string(),
+            refresh_token: None,
             email: String::new(),
             username: None,
             r#type: r#type as i32,

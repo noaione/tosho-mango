@@ -116,6 +116,75 @@ pub(crate) async fn nids_auth_session(
     }
 }
 
+pub(crate) async fn nids_auth_email(
+    email: String,
+    password: String,
+    device_kind: DeviceKind,
+    proxy: Option<&reqwest::Proxy>,
+    console: &crate::term::Terminal,
+) -> ExitCode {
+    let r#type = match device_kind {
+        DeviceKind::Web => DeviceType::Web,
+    };
+
+    console.info(cformat!("Authenticating with email <m,s>{}</>...", &email));
+
+    let all_configs = get_all_config(&crate::r#impl::Implementations::Nids, None);
+
+    match tosho_nids::NIClient::login(email, password, proxy.cloned()).await {
+        Err(e) => {
+            console.error(cformat!("Unable to authenticate: {}", e));
+            1
+        }
+        Ok(token_results) => {
+            let token_data = token_results.data();
+            let old_config = all_configs.iter().find(|&c| match c {
+                crate::config::ConfigImpl::Nids(c) => c.id == token_data.user().id(),
+                _ => false,
+            });
+
+            let mut config = Config {
+                id: token_data.user().id().to_string(),
+                session: token_data.tokens().access_token().to_string(),
+                refresh_token: Some(token_data.tokens().refresh_token().to_string()),
+                email: token_data.user().email().to_string(),
+                username: token_data.user().username().map(|s| s.to_string()),
+                r#type: r#type as i32,
+            };
+
+            if let Some(old_config) = old_config {
+                console.warn("Session ID already authenticated!");
+                let abort_it = console.confirm(Some("Do you want to replace it?"));
+                if !abort_it {
+                    console.info("Aborting...");
+                    return 0;
+                }
+
+                match old_config {
+                    crate::config::ConfigImpl::Nids(c) => {
+                        config.apply_id(&c.id);
+                    }
+                    _ => unreachable!(),
+                }
+            }
+
+            console.info(cformat!(
+                "Authenticated as <m,s>{}</> ({})...",
+                token_data.user().username().unwrap_or("Unknown"),
+                token_data.user().email()
+            ));
+
+            console.info(cformat!(
+                "Created session ID <m,s>{}</>, saving config...",
+                config.get_id()
+            ));
+            save_config(crate::config::ConfigImpl::Nids(config), None);
+
+            0
+        }
+    }
+}
+
 pub(crate) fn nids_accounts(console: &crate::term::Terminal) -> ExitCode {
     let all_configs = get_all_config(&crate::r#impl::Implementations::Nids, None);
 
@@ -209,6 +278,58 @@ pub(crate) async fn nids_account_info(
         Err(e) => {
             console.error(cformat!("Unable to fetch account info: {}", e));
             1
+        }
+    }
+}
+
+pub(crate) async fn nids_account_refresh(
+    refresh_token: Option<&str>,
+    client: &tosho_nids::NIClient,
+    account: &Config,
+    console: &crate::term::Terminal,
+) -> ExitCode {
+    console.info(cformat!(
+        "Refreshing tokens for account <m,s>{}</>...",
+        account.id
+    ));
+
+    let refresh_token = match refresh_token {
+        Some(token) => token.to_string(),
+        None => {
+            let refresh = account.refresh_token();
+            if !refresh.is_empty() {
+                refresh.to_string()
+            } else {
+                console.error("No refresh token found for this account!");
+                return 1;
+            }
+        }
+    };
+
+    match client.refresh_token(refresh_token).await {
+        Err(e) => {
+            console.error(cformat!("Unable to refresh tokens: {}", e));
+            1
+        }
+        Ok(token_results) => {
+            let token_data = token_results.data();
+
+            console.info(cformat!(
+                "Successfully refreshed tokens for account <m,s>{}</>.",
+                account.id
+            ));
+
+            let mut new_account = account.clone();
+            new_account.session = token_data.tokens().access_token().to_string();
+            new_account.refresh_token = Some(token_data.tokens().refresh_token().to_string());
+
+            console.info(cformat!(
+                "Saving updated config for account <m,s>{}</>...",
+                account.id
+            ));
+            save_config(crate::config::ConfigImpl::Nids(new_account), None);
+
+            0
         }
     }
 }

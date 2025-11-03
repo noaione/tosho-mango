@@ -21,6 +21,16 @@ pub(crate) mod series;
 pub(crate) enum NIDSCommands {
     /// Authenticate tosho with your NI account.
     Auth {
+        /// Email of the NI account
+        email: String,
+        /// Password of the NI account
+        password: String,
+        /// Device kind/type to use
+        #[arg(short, long, value_enum, default_value = "web")]
+        r#type: crate::r#impl::nids::accounts::DeviceKind,
+    },
+    /// Authenticate tosho with your NI auth token.
+    AuthToken {
         /// Session token to use
         session_token: String,
         /// Device kind/type to use
@@ -124,6 +134,11 @@ pub(crate) enum NIDSCommands {
         /// Maximum number of series to return
         #[arg(short = 'l', long = "limit", default_value_t = 18)]
         limit: u32,
+    },
+    /// Refresh authentication tokens
+    Refresh {
+        /// Specific refresh token to use, required if the account does not have a stored refresh token
+        refresh_token: Option<String>,
     },
     /// Revoke or delete an account
     Revoke,
