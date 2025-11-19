@@ -6,6 +6,7 @@ use std::{
 use clap::ValueEnum;
 use color_print::cformat;
 use num_format::{Locale, ToFormattedString};
+use tokio::time::Instant;
 use tosho_nids::NIClient;
 
 use crate::{cli::ExitCode, r#impl::nids::common::timedelta_to_humantime};
@@ -317,7 +318,28 @@ pub(crate) async fn nids_download(
     if dl_config.parallel {
         let semaphore = Arc::new(tokio::sync::Semaphore::new(dl_config.threads));
 
-        // TODO: Implement page viewing report with pressure
+        let (tx, rx) = tokio::sync::mpsc::unbounded_channel::<usize>();
+
+        // reporter tasks
+        let throttle_duration = std::time::Duration::from_millis(250); // every 250ms we report
+        let report_client = client.clone();
+        let issue_uuid = results.uuid().to_string();
+        tokio::spawn(async move {
+            let mut rx = rx;
+            let mut last_run = Instant::now() - throttle_duration;
+
+            while let Some(idx) = rx.recv().await {
+                if last_run.elapsed() >= throttle_duration {
+                    let pg_num = (idx + 1) as u32;
+                    if !dl_config.no_report {
+                        // report progress
+                        let _ = nids_report_progress(&issue_uuid, pg_num, &report_client).await;
+                    }
+                    last_run = Instant::now();
+                }
+            }
+        });
+
         let tasks: Vec<_> = pages_meta
             .pages()
             .pages()
@@ -334,6 +356,8 @@ pub(crate) async fn nids_download(
                     DownloadImageQuality::Mobile => page.image().mobile_url().to_string(),
                 };
 
+                let tx = tx.clone();
+
                 tokio::spawn(async move {
                     let _permit = semaphore.acquire().await.unwrap();
 
@@ -347,9 +371,13 @@ pub(crate) async fn nids_download(
                     {
                         cnsl.error(format!("    Failed to download page {}: {}", idx + 1, err));
                     }
+
+                    let _ = tx.send(idx);
                 })
             })
             .collect();
+
+        drop(tx); // Close the sender
 
         futures_util::future::join_all(tasks).await;
     } else {
