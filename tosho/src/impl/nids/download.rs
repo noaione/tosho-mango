@@ -121,6 +121,38 @@ async fn nids_actual_downloader(
     Ok(())
 }
 
+/// Task to handle sequential page view reporting during parallel downloads
+async fn nids_report_task(
+    issue_uuid: String,
+    total_pages: usize,
+    mut completed_rx: tokio::sync::mpsc::UnboundedReceiver<usize>,
+    client: NIClient,
+    no_report: bool,
+) {
+    if no_report {
+        return;
+    }
+
+    let mut completed_pages = std::collections::HashSet::new();
+    let mut next_page_to_report = 0;
+
+    while let Some(page_idx) = completed_rx.recv().await {
+        completed_pages.insert(page_idx);
+
+        // Report all consecutive pages starting from next_page_to_report
+        while next_page_to_report < total_pages && completed_pages.contains(&next_page_to_report) {
+            let page_num = (next_page_to_report + 1) as u32;
+            let _ = nids_report_progress(&issue_uuid, page_num, &client).await;
+            next_page_to_report += 1;
+        }
+
+        // Break early if we've reported all pages
+        if next_page_to_report >= total_pages {
+            break;
+        }
+    }
+}
+
 #[derive(serde::Serialize)]
 struct FrameWithPage {
     frame: tosho_nids::models::reader::ReaderFrame,
@@ -317,7 +349,19 @@ pub(crate) async fn nids_download(
     if dl_config.parallel {
         let semaphore = Arc::new(tokio::sync::Semaphore::new(dl_config.threads));
 
-        // TODO: Implement page viewing report with pressure
+        // Create a channel for page completion notifications
+        let (completed_tx, completed_rx) =
+            tokio::sync::mpsc::unbounded_channel::<usize>();
+
+        // Spawn the reporting task
+        let report_task = tokio::spawn(nids_report_task(
+            results.uuid().to_string(),
+            pages_meta.total_pages() as usize,
+            completed_rx,
+            client.clone(),
+            dl_config.no_report,
+        ));
+
         let tasks: Vec<_> = pages_meta
             .pages()
             .pages()
@@ -329,6 +373,7 @@ pub(crate) async fn nids_download(
                 let cnsl = console.clone();
                 let progress = Arc::clone(&progress);
                 let semaphore = Arc::clone(&semaphore);
+                let completed_tx = completed_tx.clone();
                 let page_url = match dl_config.quality {
                     DownloadImageQuality::Desktop => page.image().url().to_string(),
                     DownloadImageQuality::Mobile => page.image().mobile_url().to_string(),
@@ -343,15 +388,25 @@ pub(crate) async fn nids_download(
                         page_name: format!("i_{:04}", idx + 1),
                     };
 
-                    if let Err(err) = nids_actual_downloader(node, image_dir, &cnsl, progress).await
-                    {
-                        cnsl.error(format!("    Failed to download page {}: {}", idx + 1, err));
+                    match nids_actual_downloader(node, image_dir, &cnsl, progress).await {
+                        Ok(_) => {
+                            // Notify the reporting task that this page is complete
+                            let _ = completed_tx.send(idx);
+                        }
+                        Err(err) => {
+                            cnsl.error(format!("    Failed to download page {}: {}", idx + 1, err));
+                        }
                     }
                 })
             })
             .collect();
 
         futures_util::future::join_all(tasks).await;
+        
+        // Drop the sender to signal the reporting task to finish
+        drop(completed_tx);
+        // Wait for all reports to complete
+        let _ = report_task.await;
     } else {
         for (idx, page) in pages_meta.pages().pages().iter().enumerate() {
             let node = DownloadNode {
