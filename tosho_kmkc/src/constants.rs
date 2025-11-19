@@ -29,6 +29,8 @@ pub struct Constants {
     pub(crate) display_version: Option<&'static str>,
     /// The hash header used for API requests.
     pub(crate) hash: &'static str,
+    /// Platform number
+    pub(crate) platform_number: u8,
 }
 
 /// A ranking tab for KM.
@@ -56,6 +58,7 @@ pub static ANDROID_CONSTANTS: LazyLock<Constants> = LazyLock::new(|| Constants {
     version: "6.3.5",
     display_version: Some("2.3.5"),
     hash: HASH_HEADER_MOBILE,
+    platform_number: 2,
 });
 /// The constants used for legacy Android devices.
 ///
@@ -67,6 +70,7 @@ pub static ANDROID_LEGACY_CONSTANTS: LazyLock<Constants> = LazyLock::new(|| Cons
     version: "6.1.0",
     display_version: Some("2.1.5"),
     hash: HASH_HEADER_MOBILE,
+    platform_number: 2,
 });
 /// The constants used for iOS devices.
 pub static APPLE_CONSTANTS: LazyLock<Constants> = LazyLock::new(|| {
@@ -84,6 +88,7 @@ pub static APPLE_CONSTANTS: LazyLock<Constants> = LazyLock::new(|| {
         version: "5.3.0",
         display_version: None,
         hash: hash_header,
+        platform_number: 1,
     }
 });
 /// The constants used for web devices.
@@ -98,6 +103,7 @@ pub static WEB_CONSTANTS: LazyLock<Constants> = LazyLock::new(|| {
         version: "6.0.0",
         display_version: None,
         hash: hash_header,
+        platform_number: 3,
     }
 });
 
@@ -112,6 +118,11 @@ pub const BASE_HOST: &str = comptime_b64!("a21hbmdhLmtvZGFuc2hhLmNvbQ==");
 pub const API_HOST: &str = comptime_b64!("YXBpLmttYW5nYS5rb2RhbnNoYS5jb20=");
 /// The image host used for image requests.
 pub const IMAGE_HOST: &str = comptime_b64!("Y2RuLmttYW5nYS5rb2RhbnNoYS5jb20=");
+
+/// The header value used for crawler requests.
+pub const HEADER_CRAWLER: &str = comptime_b64!("eC1rbWFuZ2EtaXMtY3Jhd2xlcg==");
+/// The header value used for crawler requests.
+pub const HEADER_PLATFORM: &str = comptime_b64!("eC1rbWFuZ2EtcGxhdGZvcm0=");
 
 /// The ranking tabs used for the ranking endpoint.
 ///

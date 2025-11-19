@@ -8,7 +8,9 @@ pub mod config;
 pub mod constants;
 pub mod imaging;
 pub mod models;
-use constants::{API_HOST, BASE_API, IMAGE_HOST, WEB_CONSTANTS, get_constants};
+use constants::{
+    API_HOST, BASE_API, HEADER_CRAWLER, HEADER_PLATFORM, IMAGE_HOST, WEB_CONSTANTS, get_constants,
+};
 use futures_util::TryStreamExt;
 use md5::Md5;
 use models::{
@@ -236,6 +238,34 @@ impl KMClient {
             hash_value
                 .parse()
                 .map_err(|e| make_error!("Failed to parse value hash header: {}", e))?,
+        );
+        empty_headers.insert(
+            HEADER_PLATFORM,
+            self.constants
+                .platform_number
+                .to_string()
+                .parse()
+                .map_err(|e| make_error!("Failed to parse empty platform header: {}", e))?,
+        );
+        extend_headers.insert(
+            HEADER_PLATFORM,
+            self.constants
+                .platform_number
+                .to_string()
+                .parse()
+                .map_err(|e| make_error!("Failed to parse extended platform header: {}", e))?,
+        );
+        empty_headers.insert(
+            HEADER_CRAWLER,
+            "false"
+                .parse()
+                .map_err(|e| make_error!("Failed to parse empty crawler header: {}", e))?,
+        );
+        extend_headers.insert(
+            HEADER_CRAWLER,
+            "false"
+                .parse()
+                .map_err(|e| make_error!("Failed to parse extended crawler header: {}", e))?,
         );
 
         let request = match (data.clone(), params.clone()) {
