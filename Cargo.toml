@@ -8,6 +8,7 @@ members = [
     "tosho_sjv",
     "tosho_rbean",
     "tosho_mplus",
+    "tosho_nids",
     "tosho_macros",
     "tosho_common",
 ]

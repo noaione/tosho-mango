@@ -55,10 +55,11 @@ pub(crate) fn impl_serenum32_derive(ast: &syn::DeriveInput) -> TokenStream {
     let mut match_arms = vec![];
     for variant in variants {
         let variant_name = &variant.ident;
+        let variant_name_str = variant_name.to_string();
         let value = if let Some((_, expr)) = &variant.discriminant {
             quote::quote! { #expr }
         } else {
-            quote::quote! { stringify!(#variant_name).parse().unwrap() }
+            quote::quote! { #variant_name_str.parse().unwrap() }
         };
 
         match_arms.push(quote::quote! {
@@ -94,10 +95,11 @@ pub(crate) fn impl_deserenum32_derive(ast: &syn::DeriveInput, with_default: bool
     let mut match_arms = vec![];
     for variant in variants {
         let variant_name = &variant.ident;
+        let variant_name_str = variant_name.to_string();
         let value = if let Some((_, expr)) = &variant.discriminant {
             quote::quote! { #expr }
         } else {
-            quote::quote! { stringify!(#variant_name).parse().unwrap() }
+            quote::quote! { #variant_name_str.parse().unwrap() }
         };
 
         match_arms.push(quote::quote! {
@@ -105,17 +107,16 @@ pub(crate) fn impl_deserenum32_derive(ast: &syn::DeriveInput, with_default: bool
         });
     }
 
+    let name_str = name.to_string();
     match with_default {
         true => {
             match_arms.push(quote::quote! {
                 _ => Ok(#name::default()),
             });
         }
-        false => {
-            match_arms.push(quote::quote! {
-                _ => Err(serde::de::Error::custom(format!("Invalid {} value: {}", stringify!(#name), s))),
-            })
-        }
+        false => match_arms.push(quote::quote! {
+            _ => Err(serde::de::Error::custom(format!("Invalid {} value: {}", #name_str, s))),
+        }),
     }
 
     let tokens = quote::quote! {

@@ -53,6 +53,7 @@
 
 use std::path::PathBuf;
 
+use crate::cli::{ToshoCli, max_threads};
 use clap::Parser;
 use cli::{ExitCode, ToshoCommands};
 use r#impl::Implementations;
@@ -61,6 +62,8 @@ use r#impl::amap::download::AMDownloadCliConfig;
 use r#impl::client::select_single_account;
 use r#impl::mplus::MPlusCommands;
 use r#impl::mplus::download::MPDownloadCliConfig;
+use r#impl::nids::NIDSCommands;
+use r#impl::nids::download::NIDownloadCliConfig;
 use r#impl::parser::WeeklyCodeCli;
 use r#impl::rbean::RBeanCommands;
 use r#impl::rbean::download::RBDownloadConfigCli;
@@ -78,7 +81,6 @@ pub(crate) mod term;
 #[cfg(feature = "with-updater")]
 pub(crate) mod updater;
 pub(crate) mod win_term;
-use crate::cli::{ToshoCli, max_threads};
 pub(crate) use term::macros::linkify;
 
 fn get_default_download_dir() -> PathBuf {
@@ -965,6 +967,304 @@ async fn entrypoint(cli: ToshoCli) -> anyhow::Result<ExitCode> {
                 MPlusCommands::Search { query } => {
                     r#impl::mplus::manga::mplus_search(query.as_str(), &client, &t).await
                 }
+            };
+
+            Ok(exit_code)
+        }
+        ToshoCommands::Nids {
+            account_id,
+            subcommand,
+        } => {
+            let clean_client =
+                tosho_nids::NIClient::new(None, tosho_nids::constants::get_constants(1))?;
+            let clean_client = if let Some(proxy) = &parsed_proxy {
+                clean_client.with_proxy(proxy.clone())?
+            } else {
+                clean_client
+            };
+            let early_exit = match subcommand.clone() {
+                NIDSCommands::Auth {
+                    email,
+                    password,
+                    r#type,
+                } => Some(
+                    r#impl::nids::accounts::nids_auth_email(
+                        email,
+                        password,
+                        r#type,
+                        parsed_proxy.as_ref(),
+                        &t,
+                    )
+                    .await,
+                ),
+                NIDSCommands::AuthToken {
+                    session_token,
+                    r#type,
+                } => {
+                    Some(r#impl::nids::accounts::nids_auth_session(session_token, r#type, &t).await)
+                }
+                NIDSCommands::Accounts => Some(r#impl::nids::accounts::nids_accounts(&t)),
+                NIDSCommands::Issue {
+                    issue_id,
+                    with_marketplace,
+                } => Some(
+                    r#impl::nids::issues::nids_get_issue(
+                        issue_id,
+                        with_marketplace,
+                        &clean_client,
+                        &t,
+                    )
+                    .await,
+                ),
+                NIDSCommands::Issues {
+                    filters,
+                    limit,
+                    sort_by,
+                    direction,
+                    scope,
+                } => {
+                    let base_filter = tosho_nids::Filter::new()
+                        .with_per_page(limit)
+                        .with_order(sort_by, direction.into());
+                    let merged_filters = filters
+                        .unwrap_or_default()
+                        .into_iter()
+                        .fold(base_filter, |acc, (filt_type, filt_data)| {
+                            acc.add_filter(filt_type, filt_data)
+                        });
+                    let mut full_filters = match scope {
+                        // For on-sale, we don't need to add any date filters
+                        Some(r#impl::nids::common::FilterScopeInput::OnSale) => merged_filters,
+                        Some(r#impl::nids::common::FilterScopeInput::NewReleases) => merged_filters,
+                        Some(r#impl::nids::common::FilterScopeInput::BestSelling) => merged_filters,
+                        Some(s) => {
+                            let with_scope = merged_filters.with_scope(s.into());
+                            // add release_date_start and release_date_end manually
+                            let (start_time, end_time) =
+                                crate::r#impl::nids::common::get_scope_dates();
+                            if with_scope.has_filter(&tosho_nids::FilterType::ReleaseDateStart)
+                                || with_scope.has_filter(&tosho_nids::FilterType::ReleaseDateEnd)
+                            {
+                                // if user already specify either one of the date filters, we won't override it
+                                with_scope
+                            } else {
+                                with_scope
+                                    .add_filter(
+                                        tosho_nids::FilterType::ReleaseDateStart,
+                                        start_time,
+                                    )
+                                    .add_filter(tosho_nids::FilterType::ReleaseDateEnd, end_time)
+                            }
+                        }
+                        None => merged_filters,
+                    };
+
+                    Some(
+                        r#impl::nids::issues::nids_get_issues(&mut full_filters, &clean_client, &t)
+                            .await,
+                    )
+                }
+                NIDSCommands::Marketplace {
+                    limit,
+                    direction,
+                    grouped,
+                } => {
+                    let base_filter = tosho_nids::Filter::new().with_per_page(limit);
+                    let mut base_filter = if grouped {
+                        base_filter
+                            .with_order(tosho_nids::SortBy::EditionPriceMin, direction.into())
+                    } else {
+                        base_filter
+                            .with_order(tosho_nids::SortBy::MarketplacePrice, direction.into())
+                    };
+
+                    let exit_code = if grouped {
+                        r#impl::nids::marketplace::nids_get_marketplace_grouped(
+                            &mut base_filter,
+                            &clean_client,
+                            &t,
+                        )
+                        .await
+                    } else {
+                        r#impl::nids::marketplace::nids_get_marketplace_ungrouped(
+                            &mut base_filter,
+                            &clean_client,
+                            &t,
+                        )
+                        .await
+                    };
+                    Some(exit_code)
+                }
+                NIDSCommands::Publisher {
+                    publisher_slug,
+                    with_imprints,
+                } => Some(
+                    r#impl::nids::publishers::nids_get_publisher(
+                        &publisher_slug,
+                        with_imprints,
+                        &clean_client,
+                        &t,
+                    )
+                    .await,
+                ),
+                NIDSCommands::Publishers => {
+                    Some(r#impl::nids::publishers::nids_get_publishers(&clean_client, &t).await)
+                }
+                NIDSCommands::SeriesRun {
+                    series_run_id,
+                    with_marketplace,
+                } => Some(
+                    r#impl::nids::series::nids_get_series_info(
+                        series_run_id,
+                        with_marketplace,
+                        &clean_client,
+                        &t,
+                    )
+                    .await,
+                ),
+                NIDSCommands::SeriesRuns {
+                    filters,
+                    limit,
+                    sort_by,
+                    direction,
+                } => {
+                    let base_filter = tosho_nids::Filter::new()
+                        .with_per_page(limit)
+                        .with_order(sort_by, direction.into());
+                    let mut merged_filters = filters
+                        .unwrap_or_default()
+                        .into_iter()
+                        .fold(base_filter, |acc, (filt_type, filt_data)| {
+                            acc.add_filter(filt_type, filt_data)
+                        });
+                    Some(
+                        r#impl::nids::series::nids_get_series(
+                            &mut merged_filters,
+                            &clean_client,
+                            &t,
+                        )
+                        .await,
+                    )
+                }
+                _ => None,
+            };
+
+            // early exit
+            if let Some(early_exit) = early_exit {
+                drop(clean_client);
+                return Ok(early_exit);
+            }
+
+            let config = select_single_account(account_id.as_deref(), Implementations::Nids, &t);
+            let config = match config {
+                Some(config) => match config {
+                    config::ConfigImpl::Nids(c) => c,
+                    _ => unreachable!(),
+                },
+                None => {
+                    t.warn("Aborted!");
+                    return Ok(1);
+                }
+            };
+
+            let client = r#impl::client::make_nids_client(&config)?;
+            let client = if let Some(proxy) = parsed_proxy {
+                client.with_proxy(proxy)?
+            } else {
+                client
+            };
+
+            let exit_code = match subcommand {
+                NIDSCommands::Auth { .. } => 0,
+                NIDSCommands::AuthToken { .. } => 0,
+                NIDSCommands::Account => {
+                    r#impl::nids::accounts::nids_account_info(&client, &config, &t).await
+                }
+                NIDSCommands::Accounts => 0,
+                NIDSCommands::Download {
+                    issue_id,
+                    output,
+                    parallel,
+                    threads,
+                    no_report,
+                    quality,
+                } => {
+                    let dl_config = NIDownloadCliConfig {
+                        output,
+                        parallel,
+                        threads: max_threads(threads),
+                        no_report,
+                        quality,
+                    };
+
+                    r#impl::nids::download::nids_download(
+                        issue_id,
+                        dl_config,
+                        get_default_download_dir(),
+                        &client,
+                        &mut t_mut,
+                    )
+                    .await
+                }
+                NIDSCommands::Issue { .. } => 0,
+                NIDSCommands::Issues { .. } => 0,
+                NIDSCommands::Marketplace { .. } => 0,
+                NIDSCommands::Publisher { .. } => 0,
+                NIDSCommands::Publishers => 0,
+                NIDSCommands::PurchasedIssues {
+                    series_run_uuid,
+                    limit,
+                } => {
+                    let mut filters = tosho_nids::Filter::new()
+                        .add_filter(
+                            tosho_nids::filters::FilterType::SeriesRunId,
+                            &series_run_uuid,
+                        )
+                        .with_order(
+                            tosho_nids::filters::SortBy::FullTitle,
+                            tosho_nids::filters::SortOrder::ASC,
+                        )
+                        .with_per_page(limit)
+                        .with_page(1);
+
+                    r#impl::nids::purchases::nids_get_purchased_issues(
+                        &series_run_uuid,
+                        &mut filters,
+                        &client,
+                        &config,
+                        &t,
+                    )
+                    .await
+                }
+                NIDSCommands::PurchasedSeries { limit } => {
+                    let mut filters = tosho_nids::Filter::new()
+                        .with_order(
+                            tosho_nids::filters::SortBy::Title,
+                            tosho_nids::filters::SortOrder::ASC,
+                        )
+                        .with_per_page(limit)
+                        .with_page(1);
+
+                    r#impl::nids::purchases::nids_get_purchased_series(
+                        &mut filters,
+                        &client,
+                        &config,
+                        &t,
+                    )
+                    .await
+                }
+                NIDSCommands::Refresh { refresh_token } => {
+                    r#impl::nids::accounts::nids_account_refresh(
+                        refresh_token.as_deref(),
+                        &client,
+                        &config,
+                        &t,
+                    )
+                    .await
+                }
+                NIDSCommands::Revoke => r#impl::nids::accounts::nids_account_revoke(&config, &t),
+                NIDSCommands::SeriesRun { .. } => 0,
+                NIDSCommands::SeriesRuns { .. } => 0,
             };
 
             Ok(exit_code)

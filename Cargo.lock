@@ -2414,6 +2414,7 @@ dependencies = [
  "tosho-macros",
  "tosho-mplus",
  "tosho-musq",
+ "tosho-nids",
  "tosho-rbean",
  "tosho-sjv",
  "uuid",
@@ -2506,6 +2507,20 @@ dependencies = [
  "prost",
  "reqwest",
  "serde",
+ "tokio",
+ "tosho-common",
+ "tosho-macros",
+]
+
+[[package]]
+name = "tosho-nids"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "futures-util",
+ "reqwest",
+ "serde",
+ "serde_json",
  "tokio",
  "tosho-common",
  "tosho-macros",

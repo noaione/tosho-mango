@@ -1,0 +1,26 @@
+[package]
+name = "tosho-nids"
+version = "0.1.0"
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+rust-version.workspace = true
+keywords = ["api", "library"]
+description = "An asynchronous client for NI by DS"
+readme = "./README.md"
+
+[dependencies]
+tokio.workspace = true
+futures-util.workspace = true
+
+serde.workspace = true
+serde_json.workspace = true
+
+reqwest = { workspace = true, features = ["json"] }
+
+chrono.workspace = true
+
+tosho-macros = { path = "../tosho_macros", version = "0.5" }
+tosho-common = { path = "../tosho_common", version = "=0.2.0", features = ["serde"] }
