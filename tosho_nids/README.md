@@ -102,4 +102,4 @@ We're not responsible if your account got deactivated.
 
 This project is licensed with MIT License ([LICENSE](https://github.com/noaione/tosho-mango/blob/master/LICENSE) or <http://opensource.org/licenses/MIT>)
 
-[filters-example]: https://github.com/noaione/tosho-mango/blob/feature/src-nids/tosho_nids/FILTERS.md
+[filters-example]: https://github.com/noaione/tosho-mango/blob/master/tosho_nids/FILTERS.md

@@ -75,6 +75,7 @@ We support the following platform:
 - [SJ/M by V](https://github.com/noaione/tosho-mango/tree/master/tosho_sjv) (Android, Apple, Web)
 - [小豆 (Red Bean) by KRKR](https://github.com/noaione/tosho-mango/tree/master/tosho_rbean) (Android)
 - [M+ by S](https://github.com/noaione/tosho-mango/tree/master/tosho_mplus) (Android)
+- [NI by DS](https://github.com/noaione/tosho-mango/tree/master/tosho_nids) (Web)
 
 ## License
 
