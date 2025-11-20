@@ -3,6 +3,9 @@
 Starting from Rust port of the project, all changes will be put into this file.
 
 ## Unreleased
+### New Features
+- Add **`NI`** as a new source
+
 ### Changes
 - **Breaking Changes**: Change all base64 decoding on all source crates to use `tosho_macros::comptime_b64!()`
   - This is a breaking change since the type signature is changed from `LazyLock<String>>` to `&'static str`.
