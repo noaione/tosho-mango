@@ -321,7 +321,7 @@ pub(crate) async fn nids_download(
         let (tx, rx) = tokio::sync::mpsc::unbounded_channel::<usize>();
 
         // reporter tasks
-        let throttle_duration = std::time::Duration::from_millis(250); // every 250ms we report
+        let throttle_duration = std::time::Duration::from_millis(1500); // every 1.5s we report
         let report_client = client.clone();
         let issue_uuid = results.uuid().to_string();
         tokio::spawn(async move {
