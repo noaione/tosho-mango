@@ -286,7 +286,7 @@ pub async fn nids_get_issue(
                     download_txt.push_str(&cformat!(" (<c>DRM-free</c>)"));
                 }
                 tosho_nids::models::DownloadType::Watermarked => {
-                    download_txt.push_str(&cformat!(" (<r!>Visible Watermark)</r!>"));
+                    download_txt.push_str(&cformat!(" (<r!,s,u>Visible Watermark</r!,s,u>)"));
                 }
                 tosho_nids::models::DownloadType::InvisibleWatermarked => {
                     download_txt.push_str(&cformat!(" (<r,s>Invisible Watermark</r,s>)"));
