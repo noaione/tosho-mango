@@ -1,6 +1,5 @@
 use clap::ValueEnum;
 use color_print::cformat;
-use num_format::{Locale, ToFormattedString};
 
 use crate::{
     cli::ExitCode,
@@ -251,11 +250,13 @@ pub(crate) async fn nids_account_info(
             if !user_name.is_empty() {
                 console.info(cformat!("  <s>Name</>: {}", user_name));
             }
-            console.info(cformat!("  <s>Roles</>: {}", acc_info.roles()));
+            if !acc_info.roles().is_empty() {
+                console.info(cformat!("  <s>Roles</>: {}", acc_info.roles()));
+            }
 
             console.info(cformat!(
-                "  <s>Balance</>: {}",
-                acc_info.balance().to_formatted_string(&Locale::en)
+                "  <s>Balance</>: <g,s>$</g,s>{}",
+                tosho_nids::format_price(acc_info.balance())
             ));
             if let Some(payment_method) = acc_info.payment_method() {
                 // Formatting: {Brand} **** {Last4} ({ExpMonth}/{ExpYear})
