@@ -41,6 +41,11 @@ pub struct IssueDetail {
     ///
     /// This is normalized following Stripe currency convention (i.e. 199 = $1.99)
     price_usd: u64,
+    /// The sale price of the issue in USD if any
+    ///
+    /// This is normalized following Stripe currency convention (i.e. 199 = $1.99)
+    #[serde(rename = "compare_at_price_usd", default)]
+    original_price: Option<u64>,
     /// The release date of the issue in ISO 8601 format
     #[serde(with = "super::datetime")]
     release_date: chrono::DateTime<chrono::FixedOffset>,
@@ -138,6 +143,11 @@ pub struct IssueVariant {
     ///
     /// This is normalized following Stripe currency convention (i.e. 199 = $1.99)
     price_usd: u64,
+    /// The original price of the issue in USD if any
+    ///
+    /// This is normalized following Stripe currency convention (i.e. 199 = $1.99)
+    #[serde(rename = "compare_at_price_usd", default)]
+    original_price: Option<u64>,
     /// The release date of the issue in ISO 8601 format
     #[serde(with = "super::datetime")]
     release_date: chrono::DateTime<chrono::FixedOffset>,
@@ -183,6 +193,11 @@ pub struct IssueSummary {
     ///
     /// This is normalized following Stripe currency convention (i.e. 199 = $1.99)
     price_usd: u64,
+    /// The sale price of the issue in USD if any
+    ///
+    /// This is normalized following Stripe currency convention (i.e. 199 = $1.99)
+    #[serde(rename = "compare_at_price_usd", default)]
+    original_price: Option<u64>,
     /// The release date of the issue in ISO 8601 format
     #[serde(with = "super::datetime")]
     release_date: chrono::DateTime<chrono::FixedOffset>,

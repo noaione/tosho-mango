@@ -335,3 +335,18 @@ pub(super) fn timedelta_to_humantime(duration: chrono::TimeDelta) -> String {
     let num_years = num_days / 365;
     format!("{}y {:02}mo", num_years, num_days % 365 / 30)
 }
+
+pub(super) fn format_price(price_usd: u64, original_price_usd: Option<u64>) -> String {
+    let price_usd_s = cformat!("<g,s>${:.2}</g,s>", tosho_nids::format_price(price_usd));
+    if let Some(orig_price) = original_price_usd
+        && orig_price > price_usd
+    {
+        cformat!(
+            "<s,dim,strike>${:.2}</s,dim,strike> <g,s>${:.2}</g,s>",
+            tosho_nids::format_price(orig_price),
+            tosho_nids::format_price(price_usd)
+        )
+    } else {
+        price_usd_s
+    }
+}

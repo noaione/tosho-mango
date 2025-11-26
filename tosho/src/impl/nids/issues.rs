@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use super::common::format_price;
 use crate::{
     cli::ExitCode,
     r#impl::nids::common::{PaginateAction, fmt_date, format_series_run, pagination_helper},
@@ -34,10 +35,10 @@ fn print_issue_summary(issue: &tosho_nids::models::IssueSummary, console: &crate
     };
 
     let title_smol_info = cformat!(
-        "<b,s>{}</b,s> | {} | <g,s>$</g,s>{:.2}",
+        "<b,s>{}</b,s> | {} | {}",
         fmt_date(issue.release_date()),
         pubs_text,
-        tosho_nids::format_price(issue.price_usd())
+        format_price(issue.price_usd(), issue.original_price())
     );
 
     console.info(format!("  {}", title_text));
@@ -249,8 +250,8 @@ pub async fn nids_get_issue(
     // Print price
     let post_sale_text = format_sale_status(issue_detail.status());
     console.info(cformat!(
-        "  <s>Price</s>: <g,s>$</g,s>{:.2} ({})",
-        tosho_nids::format_price(issue_detail.price_usd()),
+        "  <s>Price</s>: {} ({})",
+        format_price(issue_detail.price_usd(), issue_detail.original_price()),
         post_sale_text,
     ));
 
@@ -347,8 +348,8 @@ pub async fn nids_get_issue(
             let post_sale_text = format_sale_status(variant.status());
 
             console.info(cformat!(
-                "     <s>Price</s>: <g,s>$</g,s>{:.2} ({})",
-                tosho_nids::format_price(variant.price_usd()),
+                "     <s>Price</s>: {} ({})",
+                format_price(variant.price_usd(), variant.original_price()),
                 post_sale_text,
             ));
         }
