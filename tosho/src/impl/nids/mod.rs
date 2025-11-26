@@ -59,11 +59,9 @@ pub(crate) enum NIDSCommands {
         /// Needs to be used with `--parallel` flag.
         #[arg(short = 't', long = "threads", default_value = "4")]
         threads: usize,
-        /// Do not report page viewing progress to the server
-        ///
-        /// This is not recommended
-        #[arg(long = "no-report", default_value_t = false)]
-        no_report: bool,
+        /// Report page viewing progress to the server
+        #[arg(long = "report", default_value_t = false)]
+        report: bool,
         /// Quality of images to download
         #[arg(short = 'q', long = "quality", default_value = "desktop", value_enum)]
         quality: crate::r#impl::nids::download::DownloadImageQuality,

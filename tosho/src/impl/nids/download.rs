@@ -177,8 +177,8 @@ pub(crate) struct NIDownloadCliConfig {
     pub(crate) threads: usize,
     /// Override output directory
     pub(crate) output: Option<PathBuf>,
-    /// Do not report page viewing progress to the server
-    pub(crate) no_report: bool,
+    /// Report page viewing progress to the server
+    pub(crate) report: bool,
 }
 
 impl Default for NIDownloadCliConfig {
@@ -187,7 +187,7 @@ impl Default for NIDownloadCliConfig {
             parallel: false,
             threads: 4,
             output: None,
-            no_report: false,
+            report: false,
             quality: DownloadImageQuality::Desktop,
         }
     }
@@ -331,7 +331,7 @@ pub(crate) async fn nids_download(
             while let Some(idx) = rx.recv().await {
                 if last_run.elapsed() >= throttle_duration {
                     let pg_num = (idx + 1) as u32;
-                    if !dl_config.no_report {
+                    if dl_config.report {
                         // report progress
                         let _ = nids_report_progress(&issue_uuid, pg_num, &report_client).await;
                     }
@@ -394,7 +394,7 @@ pub(crate) async fn nids_download(
                 Ok(_) => {
                     // report
                     let pg_num = (idx + 1) as u32;
-                    if !dl_config.no_report {
+                    if dl_config.report {
                         let _ = nids_report_progress(results.uuid(), pg_num, client).await;
                     }
                 }

@@ -1186,14 +1186,14 @@ async fn entrypoint(cli: ToshoCli) -> anyhow::Result<ExitCode> {
                     output,
                     parallel,
                     threads,
-                    no_report,
+                    report,
                     quality,
                 } => {
                     let dl_config = NIDownloadCliConfig {
                         output,
                         parallel,
                         threads: max_threads(threads),
-                        no_report,
+                        report,
                         quality,
                     };
 
