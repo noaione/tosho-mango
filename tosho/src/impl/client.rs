@@ -32,15 +32,16 @@ pub(crate) fn select_single_account(
                 super::kmkc::config::Config::Mobile(cc) => ConsoleChoice {
                     name: cc.id.clone(),
                     value: format!(
-                        "{} [{} - {}]",
+                        "{} - {} [{} - {}]",
                         cc.id,
+                        cc.username,
                         cc.r#type().to_name(),
                         cc.platform().to_name()
                     ),
                 },
                 super::kmkc::config::Config::Web(cc) => ConsoleChoice {
                     name: cc.id.clone(),
-                    value: format!("{} [{}]", cc.id, cc.r#type().to_name()),
+                    value: format!("{} - {} [{}]", cc.id, cc.username, cc.r#type().to_name()),
                 },
             },
             crate::config::ConfigImpl::Musq(c) => ConsoleChoice {
@@ -50,21 +51,22 @@ pub(crate) fn select_single_account(
             crate::config::ConfigImpl::Sjv(c) => ConsoleChoice {
                 name: c.id.clone(),
                 value: format!(
-                    "{} [{} - {}]",
+                    "{} - {} [{} - {}]",
                     c.id,
+                    c.username,
                     c.r#type().to_name(),
                     c.mode().to_name()
                 ),
             },
             crate::config::ConfigImpl::Rbean(c) => ConsoleChoice {
                 name: c.id.clone(),
-                value: format!("{} [{} - {}]", c.id, c.email, c.platform().to_name()),
+                value: format!("{} - {} [{}]", c.id, c.email, c.platform().to_name()),
             },
             crate::config::ConfigImpl::Mplus(c) => ConsoleChoice {
                 name: c.id.clone(),
                 value: if c.username.is_some() {
                     format!(
-                        "{} [{} - {}]",
+                        "{} - {} [{}]",
                         c.id,
                         c.username.as_ref().unwrap(),
                         c.r#type().to_name()
@@ -75,7 +77,7 @@ pub(crate) fn select_single_account(
             },
             crate::config::ConfigImpl::Nids(c) => ConsoleChoice {
                 name: c.id.clone(),
-                value: format!("{} [{}]", c.id, c.r#type().to_name()),
+                value: format!("{} - {} [{}]", c.id, c.email, c.r#type().to_name()),
             },
         })
         .collect();
