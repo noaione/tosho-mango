@@ -109,8 +109,8 @@ pub enum PublishCategory {
     Serializing = 1,
     /// Series is complete!
     Complete = 2,
-    /// ???
-    ReadingOut = 3,
+    /// One-shot series
+    OneShot = 3,
 }
 
 /// The magazine category type.
