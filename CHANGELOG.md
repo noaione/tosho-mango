@@ -12,6 +12,7 @@ Starting from Rust port of the project, all changes will be put into this file.
   - It also change from `static` to `const`
 - `SJ/M`: Use `i32` for account archive limit instead of `u32`
 - `SJ/M`: Make `copyright` field optional
+- `KM`: Fix genre display and add publishing information
 - Unblock `self_update` blocking tokio runtime
 - Minimize some struct size
 - Migrate some `let` block to use the new let-chains syntax

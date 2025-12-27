@@ -181,10 +181,16 @@ pub(crate) async fn kmkc_title_info(
             ));
             console.info(cformat!("  <s>Author</>: {}", result.author()));
 
-            if !genre_results.is_empty() {
+            let filtered_genres = genre_results
+                .iter()
+                .filter(|g| result.genre_ids().contains(&g.id()))
+                .cloned()
+                .collect::<Vec<GenreNode>>();
+
+            if !filtered_genres.is_empty() {
                 console.info(cformat!(
                     "  <s>Genre/Tags</>: {}",
-                    format_tags(&genre_results)
+                    format_tags(&filtered_genres)
                 ));
             }
             if result.magazine() != MagazineCategory::Undefined {
@@ -193,6 +199,18 @@ pub(crate) async fn kmkc_title_info(
                     result.magazine().pretty_name()
                 ));
             }
+            let pub_cat = match result.publishing() {
+                tosho_kmkc::models::enums::PublishCategory::Serializing => {
+                    cformat!("<cyan>Serializing</>")
+                }
+                tosho_kmkc::models::enums::PublishCategory::Complete => {
+                    cformat!("<green>Complete</>")
+                }
+                tosho_kmkc::models::enums::PublishCategory::OneShot => {
+                    cformat!("<yellow>One-shot</>")
+                }
+            };
+            console.info(cformat!("  <s>Status</>: {}", pub_cat));
 
             console.info(cformat!("  <s>Summary</>"));
             if !result.summary().is_empty() {
