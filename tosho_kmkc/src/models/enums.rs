@@ -238,6 +238,8 @@ pub enum MagazineCategory {
     LightNovel = 47,
     /// Article/Report published by Kodansha.
     Article = 48,
+    /// ARTEMIS by Sirius Shonen Magazine, digital magazine focused for women.
+    Artemis = 49,
 }
 
 impl MagazineCategory {
