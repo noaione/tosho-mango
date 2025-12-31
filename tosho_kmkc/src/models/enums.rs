@@ -419,6 +419,6 @@ Owns the following:
 
     #[test]
     fn test_enum_count() {
-        assert_eq!(MagazineCategory::count(), 49);
+        assert_eq!(MagazineCategory::count(), 50);
     }
 }
