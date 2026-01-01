@@ -3,6 +3,10 @@
 Starting from Rust port of the project, all changes will be put into this file.
 
 ## Unreleased
+
+Nothing yet!
+
+## [0.9.0] (2026-01-01)
 ### New Features
 - Add **`NI`** as a new source
 
@@ -14,9 +18,16 @@ Starting from Rust port of the project, all changes will be put into this file.
 - `SJ/M`: Make `copyright` field optional
 - `KM`: Fix genre display and add publishing information
 - `KM`: Add `Artemis` magazine category
+- `KM`: Implement descrambling for mobile images
+  - Both version of web and mobile images are now scrambled, so no more need to check for platform.
+  - Also added old constants as `LegacyAndroid`
+- `KM`: Add new header for Web request
+- **Breaking Changes** `KM`: Change `PublishCategory::ReadingOut` to `PublishCategory::OneShot`
 - Unblock `self_update` blocking tokio runtime
 - Minimize some struct size
 - Migrate some `let` block to use the new let-chains syntax
+- Set default parallel image download to 4 threads instead of all available CPU cores
+- Adjust the account selector to show better information
 
 ### Build
 - Bump dependencies to latest version (except `reqwest`)
