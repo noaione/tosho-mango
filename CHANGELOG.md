@@ -3,8 +3,8 @@
 Starting from Rust port of the project, all changes will be put into this file.
 
 ## Unreleased
-
-Nothing yet!
+### Build
+- Change `ci` profile `opt-level` to `s` for smaller binary size with auto-vectorization.
 
 ## [0.9.1] (2026-01-01)
 ### Changes

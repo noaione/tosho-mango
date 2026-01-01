@@ -14,7 +14,7 @@ members = [
 ]
 
 [workspace.package]
-version = "0.9.1"
+version = "0.9.2-dev"
 edition = "2024"
 authors = ["noaione <noaione@n4o.xyz>"]
 license = "MIT"
@@ -79,6 +79,6 @@ windows-sys = { version = "0.61.2", default-features = false, features = ["Win32
 # CI build profile, very optimized
 [profile.ci]
 inherits = "release"
-opt-level = "z"
+opt-level = "s"
 lto = true
 codegen-units = 1
