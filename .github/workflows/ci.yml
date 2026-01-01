@@ -199,6 +199,12 @@ jobs:
           pattern: tosho-packages-*
           merge-multiple: true
 
+      - name: Generate artifacts attestation
+        uses: actions/attest-build-provenance@00014ed6ed5efc5b1ab7f7f34a39eb55d41aa4f8
+        id: attest
+        with:
+          subject-path: tosho-packages/*
+
       - name: Create changelog
         id: prepare-change
         run: |
@@ -208,6 +214,7 @@ jobs:
           echo "version_subject=$VERSION_SUBJ" >> "$GITHUB_OUTPUT"
         env:
           VERSION: ${{ github.ref }}
+          ATTEST_URL: ${{ steps.attest.outputs.attestation-url }}
 
       - name: Release
         uses: softprops/action-gh-release@67b6c38432c171b8aa64dc6f3f152d12da2d99fa

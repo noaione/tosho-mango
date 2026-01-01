@@ -19,6 +19,11 @@ INNER_DESC = """The following release notes are automatically generated.
 For the complete changelog, visit [here](https://github.com/noaione/tosho-mango/blob/master/CHANGELOG.md).
 If you encounter any problems, please report them on the [issues](https://github.com/noaione/tosho-mango/issues/new/choose) page.
 
+> [!NOTE]
+> **For Windows users**:
+> The correct file to download should be `x86_64` for most users.
+> If you are on Windows on ARM (like Surface Pro X), please download the `aarch64` version.
+
 ### Updating
 
 Since [v0.3.1](https://github.com/noaione/tosho-mango/releases/tag/v0.3.1), you can update `tosho` using the following command:
@@ -79,6 +84,9 @@ EXTRACTED_CHANGELOG = EXTRACTED_CHANGELOG.strip()
 if not EXTRACTED_CHANGELOG:
     EXTRACTED_CHANGELOG = f"{INNER_DESC}\n\nNo changelog found for version {VERSION}"
 EXTRACTED_CHANGELOG += "\n" + OUTER_DESC
+
+if attest_url := os.getenv("ATTEST_URL"):
+    EXTRACTED_CHANGELOG += f"---\n\n**Attestation URL**: {attest_url}\n"
 
 if args.dry_run:
     print(EXTRACTED_CHANGELOG)
