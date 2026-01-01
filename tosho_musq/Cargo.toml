@@ -1,6 +1,6 @@
 [package]
 name = "tosho-musq"
-version = "0.7.0"
+version = "0.8.0"
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
@@ -33,7 +33,7 @@ chrono.workspace = true
 aes = { workspace = true, optional = true }
 cbc = { workspace = true, optional = true }
 
-tosho-macros = { path = "../tosho_macros", version = "0.5" }
+tosho-macros = { path = "../tosho_macros", version = "0.6" }
 tosho-common = { path = "../tosho_common", version = "=0.2.0", features = ["protobuf"] }
 
 [features]
