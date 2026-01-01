@@ -30,10 +30,16 @@ async fn main() {
 
 ## Authentication
 
-The following sources only have one method of authentication, and that method uses your email and password.
+You can authenticate to access your collection and other personalized data via either JWT token or email and password.
 
 ```bash
-$ tosho ni auth <jwtToken>
+$ tosho ni auth <email> <password>
+```
+
+Or, directly with JWT token:
+
+```bash
+$ tosho ni auth-token <jwtToken>
 ```
 
 Or, if you use the crates:
@@ -46,6 +52,23 @@ async fn main() {
     let constants = tosho_nids::constants::get_constants(1); // Web
     let client = NIClient::new(Some("your_jwt_token_here"), constants).unwrap();
     
+    // Now you can make authenticated requests
+    let my_series = client.get_series_run_collections(None).await.unwrap();
+    println!("My series: {:?}", my_series);
+}
+```
+
+Or using email and password:
+
+```rust,no_run
+use tosho_nids::NIClient;
+
+#[tokio::main]
+async fn main() {
+    let constants = tosho_nids::constants::get_constants(1); // Web
+    let login_response = NIClient::login("email@example.com", "your_password", None).await.unwrap();
+
+    let client = NIClient::new(Some(login_response.data().tokens().access_token()), constants).unwrap();
     // Now you can make authenticated requests
     let my_series = client.get_series_run_collections(None).await.unwrap();
     println!("My series: {:?}", my_series);
