@@ -25,4 +25,4 @@ reqwest = { workspace = true, features = ["json"] }
 chrono.workspace = true
 
 tosho-macros = { path = "../tosho_macros", version = "0.6" }
-tosho-common = { path = "../tosho_common", version = "=0.2.0", features = ["serde"] }
+tosho-common = { path = "../tosho_common", version = "0.3", features = ["serde"] }

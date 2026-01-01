@@ -1,6 +1,6 @@
 [package]
 name = "tosho-nids"
-version = "0.1.0"
+version = "0.1.1"
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
@@ -23,4 +23,4 @@ reqwest = { workspace = true, features = ["json"] }
 chrono.workspace = true
 
 tosho-macros = { path = "../tosho_macros", version = "0.6" }
-tosho-common = { path = "../tosho_common", version = "=0.2.0", features = ["serde"] }
+tosho-common = { path = "../tosho_common", version = "0.3", features = ["serde"] }

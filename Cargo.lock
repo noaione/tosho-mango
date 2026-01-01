@@ -2330,7 +2330,7 @@ dependencies = [
 
 [[package]]
 name = "tosho"
-version = "0.9.1-dev"
+version = "0.9.1"
 dependencies = [
  "aho-corasick",
  "anstream",
@@ -2386,7 +2386,7 @@ dependencies = [
 
 [[package]]
 name = "tosho-common"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "image",
  "prost",
@@ -2398,7 +2398,7 @@ dependencies = [
 
 [[package]]
 name = "tosho-kmkc"
-version = "0.8.0"
+version = "0.8.1"
 dependencies = [
  "chrono",
  "futures-util",
@@ -2460,7 +2460,7 @@ dependencies = [
 
 [[package]]
 name = "tosho-nids"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "chrono",
  "futures-util",

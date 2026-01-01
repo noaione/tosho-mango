@@ -34,7 +34,7 @@ aes = { workspace = true, optional = true }
 cbc = { workspace = true, optional = true }
 
 tosho-macros = { path = "../tosho_macros", version = "0.6" }
-tosho-common = { path = "../tosho_common", version = "=0.2.0", features = ["protobuf"] }
+tosho-common = { path = "../tosho_common", version = "0.3", features = ["protobuf"] }
 
 [features]
 default = []

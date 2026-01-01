@@ -6,6 +6,10 @@ Starting from Rust port of the project, all changes will be put into this file.
 
 Nothing yet!
 
+## [0.9.1] (2026-01-01)
+### Changes
+- Fix version mismatch for `tosho-common` crate, this requires me to republish all source crates.
+
 ## [0.9.0] (2026-01-01)
 ### New Features
 - Add **`NI`** as a new source

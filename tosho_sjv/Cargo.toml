@@ -32,7 +32,7 @@ image.workspace = true
 kamadak-exif.workspace = true
 
 tosho-macros = { path = "../tosho_macros", version = "0.6" }
-tosho-common = { path = "../tosho_common", version = "=0.2.0", features = ["serde", "image", "id-gen"] }
+tosho-common = { path = "../tosho_common", version = "0.3", features = ["serde", "image", "id-gen"] }
 
 [dev-dependencies]
 base64.workspace = true
