@@ -19,7 +19,7 @@ Starting from Rust port of the project, all changes will be put into this file.
 - Migrate some `let` block to use the new let-chains syntax
 
 ### Build
-- Bump dependencies to latest version
+- Bump dependencies to latest version (except `reqwest`)
 - Bump MSRV to 1.88.0
 - Remove `paste` dependency
 - Move almost all dependencies to `workspace` section
