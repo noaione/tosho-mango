@@ -24,7 +24,7 @@ rust-version = "1.88.0"
 
 [workspace.dependencies]
 # Tokio related
-tokio = { version = "1.48.0", features = ["full"] }
+tokio = { version = "1.49.0", features = ["full"] }
 futures-util = "0.3.31"
 
 # JSON/Protobuf related
@@ -65,7 +65,7 @@ aes = "0.8.4"
 cbc = "0.1.2"
 
 # CLI related
-clap = { version = "4.5.53", features = ["derive"] }
+clap = { version = "4.5.54", features = ["derive"] }
 anstream = "0.6.21"
 color-print = "0.3.7"
 inquire = "0.9.1"
@@ -82,3 +82,10 @@ inherits = "release"
 opt-level = "s"
 lto = true
 codegen-units = 1
+
+## Enable limited debug info for tosho package
+[profile.ci.package.tosho]
+debug = "limited"
+
+[profile.release.package.tosho]
+debug = "limited"
