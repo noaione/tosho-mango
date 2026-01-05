@@ -116,7 +116,9 @@ pub(super) struct TitleListCache {
     pub last_updated: i64,
 }
 
-pub(super) async fn get_cached_titles_data(client: &MPClient) -> anyhow::Result<Vec<TitleListV2>> {
+pub(super) async fn get_cached_titles_data(
+    client: &MPClient,
+) -> color_eyre::eyre::Result<Vec<TitleListV2>> {
     let term = get_console(0);
 
     let base_path = get_user_path();
@@ -144,7 +146,7 @@ pub(super) async fn get_cached_titles_data(client: &MPClient) -> anyhow::Result<
     let titles = client.get_all_titles().await;
     if let Err(e) = titles {
         term.error(format!("Failed to fetch data from server: {e}"));
-        anyhow::bail!("Failed to fetch data from server: {}", e);
+        color_eyre::eyre::bail!("Failed to fetch data from server: {}", e);
     }
 
     let titles = titles.unwrap();
@@ -167,7 +169,7 @@ pub(super) async fn get_cached_titles_data(client: &MPClient) -> anyhow::Result<
                 "Failed to fetch data from server: {}",
                 e.as_string()
             ));
-            anyhow::bail!("Failed to fetch data from server: {:?}", e);
+            color_eyre::eyre::bail!("Failed to fetch data from server: {:?}", e);
         }
     }
 }

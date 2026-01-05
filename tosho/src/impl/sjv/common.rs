@@ -131,7 +131,9 @@ impl From<MangaStoreResponse> for WrappedStoreCache {
     }
 }
 
-pub(super) async fn get_cached_store_data(client: &SJClient) -> anyhow::Result<WrappedStoreCache> {
+pub(super) async fn get_cached_store_data(
+    client: &SJClient,
+) -> color_eyre::eyre::Result<WrappedStoreCache> {
     let term = get_console(0);
 
     let base_path = get_user_path();
@@ -168,7 +170,7 @@ pub(super) async fn get_cached_store_data(client: &SJClient) -> anyhow::Result<W
 
     let cache_store = client.get_store_cache().await.map_err(|e| {
         term.error(format!("Failed to get store cache: {e}"));
-        anyhow::anyhow!("Failed to get store cache: {}", e)
+        color_eyre::eyre::eyre!("Failed to get store cache: {}", e)
     })?;
     let wrapped = WrappedStoreCache::from(cache_store);
 

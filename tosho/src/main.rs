@@ -89,20 +89,16 @@ fn get_default_download_dir() -> PathBuf {
 }
 
 #[tokio::main]
-async fn main() {
+async fn main() -> color_eyre::Result<()> {
     // For some god know what reason, `clap` + rustc_lint will show this as unreachable code.
     let _cli = ToshoCli::parse();
 
-    match entrypoint(_cli).await {
-        Ok(exit_code) => std::process::exit(exit_code.try_into().unwrap_or(1_i32)),
-        Err(e) => {
-            eprintln!("Error: {e}");
-            std::process::exit(1);
-        }
-    }
+    let exit_code = entrypoint(_cli).await?;
+
+    std::process::exit(exit_code as i32);
 }
 
-async fn entrypoint(cli: ToshoCli) -> anyhow::Result<ExitCode> {
+async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<ExitCode> {
     let t = term::get_console(cli.verbose);
     let mut t_mut = term::get_console(cli.verbose);
 

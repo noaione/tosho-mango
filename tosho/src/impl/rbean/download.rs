@@ -234,9 +234,9 @@ fn select_quality_url(
     source: &[ImageSource],
     quality: CLIDownloadQuality,
     hires_available: bool,
-) -> anyhow::Result<String> {
+) -> color_eyre::eyre::Result<String> {
     if hires_available && quality == CLIDownloadQuality::Highest {
-        RBClient::modify_url_for_highres(source[0].url()).map_err(|e| anyhow::anyhow!(e))
+        RBClient::modify_url_for_highres(source[0].url()).map_err(|e| color_eyre::eyre::eyre!(e))
     } else {
         // Source is reverse sorted from highest to lowest quality
         match quality {
@@ -244,14 +244,18 @@ fn select_quality_url(
                 // Get the highest quality image
                 match source.first() {
                     Some(first_src) => Ok(first_src.url().to_string()),
-                    None => Err(anyhow::anyhow!("No image source available for download")),
+                    None => Err(color_eyre::eyre::eyre!(
+                        "No image source available for download"
+                    )),
                 }
             }
             CLIDownloadQuality::Lowest => {
                 // Get the lowest quality image
                 match source.last() {
                     Some(last_src) => Ok(last_src.url().to_string()),
-                    None => Err(anyhow::anyhow!("No image source available for download")),
+                    None => Err(color_eyre::eyre::eyre!(
+                        "No image source available for download"
+                    )),
                 }
             }
             CLIDownloadQuality::Medium => {
@@ -265,7 +269,7 @@ fn select_quality_url(
                             // get the highest quality image
                             match source.first() {
                                 Some(first_src) => Ok(first_src.url().to_string()),
-                                None => Err(anyhow::anyhow!(
+                                None => Err(color_eyre::eyre::eyre!(
                                     "Tried to get middle quality {idx} but no image source available for download"
                                 )),
                             }
@@ -275,7 +279,9 @@ fn select_quality_url(
                     // Get the highest quality image
                     match source.first() {
                         Some(first_src) => Ok(first_src.url().to_string()),
-                        None => Err(anyhow::anyhow!("No image source available for download")),
+                        None => Err(color_eyre::eyre::eyre!(
+                            "No image source available for download"
+                        )),
                     }
                 }
             }
@@ -290,7 +296,7 @@ async fn rbean_actual_downloader(
     hires_available: bool,
     console: Terminal,
     progress: Arc<indicatif::ProgressBar>,
-) -> anyhow::Result<()> {
+) -> color_eyre::eyre::Result<()> {
     let image_fn = format!("p{:03}.{}", node.idx, node.extension);
     let img_dl_path = image_dir.join(image_fn.clone());
 

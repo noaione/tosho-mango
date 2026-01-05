@@ -89,7 +89,7 @@ async fn kmkc_actual_downloader(
     image_dir: PathBuf,
     console: Terminal,
     progress: Arc<indicatif::ProgressBar>,
-) -> anyhow::Result<()> {
+) -> color_eyre::eyre::Result<()> {
     let image_fn = format!("p{:03}.{}", node.idx, node.extension);
     let img_dl_path = image_dir.join(&image_fn);
 

@@ -16,7 +16,7 @@ fn create_updater(
         .build()
 }
 
-pub(crate) async fn get_last_update_check_time() -> anyhow::Result<i64> {
+pub(crate) async fn get_last_update_check_time() -> color_eyre::Result<i64> {
     let target_file = crate::config::get_user_path().join("last_update_check.tmd");
 
     if !target_file.exists() {
@@ -31,7 +31,7 @@ pub(crate) async fn get_last_update_check_time() -> anyhow::Result<i64> {
     Ok(time)
 }
 
-async fn write_last_update_check_time(time: i64) -> anyhow::Result<()> {
+async fn write_last_update_check_time(time: i64) -> color_eyre::Result<()> {
     let target_file = crate::config::get_user_path().join("last_update_check.tmd");
 
     tokio::fs::write(&target_file, time.to_string()).await?;
@@ -39,7 +39,7 @@ async fn write_last_update_check_time(time: i64) -> anyhow::Result<()> {
     Ok(())
 }
 
-pub(crate) async fn check_for_update(console: &crate::term::Terminal) -> anyhow::Result<()> {
+pub(crate) async fn check_for_update(console: &crate::term::Terminal) -> color_eyre::Result<()> {
     // Only check for update once every 24 hours
     let last_check = get_last_update_check_time().await?;
     let now = chrono::Utc::now().timestamp();
@@ -73,7 +73,7 @@ pub(crate) async fn check_for_update(console: &crate::term::Terminal) -> anyhow:
     Ok(())
 }
 
-pub(crate) async fn perform_update(console: &crate::term::Terminal) -> anyhow::Result<()> {
+pub(crate) async fn perform_update(console: &crate::term::Terminal) -> color_eyre::Result<()> {
     console.info("Checking for update...");
 
     let is_debug = console.is_debug();

@@ -3,6 +3,9 @@
 Starting from Rust port of the project, all changes will be put into this file.
 
 ## Unreleased
+### Changes
+- Replace `anyhow` with `color-eyre` for better error reporting.
+
 ### Build
 - Change `ci` profile `opt-level` to `s` for smaller binary size with auto-vectorization.
 - Bump dependencies

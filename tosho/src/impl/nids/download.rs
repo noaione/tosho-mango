@@ -86,12 +86,12 @@ async fn nids_actual_downloader(
     image_dir: PathBuf,
     console: &crate::term::Terminal,
     progress: Arc<indicatif::ProgressBar>,
-) -> anyhow::Result<()> {
+) -> color_eyre::eyre::Result<()> {
     // determine image extension from page_url
     let extension = match extract_extensions_from_url(&node.page_url) {
         Some(ext) => ext,
         None => {
-            anyhow::bail!("Failed to determine image extension from URL");
+            color_eyre::eyre::bail!("Failed to determine image extension from URL");
         }
     };
 
@@ -131,7 +131,7 @@ struct FrameWithPage {
 fn dump_reading_frames(
     output_dir: &Path,
     images: &[tosho_nids::models::reader::ReaderPage],
-) -> anyhow::Result<()> {
+) -> color_eyre::eyre::Result<()> {
     let mut frames_with_page = Vec::new();
     let mut has_any = false;
     for (idx, page) in images.iter().enumerate() {
@@ -140,7 +140,7 @@ fn dump_reading_frames(
             let extension = match extract_extensions_from_url(page.image().url()) {
                 Some(ext) => ext,
                 None => {
-                    anyhow::bail!("Failed to determine image extension from URL");
+                    color_eyre::eyre::bail!("Failed to determine image extension from URL");
                 }
             };
             frames_with_page.push(FrameWithPage {
@@ -155,11 +155,11 @@ fn dump_reading_frames(
         match serde_json::to_string_pretty(&frames_with_page) {
             Ok(json_str) => {
                 if let Err(err) = std::fs::write(&output_file, json_str) {
-                    anyhow::bail!("Failed to write frames.json: {}", err);
+                    color_eyre::eyre::bail!("Failed to write frames.json: {}", err);
                 }
             }
             Err(err) => {
-                anyhow::bail!("Failed to serialize frames.json: {}", err);
+                color_eyre::eyre::bail!("Failed to serialize frames.json: {}", err);
             }
         }
     }
@@ -197,12 +197,12 @@ async fn nids_report_progress(
     issue_uuid: &str,
     pages: u32,
     client: &NIClient,
-) -> anyhow::Result<()> {
+) -> color_eyre::eyre::Result<()> {
     // Report progress to the server
     client
         .report_page_view(issue_uuid, pages)
         .await
-        .map_err(|e| anyhow::anyhow!("Failed to report progress: {}", e))?;
+        .map_err(|e| color_eyre::eyre::eyre!("Failed to report progress: {}", e))?;
 
     Ok(())
 }

@@ -157,12 +157,12 @@ async fn sjv_actual_downloader(
     image_dir: PathBuf,
     console: crate::term::Terminal,
     progress: Arc<indicatif::ProgressBar>,
-) -> anyhow::Result<()> {
+) -> color_eyre::eyre::Result<()> {
     let download_url = node
         .client
         .get_manga_url(node.id, false, Some(node.page))
         .await
-        .map_err(|e| anyhow::anyhow!(e))?;
+        .map_err(|e| color_eyre::eyre::eyre!(e))?;
 
     let image_fn = format!("p{:03}.{}", node.page, node.extension);
     let img_dl_path = image_dir.join(&image_fn);
