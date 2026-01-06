@@ -1,11 +1,11 @@
 use crate::{
-    cli::ExitCode,
     r#impl::models::{
         ChapterDetailDump, IdDump, MangaDetailDump, MangaManualMergeChapterDetail,
         MangaManualMergeDetail,
     },
     term::ConsoleChoice,
 };
+use color_eyre::eyre::{Context, OptionExt};
 use color_print::cformat;
 use inquire::{Text, required, validator::StringValidator};
 use std::{
@@ -107,7 +107,7 @@ fn inquire_chapter_number(
     chapter: &ChapterDetailDump,
     last_known_num: u64,
     console: &mut crate::term::Terminal,
-) -> Option<PseudoMatch> {
+) -> color_eyre::Result<Option<PseudoMatch>> {
     console.warn(format!(
         "  Failed to parse chapter title: {}",
         chapter.main_name
@@ -125,40 +125,42 @@ fn inquire_chapter_number(
         Err(err) => match err {
             inquire::error::InquireError::OperationCanceled => {
                 console.warn("Aborted.");
-                return None;
+                return Ok(None);
             }
             inquire::InquireError::OperationInterrupted => {
                 console.warn("Aborted.");
-                return None;
+                return Ok(None);
             }
             _ => {
                 console.error("  Failed to get chapter number.");
-                return None;
+                return Ok(None);
             }
         },
     };
 
     let mut matching = PseudoMatch::default();
     if ch_number.contains('.') {
-        let (base, floaty) = ch_number.split_once('.').unwrap();
+        let (base, floaty) = ch_number
+            .split_once('.')
+            .ok_or_eyre(format!("Failed to split chapter number: {ch_number}"))?;
         matching.set("base", base);
         matching.set("floaty", floaty);
     } else {
         matching.set("base", ch_number.as_str());
     }
 
-    Some(matching)
+    Ok(Some(matching))
 }
 
 pub fn auto_chapters_collector(
     mut chapters_dump: Vec<ChapterDetailDump>,
     console: &mut crate::term::Terminal,
-) -> Option<BTreeMap<String, Vec<ChapterDetailDump>>> {
+) -> color_eyre::Result<Option<BTreeMap<String, Vec<ChapterDetailDump>>>> {
     chapters_dump.sort_by(|a, b| a.id.cmp(&b.id));
 
     if chapters_dump.is_empty() {
         console.error("  Empty chapters collection, aborting...");
-        return None;
+        return Ok(None);
     }
 
     let mut last_known_num = 0;
@@ -174,7 +176,7 @@ pub fn auto_chapters_collector(
 
                 match (base, split) {
                     ("", "") => {
-                        let temp = inquire_chapter_number(&chapter, last_known_num, console);
+                        let temp = inquire_chapter_number(&chapter, last_known_num, console)?;
                         if let Some(temp) = temp {
                             let base_t = temp.get("base").unwrap_or_default();
                             let split_t = temp.get("split").unwrap_or_default();
@@ -187,7 +189,7 @@ pub fn auto_chapters_collector(
                 }
             }
             None => {
-                let test_match = inquire_chapter_number(&chapter, last_known_num, console);
+                let test_match = inquire_chapter_number(&chapter, last_known_num, console)?;
 
                 if let Some(test_match) = test_match {
                     let base = test_match.get("base").unwrap_or_default();
@@ -205,7 +207,7 @@ pub fn auto_chapters_collector(
             base = last_known_num.to_string();
         }
 
-        let mut base = base.trim().parse::<u64>().unwrap();
+        let mut base = base.trim().parse::<u64>()?;
         let mut use_extra = false;
         if last_known_num > base {
             console.warn(format!(
@@ -229,18 +231,18 @@ pub fn auto_chapters_collector(
         }
     }
 
-    Some(chapters_mapping)
+    Ok(Some(chapters_mapping))
 }
 
 pub fn manual_chapters_collector(
     mut chapters_dump: Vec<ChapterDetailDump>,
     console: &mut crate::term::Terminal,
-) -> Option<BTreeMap<String, Vec<ChapterDetailDump>>> {
+) -> color_eyre::Result<Option<BTreeMap<String, Vec<ChapterDetailDump>>>> {
     chapters_dump.sort_by(|a, b| a.id.cmp(&b.id));
 
     if chapters_dump.is_empty() {
         console.error("  Empty chapters collection, aborting...");
-        return None;
+        return Ok(None);
     }
 
     let mut chapters_mapping: BTreeMap<String, Vec<ChapterDetailDump>> = BTreeMap::new();
@@ -314,7 +316,12 @@ pub fn manual_chapters_collector(
             Some(merge_choice) => {
                 let chapter_ids = merge_choice
                     .iter()
-                    .map(|choice| choice.name.parse::<IdDump>().unwrap())
+                    .map(|choice| {
+                        choice
+                            .name
+                            .parse::<IdDump>()
+                            .expect(&format!("Failed to parse IDs: {}", choice.name))
+                    })
                     .collect::<Vec<IdDump>>();
                 if chapter_ids.is_empty() {
                     console.warn("  No chapter selected, skipping...");
@@ -324,7 +331,12 @@ pub fn manual_chapters_collector(
                 let name = format!("c{ch_number:03}");
                 let remapped = chapter_ids
                     .iter()
-                    .map(|id| chapter_id_map.remove(id).unwrap().clone())
+                    .map(|id| {
+                        chapter_id_map
+                            .remove(id)
+                            .expect(&format!("Failed to remove IDs: {}", id))
+                            .clone()
+                    })
                     .collect::<Vec<ChapterDetailDump>>();
                 chapters_mapping.entry(name).or_default().extend(remapped);
             }
@@ -342,9 +354,9 @@ pub fn manual_chapters_collector(
     }
 
     if abort_after {
-        None
+        Ok(None)
     } else {
-        Some(chapters_mapping)
+        Ok(Some(chapters_mapping))
     }
 }
 
@@ -358,54 +370,67 @@ fn is_all_folder_exist(base_dir: PathBuf, chapters: &[ChapterDetailDump]) -> boo
     true
 }
 
-async fn get_last_page(target_dir: PathBuf) -> u64 {
+async fn get_last_page(target_dir: PathBuf) -> color_eyre::Result<u64> {
     let mut last_page = 0;
-    let mut read_dirs = tokio::fs::read_dir(target_dir).await.unwrap();
+    let mut read_dirs = tokio::fs::read_dir(target_dir).await?;
 
     loop {
-        let file = read_dirs.next_entry().await.unwrap();
+        let file = read_dirs.next_entry().await?;
         let file = match file {
             Some(file) => file,
             None => break,
         };
 
         let path = file.path();
-        let file_stem = path.file_stem().unwrap().to_str().unwrap();
+        let file_stem = path
+            .file_stem()
+            .ok_or_eyre(format!("Failed to get file stem: {}", path.display()))?
+            .to_str()
+            .ok_or_eyre(format!("Failed to parse file name: {}", path.display()))?;
         if path.is_file() && file_stem.starts_with('p') {
-            let file_stem = file_stem.split_once('p').unwrap().1;
-            let file_stem = file_stem.parse::<u64>().unwrap() + 1;
+            let file_stem = file_stem
+                .split_once('p')
+                .ok_or_eyre(format!(
+                    "Failed to split file stem with 'p': {}",
+                    path.display()
+                ))?
+                .1;
+            let file_stem = file_stem.parse::<u64>()? + 1;
             if file_stem > last_page {
                 last_page = file_stem;
             }
         }
     }
 
-    last_page
+    Ok(last_page)
 }
 
-fn guess_from_ext(path: &Path) -> Option<String> {
+fn guess_from_ext(path: &Path) -> color_eyre::Result<Option<String>> {
     let suffix = path.extension();
     if let Some(suffix) = suffix {
-        let suffix = suffix.to_str().unwrap();
+        let suffix = suffix.to_str().ok_or_eyre(format!(
+            "Failed to parse extension for path: {}",
+            path.display()
+        ))?;
         if MODERN_IMAGE_EXT.contains(&suffix) {
-            return Some(suffix.to_string());
+            return Ok(Some(suffix.to_string()));
         }
     }
-    None
+    Ok(None)
 }
 
-fn is_image(path: &PathBuf) -> bool {
+fn is_image(path: &PathBuf) -> color_eyre::Result<bool> {
     let guess = mime_guess::from_path(path);
 
     match guess.first() {
         Some(mima) => {
             if mima.type_() == mime_guess::mime::IMAGE {
-                true
+                Ok(true)
             } else {
-                guess_from_ext(path).is_some()
+                Ok(guess_from_ext(path)?.is_some())
             }
         }
-        None => guess_from_ext(path).is_some(),
+        None => Ok(guess_from_ext(path)?.is_some()),
     }
 }
 
@@ -426,30 +451,23 @@ pub(crate) async fn tools_split_merge(
     input_folder: &Path,
     config: ToolsMergeConfig,
     console: &mut crate::term::Terminal,
-) -> ExitCode {
+) -> color_eyre::Result<()> {
     let info_json = input_folder.join("_info.json");
     console.info(format!("Reading _info.json file: {}", info_json.display()));
 
     if !info_json.exists() {
         console.error("The _info.json file is not found in the input folder.");
-        return 1;
+        return Err(color_eyre::eyre::eyre!(
+            "The _info.json file is not found in the input folder."
+        ));
     }
 
-    let info_json = match tokio::fs::read_to_string(info_json).await {
-        Ok(info_json) => info_json,
-        Err(err) => {
-            console.error(format!("Failed to read _info.json file: {err}"));
-            return 1;
-        }
-    };
+    let info_json = tokio::fs::read_to_string(info_json)
+        .await
+        .context("Failed to read _info.json file")?;
 
-    let info_json: MangaDetailDump = match serde_json::from_str(&info_json) {
-        Ok(info_json) => info_json,
-        Err(err) => {
-            console.error(format!("Failed to parse _info.json file: {err}"));
-            return 1;
-        }
-    };
+    let info_json: MangaDetailDump =
+        serde_json::from_str(&info_json).context("Failed when parsing _info.json file")?;
 
     console.info(format!(
         "Loaded {} chapters from _info.json, collecting...",
@@ -471,17 +489,19 @@ pub(crate) async fn tools_split_merge(
             current_chapters.retain(|ch| !manual_chapters.contains(&ch.id));
         }
         manual_chapters_collector(current_chapters, console)
-    };
+    }?;
 
     let mut chapters_maps = if let Some(chapters_maps) = chapters_maps {
         chapters_maps
     } else {
-        return 1;
+        return Ok(());
     };
 
     if chapters_maps.is_empty() {
         console.warn("No chapters collected, aborting...");
-        return 1;
+        return Err(color_eyre::eyre::eyre!(
+            "No chapters collected, aborting..."
+        ));
     }
 
     console.info(format!("Collected {} chapters", chapters_maps.keys().len()));
@@ -511,15 +531,21 @@ pub(crate) async fn tools_split_merge(
         )));
         if !is_continue {
             console.warn("Aborting...");
-            return 1;
+            return Err(color_eyre::eyre::eyre!("Aborting..."));
         }
     }
 
     if config.skip_last {
         console.warn("Skipping last chapter merge...");
         // pop the last chapter
-        let last_key = chapters_maps.keys().last().unwrap().clone();
-        chapters_maps.remove(&last_key).unwrap();
+        let last_key = chapters_maps
+            .keys()
+            .last()
+            .ok_or_eyre("Failed to get last key")?
+            .to_string();
+        chapters_maps
+            .remove(&last_key)
+            .ok_or_eyre("Failed to remove last chapter")?;
     }
 
     console.info("Starting merge...");
@@ -546,7 +572,7 @@ pub(crate) async fn tools_split_merge(
             }
         }
 
-        let mut last_page = get_last_page(target_dir.clone()).await;
+        let mut last_page = get_last_page(target_dir.clone()).await?;
         let mut write_to_json = false;
         for chapter in chapters {
             let source_dir = input_folder.join(chapter.id.to_string());
@@ -582,10 +608,14 @@ pub(crate) async fn tools_split_merge(
                 };
 
                 let path = &file.path();
-                if path.is_file() && is_image(path) {
+                if path.is_file() && is_image(path)? {
                     // move the file from "file" to target_dir / p{last_page}.{ext}
                     let file_name = format!("p{last_page:03}");
-                    let file_ext = path.extension().unwrap().to_str().unwrap();
+                    let file_ext = path
+                        .extension()
+                        .ok_or_eyre(format!("Failed to get file extension: {}", path.display()))?
+                        .to_string_lossy()
+                        .to_string();
                     let file_name = format!("{file_name}.{file_ext}");
 
                     let target_path = target_dir.join(file_name);
@@ -623,7 +653,7 @@ pub(crate) async fn tools_split_merge(
 
     if !config.no_input {
         // write the manual info
-        let manual_json_content = serde_json::to_string_pretty(&manual_info_merge).unwrap();
+        let manual_json_content = serde_json::to_string_pretty(&manual_info_merge)?;
         let manual_json_path = input_folder.join("_info_manual_merge.json");
         match tokio::fs::write(manual_json_path, manual_json_content).await {
             Ok(_) => {}
@@ -633,5 +663,5 @@ pub(crate) async fn tools_split_merge(
         }
     }
 
-    0
+    Ok(())
 }

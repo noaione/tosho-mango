@@ -1,33 +1,34 @@
-use crate::{cli::ExitCode, config::get_user_path};
+use crate::config::get_user_path;
+use color_eyre::eyre::OptionExt;
 use color_print::cformat;
 use std::path::{Path, PathBuf};
 
-fn glob_cache(prefix: &str, base_path: &Path) -> Vec<PathBuf> {
+fn glob_cache(prefix: &str, base_path: &Path) -> color_eyre::Result<Vec<PathBuf>> {
     let glob_path = base_path.join(format!("{prefix}*"));
 
     let mut matched_files = vec![];
-    for entry in glob::glob(glob_path.to_str().unwrap())
-        .expect("Failed to read glob pattern")
-        .flatten()
+    for entry in glob::glob(glob_path.to_str().ok_or_eyre("Failed to parse glob path")?)?.flatten()
     {
         if entry.is_file() {
             matched_files.push(entry);
         }
     }
 
-    matched_files
+    Ok(matched_files)
 }
 
-pub(crate) async fn tools_clear_cache(console: &mut crate::term::Terminal) -> ExitCode {
+pub(crate) async fn tools_clear_cache(
+    console: &mut crate::term::Terminal,
+) -> color_eyre::Result<()> {
     let base_path = get_user_path();
 
-    let sjv_caches = glob_cache("sjv_store_cache_", &base_path);
-    let mplus_caches = glob_cache("mplus_titles_", &base_path);
+    let sjv_caches = glob_cache("sjv_store_cache_", &base_path)?;
+    let mplus_caches = glob_cache("mplus_titles_", &base_path)?;
 
     // if both empty, return immediately!
     if sjv_caches.is_empty() && mplus_caches.is_empty() {
         console.warn("No cache files found!");
-        return 1;
+        return Err(color_eyre::eyre::eyre!("No cache files found"));
     }
 
     console.info(cformat!(
@@ -45,7 +46,7 @@ pub(crate) async fn tools_clear_cache(console: &mut crate::term::Terminal) -> Ex
     } else {
         println!();
         for entry in sjv_caches {
-            let file_name = entry.file_name().unwrap();
+            let file_name = entry.file_name().ok_or_eyre("Failed to get file name")?;
             match tokio::fs::remove_file(entry.clone()).await {
                 Ok(_) => console.info(cformat!("Deleted: <bold>{:?}</>", file_name)),
                 Err(e) => console.error(cformat!(
@@ -56,7 +57,7 @@ pub(crate) async fn tools_clear_cache(console: &mut crate::term::Terminal) -> Ex
             }
         }
         for entry in mplus_caches {
-            let file_name = entry.file_name().unwrap();
+            let file_name = entry.file_name().ok_or_eyre("Failed to get file name")?;
             match tokio::fs::remove_file(entry.clone()).await {
                 Ok(_) => console.info(cformat!("Deleted: <bold>{:?}</>", file_name)),
                 Err(e) => console.error(cformat!(
@@ -68,5 +69,5 @@ pub(crate) async fn tools_clear_cache(console: &mut crate::term::Terminal) -> Ex
         }
     }
 
-    0
+    Ok(())
 }

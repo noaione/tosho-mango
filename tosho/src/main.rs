@@ -1274,7 +1274,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
             exit_act
         }
         ToshoCommands::Tools { subcommand } => {
-            let exit_code = match subcommand {
+            let exit_act = match subcommand {
                 ToolsCommands::AutoMerge {
                     input_folder,
                     skip_last,
@@ -1305,15 +1305,9 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
                 }
             };
 
-            Ok(exit_code)
+            exit_act
         }
         #[cfg(feature = "with-updater")]
-        ToshoCommands::Update => match updater::perform_update(&t).await {
-            Ok(_) => Ok(0),
-            Err(e) => {
-                t.error(format!("Failed to update: {e}"));
-                Ok(1)
-            }
-        },
+        ToshoCommands::Update => updater::perform_update(&t).await,
     }
 }
