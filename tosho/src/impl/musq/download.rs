@@ -8,12 +8,9 @@ use tosho_musq::{
     proto::{ChapterV2, MangaDetailV2},
 };
 
-use crate::{
-    cli::ExitCode,
-    r#impl::{
-        common::check_downloaded_image_count,
-        models::{ChapterDetailDump, MangaDetailDump},
-    },
+use crate::r#impl::{
+    common::check_downloaded_image_count,
+    models::{ChapterDetailDump, MangaDetailDump},
 };
 
 use super::common::common_purchase_select;
@@ -83,7 +80,7 @@ pub(crate) struct MUDownloadCliConfig {
     pub(crate) no_xp_point: bool,
 }
 
-fn create_chapters_info(manga_detail: MangaDetailV2) -> MangaDetailDump {
+fn create_chapters_info(manga_detail: &MangaDetailV2) -> MangaDetailDump {
     let chapters: Vec<ChapterDetailDump> = manga_detail
         .chapters()
         .iter()
@@ -102,7 +99,7 @@ fn get_output_directory(
     title_id: u64,
     chapter_id: Option<u64>,
     create_folder: bool,
-) -> PathBuf {
+) -> color_eyre::Result<PathBuf> {
     let mut pathing = output_dir.to_path_buf();
     pathing.push(title_id.to_string());
 
@@ -111,10 +108,10 @@ fn get_output_directory(
     }
 
     if create_folder {
-        std::fs::create_dir_all(&pathing).unwrap();
+        std::fs::create_dir_all(&pathing)?;
     }
 
-    pathing
+    Ok(pathing)
 }
 
 pub(crate) async fn musq_download(
@@ -123,8 +120,8 @@ pub(crate) async fn musq_download(
     output_dir: PathBuf,
     client: &MUClient,
     console: &mut crate::term::Terminal,
-) -> ExitCode {
-    let (results, manga_detail, user_bal) = common_purchase_select(
+) -> color_eyre::Result<()> {
+    let purchase_results = common_purchase_select(
         title_id,
         client,
         true,
@@ -132,311 +129,308 @@ pub(crate) async fn musq_download(
         dl_config.no_input,
         console,
     )
-    .await;
+    .await?;
 
-    match (results, manga_detail, user_bal) {
-        (Ok(results), Some(manga_detail), Some(coin_purse)) => {
-            let results: Vec<&ChapterV2> = results
-                .iter()
-                .filter(|&ch| {
-                    if dl_config.no_input {
-                        // check if chapter id is in range
-                        match (dl_config.start_from, dl_config.end_at) {
-                            (Some(start), Some(end)) => {
-                                // between start and end
-                                ch.id() >= start && ch.id() <= end
-                            }
-                            (Some(start), None) => {
-                                ch.id() >= start // start to end
-                            }
-                            (None, Some(end)) => {
-                                ch.id() <= end // 0 to end
-                            }
-                            _ => true,
-                        }
-                    } else {
-                        // allow if chapter_ids is empty or chapter id is in chapter_ids
-                        dl_config.chapter_ids.is_empty()
-                            || dl_config.chapter_ids.contains(&(ch.id() as usize))
+    let results = purchase_results.chapters();
+    let manga_detail = purchase_results.title();
+    let coin_purse = purchase_results.balance().clone();
+
+    let results: Vec<&ChapterV2> = results
+        .iter()
+        .filter(|&ch| {
+            if dl_config.no_input {
+                // check if chapter id is in range
+                match (dl_config.start_from, dl_config.end_at) {
+                    (Some(start), Some(end)) => {
+                        // between start and end
+                        ch.id() >= start && ch.id() <= end
                     }
-                })
-                .collect();
-
-            if results.is_empty() {
-                return 1;
-            }
-
-            let mut coin_purse = coin_purse;
-
-            if dl_config.no_paid_point {
-                coin_purse.set_paid(0);
-            }
-            if dl_config.no_xp_point {
-                coin_purse.set_event(0);
-            }
-
-            console.info(format!("Downloading {} chapters...", results.len()));
-            let mut download_chapters = vec![];
-            for chapter in results {
-                if chapter.is_free() {
-                    download_chapters.push(chapter);
-                    continue;
+                    (Some(start), None) => {
+                        ch.id() >= start // start to end
+                    }
+                    (None, Some(end)) => {
+                        ch.id() <= end // 0 to end
+                    }
+                    _ => true,
                 }
+            } else {
+                // allow if chapter_ids is empty or chapter id is in chapter_ids
+                dl_config.chapter_ids.is_empty()
+                    || dl_config.chapter_ids.contains(&(ch.id() as usize))
+            }
+        })
+        .collect();
 
-                let consume = match client.calculate_coin(&coin_purse, chapter) {
-                    Ok(consume) => consume,
+    if results.is_empty() {
+        return Err(color_eyre::eyre::eyre!(
+            "No chapters to be downloaded after filtering, aborting"
+        ));
+    }
+
+    let mut coin_purse = coin_purse;
+
+    if dl_config.no_paid_point {
+        coin_purse.set_paid(0);
+    }
+    if dl_config.no_xp_point {
+        coin_purse.set_event(0);
+    }
+
+    console.info(format!("Downloading {} chapters...", results.len()));
+    let mut download_chapters = vec![];
+    for chapter in results {
+        if chapter.is_free() {
+            download_chapters.push(chapter);
+            continue;
+        }
+
+        let consume = match client.calculate_coin(&coin_purse, chapter) {
+            Ok(consume) => consume,
+            Err(err) => {
+                console.error(format!(
+                    "Failed to calculate coin for chapter <m,s>{}</> (<s>{}): {}",
+                    chapter.title(),
+                    chapter.id(),
+                    err
+                ));
+                continue;
+            }
+        };
+
+        if !consume.is_possible() {
+            if !dl_config.no_input {
+                console.warn(cformat!(
+                    "  Chapter <m,s>{}</> (<s>{}</>) is not available for purchase, skipping",
+                    chapter.title(),
+                    chapter.id()
+                ));
+                console.warn(format!(
+                    "   Need {} free coin, {} XP coin, and {} paid coin",
+                    consume.get_free(),
+                    consume.get_event(),
+                    consume.get_paid()
+                ));
+            }
+
+            continue;
+        }
+
+        let mut should_purchase = dl_config.auto_purchase;
+        if !dl_config.auto_purchase && !dl_config.no_input {
+            let prompt = cformat!(
+                "Chapter <m,s>{}</> (<s>{}</>) need to be purchased for {:?}, continue?",
+                chapter.title(),
+                chapter.id(),
+                consume
+            );
+            should_purchase = console.confirm(Some(&prompt));
+        }
+
+        if should_purchase {
+            console.info(cformat!(
+                "  Purchasing chapter <m,s>{}</> (<s>{}</>) with consumption <s>{:?}</>...",
+                chapter.title(),
+                chapter.id(),
+                consume
+            ));
+
+            let purchase_result = client
+                .get_chapter_images(
+                    chapter.id(),
+                    dl_config.quality.clone().into(),
+                    Some(consume.clone()),
+                )
+                .await;
+
+            match purchase_result {
+                Err(err) => {
+                    console.error(format!("   Failed to purchase chapter: {err}"));
+                    console.error(cformat!(
+                        "    Skipping chapter <m,s>{}</> (<s>{}</>)",
+                        chapter.title(),
+                        chapter.id()
+                    ));
+                }
+                Ok(ch_view) => {
+                    if ch_view.blocks().is_empty() {
+                        console.warn(cformat!(
+                                    "   Unable to purchase chapter <m,s>{}</> (<s>{}</>) since image block is empty, skipping",
+                                    chapter.title(),
+                                    chapter.id()
+                                ));
+                    } else {
+                        download_chapters.push(chapter);
+                        coin_purse.subtract_free(consume.get_free());
+                        coin_purse.subtract_event(consume.get_event());
+                        coin_purse.subtract_paid(consume.get_paid());
+                    }
+                }
+            }
+        }
+    }
+
+    if download_chapters.is_empty() {
+        console.warn("No chapters to be download after filtering, aborting");
+        return Err(color_eyre::eyre::eyre!(
+            "No chapters to be downloaded after filtering, aborting"
+        ));
+    }
+
+    download_chapters.sort_by(|&a, &b| a.id().cmp(&b.id()));
+
+    let title_dir = get_output_directory(&output_dir, title_id, None, true)?;
+    let dump_info = create_chapters_info(manga_detail);
+
+    let title_dump_path = title_dir.join("_info.json");
+    dump_info
+        .dump(&title_dump_path)
+        .expect("Failed to dump title info");
+
+    let mut stored_blocks: Vec<tosho_musq::proto::PageBlock> = vec![];
+    for chapter in download_chapters {
+        console.info(cformat!(
+            "  Downloading chapter <m,s>{}</> ({})...",
+            chapter.title(),
+            chapter.id()
+        ));
+
+        let image_blocks = match stored_blocks.iter().find(|&b| b.id() == chapter.id()) {
+            Some(img_blocks) => img_blocks.images().to_vec(),
+            None => {
+                let ch_images = match client
+                    .get_chapter_images(chapter.id(), dl_config.quality.clone().into(), None)
+                    .await
+                {
+                    Ok(ch_view) => ch_view,
                     Err(err) => {
-                        console.error(format!(
-                            "Failed to calculate coin for chapter <m,s>{}</> (<s>{}): {}",
+                        console.error(format!("Failed to download chapter: {err}"));
+                        console.error(cformat!(
+                            "   Skipping chapter <m,s>{}</> (<s>{}</>)",
                             chapter.title(),
-                            chapter.id(),
-                            err
+                            chapter.id()
                         ));
                         continue;
                     }
                 };
 
-                if !consume.is_possible() {
-                    if !dl_config.no_input {
-                        console.warn(cformat!(
-                            "  Chapter <m,s>{}</> (<s>{}</>) is not available for purchase, skipping",
-                            chapter.title(),
-                            chapter.id()
-                        ));
-                        console.warn(format!(
-                            "   Need {} free coin, {} XP coin, and {} paid coin",
-                            consume.get_free(),
-                            consume.get_event(),
-                            consume.get_paid()
-                        ));
-                    }
-
-                    continue;
-                }
-
-                let mut should_purchase = dl_config.auto_purchase;
-                if !dl_config.auto_purchase && !dl_config.no_input {
-                    let prompt = cformat!(
-                        "Chapter <m,s>{}</> (<s>{}</>) need to be purchased for {:?}, continue?",
-                        chapter.title(),
-                        chapter.id(),
-                        consume
-                    );
-                    should_purchase = console.confirm(Some(&prompt));
-                }
-
-                if should_purchase {
-                    console.info(cformat!(
-                        "  Purchasing chapter <m,s>{}</> (<s>{}</>) with consumption <s>{:?}</>...",
-                        chapter.title(),
-                        chapter.id(),
-                        consume
-                    ));
-
-                    let purchase_result = client
-                        .get_chapter_images(
-                            chapter.id(),
-                            dl_config.quality.clone().into(),
-                            Some(consume.clone()),
-                        )
-                        .await;
-
-                    match purchase_result {
-                        Err(err) => {
-                            console.error(format!("   Failed to purchase chapter: {err}"));
-                            console.error(cformat!(
-                                "    Skipping chapter <m,s>{}</> (<s>{}</>)",
-                                chapter.title(),
-                                chapter.id()
-                            ));
-                        }
-                        Ok(ch_view) => {
-                            if ch_view.blocks().is_empty() {
-                                console.warn(cformat!(
-                                    "   Unable to purchase chapter <m,s>{}</> (<s>{}</>) since image block is empty, skipping",
-                                    chapter.title(),
-                                    chapter.id()
-                                ));
-                            } else {
-                                download_chapters.push(chapter);
-                                coin_purse.subtract_free(consume.get_free());
-                                coin_purse.subtract_event(consume.get_event());
-                                coin_purse.subtract_paid(consume.get_paid());
-                            }
-                        }
-                    }
-                }
-            }
-
-            if download_chapters.is_empty() {
-                console.warn("No chapters to be download after filtering, aborting");
-                return 1;
-            }
-
-            download_chapters.sort_by(|&a, &b| a.id().cmp(&b.id()));
-
-            let title_dir = get_output_directory(&output_dir, title_id, None, true);
-            let dump_info = create_chapters_info(manga_detail);
-
-            let title_dump_path = title_dir.join("_info.json");
-            dump_info
-                .dump(&title_dump_path)
-                .expect("Failed to dump title info");
-
-            let mut stored_blocks: Vec<tosho_musq::proto::PageBlock> = vec![];
-            for chapter in download_chapters {
-                console.info(cformat!(
-                    "  Downloading chapter <m,s>{}</> ({})...",
-                    chapter.title(),
-                    chapter.id()
-                ));
-
-                let image_blocks = match stored_blocks.iter().find(|&b| b.id() == chapter.id()) {
-                    Some(img_blocks) => img_blocks.images().to_vec(),
-                    None => {
-                        let ch_viewer = client
-                            .get_chapter_images(
-                                chapter.id(),
-                                dl_config.quality.clone().into(),
-                                None,
-                            )
-                            .await;
-                        if let Err(err) = ch_viewer {
-                            console.error(format!("Failed to download chapter: {err}"));
-                            console.error(cformat!(
-                                "   Skipping chapter <m,s>{}</> (<s>{}</>)",
-                                chapter.title(),
-                                chapter.id()
-                            ));
-                            continue;
-                        }
-
-                        let ch_images = ch_viewer.unwrap();
-                        if ch_images.blocks().is_empty() {
-                            console.warn(cformat!(
+                if ch_images.blocks().is_empty() {
+                    console.warn(cformat!(
                             "   Unable to download chapter <m,s>{}</> (<s>{}</>) since image block is empty, skipping",
                             chapter.title(),
                             chapter.id()
                         ));
-                            continue;
-                        }
+                    continue;
+                }
 
-                        // push to stored blocks
-                        ch_images.blocks().iter().for_each(|block| {
-                            stored_blocks.push(block.clone());
-                        });
+                // push to stored blocks
+                ch_images.blocks().iter().for_each(|block| {
+                    stored_blocks.push(block.clone());
+                });
 
-                        let img_blocks =
-                            ch_images.blocks().iter().find(|&b| b.id() == chapter.id());
+                let img_blocks = ch_images.blocks().iter().find(|&b| b.id() == chapter.id());
 
-                        match img_blocks {
-                            Some(img_blocks) => img_blocks.images().to_vec(),
-                            None => {
-                                console.warn(cformat!(
+                match img_blocks {
+                    Some(img_blocks) => img_blocks.images().to_vec(),
+                    None => {
+                        console.warn(cformat!(
                                     "   Unable to download chapter <m,s>{}</> (<s>{}</>) since we can't find this chapter blocks, skipping",
                                     chapter.title(),
                                     chapter.id()
                                 ));
-                                continue;
-                            }
-                        }
+                        continue;
                     }
-                };
-
-                let image_blocks: Vec<&tosho_musq::proto::ChapterPage> = image_blocks
-                    .iter()
-                    .filter(|&x| {
-                        // only allow url with /page/ or /page_high/ in it
-                        x.url().contains("/page/") || x.url().contains("/page_high/")
-                    })
-                    .collect();
-
-                if image_blocks.is_empty() {
-                    console.warn(cformat!(
-                        "   Chapter <m,s>{}</> (<s>{}</>) has no images, skipping",
-                        chapter.title(),
-                        chapter.id()
-                    ));
-                    continue;
                 }
+            }
+        };
 
-                let ch_dir = get_output_directory(&output_dir, title_id, Some(chapter.id()), false);
-                if let Some(count) = check_downloaded_image_count(&ch_dir, "avif")
-                    && count >= image_blocks.len()
-                {
-                    console.warn(cformat!(
-                        "   Chapter <m,s>{}</> (<s>{}</>) has been downloaded, skipping",
-                        chapter.title(),
-                        chapter.id()
-                    ));
-                    continue;
-                }
+        let image_blocks: Vec<&tosho_musq::proto::ChapterPage> = image_blocks
+            .iter()
+            .filter(|&x| {
+                // only allow url with /page/ or /page_high/ in it
+                x.url().contains("/page/") || x.url().contains("/page_high/")
+            })
+            .collect();
 
-                // create folder
-                std::fs::create_dir_all(&ch_dir).unwrap();
+        if image_blocks.is_empty() {
+            console.warn(cformat!(
+                "   Chapter <m,s>{}</> (<s>{}</>) has no images, skipping",
+                chapter.title(),
+                chapter.id()
+            ));
+            continue;
+        }
 
-                // download images
-                let total_image_count = image_blocks.len() as u64;
-                for image in image_blocks {
-                    let file_number: u64 = image.file_stem().parse().unwrap();
-                    let img_fn = format!("p{:03}.{}", file_number, image.extension());
-                    let img_dl_path = ch_dir.join(&img_fn);
+        let ch_dir = get_output_directory(&output_dir, title_id, Some(chapter.id()), false)?;
+        if let Some(count) = check_downloaded_image_count(&ch_dir, "avif")
+            && count >= image_blocks.len()
+        {
+            console.warn(cformat!(
+                "   Chapter <m,s>{}</> (<s>{}</>) has been downloaded, skipping",
+                chapter.title(),
+                chapter.id()
+            ));
+            continue;
+        }
 
-                    if console.is_debug() {
-                        console.log(cformat!(
-                            "   Downloading image <s>{}</> to <s>{}</>...",
-                            image.file_name(),
-                            img_fn
-                        ));
-                    } else {
-                        console.progress(total_image_count, 1, Some("Downloading".to_string()));
-                    }
+        // create folder
+        std::fs::create_dir_all(&ch_dir)?;
 
-                    // temporarily write to a memory
-                    let mut temp_memory = Vec::new();
+        // download images
+        let total_image_count = image_blocks.len() as u64;
+        for image in image_blocks {
+            let file_number: u64 = image.file_stem().parse()?;
+            let img_fn = format!("p{:03}.{}", file_number, image.extension());
+            let img_dl_path = ch_dir.join(&img_fn);
 
-                    // async download
-                    match client.stream_download(image.url(), &mut temp_memory).await {
-                        Ok(_) => {
-                            if image.is_encrypted() {
-                                // decrypt
-                                match tosho_musq::decrypt_image(&temp_memory, image) {
-                                    Ok(decrypted) => {
-                                        // write to file
-                                        match tokio::fs::write(&img_dl_path, &decrypted).await {
-                                            Ok(_) => {}
-                                            Err(err) => {
-                                                console.error(format!(
-                                                    "    Failed to write image: {err}"
-                                                ));
-                                            }
-                                        }
-                                    }
-                                    Err(err) => {
-                                        console
-                                            .error(format!("    Failed to decrypt image: {err}"));
-                                    }
-                                }
-                            } else {
+            if console.is_debug() {
+                console.log(cformat!(
+                    "   Downloading image <s>{}</> to <s>{}</>...",
+                    image.file_name(),
+                    img_fn
+                ));
+            } else {
+                console.progress(total_image_count, 1, Some("Downloading".to_string()));
+            }
+
+            // temporarily write to a memory
+            let mut temp_memory = Vec::new();
+
+            // async download
+            match client.stream_download(image.url(), &mut temp_memory).await {
+                Ok(_) => {
+                    if image.is_encrypted() {
+                        // decrypt
+                        match tosho_musq::decrypt_image(&temp_memory, image) {
+                            Ok(decrypted) => {
                                 // write to file
-                                match tokio::fs::write(&img_dl_path, &temp_memory).await {
+                                match tokio::fs::write(&img_dl_path, &decrypted).await {
                                     Ok(_) => {}
                                     Err(err) => {
                                         console.error(format!("    Failed to write image: {err}"));
                                     }
                                 }
                             }
+                            Err(err) => {
+                                console.error(format!("    Failed to decrypt image: {err}"));
+                            }
                         }
-                        Err(err) => {
-                            console.error(format!("    Failed to download image: {err}"));
+                    } else {
+                        // write to file
+                        match tokio::fs::write(&img_dl_path, &temp_memory).await {
+                            Ok(_) => {}
+                            Err(err) => {
+                                console.error(format!("    Failed to write image: {err}"));
+                            }
                         }
                     }
                 }
-                console.stop_progress(Some("Downloaded".to_string()));
+                Err(err) => {
+                    console.error(format!("    Failed to download image: {err}"));
+                }
             }
-
-            0
         }
-        _ => 1,
+        console.stop_progress(Some("Downloaded".to_string()));
     }
+
+    Ok(())
 }

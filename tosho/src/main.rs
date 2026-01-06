@@ -55,7 +55,7 @@ use std::path::PathBuf;
 
 use crate::cli::{ToshoCli, max_threads};
 use clap::Parser;
-use cli::{ExitCode, ToshoCommands};
+use cli::ToshoCommands;
 use color_eyre::eyre::Context;
 use r#impl::Implementations;
 use r#impl::amap::AMAPCommands;
@@ -86,7 +86,7 @@ pub(crate) use term::macros::linkify;
 
 fn get_default_download_dir() -> color_eyre::Result<PathBuf> {
     let cwd = std::env::current_dir()?;
-    cwd.join("DOWNLOADS")
+    Ok(cwd.join("DOWNLOADS"))
 }
 
 #[tokio::main]
@@ -130,7 +130,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
             account_id,
             subcommand,
         } => {
-            let early_exit = match subcommand.clone() {
+            let early_act = match subcommand.clone() {
                 MUSQCommands::Auth { session_id, r#type } => {
                     Some(r#impl::musq::accounts::musq_auth_session(session_id, r#type, &t).await)
                 }
@@ -139,8 +139,8 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
             };
 
             // early exit
-            if let Some(early_exit) = early_exit {
-                return Ok(early_exit);
+            if let Some(early_act) = early_act {
+                return early_act;
             }
 
             let config = select_single_account(account_id.as_deref(), Implementations::Musq, &t);
@@ -151,7 +151,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
                 },
                 None => {
                     t.warn("Aborted!");
-                    return Ok(1);
+                    return Err(color_eyre::eyre::eyre!("Aborted by user"));
                 }
             };
 
@@ -162,15 +162,15 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
                 client
             };
 
-            let exit_code = match subcommand {
+            let early_act = match subcommand {
                 MUSQCommands::Auth {
                     session_id: _,
                     r#type: _,
-                } => 0,
+                } => Ok(()),
                 MUSQCommands::Account => {
                     r#impl::musq::accounts::musq_account_info(&client, &config, &t).await
                 }
-                MUSQCommands::Accounts => 0,
+                MUSQCommands::Accounts => Ok(()),
                 MUSQCommands::AutoDownload {
                     title_id,
                     no_purchase,
@@ -195,7 +195,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
                     r#impl::musq::download::musq_download(
                         title_id,
                         mu_config,
-                        output.unwrap_or_else(get_default_download_dir),
+                        output.unwrap_or(default_dir),
                         &client,
                         &mut t_mut,
                     )
@@ -272,7 +272,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
                 }
             };
 
-            Ok(exit_code)
+            early_act
         }
         ToshoCommands::Kmkc {
             account_id,

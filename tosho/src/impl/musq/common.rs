@@ -1,6 +1,7 @@
+use color_eyre::eyre::{Context, OptionExt};
 use color_print::cformat;
 use num_format::{Locale, ToFormattedString};
-use tosho_common::{ToshoResult, make_error};
+use tosho_macros::AutoGetter;
 use tosho_musq::{
     MUClient,
     constants::BASE_HOST,
@@ -56,6 +57,35 @@ pub(super) fn do_print_search_information(
     }
 }
 
+#[derive(Clone, AutoGetter)]
+pub(super) struct MUPurchaseResult {
+    chapters: Vec<ChapterV2>,
+    title: MangaDetailV2,
+    balance: UserPoint,
+}
+
+impl MUPurchaseResult {
+    fn from_result(result: &MangaDetailV2, balance: &UserPoint) -> Self {
+        Self {
+            chapters: result.chapters().to_vec(),
+            title: result.clone(),
+            balance: balance.clone(),
+        }
+    }
+
+    fn from_result_custom(
+        episodes: Vec<ChapterV2>,
+        title: &MangaDetailV2,
+        balance: &UserPoint,
+    ) -> Self {
+        Self {
+            chapters: episodes,
+            title: title.clone(),
+            balance: balance.clone(),
+        }
+    }
+}
+
 pub(super) async fn common_purchase_select(
     title_id: u64,
     client: &MUClient,
@@ -63,112 +93,101 @@ pub(super) async fn common_purchase_select(
     show_all: bool,
     no_input: bool,
     console: &crate::term::Terminal,
-) -> (
-    ToshoResult<Vec<ChapterV2>>,
-    Option<MangaDetailV2>,
-    Option<UserPoint>,
-) {
+) -> color_eyre::Result<MUPurchaseResult> {
     console.info(cformat!("Fetching for ID <magenta,bold>{}</>...", title_id));
 
-    let results = client.get_manga(title_id).await;
-    match results {
-        Ok(result) => {
-            let user_bal = result.user_point().unwrap_or_default();
-            let total_bal = user_bal.sum().to_formatted_string(&Locale::en);
-            let paid_point = user_bal.paid().to_formatted_string(&Locale::en);
-            let xp_point = user_bal.event().to_formatted_string(&Locale::en);
-            let free_point = user_bal.free().to_formatted_string(&Locale::en);
+    let result = client
+        .get_manga(title_id)
+        .await
+        .context("Unable to connect to MU!")?;
+    let user_bal = result.user_point().unwrap_or_default();
+    let total_bal = user_bal.sum().to_formatted_string(&Locale::en);
+    let paid_point = user_bal.paid().to_formatted_string(&Locale::en);
+    let xp_point = user_bal.event().to_formatted_string(&Locale::en);
+    let free_point = user_bal.free().to_formatted_string(&Locale::en);
 
-            console.info("Your current point balance:");
-            console.info(cformat!("  - <s>Total</>: {}", total_bal));
-            console.info(cformat!("  - <s>Paid point</>: {}c", paid_point));
-            console.info(cformat!("  - <s>Event/XP point</>: {}c", xp_point));
-            console.info(cformat!("  - <s>Free point</>: {}c", free_point));
+    console.info("Your current point balance:");
+    console.info(cformat!("  - <s>Total</>: {}", total_bal));
+    console.info(cformat!("  - <s>Paid point</>: {}c", paid_point));
+    console.info(cformat!("  - <s>Event/XP point</>: {}c", xp_point));
+    console.info(cformat!("  - <s>Free point</>: {}c", free_point));
 
-            console.info("Title information:");
-            console.info(cformat!("  - <s>ID</>: {}", title_id));
-            console.info(cformat!("  - <s>Title</>: {}", result.title()));
-            console.info(cformat!("  - <s>Chapters</>: {}", result.chapters().len()));
+    console.info("Title information:");
+    console.info(cformat!("  - <s>ID</>: {}", title_id));
+    console.info(cformat!("  - <s>Title</>: {}", result.title()));
+    console.info(cformat!("  - <s>Chapters</>: {}", result.chapters().len()));
 
-            if no_input {
-                return (
-                    Ok(result.chapters().to_vec()),
-                    Some(result.clone()),
-                    Some(user_bal),
-                );
-            }
+    if no_input {
+        return Ok(MUPurchaseResult::from_result(&result, &user_bal));
+    }
 
-            let select_choices: Vec<ConsoleChoice> = result
-                .chapters()
-                .iter()
-                .filter_map(|ch| {
-                    if download_mode && !show_all && !ch.is_free() {
-                        None
-                    } else {
-                        let value = if ch.is_free() {
-                            ch.title().to_string()
-                        } else {
-                            format!("{} ({}c)", ch.title(), ch.price())
-                        };
-                        Some(ConsoleChoice {
-                            name: ch.id().to_string(),
-                            value,
-                        })
-                    }
-                })
-                .collect();
-
-            if select_choices.is_empty() {
-                console.warn("No chapters selected, aborting...");
-
-                return (Ok(vec![]), None, Some(user_bal));
-            }
-
-            let sel_prompt = if download_mode {
-                "Select chapter to download"
+    let select_choices: Vec<ConsoleChoice> = result
+        .chapters()
+        .iter()
+        .filter_map(|ch| {
+            if download_mode && !show_all && !ch.is_free() {
+                None
             } else {
-                "Select chapter to purchase"
-            };
-            let selected = console.select(sel_prompt, select_choices);
-
-            match selected {
-                Some(selected) => {
-                    if selected.is_empty() {
-                        console.warn("No chapter selected, aborting...");
-
-                        return (Ok(vec![]), None, Some(user_bal));
-                    }
-
-                    let mut selected_chapters: Vec<ChapterV2> = vec![];
-
-                    for chapter in selected {
-                        let ch_id = chapter.name.parse::<u64>().unwrap();
-                        let ch = result
-                            .chapters()
-                            .iter()
-                            .find(|ch| ch.id() == ch_id)
-                            .unwrap()
-                            .clone();
-
-                        selected_chapters.push(ch);
-                    }
-
-                    (Ok(selected_chapters), Some(result), Some(user_bal))
-                }
-                None => {
-                    console.warn("Aborted");
-                    (
-                        Err(make_error!("Aborted by user")),
-                        Some(result.clone()),
-                        Some(user_bal),
-                    )
-                }
+                let value = if ch.is_free() {
+                    ch.title().to_string()
+                } else {
+                    format!("{} ({}c)", ch.title(), ch.price())
+                };
+                Some(ConsoleChoice {
+                    name: ch.id().to_string(),
+                    value,
+                })
             }
-        }
-        Err(e) => {
-            console.error(cformat!("Unable to connect to MU!: {}", e));
+        })
+        .collect();
 
-            (Err(e), None, None)
+    if select_choices.is_empty() {
+        console.warn("No chapters selected, aborting...");
+        return Err(color_eyre::eyre::eyre!(
+            "No chapters to be selected, aborting"
+        ));
+    }
+
+    let sel_prompt = if download_mode {
+        "Select chapter to download"
+    } else {
+        "Select chapter to purchase"
+    };
+    let selected = console.select(sel_prompt, select_choices);
+
+    match selected {
+        Some(selected) => {
+            if selected.is_empty() {
+                console.warn("No chapter selected, aborting...");
+
+                return Err(color_eyre::eyre::eyre!(
+                    "No chapters to be selected, aborting"
+                ));
+            }
+
+            let mut selected_chapters: Vec<ChapterV2> = vec![];
+
+            for chapter in selected {
+                let ch_id = chapter.name.parse::<u64>()?;
+                let ch = result
+                    .chapters()
+                    .iter()
+                    .find(|ch| ch.id() == ch_id)
+                    .ok_or_eyre(format!("Failed to find chapter ID: {ch_id}"))?
+                    .clone();
+
+                selected_chapters.push(ch);
+            }
+
+            Ok(MUPurchaseResult::from_result_custom(
+                selected_chapters,
+                &result,
+                &user_bal,
+            ))
+        }
+        None => {
+            console.warn("Aborted");
+            Err(color_eyre::eyre::eyre!("Aborted by user"))
         }
     }
 }
