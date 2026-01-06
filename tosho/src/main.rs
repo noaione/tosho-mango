@@ -93,12 +93,12 @@ async fn main() -> color_eyre::Result<()> {
     // For some god know what reason, `clap` + rustc_lint will show this as unreachable code.
     let _cli = ToshoCli::parse();
 
-    let exit_code = entrypoint(_cli).await?;
+    entrypoint(_cli).await?;
 
-    std::process::exit(exit_code as i32);
+    Ok(())
 }
 
-async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<ExitCode> {
+async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
     let t = term::get_console(cli.verbose);
     let mut t_mut = term::get_console(cli.verbose);
 
@@ -107,7 +107,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<ExitCode> {
             Ok(proxy) => Some(proxy),
             Err(e) => {
                 t.warn(format!("Unable to parse proxy: {e}"));
-                return Ok(1);
+                return Ok(());
             }
         },
         None => None,
@@ -457,7 +457,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<ExitCode> {
             account_id,
             subcommand,
         } => {
-            let early_exit = match subcommand.clone() {
+            let exit_res = match subcommand.clone() {
                 AMAPCommands::Auth { email, password } => {
                     Some(r#impl::amap::accounts::amap_account_login(email, password, &t).await)
                 }
@@ -466,8 +466,8 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<ExitCode> {
             };
 
             // early exit
-            if let Some(early_exit) = early_exit {
-                return Ok(early_exit);
+            if let Some(exit_res) = exit_res {
+                return exit_res; // Propagate error
             }
 
             let config = select_single_account(account_id.as_deref(), Implementations::Amap, &t);
@@ -478,7 +478,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<ExitCode> {
                 },
                 None => {
                     t.warn("Aborted!");
-                    return Ok(1);
+                    return Err(color_eyre::eyre::eyre!("Aborted by user"));
                 }
             };
 
@@ -489,15 +489,15 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<ExitCode> {
                 client
             };
 
-            let exit_code = match subcommand {
+            let exit_res = match subcommand {
                 AMAPCommands::Auth {
                     email: _,
                     password: _,
-                } => 0,
+                } => Ok(()),
                 AMAPCommands::Account => {
                     r#impl::amap::accounts::amap_account_info(&client, &config, &t).await
                 }
-                AMAPCommands::Accounts => 0,
+                AMAPCommands::Accounts => Ok(()),
                 AMAPCommands::AutoDownload {
                     title_id,
                     no_purchase,
@@ -582,7 +582,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<ExitCode> {
                 }
             };
 
-            Ok(exit_code)
+            exit_res
         }
         ToshoCommands::Sjv {
             account_id,

@@ -1,11 +1,12 @@
+use color_eyre::eyre::{Context, OptionExt};
 use color_print::cformat;
 use num_format::{Locale, ToFormattedString};
 use tosho_amap::{
     AMClient, SESSION_COOKIE_NAME,
     constants::BASE_HOST,
-    models::{ComicEpisodeInfo, ComicInfo, ComicSimpleInfo, IAPInfo},
+    models::{ComicEpisodeInfo, ComicInfo, ComicInfoResponse, ComicSimpleInfo, IAPInfo},
 };
-use tosho_common::{ToshoResult, make_error};
+use tosho_macros::AutoGetter;
 
 use super::config::Config;
 use crate::r#impl::common::unix_timestamp_to_string;
@@ -65,6 +66,35 @@ pub(super) fn do_print_search_information(
     }
 }
 
+#[derive(Debug, AutoGetter)]
+pub(super) struct AMPurchaseResult {
+    episodes: Vec<ComicEpisodeInfo>,
+    comic: ComicInfo,
+    balance: IAPInfo,
+}
+
+impl AMPurchaseResult {
+    fn from_result(result: &ComicInfoResponse, balance: &IAPInfo) -> Self {
+        Self {
+            episodes: result.info().episodes().to_vec(),
+            comic: result.info().clone(),
+            balance: balance.clone(),
+        }
+    }
+
+    fn from_result_custom(
+        episodes: Vec<ComicEpisodeInfo>,
+        comic: &ComicInfo,
+        balance: &IAPInfo,
+    ) -> Self {
+        Self {
+            episodes,
+            comic: comic.clone(),
+            balance: balance.clone(),
+        }
+    }
+}
+
 pub(super) async fn common_purchase_select(
     title_id: u64,
     client: &AMClient,
@@ -73,135 +103,127 @@ pub(super) async fn common_purchase_select(
     show_all: bool,
     no_input: bool,
     console: &crate::term::Terminal,
-) -> (
-    ToshoResult<Vec<ComicEpisodeInfo>>,
-    Option<ComicInfo>,
-    Option<IAPInfo>,
-) {
+) -> color_eyre::Result<AMPurchaseResult> {
     console.info(cformat!("Fetching for ID <magenta,bold>{}</>...", title_id));
 
-    let results = client.get_comic(title_id).await;
-    match results {
-        Ok(result) => {
-            save_session_config(client, account);
+    let result = client
+        .get_comic(title_id)
+        .await
+        .context("Unable to connect to AM")?;
 
-            let balance = result.account();
-            let total_ticket = balance.sum().to_formatted_string(&Locale::en);
-            let purchased = balance.purchased().to_formatted_string(&Locale::en);
-            let premium = balance.premium().to_formatted_string(&Locale::en);
-            let total_point = balance.sum_point().to_formatted_string(&Locale::en);
+    save_session_config(client, account);
 
-            console.info("Your current point balance:");
-            console.info(cformat!(
-                "  - <s>Total</>: <magenta,bold><reverse>{}</>T</magenta,bold>",
-                total_ticket
-            ));
-            console.info(cformat!(
-                "  - <s>Purchased</>: <yellow,bold><reverse>{}</>T</yellow,bold>",
-                purchased
-            ));
-            console.info(cformat!(
-                "  - <s>Premium</>: <green,bold><reverse>{}</>T</green,bold>",
-                premium
-            ));
-            console.info(cformat!(
-                "  - <s>Total point</>: <cyan!,bold><reverse>{}</>p</cyan!,bold>",
-                total_point
-            ));
+    let balance = result.account();
+    let total_ticket = balance.sum().to_formatted_string(&Locale::en);
+    let purchased = balance.purchased().to_formatted_string(&Locale::en);
+    let premium = balance.premium().to_formatted_string(&Locale::en);
+    let total_point = balance.sum_point().to_formatted_string(&Locale::en);
 
-            console.info("Title information:");
-            console.info(cformat!("  - <s>ID</>: {}", title_id));
-            console.info(cformat!("  - <s>Title</>: {}", result.info().title()));
-            console.info(cformat!(
-                "  - <s>Chapters</>: {}",
-                result.info().episodes().len()
-            ));
+    console.info("Your current point balance:");
+    console.info(cformat!(
+        "  - <s>Total</>: <magenta,bold><reverse>{}</>T</magenta,bold>",
+        total_ticket
+    ));
+    console.info(cformat!(
+        "  - <s>Purchased</>: <yellow,bold><reverse>{}</>T</yellow,bold>",
+        purchased
+    ));
+    console.info(cformat!(
+        "  - <s>Premium</>: <green,bold><reverse>{}</>T</green,bold>",
+        premium
+    ));
+    console.info(cformat!(
+        "  - <s>Total point</>: <cyan!,bold><reverse>{}</>p</cyan!,bold>",
+        total_point
+    ));
 
-            if no_input {
-                return (
-                    Ok(result.info().episodes().to_vec()),
-                    Some(result.info().clone()),
-                    Some(balance.clone()),
-                );
-            }
+    console.info("Title information:");
+    console.info(cformat!("  - <s>ID</>: {}", title_id));
+    console.info(cformat!("  - <s>Title</>: {}", result.info().title()));
+    console.info(cformat!(
+        "  - <s>Chapters</>: {}",
+        result.info().episodes().len()
+    ));
 
-            let select_choices: Vec<ConsoleChoice> = result
-                .info()
-                .episodes()
-                .iter()
-                .filter_map(|ch| {
-                    if download_mode && !show_all && !ch.info().is_available() {
-                        None
-                    } else {
-                        let value = if ch.info().is_available() {
-                            ch.info().title().to_string()
-                        } else {
-                            format!("{} ({}T)", ch.info().title(), ch.info().price())
-                        };
-                        Some(ConsoleChoice {
-                            name: ch.info().id().to_string(),
-                            value,
-                        })
-                    }
-                })
-                .collect();
+    if no_input {
+        return Ok(AMPurchaseResult::from_result(&result, &balance));
+    }
 
-            if select_choices.is_empty() {
-                console.warn("No chapters selected, aborting...");
-
-                return (Ok(vec![]), None, Some(balance.clone()));
-            }
-
-            let sel_prompt = if download_mode {
-                "Select chapter to download"
+    let select_choices: Vec<ConsoleChoice> = result
+        .info()
+        .episodes()
+        .iter()
+        .filter_map(|ch| {
+            if download_mode && !show_all && !ch.info().is_available() {
+                None
             } else {
-                "Select chapter to purchase"
-            };
-            let selected = console.select(sel_prompt, select_choices);
-
-            match selected {
-                Some(selected) => {
-                    if selected.is_empty() {
-                        console.warn("No chapter selected, aborting...");
-
-                        return (Ok(vec![]), None, Some(balance.clone()));
-                    }
-
-                    let mut selected_chapters: Vec<ComicEpisodeInfo> = vec![];
-
-                    for chapter in selected {
-                        let ch_id = chapter.name.parse::<u64>().unwrap();
-                        let ch = result
-                            .info()
-                            .episodes()
-                            .iter()
-                            .find(|&ch| ch.info().id() == ch_id)
-                            .unwrap()
-                            .clone();
-
-                        selected_chapters.push(ch);
-                    }
-
-                    (
-                        Ok(selected_chapters),
-                        Some(result.info().clone()),
-                        Some(balance.clone()),
-                    )
-                }
-                None => {
-                    console.warn("Aborted");
-                    (
-                        Err(make_error!("Aborted by user")),
-                        Some(result.info().clone()),
-                        Some(result.account().clone()),
-                    )
-                }
+                let value = if ch.info().is_available() {
+                    ch.info().title().to_string()
+                } else {
+                    format!("{} ({}T)", ch.info().title(), ch.info().price())
+                };
+                Some(ConsoleChoice {
+                    name: ch.info().id().to_string(),
+                    value,
+                })
             }
-        }
-        Err(e) => {
-            console.error(cformat!("Unable to connect to AM: {}", e));
+        })
+        .collect();
 
-            (Err(e), None, None)
+    if select_choices.is_empty() {
+        console.warn("No chapters selected, aborting...");
+
+        return Ok(AMPurchaseResult::from_result_custom(
+            vec![],
+            result.info(),
+            &balance,
+        ));
+    }
+
+    let sel_prompt = if download_mode {
+        "Select chapter to download"
+    } else {
+        "Select chapter to purchase"
+    };
+    let selected = console.select(sel_prompt, select_choices);
+
+    match selected {
+        Some(selected) => {
+            if selected.is_empty() {
+                console.warn("No chapter selected, aborting...");
+
+                return Ok(AMPurchaseResult::from_result_custom(
+                    vec![],
+                    result.info(),
+                    &balance,
+                ));
+            }
+
+            let mut selected_chapters: Vec<ComicEpisodeInfo> = vec![];
+
+            for chapter in selected {
+                let ch_id = chapter.name.parse::<u64>()?;
+                let ch = result
+                    .info()
+                    .episodes()
+                    .iter()
+                    .find(|&ch| ch.info().id() == ch_id)
+                    .ok_or_eyre(format!("Failed to find chapter ID: {}", ch_id))?
+                    .clone();
+
+                selected_chapters.push(ch);
+            }
+
+            Ok(AMPurchaseResult::from_result_custom(
+                selected_chapters,
+                result.info(),
+                &balance,
+            ))
+        }
+        None => {
+            console.warn("Aborted");
+
+            Err(color_eyre::eyre::eyre!("Aborted by user"))
         }
     }
 }

@@ -1,9 +1,9 @@
+use color_eyre::eyre::Context;
 use color_print::cformat;
 use num_format::{Locale, ToFormattedString};
 use tosho_amap::AMClient;
 
 use crate::{
-    cli::ExitCode,
     config::{get_all_config, save_config, try_remove_config},
     r#impl::client::make_amap_client,
 };
@@ -14,7 +14,7 @@ pub async fn amap_account_login(
     email: String,
     password: String,
     console: &crate::term::Terminal,
-) -> ExitCode {
+) -> color_eyre::Result<()> {
     console.info(cformat!(
         "Authenticating with email <m,s>{}</> and password <m,s>{}</>...",
         email,
@@ -34,7 +34,7 @@ pub async fn amap_account_login(
         let abort_it = console.confirm(Some("Do you want to replace it?"));
         if !abort_it {
             console.info("Aborting...");
-            return 0;
+            return Ok(());
         }
 
         match old_config {
@@ -45,75 +45,53 @@ pub async fn amap_account_login(
         }
     }
 
-    let result = AMClient::login(&email, &password).await;
+    let session = AMClient::login(&email, &password)
+        .await
+        .context("Failed to authenticate")?;
 
-    match result {
-        Ok(session) => {
-            console.info(cformat!(
-                "Authenticated as <m,s>{}</> ({})",
-                session.identifier(),
-                email
-            ));
+    console.info(cformat!(
+        "Authenticated as <m,s>{}</> ({})",
+        session.identifier(),
+        email
+    ));
 
-            match make_amap_client(&session) {
-                Ok(client) => {
-                    let account = client.get_account().await;
+    let client = make_amap_client(&session).context("Failed to create client")?;
 
-                    let as_config: Config = session.into();
+    let account = client.get_account().await.context("Failed to login")?;
 
-                    match account {
-                        Ok(account) => {
-                            let as_config = as_config
-                                .with_email(&email)
-                                .with_account_info(account.info());
+    let as_config: Config = session.into();
 
-                            console
-                                .info(cformat!("Logged in as <m,s>{}</>", account.info().name()));
+    let as_config = as_config
+        .with_email(&email)
+        .with_account_info(account.info());
 
-                            let final_config = match old_id {
-                                Some(old_id) => as_config.with_id(&old_id),
-                                None => as_config,
-                            };
+    console.info(cformat!("Logged in as <m,s>{}</>", account.info().name()));
 
-                            console.info(cformat!(
-                                "Created session ID <m,s>{}</>, saving config...",
-                                final_config.id
-                            ));
+    let final_config = match old_id {
+        Some(old_id) => as_config.with_id(&old_id),
+        None => as_config,
+    };
 
-                            save_config(crate::config::ConfigImpl::Amap(final_config), None);
+    console.info(cformat!(
+        "Created session ID <m,s>{}</>, saving config...",
+        final_config.id
+    ));
 
-                            0
-                        }
-                        Err(e) => {
-                            console.error(format!("Failed to login: {e}"));
-                            1
-                        }
-                    }
-                }
-                Err(e) => {
-                    console.error(format!("Failed to create client: {e}"));
-                    1
-                }
-            }
-        }
-        Err(e) => {
-            console.error(format!("Failed to authenticate: {e}"));
-            1
-        }
-    }
+    save_config(crate::config::ConfigImpl::Amap(final_config), None);
+
+    Ok(())
 }
 
-pub(crate) fn amap_accounts(console: &crate::term::Terminal) -> ExitCode {
+pub(crate) fn amap_accounts(console: &crate::term::Terminal) -> color_eyre::Result<()> {
     let all_configs = get_all_config(&crate::r#impl::Implementations::Amap, None);
 
     match all_configs.len() {
         0 => {
             console.warn("No accounts found!");
-
-            1
+            Ok(())
         }
-        _ => {
-            console.info(format!("Found {} accounts:", all_configs.len()));
+        count => {
+            console.info(format!("Found {} accounts:", count));
             for (i, c) in all_configs.iter().enumerate() {
                 match c {
                     crate::config::ConfigImpl::Amap(c) => {
@@ -130,7 +108,7 @@ pub(crate) fn amap_accounts(console: &crate::term::Terminal) -> ExitCode {
                 }
             }
 
-            0
+            Ok(())
         }
     }
 }
@@ -139,85 +117,76 @@ pub(crate) async fn amap_account_info(
     client: &AMClient,
     account: &Config,
     console: &crate::term::Terminal,
-) -> ExitCode {
-    let acc_resp = client.get_account().await;
+) -> color_eyre::Result<()> {
+    let acc_resp = client
+        .get_account()
+        .await
+        .context("Failed to fetch account info")?;
 
-    match acc_resp {
-        Ok(acc_resp) => {
-            super::common::save_session_config(client, account);
+    super::common::save_session_config(client, account);
 
-            let info = acc_resp.info();
+    let info = acc_resp.info();
 
-            console.info(cformat!(
-                "Account info for <magenta,bold>{}</>:",
-                account.id
-            ));
+    console.info(cformat!(
+        "Account info for <magenta,bold>{}</>:",
+        account.id
+    ));
 
-            console.info(cformat!("  <s>ID</>: {}", info.id()));
-            console.info(cformat!("  <s>Email</>: {}", account.email));
-            console.info(cformat!("  <s>Username</>: {}", info.name()));
+    console.info(cformat!("  <s>ID</>: {}", info.id()));
+    console.info(cformat!("  <s>Email</>: {}", account.email));
+    console.info(cformat!("  <s>Username</>: {}", info.name()));
 
-            0
-        }
-        Err(e) => {
-            console.error(format!("Failed to fetch account info: {e}"));
-
-            1
-        }
-    }
+    Ok(())
 }
 
 pub(crate) async fn amap_account_balance(
     client: &AMClient,
     acc_info: &Config,
     console: &crate::term::Terminal,
-) -> ExitCode {
+) -> color_eyre::Result<()> {
     console.info(cformat!(
         "Fetching balance for <magenta,bold>{}</>...",
         acc_info.id
     ));
-    let remainder = client.get_remainder().await;
+    let remainder = client
+        .get_remainder()
+        .await
+        .context("Failed to fetch balance")?;
 
-    match remainder {
-        Ok(remainder) => {
-            super::common::save_session_config(client, acc_info);
+    super::common::save_session_config(client, acc_info);
 
-            let balance = remainder.info();
+    let balance = remainder.info();
 
-            console.info("Your current point balance:");
-            let total_ticket = balance.sum().to_formatted_string(&Locale::en);
-            let purchased = balance.purchased().to_formatted_string(&Locale::en);
-            let premium = balance.premium().to_formatted_string(&Locale::en);
-            let total_point = balance.sum_point().to_formatted_string(&Locale::en);
+    console.info("Your current point balance:");
+    let total_ticket = balance.sum().to_formatted_string(&Locale::en);
+    let purchased = balance.purchased().to_formatted_string(&Locale::en);
+    let premium = balance.premium().to_formatted_string(&Locale::en);
+    let total_point = balance.sum_point().to_formatted_string(&Locale::en);
 
-            console.info(cformat!(
-                "  - <s>Total</>: <magenta,bold><reverse>{}</>T</magenta,bold>",
-                total_ticket
-            ));
-            console.info(cformat!(
-                "  - <s>Purchased</>: <yellow,bold><reverse>{}</>T</yellow,bold>",
-                purchased
-            ));
-            console.info(cformat!(
-                "  - <s>Premium</>: <green,bold><reverse>{}</>T</green,bold>",
-                premium
-            ));
-            console.info(cformat!(
-                "  - <s>Total point</>: <cyan!,bold><reverse>{}</>p</cyan!,bold>",
-                total_point
-            ));
+    console.info(cformat!(
+        "  - <s>Total</>: <magenta,bold><reverse>{}</>T</magenta,bold>",
+        total_ticket
+    ));
+    console.info(cformat!(
+        "  - <s>Purchased</>: <yellow,bold><reverse>{}</>T</yellow,bold>",
+        purchased
+    ));
+    console.info(cformat!(
+        "  - <s>Premium</>: <green,bold><reverse>{}</>T</green,bold>",
+        premium
+    ));
+    console.info(cformat!(
+        "  - <s>Total point</>: <cyan!,bold><reverse>{}</>p</cyan!,bold>",
+        total_point
+    ));
 
-            0
-        }
-        Err(e) => {
-            console.error(format!("Failed to fetch balance: {e}"));
-
-            1
-        }
-    }
+    Ok(())
 }
 
-pub(crate) fn amap_account_revoke(account: &Config, console: &crate::term::Terminal) -> ExitCode {
+pub(crate) fn amap_account_revoke(
+    account: &Config,
+    console: &crate::term::Terminal,
+) -> color_eyre::Result<()> {
     let confirm = console.confirm(Some(&cformat!(
         "Are you sure you want to delete <m,s>{}</>?\nThis action is irreversible!",
         account.id
@@ -225,24 +194,20 @@ pub(crate) fn amap_account_revoke(account: &Config, console: &crate::term::Termi
 
     if !confirm {
         console.warn("Aborted");
-        return 0;
+        return Ok(());
     }
 
-    match try_remove_config(
+    try_remove_config(
         account.id.as_str(),
         crate::r#impl::Implementations::Amap,
         None,
-    ) {
-        Ok(_) => {
-            console.info(cformat!(
-                "Successfully deleted <magenta,bold>{}</>",
-                account.id
-            ));
-            0
-        }
-        Err(err) => {
-            console.error(format!("Failed to delete account: {err}"));
-            1
-        }
-    }
+    )
+    .context("Failed to delete account")?;
+
+    console.info(cformat!(
+        "Successfully deleted <magenta,bold>{}</>",
+        account.id
+    ));
+
+    Ok(())
 }
