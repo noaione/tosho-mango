@@ -1,10 +1,8 @@
 use clap::ValueEnum;
+use color_eyre::eyre::Context;
 use color_print::cformat;
 
-use crate::{
-    cli::ExitCode,
-    config::{get_all_config, save_config, try_remove_config},
-};
+use crate::config::{get_all_config, save_config, try_remove_config};
 
 use super::config::{Config, DeviceType};
 
@@ -41,7 +39,7 @@ pub(crate) async fn nids_auth_session(
     session_token: String,
     device_kind: DeviceKind,
     console: &crate::term::Terminal,
-) -> ExitCode {
+) -> color_eyre::Result<()> {
     let r#type = match device_kind {
         DeviceKind::Web => DeviceType::Web,
     };
@@ -58,61 +56,52 @@ pub(crate) async fn nids_auth_session(
     let mut config = Config::from_session(&session_token, r#type);
     config.apply_id(&random_uuid);
 
-    match crate::r#impl::client::make_nids_client(&config) {
-        Err(e) => {
-            console.error(cformat!("Unable to create client: {}", e));
-            1
+    let client =
+        crate::r#impl::client::make_nids_client(&config).context("Unable to create client")?;
+
+    let user_info = client
+        .get_profile()
+        .await
+        .context("Unable to authenticate")?;
+
+    let old_config = all_configs.iter().find(|&c| match c {
+        crate::config::ConfigImpl::Nids(c) => c.id == user_info.id(),
+        _ => false,
+    });
+
+    if let Some(old_config) = old_config {
+        console.warn("Session ID already authenticated!");
+        let abort_it = console.confirm(Some("Do you want to replace it?"));
+        if !abort_it {
+            console.info("Aborting...");
+            return Err(color_eyre::eyre::eyre!("Aborted by user"));
         }
-        Ok(client) => {
-            let user_info = client.get_profile().await;
 
-            match user_info {
-                Err(e) => {
-                    console.error(cformat!("Unable to authenticate: {}", e));
-                    1
-                }
-                Ok(user_info) => {
-                    let old_config = all_configs.iter().find(|&c| match c {
-                        crate::config::ConfigImpl::Nids(c) => c.id == user_info.id(),
-                        _ => false,
-                    });
-
-                    if let Some(old_config) = old_config {
-                        console.warn("Session ID already authenticated!");
-                        let abort_it = console.confirm(Some("Do you want to replace it?"));
-                        if !abort_it {
-                            console.info("Aborting...");
-                            return 0;
-                        }
-
-                        match old_config {
-                            crate::config::ConfigImpl::Nids(c) => {
-                                config.apply_id(&c.id);
-                            }
-                            _ => unreachable!(),
-                        }
-                    } else {
-                        config.apply_id(user_info.id());
-                    }
-                    config.email = user_info.email().to_string();
-                    config.username = user_info.username().map(|s| s.to_string());
-
-                    console.info(cformat!(
-                        "Authenticated as <m,s>{}</> ({})...",
-                        user_info.username().unwrap_or("Unknown"),
-                        user_info.email()
-                    ));
-
-                    console.info(cformat!(
-                        "Created session ID <m,s>{}</>, saving config...",
-                        config.get_id()
-                    ));
-                    save_config(crate::config::ConfigImpl::Nids(config), None);
-                    0
-                }
+        match old_config {
+            crate::config::ConfigImpl::Nids(c) => {
+                config.apply_id(&c.id);
             }
+            _ => unreachable!(),
         }
+    } else {
+        config.apply_id(user_info.id());
     }
+    config.email = user_info.email().to_string();
+    config.username = user_info.username().map(|s| s.to_string());
+
+    console.info(cformat!(
+        "Authenticated as <m,s>{}</> ({})...",
+        user_info.username().unwrap_or("Unknown"),
+        user_info.email()
+    ));
+
+    console.info(cformat!(
+        "Created session ID <m,s>{}</>, saving config...",
+        config.get_id()
+    ));
+    save_config(crate::config::ConfigImpl::Nids(config), None);
+
+    Ok(())
 }
 
 pub(crate) async fn nids_auth_email(
@@ -121,7 +110,7 @@ pub(crate) async fn nids_auth_email(
     device_kind: DeviceKind,
     proxy: Option<&reqwest::Proxy>,
     console: &crate::term::Terminal,
-) -> ExitCode {
+) -> color_eyre::Result<()> {
     let r#type = match device_kind {
         DeviceKind::Web => DeviceType::Web,
     };
@@ -130,71 +119,67 @@ pub(crate) async fn nids_auth_email(
 
     let all_configs = get_all_config(&crate::r#impl::Implementations::Nids, None);
 
-    match tosho_nids::NIClient::login(email, password, proxy.cloned()).await {
-        Err(e) => {
-            console.error(cformat!("Unable to authenticate: {}", e));
-            1
+    let token_results = tosho_nids::NIClient::login(email, password, proxy.cloned())
+        .await
+        .context("Unable to authenticate")?;
+
+    let token_data = token_results.data();
+    let old_config = all_configs.iter().find(|&c| match c {
+        crate::config::ConfigImpl::Nids(c) => c.id == token_data.user().id(),
+        _ => false,
+    });
+
+    let mut config = Config {
+        id: token_data.user().id().to_string(),
+        session: token_data.tokens().access_token().to_string(),
+        refresh_token: Some(token_data.tokens().refresh_token().to_string()),
+        email: token_data.user().email().to_string(),
+        username: token_data.user().username().map(|s| s.to_string()),
+        r#type: r#type as i32,
+    };
+
+    if let Some(old_config) = old_config {
+        console.warn("Session ID already authenticated!");
+        let abort_it = console.confirm(Some("Do you want to replace it?"));
+        if !abort_it {
+            console.info("Aborting...");
+            return Err(color_eyre::eyre::eyre!("Aborted by user"));
         }
-        Ok(token_results) => {
-            let token_data = token_results.data();
-            let old_config = all_configs.iter().find(|&c| match c {
-                crate::config::ConfigImpl::Nids(c) => c.id == token_data.user().id(),
-                _ => false,
-            });
 
-            let mut config = Config {
-                id: token_data.user().id().to_string(),
-                session: token_data.tokens().access_token().to_string(),
-                refresh_token: Some(token_data.tokens().refresh_token().to_string()),
-                email: token_data.user().email().to_string(),
-                username: token_data.user().username().map(|s| s.to_string()),
-                r#type: r#type as i32,
-            };
-
-            if let Some(old_config) = old_config {
-                console.warn("Session ID already authenticated!");
-                let abort_it = console.confirm(Some("Do you want to replace it?"));
-                if !abort_it {
-                    console.info("Aborting...");
-                    return 0;
-                }
-
-                match old_config {
-                    crate::config::ConfigImpl::Nids(c) => {
-                        config.apply_id(&c.id);
-                    }
-                    _ => unreachable!(),
-                }
+        match old_config {
+            crate::config::ConfigImpl::Nids(c) => {
+                config.apply_id(&c.id);
             }
-
-            console.info(cformat!(
-                "Authenticated as <m,s>{}</> ({})...",
-                token_data.user().username().unwrap_or("Unknown"),
-                token_data.user().email()
-            ));
-
-            console.info(cformat!(
-                "Created session ID <m,s>{}</>, saving config...",
-                config.get_id()
-            ));
-            save_config(crate::config::ConfigImpl::Nids(config), None);
-
-            0
+            _ => unreachable!(),
         }
     }
+
+    console.info(cformat!(
+        "Authenticated as <m,s>{}</> ({})...",
+        token_data.user().username().unwrap_or("Unknown"),
+        token_data.user().email()
+    ));
+
+    console.info(cformat!(
+        "Created session ID <m,s>{}</>, saving config...",
+        config.get_id()
+    ));
+    save_config(crate::config::ConfigImpl::Nids(config), None);
+
+    Ok(())
 }
 
-pub(crate) fn nids_accounts(console: &crate::term::Terminal) -> ExitCode {
+pub(crate) fn nids_accounts(console: &crate::term::Terminal) -> color_eyre::Result<()> {
     let all_configs = get_all_config(&crate::r#impl::Implementations::Nids, None);
 
     match all_configs.len() {
         0 => {
             console.warn("No accounts found!");
 
-            1
+            Ok(())
         }
-        _ => {
-            console.info(format!("Found {} accounts:", all_configs.len()));
+        other => {
+            console.info(format!("Found {} accounts:", other));
             for (i, c) in all_configs.iter().enumerate() {
                 match c {
                     crate::config::ConfigImpl::Nids(c) => {
@@ -211,7 +196,7 @@ pub(crate) fn nids_accounts(console: &crate::term::Terminal) -> ExitCode {
                 }
             }
 
-            0
+            Ok(())
         }
     }
 }
@@ -220,67 +205,64 @@ pub(crate) async fn nids_account_info(
     client: &tosho_nids::NIClient,
     account: &Config,
     console: &crate::term::Terminal,
-) -> ExitCode {
-    match client.get_profile().await {
-        Ok(acc_info) => {
-            console.info(cformat!(
-                "Account info for <magenta,bold>{}</>:",
-                account.id
-            ));
+) -> color_eyre::Result<()> {
+    let acc_info = client
+        .get_profile()
+        .await
+        .context("Failed to fetch account info")?;
 
-            console.info(cformat!("  <s>ID</>: {}", acc_info.id()));
-            console.info(cformat!("  <s>Email</>: {}", acc_info.email()));
-            let username = acc_info.username().unwrap_or("[no username]");
-            console.info(cformat!("  <s>Username</>: {}", username));
+    console.info(cformat!(
+        "Account info for <magenta,bold>{}</>:",
+        account.id
+    ));
 
-            let mut user_name = String::new();
-            if let Some(first_name) = acc_info.first_name()
-                && !first_name.is_empty()
-            {
-                user_name.push_str(first_name);
-                user_name.push(' ');
-            }
-            if let Some(last_name) = acc_info.last_name()
-                && !last_name.is_empty()
-            {
-                user_name.push_str(last_name);
-            }
+    console.info(cformat!("  <s>ID</>: {}", acc_info.id()));
+    console.info(cformat!("  <s>Email</>: {}", acc_info.email()));
+    let username = acc_info.username().unwrap_or("[no username]");
+    console.info(cformat!("  <s>Username</>: {}", username));
 
-            user_name = user_name.trim().to_string();
-            if !user_name.is_empty() {
-                console.info(cformat!("  <s>Name</>: {}", user_name));
-            }
-            if !acc_info.roles().is_empty() {
-                console.info(cformat!("  <s>Roles</>: {}", acc_info.roles()));
-            }
-
-            console.info(cformat!(
-                "  <s>Balance</>: <g,s>$</g,s>{}",
-                tosho_nids::format_price(acc_info.balance())
-            ));
-            if let Some(payment_method) = acc_info.payment_method() {
-                // Formatting: {Brand} **** {Last4} ({ExpMonth}/{ExpYear})
-                let pm_string = format!(
-                    "{} **** {} ({}/{})",
-                    payment_method.brand(),
-                    payment_method.last4(),
-                    payment_method.exp_month(),
-                    payment_method.exp_year()
-                );
-                console.info(cformat!(
-                    "  <s>Payment method</>: {} ({})",
-                    pm_string,
-                    payment_method.pm_id()
-                ));
-            }
-
-            0
-        }
-        Err(e) => {
-            console.error(cformat!("Unable to fetch account info: {}", e));
-            1
-        }
+    let mut user_name = String::new();
+    if let Some(first_name) = acc_info.first_name()
+        && !first_name.is_empty()
+    {
+        user_name.push_str(first_name);
+        user_name.push(' ');
     }
+    if let Some(last_name) = acc_info.last_name()
+        && !last_name.is_empty()
+    {
+        user_name.push_str(last_name);
+    }
+
+    user_name = user_name.trim().to_string();
+    if !user_name.is_empty() {
+        console.info(cformat!("  <s>Name</>: {}", user_name));
+    }
+    if !acc_info.roles().is_empty() {
+        console.info(cformat!("  <s>Roles</>: {}", acc_info.roles()));
+    }
+
+    console.info(cformat!(
+        "  <s>Balance</>: <g,s>$</g,s>{}",
+        tosho_nids::format_price(acc_info.balance())
+    ));
+    if let Some(payment_method) = acc_info.payment_method() {
+        // Formatting: {Brand} **** {Last4} ({ExpMonth}/{ExpYear})
+        let pm_string = format!(
+            "{} **** {} ({}/{})",
+            payment_method.brand(),
+            payment_method.last4(),
+            payment_method.exp_month(),
+            payment_method.exp_year()
+        );
+        console.info(cformat!(
+            "  <s>Payment method</>: {} ({})",
+            pm_string,
+            payment_method.pm_id()
+        ));
+    }
+
+    Ok(())
 }
 
 pub(crate) async fn nids_account_refresh(
@@ -288,7 +270,7 @@ pub(crate) async fn nids_account_refresh(
     client: &tosho_nids::NIClient,
     account: &Config,
     console: &crate::term::Terminal,
-) -> ExitCode {
+) -> color_eyre::Result<()> {
     console.info(cformat!(
         "Refreshing tokens for account <m,s>{}</>...",
         account.id
@@ -302,40 +284,42 @@ pub(crate) async fn nids_account_refresh(
                 refresh.to_string()
             } else {
                 console.error("No refresh token found for this account!");
-                return 1;
+                return Err(color_eyre::eyre::eyre!(
+                    "No refresh token found for this account"
+                ));
             }
         }
     };
 
-    match client.refresh_token(refresh_token).await {
-        Err(e) => {
-            console.error(cformat!("Unable to refresh tokens: {}", e));
-            1
-        }
-        Ok(token_results) => {
-            let token_data = token_results.data();
+    let token_results = client
+        .refresh_token(refresh_token)
+        .await
+        .context("Unable to refresh tokens")?;
 
-            console.info(cformat!(
-                "Successfully refreshed tokens for account <m,s>{}</>.",
-                account.id
-            ));
+    let token_data = token_results.data();
 
-            let mut new_account = account.clone();
-            new_account.session = token_data.tokens().access_token().to_string();
-            new_account.refresh_token = Some(token_data.tokens().refresh_token().to_string());
+    console.info(cformat!(
+        "Successfully refreshed tokens for account <m,s>{}</>.",
+        account.id
+    ));
 
-            console.info(cformat!(
-                "Saving updated config for account <m,s>{}</>...",
-                account.id
-            ));
-            save_config(crate::config::ConfigImpl::Nids(new_account), None);
+    let mut new_account = account.clone();
+    new_account.session = token_data.tokens().access_token().to_string();
+    new_account.refresh_token = Some(token_data.tokens().refresh_token().to_string());
 
-            0
-        }
-    }
+    console.info(cformat!(
+        "Saving updated config for account <m,s>{}</>...",
+        account.id
+    ));
+    save_config(crate::config::ConfigImpl::Nids(new_account), None);
+
+    Ok(())
 }
 
-pub(crate) fn nids_account_revoke(account: &Config, console: &crate::term::Terminal) -> ExitCode {
+pub(crate) fn nids_account_revoke(
+    account: &Config,
+    console: &crate::term::Terminal,
+) -> color_eyre::Result<()> {
     let confirm = console.confirm(Some(&cformat!(
         "Are you sure you want to delete <m,s>{}</>?\nThis action is irreversible!",
         account.id
@@ -343,24 +327,20 @@ pub(crate) fn nids_account_revoke(account: &Config, console: &crate::term::Termi
 
     if !confirm {
         console.warn("Aborted");
-        return 0;
+        return Ok(());
     }
 
-    match try_remove_config(
+    try_remove_config(
         account.id.as_str(),
         crate::r#impl::Implementations::Nids,
         None,
-    ) {
-        Ok(_) => {
-            console.info(cformat!(
-                "Successfully deleted <magenta,bold>{}</>",
-                account.id
-            ));
-            0
-        }
-        Err(err) => {
-            console.error(format!("Failed to delete account: {err}"));
-            1
-        }
-    }
+    )
+    .context("Failed to delete account")?;
+
+    console.info(cformat!(
+        "Successfully deleted <magenta,bold>{}</>",
+        account.get_id()
+    ));
+
+    Ok(())
 }

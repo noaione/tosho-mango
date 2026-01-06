@@ -4,12 +4,13 @@ use std::{
 };
 
 use clap::ValueEnum;
+use color_eyre::eyre::Context;
 use color_print::cformat;
 use num_format::{Locale, ToFormattedString};
 use tokio::time::Instant;
 use tosho_nids::NIClient;
 
-use crate::{cli::ExitCode, r#impl::nids::common::timedelta_to_humantime};
+use crate::r#impl::nids::common::timedelta_to_humantime;
 
 #[derive(Debug, Clone, Default)]
 pub(crate) enum DownloadImageQuality {
@@ -51,7 +52,7 @@ fn get_output_directory(
     title_id: u32,
     issue_id: Option<u32>,
     create_folder: bool,
-) -> PathBuf {
+) -> color_eyre::Result<PathBuf> {
     let mut pathing = output_dir.to_path_buf();
     pathing.push(format!("NI_{}", title_id));
 
@@ -60,10 +61,10 @@ fn get_output_directory(
     }
 
     if create_folder {
-        std::fs::create_dir_all(&pathing).unwrap();
+        std::fs::create_dir_all(&pathing)?;
     }
 
-    pathing
+    Ok(pathing)
 }
 
 struct DownloadNode {
@@ -213,19 +214,16 @@ pub(crate) async fn nids_download(
     output_dir: PathBuf,
     client: &NIClient,
     console: &mut crate::term::Terminal,
-) -> ExitCode {
+) -> color_eyre::Result<()> {
     console.info(cformat!(
         "Fetching info for <magenta,bold>{}</>...",
         issue_id
     ));
 
-    let results = match client.get_issue(issue_id).await {
-        Ok(res) => res,
-        Err(err) => {
-            console.error(format!("Failed to fetch issue info: {err}"));
-            return 1;
-        }
-    };
+    let results = client
+        .get_issue(issue_id)
+        .await
+        .context("Failed to get issue info")?;
 
     console.info(cformat!(
         "Fetching reader for issue <m,s>{}</m,s> (<m,s>{}</m,s>)",
@@ -233,13 +231,10 @@ pub(crate) async fn nids_download(
         results.id()
     ));
 
-    let pages_meta = match client.get_issue_reader(issue_id).await {
-        Ok(pages) => pages,
-        Err(err) => {
-            console.error(format!("Failed to fetch issue reader info: {err}"));
-            return 1;
-        }
-    };
+    let pages_meta = client
+        .get_issue_reader(issue_id)
+        .await
+        .context("Failed to get issue reader info")?;
 
     let total_pages = pages_meta.total_pages().to_formatted_string(&Locale::en);
     console.info(cformat!(
@@ -254,18 +249,11 @@ pub(crate) async fn nids_download(
         results.series_run().id(),
         Some(results.id()),
         false,
-    );
+    )?;
     let output_dir = dl_config.output.clone().unwrap_or(default_dir);
 
-    if !output_dir.exists()
-        && let Err(err) = std::fs::create_dir_all(&output_dir)
-    {
-        console.error(format!(
-            "Failed to create output directory <s>{}</s>: {}",
-            output_dir.display(),
-            err
-        ));
-        return 1;
+    if !output_dir.exists() {
+        std::fs::create_dir_all(&output_dir).context("Failed to create output directory")?;
     }
 
     console.info(cformat!(
@@ -285,17 +273,9 @@ pub(crate) async fn nids_download(
     };
     let cover_ext = extract_extensions_from_url(cover_url).unwrap_or("webp".to_string());
     let cover_path = output_dir.join(format!("cover.{}", cover_ext));
-    let cover_file = match tokio::fs::File::create(&cover_path).await {
-        Ok(f) => f,
-        Err(err) => {
-            console.error(format!(
-                "   Failed to create cover file <s>{}</s>: {}",
-                cover_path.display(),
-                err
-            ));
-            return 1;
-        }
-    };
+    let cover_file = tokio::fs::File::create(&cover_path)
+        .await
+        .context("Failed to create cover file")?;
 
     if console.is_debug() {
         console.log(cformat!(
@@ -359,7 +339,10 @@ pub(crate) async fn nids_download(
                 let tx = tx.clone();
 
                 tokio::spawn(async move {
-                    let _permit = semaphore.acquire().await.unwrap();
+                    let _permit = semaphore
+                        .acquire()
+                        .await
+                        .expect("Failed to acquire semaphore");
 
                     let node = DownloadNode {
                         client: wrap_client,
@@ -415,5 +398,5 @@ pub(crate) async fn nids_download(
         timedelta_to_humantime(duration)
     ));
 
-    0
+    Ok(())
 }

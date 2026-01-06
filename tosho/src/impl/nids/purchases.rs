@@ -1,10 +1,10 @@
 use std::collections::HashMap;
 
 use crate::{
-    cli::ExitCode,
     r#impl::nids::common::{PaginateAction, pagination_helper, print_series_summary},
     linkify,
 };
+use color_eyre::eyre::Context;
 use color_print::cformat;
 use num_format::{Locale, ToFormattedString};
 use tosho_nids::constants::BASE_HOST;
@@ -14,7 +14,7 @@ pub async fn nids_get_purchased_series(
     client: &tosho_nids::NIClient,
     account: &super::config::Config,
     console: &crate::term::Terminal,
-) -> ExitCode {
+) -> color_eyre::Result<()> {
     let username = if account.username().is_empty() {
         account.email()
     } else {
@@ -26,20 +26,16 @@ pub async fn nids_get_purchased_series(
         username
     ));
 
-    let purchased_series = match client.get_series_run_collections(Some(base_filters)).await {
-        Ok(series) => series,
-        Err(err) => {
-            console.error(format!("Failed to fetch series: {err}"));
-            return 1;
-        }
-    };
+    let purchased_series = client
+        .get_series_run_collections(Some(base_filters))
+        .await
+        .context("Failed to fetch purchased series")?;
 
     if purchased_series.data().is_empty() {
         console.warn("No purchased series found.");
-        return 0;
+        return Ok(());
     }
 
-    let mut stop_code = 0;
     if purchased_series.pages() > 1 {
         // Do paginated response
         let mut current_page = 1u32;
@@ -72,8 +68,7 @@ pub async fn nids_get_purchased_series(
                         current_page -= 1;
                     }
                 }
-                PaginateAction::Exit(code) => {
-                    stop_code = code;
+                PaginateAction::Exit(_) => {
                     break;
                 }
             }
@@ -85,14 +80,10 @@ pub async fn nids_get_purchased_series(
                 console.clear_screen();
             } else {
                 console.info(cformat!("Loading page <m,s>{}</>...", current_page));
-                let new_series = match client.get_series_run_collections(Some(base_filters)).await {
-                    Ok(series) => series,
-                    Err(err) => {
-                        console.error(format!("Failed to fetch series: {err}"));
-                        stop_code = 1;
-                        break;
-                    }
-                };
+                let new_series = client
+                    .get_series_run_collections(Some(base_filters))
+                    .await
+                    .context("Failed to fetch purchased series")?;
 
                 console.clear_screen();
 
@@ -111,7 +102,7 @@ pub async fn nids_get_purchased_series(
         }
     }
 
-    stop_code
+    Ok(())
 }
 
 fn print_purchased_issue_summary(
@@ -151,7 +142,7 @@ pub async fn nids_get_purchased_issues(
     client: &tosho_nids::NIClient,
     account: &super::config::Config,
     console: &crate::term::Terminal,
-) -> ExitCode {
+) -> color_eyre::Result<()> {
     let username = if account.username().is_empty() {
         account.email()
     } else {
@@ -164,20 +155,16 @@ pub async fn nids_get_purchased_issues(
         username
     ));
 
-    let purchased_issues = match client.get_issue_collections(base_filters).await {
-        Ok(issues) => issues,
-        Err(err) => {
-            console.error(format!("Failed to fetch issues: {err}"));
-            return 1;
-        }
-    };
+    let purchased_issues = client
+        .get_issue_collections(base_filters)
+        .await
+        .context("Failed to fetch purchased issues")?;
 
     if purchased_issues.data().is_empty() {
         console.warn("No purchased issues found for this series.");
-        return 0;
+        return Ok(());
     }
 
-    let mut stop_code = 0;
     if purchased_issues.pages() > 1 {
         // Do paginated response
         let mut current_page = 1u32;
@@ -210,8 +197,7 @@ pub async fn nids_get_purchased_issues(
                         current_page -= 1;
                     }
                 }
-                PaginateAction::Exit(code) => {
-                    stop_code = code;
+                PaginateAction::Exit(_) => {
                     break;
                 }
             }
@@ -223,14 +209,10 @@ pub async fn nids_get_purchased_issues(
                 console.clear_screen();
             } else {
                 console.info(cformat!("Loading page <m,s>{}</>...", current_page));
-                let new_issues = match client.get_issue_collections(base_filters).await {
-                    Ok(series) => series,
-                    Err(err) => {
-                        console.error(format!("Failed to fetch series: {err}"));
-                        stop_code = 1;
-                        break;
-                    }
-                };
+                let new_issues = client
+                    .get_issue_collections(base_filters)
+                    .await
+                    .context("Failed to fetch purchased issues")?;
 
                 console.clear_screen();
 
@@ -249,5 +231,5 @@ pub async fn nids_get_purchased_issues(
         }
     }
 
-    stop_code
+    Ok(())
 }

@@ -1,10 +1,10 @@
 use std::collections::HashMap;
 
 use crate::{
-    cli::ExitCode,
     r#impl::nids::common::{PaginateAction, pagination_helper},
     linkify,
 };
+use color_eyre::eyre::Context;
 use color_print::cformat;
 use num_format::{Locale, ToFormattedString};
 use tosho_nids::constants::BASE_HOST;
@@ -48,7 +48,7 @@ fn print_publisher_list(
 pub async fn nids_get_publishers(
     client: &tosho_nids::NIClient,
     console: &crate::term::Terminal,
-) -> ExitCode {
+) -> color_eyre::Result<()> {
     console.info("Fetching initial publishers...");
 
     let mut filters = tosho_nids::Filter::new()
@@ -56,20 +56,16 @@ pub async fn nids_get_publishers(
         .with_per_page(25)
         .with_page(1);
 
-    let publishers = match client.get_publishers(Some(&filters)).await {
-        Ok(publishers) => publishers,
-        Err(e) => {
-            console.error(format!("Failed to get publishers: {}", e));
-            return 1;
-        }
-    };
+    let publishers = client
+        .get_publishers(Some(&filters))
+        .await
+        .context("Failed to get publishers")?;
 
     if publishers.data().is_empty() {
         console.info("No publishers found.");
-        return 0;
+        return Ok(());
     }
 
-    let mut stop_code = 0;
     if publishers.pages() > 1 {
         // Do paginated response
         let mut current_page: u32 = 1;
@@ -102,8 +98,7 @@ pub async fn nids_get_publishers(
                         current_page -= 1;
                     }
                 }
-                PaginateAction::Exit(code) => {
-                    stop_code = code;
+                PaginateAction::Exit(_) => {
                     break;
                 }
             }
@@ -115,14 +110,10 @@ pub async fn nids_get_publishers(
                 console.clear_screen();
             } else {
                 console.info(cformat!("Loading page <m,s>{}</m,s>...", current_page));
-                let new_pubs = match client.get_publishers(Some(&filters)).await {
-                    Ok(issues) => issues,
-                    Err(e) => {
-                        console.error(format!("Failed to get issues: {}", e));
-                        stop_code = 1;
-                        break;
-                    }
-                };
+                let new_pubs = client
+                    .get_publishers(Some(&filters))
+                    .await
+                    .context("Failed to get publishers")?;
 
                 console.clear_screen();
 
@@ -140,7 +131,7 @@ pub async fn nids_get_publishers(
         }
     }
 
-    stop_code
+    Ok(())
 }
 
 pub async fn nids_get_publisher(
@@ -148,28 +139,24 @@ pub async fn nids_get_publisher(
     with_imprints: bool,
     client: &tosho_nids::NIClient,
     console: &crate::term::Terminal,
-) -> ExitCode {
+) -> color_eyre::Result<()> {
     console.info(cformat!(
         "Fetching publisher <m,s>{}</m,s>...",
         publisher_slug
     ));
 
-    let publisher = match client.get_publisher(publisher_slug).await {
-        Ok(publisher) => publisher,
-        Err(e) => {
-            console.error(format!("Failed to get publisher: {}", e));
-            return 1;
-        }
-    };
+    let publisher = client
+        .get_publisher(publisher_slug)
+        .await
+        .context("Failed to get publisher")?;
 
     let publisher_imprints = if with_imprints {
-        match client.get_publisher_imprints(publisher_slug).await {
-            Ok(imprints) => Some(imprints),
-            Err(e) => {
-                console.error(format!("Failed to get publisher imprints: {}", e));
-                return 1;
-            }
-        }
+        Some(
+            client
+                .get_publisher_imprints(publisher_slug)
+                .await
+                .context("Failed to get publisher imprints")?,
+        )
     } else {
         None
     };
@@ -223,5 +210,5 @@ pub async fn nids_get_publisher(
         }
     }
 
-    0
+    Ok(())
 }

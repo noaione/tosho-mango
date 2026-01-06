@@ -1,10 +1,10 @@
 use std::collections::HashMap;
 
 use crate::{
-    cli::ExitCode,
     r#impl::nids::common::{PaginateAction, fmt_date, pagination_helper},
     linkify,
 };
+use color_eyre::eyre::Context;
 use color_print::cformat;
 use num_format::{Locale, ToFormattedString};
 use tosho_nids::constants::BASE_HOST;
@@ -106,22 +106,18 @@ pub async fn nids_get_marketplace_ungrouped(
     base_filter: &mut tosho_nids::Filter,
     client: &tosho_nids::NIClient,
     console: &crate::term::Terminal,
-) -> ExitCode {
+) -> color_eyre::Result<()> {
     console.info("Fetching initial marketplace with provided filters");
-    let marketplace_editions = match client.get_marketplace_editions(Some(base_filter)).await {
-        Ok(editions) => editions,
-        Err(err) => {
-            console.error(format!("Failed to fetch editions: {err}"));
-            return 1;
-        }
-    };
+    let marketplace_editions = client
+        .get_marketplace_editions(Some(base_filter))
+        .await
+        .context("Failed to get marketplace editions")?;
 
     if marketplace_editions.data().is_empty() {
         console.warn("No editions found with the provided filters");
-        return 0;
+        return Ok(());
     }
 
-    let mut stop_code = 0;
     if marketplace_editions.pages() > 1 {
         // Do paginated
         let mut current_page: u32 = 1;
@@ -154,8 +150,7 @@ pub async fn nids_get_marketplace_ungrouped(
                         current_page -= 1;
                     }
                 }
-                PaginateAction::Exit(code) => {
-                    stop_code = code;
+                PaginateAction::Exit(_) => {
                     break;
                 }
             }
@@ -167,14 +162,10 @@ pub async fn nids_get_marketplace_ungrouped(
                 console.clear_screen();
             } else {
                 console.info(cformat!("Loading page <m,s>{}</m,s>...", current_page));
-                let new_editions = match client.get_marketplace_editions(Some(base_filter)).await {
-                    Ok(issues) => issues,
-                    Err(e) => {
-                        console.error(format!("Failed to get editions: {}", e));
-                        stop_code = 1;
-                        break;
-                    }
-                };
+                let new_editions = client
+                    .get_marketplace_editions(Some(base_filter))
+                    .await
+                    .context("Failed to get marketplace editions")?;
 
                 console.clear_screen();
 
@@ -192,29 +183,25 @@ pub async fn nids_get_marketplace_ungrouped(
         }
     }
 
-    stop_code
+    Ok(())
 }
 
 pub async fn nids_get_marketplace_grouped(
     base_filter: &mut tosho_nids::Filter,
     client: &tosho_nids::NIClient,
     console: &crate::term::Terminal,
-) -> ExitCode {
+) -> color_eyre::Result<()> {
     console.info("Fetching initial marketplace with provided filters");
-    let marketplace_books = match client.get_marketplace_books(Some(base_filter)).await {
-        Ok(editions) => editions,
-        Err(err) => {
-            console.error(format!("Failed to fetch books: {err}"));
-            return 1;
-        }
-    };
+    let marketplace_books = client
+        .get_marketplace_books(Some(base_filter))
+        .await
+        .context("Failed to get marketplace books")?;
 
     if marketplace_books.data().is_empty() {
         console.warn("No books found with the provided filters");
-        return 0;
+        return Ok(());
     }
 
-    let mut stop_code = 0;
     if marketplace_books.pages() > 1 {
         // Do paginated
         let mut current_page: u32 = 1;
@@ -245,8 +232,7 @@ pub async fn nids_get_marketplace_grouped(
                         current_page -= 1;
                     }
                 }
-                PaginateAction::Exit(code) => {
-                    stop_code = code;
+                PaginateAction::Exit(_) => {
                     break;
                 }
             }
@@ -258,14 +244,10 @@ pub async fn nids_get_marketplace_grouped(
                 console.clear_screen();
             } else {
                 console.info(cformat!("Loading page <m,s>{}</m,s>...", current_page));
-                let new_books = match client.get_marketplace_books(Some(base_filter)).await {
-                    Ok(issues) => issues,
-                    Err(e) => {
-                        console.error(format!("Failed to get books: {}", e));
-                        stop_code = 1;
-                        break;
-                    }
-                };
+                let new_books = client
+                    .get_marketplace_books(Some(base_filter))
+                    .await
+                    .context("Failed to get marketplace books")?;
 
                 console.clear_screen();
 
@@ -283,5 +265,5 @@ pub async fn nids_get_marketplace_grouped(
         }
     }
 
-    stop_code
+    Ok(())
 }

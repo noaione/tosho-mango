@@ -11,8 +11,6 @@ use crate::r#impl::{
     tools::ToolsCommands,
 };
 
-pub(crate) type ExitCode = u32;
-
 #[derive(Parser)]
 #[command(name = "tosho")]
 #[command(bin_name = "tosho")]

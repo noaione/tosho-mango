@@ -1,5 +1,6 @@
 use chrono::Datelike;
 use clap::ValueEnum;
+use color_eyre::eyre::OptionExt;
 use color_print::cformat;
 use num_format::{Locale, ToFormattedString};
 use tosho_nids::{constants::BASE_HOST, filters::FilterType};
@@ -155,7 +156,7 @@ pub(super) fn fmt_date(date: &chrono::DateTime<chrono::FixedOffset>) -> String {
     date.format("%b %d, %Y").to_string()
 }
 
-pub(crate) fn get_scope_dates() -> (String, String) {
+pub(crate) fn get_scope_dates() -> color_eyre::Result<(String, String)> {
     let now = chrono::Utc::now();
     // get maximum time in current day
     let end_of_day = now
@@ -171,16 +172,15 @@ pub(crate) fn get_scope_dates() -> (String, String) {
     // plus end_of_day by 1 day to include the entire end day (since sometimes releases are at -4 timezone)
     let end_date = end_of_day + chrono::Duration::days(1);
     // format as RFC3339
-    (
-        start_date
-            .and_local_timezone(chrono::Utc)
-            .unwrap()
-            .to_rfc3339(),
-        end_date
-            .and_local_timezone(chrono::Utc)
-            .unwrap()
-            .to_rfc3339(),
-    )
+    let start_date_utc = start_date
+        .and_local_timezone(chrono::Utc)
+        .single()
+        .ok_or_eyre("Failed to convert start date to UTC timestamp")?;
+    let end_date_utc = end_date
+        .and_local_timezone(chrono::Utc)
+        .single()
+        .ok_or_eyre("Failed to convert start date to UTC timestamp")?;
+    Ok((start_date_utc.to_rfc3339(), end_date_utc.to_rfc3339()))
 }
 
 pub(super) enum PaginateAction {

@@ -986,7 +986,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
             } else {
                 clean_client
             };
-            let early_exit = match subcommand.clone() {
+            let early_act = match subcommand.clone() {
                 NIDSCommands::Auth {
                     email,
                     password,
@@ -1045,7 +1045,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
                             let with_scope = merged_filters.with_scope(s.into());
                             // add release_date_start and release_date_end manually
                             let (start_time, end_time) =
-                                crate::r#impl::nids::common::get_scope_dates();
+                                crate::r#impl::nids::common::get_scope_dates()?;
                             if with_scope.has_filter(&tosho_nids::FilterType::ReleaseDateStart)
                                 || with_scope.has_filter(&tosho_nids::FilterType::ReleaseDateEnd)
                             {
@@ -1154,9 +1154,9 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
             };
 
             // early exit
-            if let Some(early_exit) = early_exit {
+            if let Some(early_act) = early_act {
                 drop(clean_client);
-                return Ok(early_exit);
+                return early_act;
             }
 
             let config = select_single_account(account_id.as_deref(), Implementations::Nids, &t);
@@ -1167,7 +1167,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
                 },
                 None => {
                     t.warn("Aborted!");
-                    return Ok(1);
+                    return Err(color_eyre::eyre::eyre!("Aborted by user"));
                 }
             };
 
@@ -1178,13 +1178,13 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
                 client
             };
 
-            let exit_code = match subcommand {
-                NIDSCommands::Auth { .. } => 0,
-                NIDSCommands::AuthToken { .. } => 0,
+            let exit_act = match subcommand {
+                NIDSCommands::Auth { .. } => Ok(()),
+                NIDSCommands::AuthToken { .. } => Ok(()),
                 NIDSCommands::Account => {
                     r#impl::nids::accounts::nids_account_info(&client, &config, &t).await
                 }
-                NIDSCommands::Accounts => 0,
+                NIDSCommands::Accounts => Ok(()),
                 NIDSCommands::Download {
                     issue_id,
                     output,
@@ -1204,17 +1204,17 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
                     r#impl::nids::download::nids_download(
                         issue_id,
                         dl_config,
-                        get_default_download_dir(),
+                        get_default_download_dir()?,
                         &client,
                         &mut t_mut,
                     )
                     .await
                 }
-                NIDSCommands::Issue { .. } => 0,
-                NIDSCommands::Issues { .. } => 0,
-                NIDSCommands::Marketplace { .. } => 0,
-                NIDSCommands::Publisher { .. } => 0,
-                NIDSCommands::Publishers => 0,
+                NIDSCommands::Issue { .. } => Ok(()),
+                NIDSCommands::Issues { .. } => Ok(()),
+                NIDSCommands::Marketplace { .. } => Ok(()),
+                NIDSCommands::Publisher { .. } => Ok(()),
+                NIDSCommands::Publishers => Ok(()),
                 NIDSCommands::PurchasedIssues {
                     series_run_uuid,
                     limit,
@@ -1267,11 +1267,11 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
                     .await
                 }
                 NIDSCommands::Revoke => r#impl::nids::accounts::nids_account_revoke(&config, &t),
-                NIDSCommands::SeriesRun { .. } => 0,
-                NIDSCommands::SeriesRuns { .. } => 0,
+                NIDSCommands::SeriesRun { .. } => Ok(()),
+                NIDSCommands::SeriesRuns { .. } => Ok(()),
             };
 
-            Ok(exit_code)
+            exit_act
         }
         ToshoCommands::Tools { subcommand } => {
             let exit_code = match subcommand {

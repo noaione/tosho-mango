@@ -1,12 +1,12 @@
 use std::collections::HashMap;
 
 use crate::{
-    cli::ExitCode,
     r#impl::nids::common::{
         PaginateAction, fmt_date, format_series_run_date, pagination_helper, print_series_summary,
     },
     linkify,
 };
+use color_eyre::eyre::Context;
 use color_print::cformat;
 use num_format::{Locale, ToFormattedString};
 use tosho_nids::constants::BASE_HOST;
@@ -15,22 +15,18 @@ pub async fn nids_get_series(
     base_filter: &mut tosho_nids::Filter,
     client: &tosho_nids::NIClient,
     console: &crate::term::Terminal,
-) -> ExitCode {
+) -> color_eyre::Result<()> {
     console.info("Fetching initial series with provided filters...");
-    let series = match client.get_series_runs(base_filter).await {
-        Ok(series) => series,
-        Err(err) => {
-            console.error(format!("Failed to fetch series: {err}"));
-            return 1;
-        }
-    };
+    let series = client
+        .get_series_runs(base_filter)
+        .await
+        .context("Failed to fetch series")?;
 
     if series.data().is_empty() {
         console.warn("No series found with the provided filters.");
-        return 0;
+        return Ok(());
     }
 
-    let mut stop_code = 0;
     if series.pages() > 1 {
         // Do paginated response
         let mut current_page: u32 = 1;
@@ -63,8 +59,7 @@ pub async fn nids_get_series(
                         current_page -= 1;
                     }
                 }
-                PaginateAction::Exit(code) => {
-                    stop_code = code;
+                PaginateAction::Exit(_) => {
                     break;
                 }
             }
@@ -76,14 +71,10 @@ pub async fn nids_get_series(
                 console.clear_screen();
             } else {
                 console.info(cformat!("Loading page <m,s>{}</>...", current_page));
-                let new_series = match client.get_series_runs(base_filter).await {
-                    Ok(series) => series,
-                    Err(err) => {
-                        console.error(format!("Failed to fetch series: {err}"));
-                        stop_code = 1;
-                        break;
-                    }
-                };
+                let new_series = client
+                    .get_series_runs(base_filter)
+                    .await
+                    .context("Failed to fetch series")?;
 
                 console.clear_screen();
 
@@ -102,7 +93,7 @@ pub async fn nids_get_series(
         }
     }
 
-    stop_code
+    Ok(())
 }
 
 pub async fn nids_get_series_info(
@@ -110,18 +101,15 @@ pub async fn nids_get_series_info(
     with_marketplace: bool,
     client: &tosho_nids::NIClient,
     console: &crate::term::Terminal,
-) -> ExitCode {
+) -> color_eyre::Result<()> {
     console.info(cformat!(
         "Fetching series ID <m,s>{}</m,s>...",
         series_run_id
     ));
-    let series_detail = match client.get_series_run(series_run_id).await {
-        Ok(series) => series,
-        Err(e) => {
-            console.error(format!("Failed to get issues: {}", e));
-            return 1;
-        }
-    };
+    let series_detail = client
+        .get_series_run(series_run_id)
+        .await
+        .context("Failed to get series runs")?;
 
     console.info(cformat!(
         "Fetching issues for series <m,s>{}</m,s>...",
@@ -136,13 +124,10 @@ pub async fn nids_get_series_info(
         .with_order(tosho_nids::SortBy::IssueNumber, tosho_nids::SortOrder::ASC)
         .with_per_page(max_page_issues);
 
-    let issues_resp = match client.get_issues(&issue_filters).await {
-        Ok(issues) => issues,
-        Err(e) => {
-            console.error(format!("Failed to get issues: {}", e));
-            return 1;
-        }
-    };
+    let issues_resp = client
+        .get_issues(&issue_filters)
+        .await
+        .context("Failed to get issues")?;
 
     // If we ask for marketplace, fetch that too
     let marketplace_editions = if with_marketplace {
@@ -375,5 +360,5 @@ pub async fn nids_get_series_info(
         console.info("  <s>Marketplace Editions</s>: <dim,s>None</dim,s>");
     }
 
-    0
+    Ok(())
 }

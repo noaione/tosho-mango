@@ -2,10 +2,10 @@ use std::collections::HashMap;
 
 use super::common::format_price;
 use crate::{
-    cli::ExitCode,
     r#impl::nids::common::{PaginateAction, fmt_date, format_series_run, pagination_helper},
     linkify,
 };
+use color_eyre::eyre::Context;
 use color_print::cformat;
 use num_format::{Locale, ToFormattedString};
 use tosho_nids::{constants::BASE_HOST, models::SaleStatus};
@@ -50,23 +50,19 @@ pub async fn nids_get_issues(
     base_filter: &mut tosho_nids::Filter,
     client: &tosho_nids::NIClient,
     console: &crate::term::Terminal,
-) -> ExitCode {
+) -> color_eyre::Result<()> {
     // Do initial request
     console.info("Fetching initial issues with the filter...");
-    let issues = match client.get_issues(base_filter).await {
-        Ok(issues) => issues,
-        Err(e) => {
-            console.error(format!("Failed to get issues: {}", e));
-            return 1;
-        }
-    };
+    let issues = client
+        .get_issues(base_filter)
+        .await
+        .context("Failed to get issues")?;
 
     if issues.data().is_empty() {
         console.info("No issues found with the given filters.");
-        return 0;
+        return Ok(());
     }
 
-    let mut stop_code = 0;
     if issues.pages() > 1 {
         // Do paginated response
         let mut current_page: u32 = 1;
@@ -97,8 +93,7 @@ pub async fn nids_get_issues(
                         current_page -= 1;
                     }
                 }
-                PaginateAction::Exit(code) => {
-                    stop_code = code;
+                PaginateAction::Exit(_) => {
                     break;
                 }
             }
@@ -110,14 +105,10 @@ pub async fn nids_get_issues(
                 console.clear_screen();
             } else {
                 console.info(cformat!("Loading page <m,s>{}</m,s>...", current_page));
-                let new_issues = match client.get_issues(base_filter).await {
-                    Ok(issues) => issues,
-                    Err(e) => {
-                        console.error(format!("Failed to get issues: {}", e));
-                        stop_code = 1;
-                        break;
-                    }
-                };
+                let new_issues = client
+                    .get_issues(base_filter)
+                    .await
+                    .context("Failed to get issues")?;
 
                 console.clear_screen();
 
@@ -136,7 +127,7 @@ pub async fn nids_get_issues(
         }
     }
 
-    stop_code
+    Ok(())
 }
 
 fn format_tags(genres: &[tosho_nids::models::Genre]) -> String {
@@ -164,15 +155,12 @@ pub async fn nids_get_issue(
     with_marketplace: bool,
     client: &tosho_nids::NIClient,
     console: &crate::term::Terminal,
-) -> ExitCode {
+) -> color_eyre::Result<()> {
     console.info(cformat!("Fetching issue ID <m,s>{}</m,s>...", issue_id));
-    let issue_detail = match client.get_issue(issue_id).await {
-        Ok(issues) => issues,
-        Err(e) => {
-            console.error(format!("Failed to get issues: {}", e));
-            return 1;
-        }
-    };
+    let issue_detail = client
+        .get_issue(issue_id)
+        .await
+        .context("Failed to get issue information")?;
 
     // If we ask for marketplace, fetch that too
     let marketplace_editions = if with_marketplace {
@@ -394,5 +382,5 @@ pub async fn nids_get_issue(
         }
     }
 
-    0
+    Ok(())
 }
