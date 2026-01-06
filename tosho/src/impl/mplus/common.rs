@@ -1,4 +1,5 @@
 use aho_corasick::AhoCorasick;
+use color_eyre::eyre::Context;
 use color_print::cformat;
 use prost::Message;
 use tosho_mplus::{
@@ -56,7 +57,10 @@ pub(super) fn do_print_search_information(
 }
 
 /// Search the big cache proto for specific title
-pub(super) fn search_manga_by_text(contents: &[Title], target: &str) -> Vec<Title> {
+pub(super) fn search_manga_by_text(
+    contents: &[Title],
+    target: &str,
+) -> color_eyre::Result<Vec<Title>> {
     // Remove diacritics and lower case the target string
     let clean_target = secular::lower_lay_string(target);
     // Split target by spaces and collect patterns
@@ -66,8 +70,7 @@ pub(super) fn search_manga_by_text(contents: &[Title], target: &str) -> Vec<Titl
     let ac = AhoCorasick::builder()
         .ascii_case_insensitive(true)
         .match_kind(aho_corasick::MatchKind::LeftmostLongest)
-        .build(target)
-        .unwrap();
+        .build(target)?;
 
     // try matching
     let mut matches: Vec<(Vec<aho_corasick::Match>, &Title)> = contents
@@ -102,7 +105,7 @@ pub(super) fn search_manga_by_text(contents: &[Title], target: &str) -> Vec<Titl
     // get the actual match, reverse then take 20
     let actual_match: Vec<Title> = matches.iter().rev().map(|x| x.1.clone()).take(20).collect();
 
-    actual_match
+    Ok(actual_match)
 }
 
 // 12 hours
@@ -143,13 +146,10 @@ pub(super) async fn get_cached_titles_data(
         term.info("Fetching fresh data from server...");
     }
 
-    let titles = client.get_all_titles().await;
-    if let Err(e) = titles {
-        term.error(format!("Failed to fetch data from server: {e}"));
-        color_eyre::eyre::bail!("Failed to fetch data from server: {}", e);
-    }
-
-    let titles = titles.unwrap();
+    let titles = client
+        .get_all_titles()
+        .await
+        .context("Failed to fetch titles data from server")?;
 
     match titles {
         APIResponse::Success(titles) => {
@@ -160,7 +160,7 @@ pub(super) async fn get_cached_titles_data(
             };
 
             let mut buf = Vec::new();
-            cache.encode(&mut buf).unwrap();
+            cache.encode(&mut buf)?;
             tokio::fs::write(cache_path, buf).await?;
             Ok(title_list.to_vec())
         }

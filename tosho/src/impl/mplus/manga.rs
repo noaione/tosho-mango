@@ -1,3 +1,4 @@
+use color_eyre::eyre::{Context, OptionExt};
 use color_print::cformat;
 use tosho_mplus::{
     MPClient,
@@ -7,39 +8,34 @@ use tosho_mplus::{
 };
 
 use super::common::{do_print_search_information, get_cached_titles_data, search_manga_by_text};
-use crate::{cli::ExitCode, r#impl::common::unix_timestamp_to_string, linkify};
+use crate::{r#impl::common::unix_timestamp_to_string, linkify};
 
 pub(crate) async fn mplus_search(
     query: &str,
     client: &MPClient,
     console: &crate::term::Terminal,
-) -> ExitCode {
+) -> color_eyre::Result<()> {
     console.info(cformat!("Searching for <magenta,bold>{}</>...", query));
 
-    let results = get_cached_titles_data(client).await;
+    let results = get_cached_titles_data(client).await?;
 
-    match results {
-        Ok(results) => {
-            if results.is_empty() {
-                console.warn("No titles exist");
-                return 1;
-            }
-
-            let merged_titles: Vec<tosho_mplus::proto::Title> =
-                results.iter().flat_map(|x| x.titles().to_vec()).collect();
-            let filtered = search_manga_by_text(&merged_titles, query);
-
-            if filtered.is_empty() {
-                console.warn("No results found");
-                return 1;
-            }
-
-            do_print_search_information(&filtered, false, None);
-
-            0
-        }
-        _ => 1,
+    if results.is_empty() {
+        console.warn("No titles exist");
+        return Err(color_eyre::eyre::eyre!("No titles exist"));
     }
+
+    let merged_titles: Vec<tosho_mplus::proto::Title> =
+        results.iter().flat_map(|x| x.titles().to_vec()).collect();
+    let filtered = search_manga_by_text(&merged_titles, query)?;
+
+    if filtered.is_empty() {
+        console.warn("No results found");
+        return Err(color_eyre::eyre::eyre!("No results found"));
+    }
+
+    do_print_search_information(&filtered, false, None);
+
+    Ok(())
 }
 
 fn format_tags(tags: &[Tag]) -> String {
@@ -67,17 +63,20 @@ pub(crate) async fn mplus_title_info(
     show_related: bool,
     client: &MPClient,
     console: &crate::term::Terminal,
-) -> ExitCode {
+) -> color_eyre::Result<()> {
     console.info(cformat!(
         "Fetching info for ID <magenta,bold>{}</>...",
         title_id
     ));
 
-    let result = client.get_title_details(title_id).await;
+    let result = client
+        .get_title_details(title_id)
+        .await
+        .context("Unable to connect to M+")?;
 
     match result {
-        Ok(tosho_mplus::APIResponse::Success(title_info)) => {
-            let title = title_info.title().unwrap();
+        tosho_mplus::APIResponse::Success(title_info) => {
+            let title = title_info.title().ok_or_eyre("Failed to get title data")?;
             let manga_url = format!("https://{}/titles/{}", BASE_HOST, title.id());
             let linked = linkify!(manga_url, title.title());
 
@@ -208,15 +207,15 @@ pub(crate) async fn mplus_title_info(
                 do_print_search_information(title_info.recommended_titles(), false, Some(3));
             }
 
-            0
+            Ok(())
         }
-        Ok(tosho_mplus::APIResponse::Error(e)) => {
+        tosho_mplus::APIResponse::Error(e) => {
             console.error(format!("Failed to get title info: {}", e.as_string()));
-            1
-        }
-        Err(e) => {
-            console.error(format!("Unable to connect to M+: {e}"));
-            1
+
+            Err(color_eyre::eyre::eyre!(
+                "Failed to get title info: {}",
+                e.as_string()
+            ))
         }
     }
 }

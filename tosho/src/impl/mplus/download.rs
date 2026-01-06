@@ -2,6 +2,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use clap::ValueEnum;
+use color_eyre::eyre::{Context, OptionExt};
 use color_print::cformat;
 use tosho_mplus::proto::{Chapter, ChapterPage, TitleDetail};
 use tosho_mplus::{APIResponse, ImageQuality, MPClient};
@@ -9,7 +10,6 @@ use tosho_mplus::{APIResponse, ImageQuality, MPClient};
 use crate::r#impl::common::check_downloaded_image_count;
 use crate::term::Terminal;
 use crate::{
-    cli::ExitCode,
     r#impl::models::{ChapterDetailDump, MangaDetailDump},
     term::ConsoleChoice,
 };
@@ -87,20 +87,20 @@ pub(crate) struct MPDownloadCliConfig {
     pub(crate) end_at: Option<u64>,
 }
 
-fn create_chapters_info(title: &TitleDetail) -> MangaDetailDump {
+fn create_chapters_info(title: &TitleDetail) -> color_eyre::Result<MangaDetailDump> {
     let dumped_chapters: Vec<ChapterDetailDump> = title
         .flat_chapters_group()
         .iter()
         .map(ChapterDetailDump::from)
         .collect();
 
-    let act_title = title.title().unwrap();
+    let act_title = title.title().ok_or_eyre("Failed to get title data")?;
 
-    MangaDetailDump::new(
+    Ok(MangaDetailDump::new(
         act_title.title().to_string(),
         act_title.author().to_string(),
         dumped_chapters,
-    )
+    ))
 }
 
 fn get_output_directory(
@@ -108,7 +108,7 @@ fn get_output_directory(
     title_id: u64,
     chapter_id: Option<u64>,
     create_folder: bool,
-) -> PathBuf {
+) -> color_eyre::Result<PathBuf> {
     let mut pathing = output_dir.to_path_buf();
     pathing.push(format!("MP_{title_id}"));
 
@@ -117,18 +117,18 @@ fn get_output_directory(
     }
 
     if create_folder {
-        std::fs::create_dir_all(&pathing).unwrap();
+        std::fs::create_dir_all(&pathing)?;
     }
 
-    pathing
+    Ok(pathing)
 }
 
 fn do_chapter_select(
     result: &TitleDetail,
     show_all: bool,
     console: &mut crate::term::Terminal,
-) -> Vec<Chapter> {
-    let title_info = result.title().unwrap();
+) -> color_eyre::Result<Vec<Chapter>> {
+    let title_info = result.title().ok_or_eyre("Failed to get title data")?;
     let flat_chapters = result.flat_chapters_group();
     console.info("Title information:");
     console.info(cformat!("  - <bold>ID:</> {}", title_info.id()));
@@ -167,12 +167,12 @@ fn do_chapter_select(
             let selected_chapters: Vec<Chapter> = selected
                 .iter()
                 .map(|x| {
-                    let ch_id = x.name.parse::<u64>().unwrap();
+                    let ch_id = x.name.parse::<u64>().expect("Failed to parse chapter ID");
 
                     flat_chapters
                         .iter()
                         .find(|&ch| ch.chapter_id() == ch_id)
-                        .unwrap()
+                        .expect(&format!("Failed to find chapter ID: {}", ch_id))
                         .clone()
                 })
                 .collect();
@@ -181,11 +181,11 @@ fn do_chapter_select(
                 console.warn("No chapters selected, aborting...");
             }
 
-            selected_chapters
+            Ok(selected_chapters)
         }
         None => {
             console.warn("Aborted!");
-            vec![]
+            Ok(vec![])
         }
     }
 }
@@ -236,12 +236,14 @@ pub(crate) async fn mplus_download(
     output_dir: PathBuf,
     client: &MPClient,
     console: &mut crate::term::Terminal,
-) -> ExitCode {
+) -> color_eyre::Result<()> {
     if let (Some(start), Some(end)) = (dl_config.start_from, dl_config.end_at)
         && start > end
     {
         console.error("Start chapter is greater than end chapter!");
-        return 1;
+        return Err(color_eyre::eyre::eyre!(
+            "Start chapter is greater than end chapter!"
+        ));
     }
 
     console.info(cformat!(
@@ -249,14 +251,17 @@ pub(crate) async fn mplus_download(
         title_id
     ));
 
-    let results = client.get_title_details(title_id).await;
+    let results = client
+        .get_title_details(title_id)
+        .await
+        .context("Unable to connect to M+")?;
 
     match results {
-        Ok(tosho_mplus::APIResponse::Success(results)) => {
+        tosho_mplus::APIResponse::Success(results) => {
             let select_chapters = if dl_config.no_input {
                 results.flat_chapters_group()
             } else {
-                do_chapter_select(&results, dl_config.show_all, console)
+                do_chapter_select(&results, dl_config.show_all, console)?
             };
 
             let title_labels_subs = results
@@ -296,13 +301,15 @@ pub(crate) async fn mplus_download(
 
             if download_chapters.is_empty() {
                 console.warn("No chapters after filtered by selected chapter ids");
-                return 1;
+                return Err(color_eyre::eyre::eyre!(
+                    "No chapters after filtered by selected chapter ids"
+                ));
             }
 
             download_chapters.sort_by(|&a, &b| a.published_at().cmp(&b.published_at()));
 
-            let title_dir = get_output_directory(&output_dir, title_id, None, true);
-            let dump_info = create_chapters_info(&results);
+            let title_dir = get_output_directory(&output_dir, title_id, None, true)?;
+            let dump_info = create_chapters_info(&results)?;
 
             let title_dump_path = title_dir.join("_info.json");
             dump_info
@@ -316,23 +323,21 @@ pub(crate) async fn mplus_download(
                     chapter.chapter_id()
                 ));
 
-                let view_req = client
+                let viewer_resp = client
                     .get_chapter_viewer(chapter, &results, dl_config.quality.clone().into(), true)
-                    .await;
+                    .await
+                    .context("Failed to get viewer info")?;
 
-                if let Err(e) = view_req {
-                    console.error(format!("Failed to get viewer info: {e}"));
-                    return 1;
-                }
-
-                let viewer = view_req.unwrap();
-
-                if let APIResponse::Error(e) = viewer {
-                    console.error(format!("Failed to get viewer info: {}", e.as_string()));
-                    return 1;
-                }
-
-                let viewer = viewer.unwrap();
+                let viewer = match viewer_resp {
+                    APIResponse::Success(viewer) => viewer,
+                    APIResponse::Error(e) => {
+                        console.error(format!("Failed to get viewer info: {}", e.as_string()));
+                        return Err(color_eyre::eyre::eyre!(
+                            "Failed to get viewer info: {}",
+                            e.as_string()
+                        ));
+                    }
+                };
 
                 let chapter_images: Vec<tosho_mplus::proto::ChapterPage> = viewer
                     .pages()
@@ -341,7 +346,7 @@ pub(crate) async fn mplus_download(
                     .collect();
 
                 let image_dir =
-                    get_output_directory(&output_dir, title_id, Some(chapter.chapter_id()), false);
+                    get_output_directory(&output_dir, title_id, Some(chapter.chapter_id()), false)?;
 
                 if let Some(count) = check_downloaded_image_count(&image_dir, "webp")
                     && count >= chapter_images.len()
@@ -355,7 +360,7 @@ pub(crate) async fn mplus_download(
                 }
 
                 // create chapter dir
-                std::fs::create_dir_all(&image_dir).unwrap();
+                std::fs::create_dir_all(&image_dir)?;
 
                 let progress =
                     console.make_progress_arc(chapter_images.len() as u64, Some("Downloading"));
@@ -376,7 +381,10 @@ pub(crate) async fn mplus_download(
                             let semaphore = Arc::clone(&semaphore);
 
                             tokio::spawn(async move {
-                                let _permit = semaphore.acquire().await.unwrap();
+                                let _permit = semaphore
+                                    .acquire()
+                                    .await
+                                    .expect("Should acquire semaphore lock");
 
                                 match mplus_actual_downloader(
                                     MPDownloadNode {
@@ -427,15 +435,14 @@ pub(crate) async fn mplus_download(
                 progress.finish_with_message("Downloaded");
             }
 
-            0
+            Ok(())
         }
-        Ok(tosho_mplus::APIResponse::Error(e)) => {
+        tosho_mplus::APIResponse::Error(e) => {
             console.error(format!("Failed to get title info: {}", e.as_string()));
-            1
-        }
-        Err(e) => {
-            console.error(format!("Unable to connect to M+: {e}"));
-            1
+            Err(color_eyre::eyre::eyre!(
+                "Failed to get title info: {}",
+                e.as_string()
+            ))
         }
     }
 }

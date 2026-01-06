@@ -857,7 +857,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
             subcommand,
             app_version,
         } => {
-            let early_exit = match subcommand.clone() {
+            let early_stat = match subcommand.clone() {
                 MPlusCommands::Auth { session_id, r#type } => {
                     Some(r#impl::mplus::accounts::mplus_auth_session(session_id, r#type, &t).await)
                 }
@@ -866,8 +866,8 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
             };
 
             // early exit
-            if let Some(early_exit) = early_exit {
-                return Ok(early_exit);
+            if let Some(early_stat) = early_stat {
+                return early_stat;
             }
 
             let config = select_single_account(account_id.as_deref(), Implementations::Mplus, &t);
@@ -878,7 +878,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
                 },
                 None => {
                     t.warn("Aborted!");
-                    return Ok(1);
+                    return Ok(());
                 }
             };
 
@@ -891,15 +891,15 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
             }
             .with_app_version(app_version);
 
-            let exit_code = match subcommand {
+            let exit_stat = match subcommand {
                 MPlusCommands::Auth {
                     session_id: _,
                     r#type: _,
-                } => 0,
+                } => Ok(()),
                 MPlusCommands::Account => {
                     r#impl::mplus::accounts::mplus_account_info(&client, &config, &t).await
                 }
-                MPlusCommands::Accounts => 0,
+                MPlusCommands::Accounts => Ok(()),
                 MPlusCommands::AutoDownload {
                     title_id,
                     start_from,
@@ -918,7 +918,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
                     r#impl::mplus::download::mplus_download(
                         title_id,
                         mplus_config,
-                        output.unwrap_or_else(get_default_download_dir),
+                        output.unwrap_or(default_dir),
                         &client,
                         &mut t_mut,
                     )
@@ -941,7 +941,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
                     r#impl::mplus::download::mplus_download(
                         title_id,
                         mplus_config,
-                        output.unwrap_or_else(get_default_download_dir),
+                        output.unwrap_or(default_dir),
                         &client,
                         &mut t_mut,
                     )
@@ -973,7 +973,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
                 }
             };
 
-            Ok(exit_code)
+            exit_stat
         }
         ToshoCommands::Nids {
             account_id,

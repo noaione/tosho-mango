@@ -1,7 +1,6 @@
+use color_eyre::eyre::Context;
 use color_print::cformat;
 use tosho_mplus::MPClient;
-
-use crate::cli::ExitCode;
 
 use super::common::do_print_search_information;
 
@@ -9,18 +8,21 @@ pub(crate) async fn mplus_my_favorites(
     client: &MPClient,
     account: &super::config::Config,
     console: &crate::term::Terminal,
-) -> ExitCode {
+) -> color_eyre::Result<()> {
     console.info(cformat!(
         "Getting favorites list for user <m,s>{}</>",
         account.id
     ));
-    let results = client.get_bookmarked_titles().await;
+    let results = client
+        .get_bookmarked_titles()
+        .await
+        .context("Unable to connect to M+")?;
 
     match results {
-        Ok(tosho_mplus::APIResponse::Success(results)) => {
+        tosho_mplus::APIResponse::Success(results) => {
             if results.titles().is_empty() {
                 console.warn("You don't have any favorites.");
-                return 0;
+                return Ok(());
             }
 
             console.info(cformat!(
@@ -30,18 +32,17 @@ pub(crate) async fn mplus_my_favorites(
 
             do_print_search_information(results.titles(), false, None);
 
-            0
+            Ok(())
         }
-        Ok(tosho_mplus::APIResponse::Error(e)) => {
+        tosho_mplus::APIResponse::Error(e) => {
             console.error(format!(
                 "Failed to get your favorites list: {}",
                 e.as_string()
             ));
-            1
-        }
-        Err(e) => {
-            console.error(format!("Unable to connect to M+: {e}"));
-            1
+            Err(color_eyre::eyre::eyre!(
+                "Failed to get your favorites list: {}",
+                e.as_string()
+            ))
         }
     }
 }

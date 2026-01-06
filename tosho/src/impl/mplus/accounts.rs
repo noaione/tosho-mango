@@ -1,11 +1,9 @@
 use clap::ValueEnum;
+use color_eyre::eyre::Context;
 use color_print::cformat;
 use tosho_mplus::MPClient;
 
-use crate::{
-    cli::ExitCode,
-    config::{get_all_config, save_config, try_remove_config},
-};
+use crate::config::{get_all_config, save_config, try_remove_config};
 
 use super::config::{Config, DeviceType};
 
@@ -42,7 +40,7 @@ pub(crate) async fn mplus_auth_session(
     session_id: String,
     device_kind: DeviceKind,
     console: &crate::term::Terminal,
-) -> ExitCode {
+) -> color_eyre::Result<()> {
     let device_type = match device_kind {
         DeviceKind::Android => DeviceType::Android,
     };
@@ -61,7 +59,7 @@ pub(crate) async fn mplus_auth_session(
         let abort_it = console.confirm(Some("Do you want to replace it?"));
         if !abort_it {
             console.info("Aborting...");
-            return 0;
+            return Err(color_eyre::eyre::eyre!("Aborted by user"));
         }
 
         match old_config {
@@ -83,68 +81,63 @@ pub(crate) async fn mplus_auth_session(
         config = config.with_id(&old_id);
     }
 
-    match crate::r#impl::client::make_mplus_client(&config, tosho_mplus::proto::Language::English) {
-        Ok(client) => {
-            let account = client.get_user_profile().await;
+    let client =
+        crate::r#impl::client::make_mplus_client(&config, tosho_mplus::proto::Language::English)
+            .context("Failed to create client")?;
 
-            match account {
-                Ok(tosho_mplus::APIResponse::Success(account_resp)) => {
-                    let mut final_config = config.clone();
+    let account_resp = client
+        .get_user_profile()
+        .await
+        .context("Authentication failed")?;
 
-                    if !account_resp.user_name().is_empty() {
-                        final_config = final_config.with_username(account_resp.user_name());
-                    }
+    match account_resp {
+        tosho_mplus::APIResponse::Success(account) => {
+            let mut final_config = config.clone();
 
-                    console.info(cformat!(
-                        "Authenticated as <m,b>{}</> (<s>{}</>)",
-                        final_config.username.as_ref().unwrap_or(&final_config.id),
-                        final_config.r#type().to_name()
-                    ));
-
-                    save_config(crate::config::ConfigImpl::Mplus(final_config), None);
-
-                    0
-                }
-                Ok(tosho_mplus::APIResponse::Error(e)) => {
-                    console.error(format!("Authentication failed: {}", e.as_string()));
-                    1
-                }
-                Err(e) => {
-                    console.error(format!("Authentication failed: {e}"));
-                    1
-                }
+            if !account.user_name().is_empty() {
+                final_config = final_config.with_username(account.user_name());
             }
+
+            console.info(cformat!(
+                "Authenticated as <m,b>{}</> (<s>{}</>)",
+                final_config.username.as_ref().unwrap_or(&final_config.id),
+                final_config.r#type().to_name()
+            ));
+
+            save_config(crate::config::ConfigImpl::Mplus(final_config), None);
+
+            Ok(())
         }
-        Err(e) => {
-            console.error(format!("Failed to create client: {e}"));
-            1
-        }
+        tosho_mplus::APIResponse::Error(e) => Err(color_eyre::eyre::eyre!(
+            "Authentication failed: {}",
+            e.as_string()
+        )),
     }
 }
 
-pub(crate) fn mplus_accounts(console: &crate::term::Terminal) -> ExitCode {
+pub(crate) fn mplus_accounts(console: &crate::term::Terminal) -> color_eyre::Result<()> {
     let all_configs = get_all_config(&crate::r#impl::Implementations::Mplus, None);
 
     match all_configs.len() {
         0 => {
             console.warn("No accounts found!");
-
-            1
+            Ok(())
         }
-        _ => {
-            console.info(format!("Found {} accounts:", all_configs.len()));
+        other => {
+            console.info(format!("Found {} accounts:", other));
             for (i, c) in all_configs.iter().enumerate() {
                 match c {
-                    crate::config::ConfigImpl::Mplus(c) => {
-                        if c.username.is_some() {
+                    crate::config::ConfigImpl::Mplus(c) => match &c.username {
+                        Some(uname) => {
                             console.info(format!(
                                 "{:02}. {} - {} ({})",
                                 i + 1,
                                 c.id,
-                                c.username.as_ref().unwrap(),
+                                uname,
                                 c.r#type().to_name()
                             ));
-                        } else {
+                        }
+                        None => {
                             console.info(format!(
                                 "{:02}. {} ({})",
                                 i + 1,
@@ -152,12 +145,12 @@ pub(crate) fn mplus_accounts(console: &crate::term::Terminal) -> ExitCode {
                                 c.r#type().to_name()
                             ));
                         }
-                    }
+                    },
                     _ => unreachable!(),
                 }
             }
 
-            0
+            Ok(())
         }
     }
 }
@@ -166,16 +159,19 @@ pub async fn mplus_account_info(
     client: &MPClient,
     acc_info: &Config,
     console: &crate::term::Terminal,
-) -> ExitCode {
+) -> color_eyre::Result<()> {
     console.info(cformat!(
         "Fetching account info for <magenta,bold>{}</>...",
         acc_info.id
     ));
 
-    let account = client.get_user_settings().await;
+    let account_resp = client
+        .get_user_settings()
+        .await
+        .context("Failed fetching account info")?;
 
-    match account {
-        Ok(tosho_mplus::APIResponse::Success(account_resp)) => {
+    match account_resp {
+        tosho_mplus::APIResponse::Success(account_resp) => {
             console.info(cformat!(
                 "Account info for <magenta,bold>{}</> (<s>{}</>):",
                 acc_info.id,
@@ -215,20 +211,22 @@ pub async fn mplus_account_info(
                 }
             ));
 
-            0
+            Ok(())
         }
-        Ok(tosho_mplus::APIResponse::Error(e)) => {
+        tosho_mplus::APIResponse::Error(e) => {
             console.error(format!("Failed to fetch account info: {}", e.as_string()));
-            1
-        }
-        Err(e) => {
-            console.error(format!("Failed to fetch account info: {e}"));
-            1
+            Err(color_eyre::eyre::eyre!(
+                "Failed to fetch account info: {}",
+                e.as_string()
+            ))
         }
     }
 }
 
-pub(crate) fn mplus_account_revoke(account: &Config, console: &crate::term::Terminal) -> ExitCode {
+pub(crate) fn mplus_account_revoke(
+    account: &Config,
+    console: &crate::term::Terminal,
+) -> color_eyre::Result<()> {
     let confirm = console.confirm(Some(&cformat!(
         "Are you sure you want to delete <m,s>{}</>?\nThis action is irreversible!",
         account.id
@@ -236,24 +234,20 @@ pub(crate) fn mplus_account_revoke(account: &Config, console: &crate::term::Term
 
     if !confirm {
         console.warn("Aborted");
-        return 0;
+        return Ok(());
     }
 
-    match try_remove_config(
+    try_remove_config(
         account.id.as_str(),
         crate::r#impl::Implementations::Mplus,
         None,
-    ) {
-        Ok(_) => {
-            console.info(cformat!(
-                "Successfully deleted <magenta,bold>{}</>",
-                account.id
-            ));
-            0
-        }
-        Err(err) => {
-            console.error(format!("Failed to delete account: {err}"));
-            1
-        }
-    }
+    )
+    .context("Failed to delete account")?;
+
+    console.info(cformat!(
+        "Successfully deleted <magenta,bold>{}</>",
+        account.get_id()
+    ));
+
+    Ok(())
 }

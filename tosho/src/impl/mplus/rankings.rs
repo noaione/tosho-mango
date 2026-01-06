@@ -1,9 +1,8 @@
 use clap::ValueEnum;
+use color_eyre::eyre::Context;
 use color_print::cformat;
 use tosho_macros::EnumName;
 use tosho_mplus::{MPClient, helper::RankingType};
-
-use crate::cli::ExitCode;
 
 use super::common::do_print_search_information;
 
@@ -60,17 +59,26 @@ pub(crate) async fn mplus_home_rankings(
     kind: RankingKind,
     client: &MPClient,
     console: &crate::term::Terminal,
-) -> ExitCode {
+) -> color_eyre::Result<()> {
     console.info("Getting rankings list for M+");
 
-    let results = client.get_title_ranking(Some(kind.clone().into())).await;
+    let results = client
+        .get_title_ranking(Some(kind.clone().into()))
+        .await
+        .context("Unable to connect to M+")?;
 
     match results {
-        Ok(tosho_mplus::APIResponse::Success(results)) => {
+        tosho_mplus::APIResponse::Success(results) => {
             let all_titles: Vec<tosho_mplus::proto::Title> = results
                 .titles()
                 .iter()
-                .map(|title| title.titles().first().unwrap().clone())
+                .map(|title| {
+                    title
+                        .titles()
+                        .first()
+                        .expect("Failed to get first title information from ranking")
+                        .clone()
+                })
                 .collect();
 
             console.info(cformat!(
@@ -80,15 +88,11 @@ pub(crate) async fn mplus_home_rankings(
             ));
             do_print_search_information(&all_titles, true, None);
 
-            0
+            Ok(())
         }
-        Ok(tosho_mplus::APIResponse::Error(e)) => {
-            console.error(format!("Failed to get rankings list: {}", e.as_string()));
-            1
-        }
-        Err(e) => {
-            console.error(format!("Unable to connect to M+: {e}"));
-            1
-        }
+        tosho_mplus::APIResponse::Error(e) => Err(color_eyre::eyre::eyre!(
+            "Failed to get rankings list: {}",
+            e.as_string()
+        )),
     }
 }
