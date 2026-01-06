@@ -1,6 +1,7 @@
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+use color_eyre::eyre::{Context, OptionExt};
 use color_print::cformat;
 use tosho_sjv::{
     SJClient, SJPlatform,
@@ -9,7 +10,6 @@ use tosho_sjv::{
 
 use crate::r#impl::common::check_downloaded_image_count;
 use crate::{
-    cli::ExitCode,
     r#impl::{
         models::{ChapterDetailDump, MangaDetailDump},
         parser::NumberOrString,
@@ -57,7 +57,7 @@ fn get_output_directory(
     title_id: u32,
     chapter_id: Option<u32>,
     create_folder: bool,
-) -> PathBuf {
+) -> color_eyre::Result<PathBuf> {
     let mut pathing = output_dir.to_path_buf();
     pathing.push(format!("SJV_{title_id}"));
 
@@ -66,10 +66,10 @@ fn get_output_directory(
     }
 
     if create_folder {
-        std::fs::create_dir_all(&pathing).unwrap();
+        std::fs::create_dir_all(&pathing)?;
     }
 
-    pathing
+    Ok(pathing)
 }
 
 fn do_chapter_select(
@@ -122,12 +122,12 @@ fn do_chapter_select(
             let selected_chapters: Vec<MangaChapterDetail> = selected
                 .iter()
                 .map(|x| {
-                    let ch_id = x.name.parse::<u32>().unwrap();
+                    let ch_id = x.name.parse::<u32>().expect("Failed to parse chapter ID");
 
                     chapters_entry
                         .iter()
                         .find(|ch| ch.id() == ch_id)
-                        .unwrap()
+                        .expect(&format!("Failed to find chapter ID: {}", ch_id))
                         .clone()
                 })
                 .collect();
@@ -197,12 +197,14 @@ pub(crate) async fn sjv_download(
     output_dir: PathBuf,
     client: &SJClient,
     console: &mut crate::term::Terminal,
-) -> ExitCode {
+) -> color_eyre::Result<()> {
     if let (Some(start), Some(end)) = (dl_config.start_from, dl_config.end_at)
         && start > end
     {
         console.error("Start chapter is greater than end chapter!");
-        return 1;
+        return Err(color_eyre::eyre::eyre!(
+            "Start chapter is greater than end chapter!"
+        ));
     }
 
     console.info(cformat!(
@@ -210,243 +212,233 @@ pub(crate) async fn sjv_download(
         title_or_slug
     ));
 
-    let results = get_cached_store_data(client).await;
+    let results = get_cached_store_data(client)
+        .await
+        .context("Failed to get cached store data")?;
 
-    if let Err(e) = results {
-        console.error(format!("Failed to fetch cached store: {e}"));
-        return 1;
-    }
-
-    let results = results.unwrap();
-    let title = results.series.iter().find(|x| {
-        if let NumberOrString::Number(n) = title_or_slug {
-            x.id() == n as u32
-        } else {
-            x.slug() == title_or_slug.to_string()
-        }
-    });
-    if title.is_none() {
-        console.warn("No match found");
-        return 1;
-    }
+    let title = results
+        .series
+        .iter()
+        .find(|x| {
+            if let NumberOrString::Number(n) = title_or_slug {
+                x.id() == n as u32
+            } else {
+                x.slug() == title_or_slug.to_string()
+            }
+        })
+        .ok_or_eyre("Series not found")?;
 
     console.info("Fetching subscription info...");
-    let subs_resp = client.get_entitlements().await;
-    if let Err(e) = subs_resp {
-        console.error(format!("Failed to fetch subscription info: {e}"));
-        return 1;
-    }
+    let subs_resp = client
+        .get_entitlements()
+        .await
+        .context("Failed to fetch subscription info")?;
 
-    let subs_resp = subs_resp.unwrap();
-
-    let title = title.unwrap();
     console.info(cformat!(
         "Fetching chapters for <magenta,bold>{}</>...",
         title.title()
     ));
 
-    let chapters_resp = client.get_chapters(title.id()).await;
+    let chapters_resp = client
+        .get_chapters(title.id())
+        .await
+        .context("Failed to get chapters")?;
 
-    match chapters_resp {
-        Ok(chapters_resp) => {
-            let chapters: Vec<MangaChapterDetail> = chapters_resp
-                .chapters()
-                .iter()
-                .filter_map(|ch| {
-                    if ch.chapter().chapter().is_some() {
-                        Some(ch.chapter().clone())
-                    } else {
-                        None
-                    }
-                })
-                .collect();
-
-            if chapters.is_empty() {
-                console.warn("No chapters found");
-                return 1;
-            }
-
-            let select_chapters = if dl_config.no_input {
-                chapters.clone()
+    let chapters: Vec<MangaChapterDetail> = chapters_resp
+        .chapters()
+        .iter()
+        .filter_map(|ch| {
+            if ch.chapter().chapter().is_some() {
+                Some(ch.chapter().clone())
             } else {
-                do_chapter_select(chapters.clone(), title, subs_resp.subscriptions(), console)
-            };
-
-            let has_subs = match title.subscription_type() {
-                None => false,
-                Some(subs) => match subs {
-                    SubscriptionType::SJ => subs_resp.subscriptions().is_sj_active(),
-                    SubscriptionType::VM => subs_resp.subscriptions().is_vm_active(),
-                },
-            };
-
-            let mut download_chapters: Vec<&MangaChapterDetail> = select_chapters
-                .iter()
-                .filter(|&ch| {
-                    if dl_config.no_input {
-                        // check if chapter id is in range
-                        match (dl_config.start_from, dl_config.end_at) {
-                            (Some(start), Some(end)) => {
-                                // between start and end
-                                ch.id() >= start && ch.id() <= end
-                            }
-                            (Some(start), None) => {
-                                ch.id() >= start // start to end
-                            }
-                            (None, Some(end)) => {
-                                ch.id() <= end // 0 to end
-                            }
-                            _ => true,
-                        }
-                    } else {
-                        dl_config.chapter_ids.is_empty()
-                            || dl_config.chapter_ids.contains(&(ch.id() as usize))
-                    }
-                })
-                .filter(|&ch| ch.is_available() || has_subs)
-                .filter(|&ch| {
-                    // Hide future chapters because we're not time traveler
-                    if let Some(pub_at) = ch.published_at() {
-                        pub_at.timestamp() <= chrono::Utc::now().timestamp()
-                    } else {
-                        true
-                    }
-                })
-                .collect();
-
-            if download_chapters.is_empty() {
-                console.warn("No chapters after filtered by selected chapter ids");
-                return 1;
+                None
             }
+        })
+        .collect();
 
-            download_chapters.sort_by(|&a, &b| a.id().cmp(&b.id()));
+    if chapters.is_empty() {
+        console.warn("No chapters found");
+        return Err(color_eyre::eyre::eyre!("No chapters found"));
+    }
 
-            let title_dir = get_output_directory(&output_dir, title.id(), None, true);
-            let dump_info = create_chapters_info(title, &chapters);
+    let select_chapters = if dl_config.no_input {
+        chapters.clone()
+    } else {
+        do_chapter_select(chapters.clone(), title, subs_resp.subscriptions(), console)
+    };
 
-            let title_dump_path = title_dir.join("_info.json");
-            dump_info
-                .dump(&title_dump_path)
-                .expect("Failed to dump title info");
+    let has_subs = match title.subscription_type() {
+        None => false,
+        Some(subs) => match subs {
+            SubscriptionType::SJ => subs_resp.subscriptions().is_sj_active(),
+            SubscriptionType::VM => subs_resp.subscriptions().is_vm_active(),
+        },
+    };
 
-            for chapter in download_chapters {
-                console.info(cformat!(
-                    "  Downloading chapter <m,s>{}</> ({})...",
-                    chapter.pretty_title(),
-                    chapter.id()
-                ));
-
-                let image_dir =
-                    get_output_directory(&output_dir, title.id(), Some(chapter.id()), false);
-                let image_ext = match client.get_platform() {
-                    SJPlatform::Web => "png",
-                    _ => "jpg",
-                };
-
-                if let Some(count) = check_downloaded_image_count(&image_dir, image_ext)
-                    && count >= chapter.pages() as usize
-                {
-                    console.warn(cformat!(
-                        "   Chapter <m,s>{}</> (<s>{}</>) has been downloaded, skipping",
-                        chapter.pretty_title(),
-                        chapter.id()
-                    ));
-                    continue;
+    let mut download_chapters: Vec<&MangaChapterDetail> = select_chapters
+        .iter()
+        .filter(|&ch| {
+            if dl_config.no_input {
+                // check if chapter id is in range
+                match (dl_config.start_from, dl_config.end_at) {
+                    (Some(start), Some(end)) => {
+                        // between start and end
+                        ch.id() >= start && ch.id() <= end
+                    }
+                    (Some(start), None) => {
+                        ch.id() >= start // start to end
+                    }
+                    (None, Some(end)) => {
+                        ch.id() <= end // 0 to end
+                    }
+                    _ => true,
                 }
+            } else {
+                dl_config.chapter_ids.is_empty()
+                    || dl_config.chapter_ids.contains(&(ch.id() as usize))
+            }
+        })
+        .filter(|&ch| ch.is_available() || has_subs)
+        .filter(|&ch| {
+            // Hide future chapters because we're not time traveler
+            if let Some(pub_at) = ch.published_at() {
+                pub_at.timestamp() <= chrono::Utc::now().timestamp()
+            } else {
+                true
+            }
+        })
+        .collect();
 
-                let view_req = client.verify_chapter(chapter.id()).await;
-                if let Err(e) = view_req {
-                    console.error(format!("Failed to verify chapter: {e}"));
-                    continue;
-                }
+    if download_chapters.is_empty() {
+        console.warn("No chapters after filtered by selected chapter IDs");
+        return Err(color_eyre::eyre::eyre!(
+            "No chapters after filtered by selected chapter IDs"
+        ));
+    }
 
-                let ch_metadata = client.get_chapter_metadata(chapter.id()).await;
-                if let Err(e) = ch_metadata {
-                    console.error(format!("Failed to fetch chapter metadata: {e}"));
-                    continue;
-                }
+    download_chapters.sort_by(|&a, &b| a.id().cmp(&b.id()));
 
-                // create chapter dir
-                std::fs::create_dir_all(&image_dir).unwrap();
+    let title_dir = get_output_directory(&output_dir, title.id(), None, true)?;
+    let dump_info = create_chapters_info(title, &chapters);
 
-                // Determine total image count, if we start at 0
-                // then the total image count is the same as the chapter.pages
-                // If above 0, then we need to add that amount to the total image count
-                let start_page = chapter.start_page();
-                let total_image_count = chapter.pages() + start_page;
+    let title_dump_path = title_dir.join("_info.json");
+    dump_info
+        .dump(&title_dump_path)
+        .expect("Failed to dump title info");
 
-                let progress =
-                    console.make_progress_arc(total_image_count as u64, Some("Downloading"));
+    for chapter in download_chapters {
+        console.info(cformat!(
+            "  Downloading chapter <m,s>{}</> ({})...",
+            chapter.pretty_title(),
+            chapter.id()
+        ));
 
-                if dl_config.parallel {
-                    let semaphore = Arc::new(tokio::sync::Semaphore::new(dl_config.threads));
+        let image_dir = get_output_directory(&output_dir, title.id(), Some(chapter.id()), false)?;
+        let image_ext = match client.get_platform() {
+            SJPlatform::Web => "png",
+            _ => "jpg",
+        };
 
-                    let tasks: Vec<_> = (0..total_image_count)
-                        .map(|page| {
-                            // wrap function in async block
-                            let wrap_client = client.clone();
-                            let image_dir = image_dir.clone();
-                            let cnsl = console.clone();
-                            let progress = Arc::clone(&progress);
-                            let chapter_id = chapter.id();
-                            let semaphore = Arc::clone(&semaphore);
+        if let Some(count) = check_downloaded_image_count(&image_dir, image_ext)
+            && count >= chapter.pages() as usize
+        {
+            console.warn(cformat!(
+                "   Chapter <m,s>{}</> (<s>{}</>) has been downloaded, skipping",
+                chapter.pretty_title(),
+                chapter.id()
+            ));
+            continue;
+        }
 
-                            tokio::spawn(async move {
-                                let _permit = semaphore.acquire().await.unwrap();
+        let view_req = client.verify_chapter(chapter.id()).await;
+        if let Err(e) = view_req {
+            console.error(format!("Failed to verify chapter: {e}"));
+            continue;
+        }
 
-                                match sjv_actual_downloader(
-                                    DownloadNode {
-                                        client: wrap_client,
-                                        id: chapter_id,
-                                        page,
-                                        extension: image_ext.to_string(),
-                                    },
-                                    image_dir,
-                                    cnsl.clone(),
-                                    progress,
-                                )
-                                .await
-                                {
-                                    Ok(_) => {}
-                                    Err(e) => {
-                                        cnsl.error(format!("    Failed to download chapter: {e}"));
-                                    }
-                                }
-                            })
-                        })
-                        .collect();
+        let ch_metadata = client.get_chapter_metadata(chapter.id()).await;
+        if let Err(e) = ch_metadata {
+            console.error(format!("Failed to fetch chapter metadata: {e}"));
+            continue;
+        }
 
-                    futures_util::future::join_all(tasks).await;
-                } else {
-                    for page in 0..total_image_count {
+        // create chapter dir
+        std::fs::create_dir_all(&image_dir)?;
+
+        // Determine total image count, if we start at 0
+        // then the total image count is the same as the chapter.pages
+        // If above 0, then we need to add that amount to the total image count
+        let start_page = chapter.start_page();
+        let total_image_count = chapter.pages() + start_page;
+
+        let progress = console.make_progress_arc(total_image_count as u64, Some("Downloading"));
+
+        if dl_config.parallel {
+            let semaphore = Arc::new(tokio::sync::Semaphore::new(dl_config.threads));
+
+            let tasks: Vec<_> = (0..total_image_count)
+                .map(|page| {
+                    // wrap function in async block
+                    let wrap_client = client.clone();
+                    let image_dir = image_dir.clone();
+                    let cnsl = console.clone();
+                    let progress = Arc::clone(&progress);
+                    let chapter_id = chapter.id();
+                    let semaphore = Arc::clone(&semaphore);
+
+                    tokio::spawn(async move {
+                        let _permit = semaphore
+                            .acquire()
+                            .await
+                            .expect("Failed to acquire semaphore");
+
                         match sjv_actual_downloader(
                             DownloadNode {
-                                client: client.clone(),
-                                id: chapter.id(),
+                                client: wrap_client,
+                                id: chapter_id,
                                 page,
                                 extension: image_ext.to_string(),
                             },
-                            image_dir.clone(),
-                            console.clone(),
-                            Arc::clone(&progress),
+                            image_dir,
+                            cnsl.clone(),
+                            progress,
                         )
                         .await
                         {
                             Ok(_) => {}
                             Err(e) => {
-                                console.error(format!("    Failed to download chapter: {e}"));
+                                cnsl.error(format!("    Failed to download chapter: {e}"));
                             }
                         }
+                    })
+                })
+                .collect();
+
+            futures_util::future::join_all(tasks).await;
+        } else {
+            for page in 0..total_image_count {
+                match sjv_actual_downloader(
+                    DownloadNode {
+                        client: client.clone(),
+                        id: chapter.id(),
+                        page,
+                        extension: image_ext.to_string(),
+                    },
+                    image_dir.clone(),
+                    console.clone(),
+                    Arc::clone(&progress),
+                )
+                .await
+                {
+                    Ok(_) => {}
+                    Err(e) => {
+                        console.error(format!("    Failed to download chapter: {e}"));
                     }
                 }
-                progress.finish_with_message("Downloaded");
             }
-
-            0
         }
-        Err(e) => {
-            console.error(format!("Failed to fetch chapters: {e}"));
-            1
-        }
+        progress.finish_with_message("Downloaded");
     }
+
+    Ok(())
 }

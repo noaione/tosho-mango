@@ -596,7 +596,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
             account_id,
             subcommand,
         } => {
-            let early_exit = match subcommand.clone() {
+            let early_act = match subcommand.clone() {
                 SJVCommands::Auth {
                     email,
                     password,
@@ -611,8 +611,8 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
             };
 
             // early exit
-            if let Some(early_exit) = early_exit {
-                return Ok(early_exit);
+            if let Some(early_act) = early_act {
+                return early_act;
             }
 
             let config = select_single_account(account_id.as_deref(), Implementations::Sjv, &t);
@@ -623,7 +623,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
                 },
                 None => {
                     t.warn("Aborted!");
-                    return Ok(1);
+                    return Err(color_eyre::eyre::eyre!("Aborted by user"));
                 }
             };
 
@@ -634,15 +634,15 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
                 client
             };
 
-            let exit_code = match subcommand {
+            let exit_act = match subcommand {
                 SJVCommands::Auth {
                     email: _,
                     password: _,
                     mode: _,
                     platform: _,
-                } => 0,
+                } => Ok(()),
                 SJVCommands::Account => r#impl::sjv::accounts::sjv_account_info(&config, &t).await,
-                SJVCommands::Accounts => 0,
+                SJVCommands::Accounts => Ok(()),
                 SJVCommands::AutoDownload {
                     title_or_slug,
                     start_from,
@@ -663,7 +663,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
                     r#impl::sjv::download::sjv_download(
                         title_or_slug,
                         dl_config,
-                        output.unwrap_or_else(get_default_download_dir),
+                        output.unwrap_or(default_dir),
                         &client,
                         &mut t_mut,
                     )
@@ -686,7 +686,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
                     r#impl::sjv::download::sjv_download(
                         title_or_slug,
                         dl_config,
-                        output.unwrap_or_else(get_default_download_dir),
+                        output.unwrap_or(default_dir),
                         &client,
                         &mut t_mut,
                     )
@@ -708,7 +708,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
                 }
             };
 
-            Ok(exit_code)
+            exit_act
         }
         ToshoCommands::Rbean {
             subcommand,

@@ -42,7 +42,10 @@ pub(super) fn do_print_search_information(
 }
 
 /// Search the big cache JSON for specific title
-pub(super) fn search_manga_by_text(contents: &[MangaDetail], target: &str) -> Vec<MangaDetail> {
+pub(super) fn search_manga_by_text(
+    contents: &[MangaDetail],
+    target: &str,
+) -> color_eyre::Result<Vec<MangaDetail>> {
     // Remove diacritics and lower case the target string
     let clean_target = secular::lower_lay_string(target);
     // Split target by spaces and collect patterns
@@ -52,8 +55,7 @@ pub(super) fn search_manga_by_text(contents: &[MangaDetail], target: &str) -> Ve
     let ac = AhoCorasick::builder()
         .ascii_case_insensitive(true)
         .match_kind(aho_corasick::MatchKind::LeftmostLongest)
-        .build(target)
-        .unwrap();
+        .build(target)?;
 
     // try matching
     let mut matches: Vec<(Vec<aho_corasick::Match>, &MangaDetail)> = contents
@@ -89,7 +91,7 @@ pub(super) fn search_manga_by_text(contents: &[MangaDetail], target: &str) -> Ve
     let actual_match: Vec<MangaDetail> =
         matches.iter().rev().map(|x| x.1.clone()).take(20).collect();
 
-    actual_match
+    Ok(actual_match)
 }
 
 // 12 hours
@@ -195,7 +197,7 @@ pub(super) fn sort_chapters(chapters: &mut [MangaChapterDetail], reverse: bool) 
             .map(|x| x.parse::<f64>().unwrap_or(0.0));
 
         match (an, bn) {
-            (Some(an), Some(bn)) => an.partial_cmp(&bn).unwrap(),
+            (Some(an), Some(bn)) => an.partial_cmp(&bn).unwrap_or(std::cmp::Ordering::Equal),
             (Some(_), None) => std::cmp::Ordering::Less,
             (None, Some(_)) => std::cmp::Ordering::Greater,
             (None, None) => a.id().cmp(&b.id()),
