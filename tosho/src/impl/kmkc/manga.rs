@@ -1,3 +1,4 @@
+use color_eyre::eyre::{Context, OptionExt};
 use color_print::cformat;
 use tosho_kmkc::{
     KMClient,
@@ -6,7 +7,7 @@ use tosho_kmkc::{
 };
 
 use super::super::parser::WeeklyCodeCli;
-use crate::{cli::ExitCode, linkify};
+use crate::linkify;
 
 use super::common::do_print_search_information;
 
@@ -14,83 +15,77 @@ pub(crate) async fn kmkc_search(
     query: &str,
     client: &KMClient,
     console: &crate::term::Terminal,
-) -> ExitCode {
+) -> color_eyre::Result<()> {
     console.info(cformat!("Searching for <magenta,bold>{}</>...", query));
 
-    let results = client.search(query, Some(50)).await;
-    match results {
-        Ok(results) => {
-            if results.is_empty() {
-                console.warn("No results found");
-                return 1;
-            }
+    let results = client
+        .search(query, Some(50))
+        .await
+        .context("Failed when searching with KM")?;
 
-            console.info(cformat!(
-                "Search results (<magenta,bold>{}</> results):",
-                results.len()
-            ));
-
-            do_print_search_information(&results, false, None);
-
-            0
-        }
-        Err(e) => {
-            console.error(cformat!("Unable to connect to KM: {}", e));
-            1
-        }
+    if results.is_empty() {
+        console.warn("No results found");
+        return Ok(());
     }
+
+    console.info(cformat!(
+        "Search results (<magenta,bold>{}</> results):",
+        results.len()
+    ));
+
+    do_print_search_information(&results, false, None);
+
+    Ok(())
 }
 
 pub(crate) async fn kmkc_search_weekly(
     weekday: WeeklyCodeCli,
     client: &KMClient,
     console: &crate::term::Terminal,
-) -> ExitCode {
+) -> color_eyre::Result<()> {
     console.info(cformat!(
         "Getting weekly manga for week <magenta,bold>{}</>...",
         weekday.to_name()
     ));
 
-    let results = client.get_weekly().await;
-    match results {
-        Ok(results) => {
-            let mut title_ids_list: Vec<i32> = vec![];
-            for weekly_info in results.contents() {
-                if weekly_info.weekday() == weekday.indexed() {
-                    title_ids_list = weekly_info.titles().to_vec();
-                    break;
-                }
-            }
+    let results = client
+        .get_weekly()
+        .await
+        .context("Failed fetching weekly information")?;
 
-            let mut titles = vec![];
-            for title_id in title_ids_list {
-                let find_title = results.titles().iter().find(|t| t.id() == title_id);
-
-                if let Some(title) = find_title {
-                    titles.push(title.clone());
-                }
-            }
-
-            if titles.is_empty() {
-                console.warn("No results found");
-                return 1;
-            }
-
-            console.info(cformat!(
-                "Weekday <bold>{}</> results (<magenta,bold>{}</> results):",
-                weekday.to_name(),
-                titles.len()
-            ));
-
-            do_print_search_information(&titles, false, None);
-
-            0
-        }
-        Err(e) => {
-            console.error(cformat!("Unable to connect to KM: {}", e));
-            1
+    let mut title_ids_list: Vec<i32> = vec![];
+    for weekly_info in results.contents() {
+        if weekly_info.weekday() == weekday.indexed() {
+            title_ids_list = weekly_info.titles().to_vec();
+            break;
         }
     }
+
+    let mut titles = vec![];
+    for title_id in title_ids_list {
+        let find_title = results.titles().iter().find(|t| t.id() == title_id);
+
+        if let Some(title) = find_title {
+            titles.push(title.clone());
+        }
+    }
+
+    if titles.is_empty() {
+        console.warn("No results found");
+        return Err(color_eyre::eyre::eyre!(
+            "No results found for the specified weekday"
+        ));
+    }
+
+    console.info(cformat!(
+        "Weekday <bold>{}</> results (<magenta,bold>{}</> results):",
+        weekday.to_name(),
+        titles.len()
+    ));
+
+    do_print_search_information(&titles, false, None);
+
+    Ok(())
 }
 
 fn format_tag_name(tag_name: &str) -> String {
@@ -117,239 +112,223 @@ pub(crate) async fn kmkc_title_info(
     show_chapters: bool,
     client: &KMClient,
     console: &crate::term::Terminal,
-) -> ExitCode {
+) -> color_eyre::Result<()> {
     console.info(cformat!(
         "Fetching info for ID <magenta,bold>{}</>...",
         title_id
     ));
-    let results = client.get_titles(vec![title_id]).await;
 
-    match results {
-        Err(e) => {
-            console.error(cformat!("Unable to connect to KM: {}", e));
-            1
-        }
-        Ok(results) => {
-            if results.is_empty() {
-                console.warn("Unable to find title information.");
-                return 1;
-            }
+    let results = client
+        .get_titles(vec![title_id])
+        .await
+        .context(format!("Failed fetching ID {}", title_id))?;
 
-            let result = results.first().unwrap();
+    let result = results
+        .first()
+        .ok_or_eyre("Unable to find title information.")?;
 
-            let mut genre_results = vec![];
-            if !result.genre_ids().is_empty() {
-                let genre_resp = client.get_genres().await;
-                match genre_resp {
-                    Err(e) => {
-                        console.error(cformat!("Unable to connect to KM: {}", e));
-                        return 1;
-                    }
-                    Ok(genre_resp) => genre_results.clone_from(&genre_resp.genres().to_vec()),
-                }
-            }
+    let mut genre_results = vec![];
+    if !result.genre_ids().is_empty() {
+        let genre_resp = client
+            .get_genres()
+            .await
+            .context("Failed to get genres information")?;
 
-            let mut chapters_info = vec![];
-            if show_chapters {
-                console.info(cformat!(
-                    "Fetching <magenta,bold>{}</> <bold>{}</bold> chapters information...",
-                    result.title(),
-                    result.episode_ids().len()
-                ));
+        genre_results.clone_from(&genre_resp.genres().to_vec());
+    }
 
-                for chunk_eps in result.episode_ids().chunks(50) {
-                    let chap_req = client.get_episodes(chunk_eps.to_vec()).await;
+    let mut chapters_info = vec![];
+    if show_chapters {
+        console.info(cformat!(
+            "Fetching <magenta,bold>{}</> <bold>{}</bold> chapters information...",
+            result.title(),
+            result.episode_ids().len()
+        ));
 
-                    match chap_req {
-                        Err(e) => {
-                            console.error(cformat!("Failed to get chapter information: {}", e));
-                            return 1;
-                        }
-                        Ok(chap_req) => {
-                            chapters_info.extend(chap_req);
-                        }
-                    }
-                }
-            }
+        for (chunk_idx, chunk_eps) in result.episode_ids().chunks(50).enumerate() {
+            let chap_req = client
+                .get_episodes(chunk_eps.to_vec())
+                .await
+                .context(format!(
+                    "Failed to get chapter information for chunk #{}",
+                    chunk_idx + 1
+                ))?;
 
-            let manga_url = format!("https://{}/title/{}", BASE_HOST, title_id);
-            let linked = linkify!(&manga_url, result.title());
-
-            console.info(cformat!(
-                "Title information for <magenta,bold>{}</>",
-                linked,
-            ));
-            console.info(cformat!("  <s>Author</>: {}", result.author()));
-
-            let filtered_genres = genre_results
-                .iter()
-                .filter(|g| result.genre_ids().contains(&g.id()))
-                .cloned()
-                .collect::<Vec<GenreNode>>();
-
-            if !filtered_genres.is_empty() {
-                console.info(cformat!(
-                    "  <s>Genre/Tags</>: {}",
-                    format_tags(&filtered_genres)
-                ));
-            }
-            if result.magazine() != MagazineCategory::Undefined {
-                console.info(cformat!(
-                    "  <s>Magazine</>: {}",
-                    result.magazine().pretty_name()
-                ));
-            }
-            let pub_cat = match result.publishing() {
-                tosho_kmkc::models::enums::PublishCategory::Serializing => {
-                    cformat!("<cyan>Serializing</>")
-                }
-                tosho_kmkc::models::enums::PublishCategory::Complete => {
-                    cformat!("<green>Complete</>")
-                }
-                tosho_kmkc::models::enums::PublishCategory::OneShot => {
-                    cformat!("<yellow>One-shot</>")
-                }
-            };
-            console.info(cformat!("  <s>Status</>: {}", pub_cat));
-
-            console.info(cformat!("  <s>Summary</>"));
-            if !result.summary().is_empty() {
-                console.info(cformat!("   <blue>{}</>", result.summary()));
-            }
-            let split_desc: Vec<&str> = result.description().split('\n').collect();
-            for desc in split_desc {
-                console.info(format!("    {desc}"));
-            }
-
-            if !result.notice().is_empty() {
-                console.warn(cformat!("  <s>Notice</>: {}", result.notice()));
-            }
-
-            println!();
-            console.info(cformat!(
-                "  <s>Chapters</>: {} chapters",
-                result.episode_ids().len()
-            ));
-            if show_chapters && chapters_info.is_empty() {
-                console.warn("   <red,s>Error</>: Unable to get chapters information");
-                println!();
-            } else if show_chapters && !chapters_info.is_empty() {
-                for chapter in chapters_info {
-                    let episode_url = format!("{}/episode/{}", manga_url, chapter.id());
-                    let ep_linked = linkify!(&episode_url, chapter.title());
-
-                    let mut text_info = cformat!("    <s>{}</> ({})", ep_linked, chapter.id());
-                    match chapter.badge() {
-                        tosho_kmkc::models::EpisodeBadge::Purchaseable => {
-                            if chapter.ticket_rental().into() {
-                                let ticket_emote = if console.is_modern() {
-                                    "🎫"
-                                } else {
-                                    "TICKET"
-                                };
-
-                                text_info = cformat!(
-                                    "{} [<yellow,bold>{} <rev>FREE</rev></>]",
-                                    text_info,
-                                    ticket_emote
-                                );
-                            } else {
-                                text_info = cformat!(
-                                    "{} [<green,bold,reverse>P{}</>]",
-                                    text_info,
-                                    chapter.point()
-                                );
-                            }
-                        }
-                        tosho_kmkc::models::EpisodeBadge::Free => {
-                            text_info = cformat!("{} [<p(18),bold,reverse>FREE</>]", text_info);
-                        }
-                        tosho_kmkc::models::EpisodeBadge::Purchased => {
-                            text_info = cformat!("{} [<green,bold>Purchased</>]", text_info);
-                        }
-                        tosho_kmkc::models::EpisodeBadge::Rental => {
-                            if let Some(rental_time) = chapter.rental_rest_time() {
-                                text_info = cformat!(
-                                    "{} [<yellow,bold>Renting: {}</>]",
-                                    text_info,
-                                    rental_time
-                                );
-                            }
-                        }
-                    }
-
-                    console.info(&text_info);
-                    let st_fmt = chapter.start_time().format("%b %d, %Y");
-                    console.info(cformat!("     <s>Published</>: {}", st_fmt));
-                }
-                println!();
-            }
-
-            if let Some(next_update) = result.next_update() {
-                console.info(cformat!("  <s>Next update</>: {}", next_update));
-            }
-
-            0
+            chapters_info.extend(chap_req);
         }
     }
+
+    let manga_url = format!("https://{}/title/{}", BASE_HOST, title_id);
+    let linked = linkify!(&manga_url, result.title());
+
+    console.info(cformat!(
+        "Title information for <magenta,bold>{}</>",
+        linked,
+    ));
+    console.info(cformat!("  <s>Author</>: {}", result.author()));
+
+    let filtered_genres = genre_results
+        .iter()
+        .filter(|g| result.genre_ids().contains(&g.id()))
+        .cloned()
+        .collect::<Vec<GenreNode>>();
+
+    if !filtered_genres.is_empty() {
+        console.info(cformat!(
+            "  <s>Genre/Tags</>: {}",
+            format_tags(&filtered_genres)
+        ));
+    }
+    if result.magazine() != MagazineCategory::Undefined {
+        console.info(cformat!(
+            "  <s>Magazine</>: {}",
+            result.magazine().pretty_name()
+        ));
+    }
+    let pub_cat = match result.publishing() {
+        tosho_kmkc::models::enums::PublishCategory::Serializing => {
+            cformat!("<cyan>Serializing</>")
+        }
+        tosho_kmkc::models::enums::PublishCategory::Complete => {
+            cformat!("<green>Complete</>")
+        }
+        tosho_kmkc::models::enums::PublishCategory::OneShot => {
+            cformat!("<yellow>One-shot</>")
+        }
+    };
+    console.info(cformat!("  <s>Status</>: {}", pub_cat));
+
+    console.info(cformat!("  <s>Summary</>"));
+    if !result.summary().is_empty() {
+        console.info(cformat!("   <blue>{}</>", result.summary()));
+    }
+    let split_desc: Vec<&str> = result.description().split('\n').collect();
+    for desc in split_desc {
+        console.info(format!("    {desc}"));
+    }
+
+    if !result.notice().is_empty() {
+        console.warn(cformat!("  <s>Notice</>: {}", result.notice()));
+    }
+
+    println!();
+    console.info(cformat!(
+        "  <s>Chapters</>: {} chapters",
+        result.episode_ids().len()
+    ));
+    if show_chapters && chapters_info.is_empty() {
+        console.warn("   <red,s>Error</>: Unable to get chapters information");
+        println!();
+    } else if show_chapters && !chapters_info.is_empty() {
+        for chapter in chapters_info {
+            let episode_url = format!("{}/episode/{}", manga_url, chapter.id());
+            let ep_linked = linkify!(&episode_url, chapter.title());
+
+            let mut text_info = cformat!("    <s>{}</> ({})", ep_linked, chapter.id());
+            match chapter.badge() {
+                tosho_kmkc::models::EpisodeBadge::Purchaseable => {
+                    if chapter.ticket_rental().into() {
+                        let ticket_emote = if console.is_modern() {
+                            "🎫"
+                        } else {
+                            "TICKET"
+                        };
+
+                        text_info = cformat!(
+                            "{} [<yellow,bold>{} <rev>FREE</rev></>]",
+                            text_info,
+                            ticket_emote
+                        );
+                    } else {
+                        text_info = cformat!(
+                            "{} [<green,bold,reverse>P{}</>]",
+                            text_info,
+                            chapter.point()
+                        );
+                    }
+                }
+                tosho_kmkc::models::EpisodeBadge::Free => {
+                    text_info = cformat!("{} [<p(18),bold,reverse>FREE</>]", text_info);
+                }
+                tosho_kmkc::models::EpisodeBadge::Purchased => {
+                    text_info = cformat!("{} [<green,bold>Purchased</>]", text_info);
+                }
+                tosho_kmkc::models::EpisodeBadge::Rental => {
+                    if let Some(rental_time) = chapter.rental_rest_time() {
+                        text_info =
+                            cformat!("{} [<yellow,bold>Renting: {}</>]", text_info, rental_time);
+                    }
+                }
+            }
+
+            console.info(&text_info);
+            let st_fmt = chapter.start_time().format("%b %d, %Y");
+            console.info(cformat!("     <s>Published</>: {}", st_fmt));
+        }
+        println!();
+    }
+
+    if let Some(next_update) = result.next_update() {
+        console.info(cformat!("  <s>Next update</>: {}", next_update));
+    }
+
+    Ok(())
 }
 
 pub(crate) async fn kmkc_magazines_list(
     client: &KMClient,
     console: &crate::term::Terminal,
-) -> ExitCode {
+) -> color_eyre::Result<()> {
     console.info("Fetching magazines list...");
 
-    let results = client.get_magazines().await;
+    let results = client
+        .get_magazines()
+        .await
+        .context("Failed fetching magazines list")?;
 
-    match results {
-        Err(e) => {
-            console.error(cformat!("Unable to connect to KM: {}", e));
-            1
+    if results.categories().is_empty() {
+        console.warn("No magazine results found.");
+        return Err(color_eyre::eyre::eyre!("No magazine results found."));
+    }
+
+    let mut unknown_ids = vec![];
+    for magazine in results.categories() {
+        if magazine.id() == 0 {
+            continue;
         }
-        Ok(results) => {
-            if results.categories().is_empty() {
-                console.warn("No magazine results found.");
-                return 1;
+
+        let mag_text = cformat!("<s>{}</> ({})", magazine.name(), magazine.id());
+        let mag = MagazineCategory::from(magazine.id());
+
+        if mag != MagazineCategory::Undefined {
+            console.info(cformat!("{} <s>{}</>", mag_text, mag.pretty_name()));
+
+            let doc_text = mag.get_doc();
+            if let Some(doc_text) = doc_text {
+                let first_line = doc_text
+                    .split('\n')
+                    .next()
+                    .ok_or_eyre("Failed to get next line for description")?;
+                console.info(cformat!("  <s>{}</s>", first_line));
             }
-
-            let mut unknown_ids = vec![];
-            for magazine in results.categories() {
-                if magazine.id() == 0 {
-                    continue;
-                }
-
-                let mag_text = cformat!("<s>{}</> ({})", magazine.name(), magazine.id());
-                let mag = MagazineCategory::from(magazine.id());
-
-                if mag != MagazineCategory::Undefined {
-                    console.info(cformat!("{} <s>{}</>", mag_text, mag.pretty_name()));
-
-                    let doc_text = mag.get_doc();
-                    if let Some(doc_text) = doc_text {
-                        let first_line = doc_text.split('\n').next().unwrap();
-                        console.info(cformat!("  <s>{}</s>", first_line));
-                    }
-                } else {
-                    console.warn(cformat!("{} <s>Unknown</>", mag_text));
-                    unknown_ids.push(magazine.id());
-                }
-            }
-
-            if !unknown_ids.is_empty() {
-                console.warn(cformat!(
-                    "Found <red,bold>{}</> unknown magazine IDs",
-                    unknown_ids.len()
-                ));
-                let unknown_join = unknown_ids
-                    .iter()
-                    .map(|id| id.to_string())
-                    .collect::<Vec<String>>()
-                    .join(", ");
-                console.warn(cformat!("  {}", unknown_join));
-            }
-
-            0
+        } else {
+            console.warn(cformat!("{} <s>Unknown</>", mag_text));
+            unknown_ids.push(magazine.id());
         }
     }
+
+    if !unknown_ids.is_empty() {
+        console.warn(cformat!(
+            "Found <red,bold>{}</> unknown magazine IDs",
+            unknown_ids.len()
+        ));
+        let unknown_join = unknown_ids
+            .iter()
+            .map(|id| id.to_string())
+            .collect::<Vec<String>>()
+            .join(", ");
+        console.warn(cformat!("  {}", unknown_join));
+    }
+
+    Ok(())
 }

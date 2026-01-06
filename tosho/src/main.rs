@@ -56,6 +56,7 @@ use std::path::PathBuf;
 use crate::cli::{ToshoCli, max_threads};
 use clap::Parser;
 use cli::{ExitCode, ToshoCommands};
+use color_eyre::eyre::Context;
 use r#impl::Implementations;
 use r#impl::amap::AMAPCommands;
 use r#impl::amap::download::AMDownloadCliConfig;
@@ -83,8 +84,8 @@ pub(crate) mod updater;
 pub(crate) mod win_term;
 pub(crate) use term::macros::linkify;
 
-fn get_default_download_dir() -> PathBuf {
-    let cwd = std::env::current_dir().unwrap();
+fn get_default_download_dir() -> color_eyre::Result<PathBuf> {
+    let cwd = std::env::current_dir()?;
     cwd.join("DOWNLOADS")
 }
 
@@ -121,6 +122,8 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
                 t.warn(format!("Failed to check for update: {e}"));
             });
     }
+
+    let default_dir = get_default_download_dir()?;
 
     match cli.command {
         ToshoCommands::Musq {
@@ -220,7 +223,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
                     r#impl::musq::download::musq_download(
                         title_id,
                         mu_config,
-                        output.unwrap_or_else(get_default_download_dir),
+                        output.unwrap_or(default_dir),
                         &client,
                         &mut t_mut,
                     )
@@ -275,7 +278,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
             account_id,
             subcommand,
         } => {
-            let early_exit = match subcommand.clone() {
+            let exit_stat = match subcommand.clone() {
                 KMKCCommands::Auth {
                     email,
                     password,
@@ -304,8 +307,8 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
             };
 
             // exit early
-            if let Some(exit_code) = early_exit {
-                return Ok(exit_code);
+            if let Some(exit_stat) = exit_stat {
+                return exit_stat;
             }
 
             let config = select_single_account(account_id.as_deref(), Implementations::Kmkc, &t);
@@ -316,34 +319,39 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
                 },
                 None => {
                     t.warn("Aborted!");
-                    return Ok(1);
+                    return Err(color_eyre::eyre::eyre!("Aborted by user"));
                 }
             };
 
-            let client = r#impl::client::make_kmkc_client(&config.clone().into())?;
+            let client = r#impl::client::make_kmkc_client(
+                &config
+                    .clone()
+                    .try_into()
+                    .context("Failed to convert client config")?,
+            )?;
             let client = if let Some(proxy) = parsed_proxy {
                 client.with_proxy(proxy)?
             } else {
                 client
             };
 
-            let exit_code = match subcommand {
+            let exit_stat = match subcommand {
                 KMKCCommands::Auth {
                     email: _,
                     password: _,
                     r#type: _,
-                } => 0,
+                } => Ok(()),
                 KMKCCommands::AuthMobile {
                     user_id: _,
                     hash_key: _,
                     r#type: _,
-                } => 0,
-                KMKCCommands::AuthWeb { cookies: _ } => 0,
-                KMKCCommands::AuthAdapt { r#type: _ } => 0,
+                } => Ok(()),
+                KMKCCommands::AuthWeb { cookies: _ } => Ok(()),
+                KMKCCommands::AuthAdapt { r#type: _ } => Ok(()),
                 KMKCCommands::Account => {
                     r#impl::kmkc::accounts::kmkc_account_info(&client, &config, &t).await
                 }
-                KMKCCommands::Accounts => 0,
+                KMKCCommands::Accounts => Ok(()),
                 KMKCCommands::AutoDownload {
                     title_id,
                     no_purchase,
@@ -370,7 +378,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
                     r#impl::kmkc::download::kmkc_download(
                         title_id,
                         main_config,
-                        output.unwrap_or_else(get_default_download_dir),
+                        output.unwrap_or(default_dir),
                         &client,
                         &config,
                         &mut t_mut,
@@ -401,7 +409,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
                     r#impl::kmkc::download::kmkc_download(
                         title_id,
                         main_config,
-                        output.unwrap_or_else(get_default_download_dir),
+                        output.unwrap_or(default_dir),
                         &client,
                         &config,
                         &mut t_mut,
@@ -451,7 +459,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
                 }
             };
 
-            Ok(exit_code)
+            exit_stat
         }
         ToshoCommands::Amap {
             account_id,
@@ -520,7 +528,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
                     r#impl::amap::download::amap_download(
                         title_id,
                         dl_config,
-                        output.unwrap_or_else(get_default_download_dir),
+                        output.unwrap_or(default_dir),
                         &client,
                         &config,
                         &mut t_mut,
@@ -550,7 +558,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
                     r#impl::amap::download::amap_download(
                         title_id,
                         dl_config,
-                        output.unwrap_or_else(get_default_download_dir),
+                        output.unwrap_or(default_dir),
                         &client,
                         &config,
                         &mut t_mut,

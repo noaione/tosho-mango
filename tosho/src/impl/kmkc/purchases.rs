@@ -1,3 +1,4 @@
+use color_eyre::eyre::{Context, OptionExt};
 use color_print::cformat;
 use num_format::{Locale, ToFormattedString};
 use tosho_kmkc::{
@@ -6,7 +7,7 @@ use tosho_kmkc::{
     models::{EpisodeNode, TicketInfoType},
 };
 
-use crate::{cli::ExitCode, linkify};
+use crate::linkify;
 
 use super::{common::common_purchase_select, config::Config};
 
@@ -15,223 +16,226 @@ pub(crate) async fn kmkc_purchase(
     client: &KMClient,
     account: &Config,
     console: &mut crate::term::Terminal,
-) -> ExitCode {
-    let (results, _, _, user_point) =
-        common_purchase_select(title_id, client, account, false, false, false, console).await;
+) -> color_eyre::Result<()> {
+    let purchase_results =
+        common_purchase_select(title_id, client, account, false, false, false, console).await?;
 
-    match (results, user_point) {
-        (Ok(results), Some(user_point)) => {
-            if results.is_empty() {
-                return 1;
-            }
+    let results = purchase_results.episodes();
+    let user_point = purchase_results.balance();
 
-            let mut wallet_copy = user_point.point.point().clone();
-            let mut ticket_entry = user_point.ticket.clone();
-
-            let mut chapter_point_claim: Vec<EpisodeNode> = vec![];
-            let mut ticketing_claim: Vec<(EpisodeNode, TicketInfoType)> = vec![];
-            // let mut chapter_point_back: Vec<EpisodeNode> = vec![];
-            for chapter in results {
-                if chapter.is_available() {
-                    console.warn(cformat!(
-                        "Chapter <m,s>{}</> is already purchased, skipping",
-                        chapter.title()
-                    ));
-                    continue;
-                }
-
-                if chapter.is_ticketable() && ticket_entry.is_title_available() {
-                    // if chapter.bonus_point > 0 {
-                    //     chapter_point_back.push(chapter.clone());
-                    // }
-                    ticketing_claim.push((
-                        chapter,
-                        TicketInfoType::Title(ticket_entry.info().title().unwrap()),
-                    ));
-                    ticket_entry.subtract_title();
-                } else if chapter.is_ticketable() && ticket_entry.is_premium_available() {
-                    // if chapter.bonus_point > 0 {
-                    //     chapter_point_back.push(chapter.clone());
-                    // }
-                    ticketing_claim.push((
-                        chapter,
-                        TicketInfoType::Premium(ticket_entry.info().premium().unwrap()),
-                    ));
-                    ticket_entry.subtract_premium();
-                } else if wallet_copy.can_purchase(chapter.point().try_into().unwrap_or(0)) {
-                    wallet_copy.subtract(chapter.point().try_into().unwrap_or(0));
-                    // if chapter.bonus_point > 0 {
-                    //     chapter_point_back.push(chapter.clone());
-                    // }
-                    chapter_point_claim.push(chapter);
-                }
-            }
-
-            let total_claim = chapter_point_claim.len() + ticketing_claim.len();
-
-            if total_claim == 0 {
-                console.warn("No chapter selected, aborting...");
-
-                return 1;
-            }
-
-            console.info("Precalculate purchase information...");
-            console.info(cformat!(
-                "  - <bold>With point:</> {} chapters",
-                chapter_point_claim.len()
-            ));
-            console.info(cformat!(
-                "  - <bold>With ticket:</> {} chapters",
-                ticketing_claim.len()
-            ));
-
-            console.status(format!("Purchasing chapter(s)... (1/{total_claim})"));
-            let mut purchase_count = 0;
-            let mut failure_count = 0_u64;
-
-            for (chapter, ticket_info) in ticketing_claim {
-                purchase_count += 1;
-                console.status(format!(
-                    "Purchasing chapter(s)... ({purchase_count}/{total_claim})"
-                ));
-
-                let result = client
-                    .claim_episode_with_ticket(chapter.id(), &ticket_info)
-                    .await;
-
-                if let Err(error) = result {
-                    console.error(format!("Failed to purchase chapter: {error}"));
-                    failure_count += 1;
-                }
-            }
-
-            if !chapter_point_claim.is_empty() {
-                console.status(format!(
-                    "Purchasing chapter(s)... ({purchase_count}/{total_claim}) [point]"
-                ));
-
-                // convert Vec<EpisodeNode> to Vec<&EpisodeNode>
-                let temp_chapter_claim: Vec<&EpisodeNode> =
-                    chapter_point_claim.iter().collect::<Vec<&EpisodeNode>>();
-
-                let mut mutable_point = user_point.point.point().clone();
-
-                let result = client
-                    .claim_episodes(temp_chapter_claim, &mut mutable_point)
-                    .await;
-
-                match result {
-                    Ok(_) => {
-                        purchase_count += chapter_point_claim.len();
-                    }
-                    Err(error) => {
-                        console.error(format!("Failed to purchase chapter: {error}"));
-                        failure_count += chapter_point_claim.len() as u64;
-                    }
-                }
-            }
-
-            console.stop_status_msg(cformat!("Purchased <m,s>{}</> chapters", purchase_count));
-
-            if failure_count > 0 {
-                console.warn(cformat!(
-                    "  There is <m,s>{}</> chapters that we failed to purchase",
-                    failure_count
-                ));
-            }
-
-            // disable point claim for now
-            // if !chapter_point_back.is_empty() {
-            //     console.info(&cformat!(
-            //         "Claiming back point from <s>{}</> chapters...",
-            //         chapter_point_back.len(),
-            //     ));
-
-            //     for chapter in chapter_point_back {
-            //         let result = client.get_episode_viewer(&chapter).await;
-            //         match result {
-            //             Ok(_) => {
-            //                 console.info(&cformat!(
-            //                     "  Claiming back point from <m,s>{}</> ({})",
-            //                     chapter.title,
-            //                     chapter.id
-            //                 ));
-            //                 let claim_back_res = client.finish_episode_viewer(&chapter).await;
-            //                 match claim_back_res {
-            //                     Ok(finish_res) => {
-            //                         console.info(&cformat!(
-            //                             "   Claimed back <yellow,s>{}</> point from <m,s>{}</> ({})",
-            //                             finish_res.bonus_point,
-            //                             chapter.title,
-            //                             chapter.id
-            //                         ));
-            //                     }
-            //                     Err(error) => {
-            //                         console.error(&cformat!(
-            //                             "   Failed to claim back point from <m,s>{}</> ({}): <red,s>{}</>",
-            //                             chapter.title,
-            //                             chapter.id,
-            //                             error
-            //                         ));
-            //                     }
-            //                 }
-            //             }
-            //             Err(err) => {
-            //                 console.warn(&cformat!(
-            //                     "   Chapter <m,s>{}</> ({}) is not available: <red,s>{}</>",
-            //                     chapter.title,
-            //                     chapter.id,
-            //                     err
-            //                 ));
-            //             }
-            //         }
-            //     }
-            // }
-
-            0
-        }
-        _ => 1,
+    if results.is_empty() {
+        return Err(color_eyre::eyre::eyre!(
+            "No chapters to be purchased, aborting"
+        ));
     }
+
+    let mut wallet_copy = user_point.point.point().clone();
+    let mut ticket_entry = user_point.ticket.clone();
+
+    let mut chapter_point_claim: Vec<&EpisodeNode> = vec![];
+    let mut ticketing_claim: Vec<(&EpisodeNode, TicketInfoType)> = vec![];
+    // let mut chapter_point_back: Vec<EpisodeNode> = vec![];
+    for chapter in results {
+        if chapter.is_available() {
+            console.warn(cformat!(
+                "Chapter <m,s>{}</> is already purchased, skipping",
+                chapter.title()
+            ));
+            continue;
+        }
+
+        if chapter.is_ticketable() && ticket_entry.is_title_available() {
+            // if chapter.bonus_point > 0 {
+            //     chapter_point_back.push(chapter.clone());
+            // }
+            ticketing_claim.push((
+                chapter,
+                TicketInfoType::Title(
+                    ticket_entry
+                        .info()
+                        .title()
+                        .ok_or_eyre("Failed to get ticket title information")?,
+                ),
+            ));
+            ticket_entry.subtract_title();
+        } else if chapter.is_ticketable() && ticket_entry.is_premium_available() {
+            // if chapter.bonus_point > 0 {
+            //     chapter_point_back.push(chapter.clone());
+            // }
+            ticketing_claim.push((
+                chapter,
+                TicketInfoType::Premium(
+                    ticket_entry
+                        .info()
+                        .premium()
+                        .ok_or_eyre("Failed to get premium title information")?,
+                ),
+            ));
+            ticket_entry.subtract_premium();
+        } else if wallet_copy.can_purchase(chapter.point().try_into().unwrap_or(0)) {
+            wallet_copy.subtract(chapter.point().try_into().unwrap_or(0));
+            // if chapter.bonus_point > 0 {
+            //     chapter_point_back.push(chapter.clone());
+            // }
+            chapter_point_claim.push(chapter);
+        }
+    }
+
+    let total_claim = chapter_point_claim.len() + ticketing_claim.len();
+
+    if total_claim == 0 {
+        console.warn("No chapter selected, aborting...");
+
+        return Err(color_eyre::eyre::eyre!("No chapter selected, aborting"));
+    }
+
+    console.info("Precalculate purchase information...");
+    console.info(cformat!(
+        "  - <bold>With point:</> {} chapters",
+        chapter_point_claim.len()
+    ));
+    console.info(cformat!(
+        "  - <bold>With ticket:</> {} chapters",
+        ticketing_claim.len()
+    ));
+
+    console.status(format!("Purchasing chapter(s)... (1/{total_claim})"));
+    let mut purchase_count = 0;
+    let mut failure_count = 0_u64;
+
+    for (chapter, ticket_info) in ticketing_claim {
+        purchase_count += 1;
+        console.status(format!(
+            "Purchasing chapter(s)... ({purchase_count}/{total_claim})"
+        ));
+
+        let result = client
+            .claim_episode_with_ticket(chapter.id(), &ticket_info)
+            .await;
+
+        if let Err(error) = result {
+            console.error(format!("Failed to purchase chapter: {error}"));
+            failure_count += 1;
+        }
+    }
+
+    if !chapter_point_claim.is_empty() {
+        console.status(format!(
+            "Purchasing chapter(s)... ({purchase_count}/{total_claim}) [point]"
+        ));
+
+        let mut mutable_point = user_point.point.point().clone();
+
+        let total_claim = chapter_point_claim.len();
+        let result = client
+            .claim_episodes(chapter_point_claim, &mut mutable_point)
+            .await;
+
+        match result {
+            Ok(_) => {
+                purchase_count += total_claim;
+            }
+            Err(error) => {
+                console.error(format!("Failed to purchase chapter: {error}"));
+                failure_count += total_claim as u64;
+            }
+        }
+    }
+
+    console.stop_status_msg(cformat!("Purchased <m,s>{}</> chapters", purchase_count));
+
+    if failure_count > 0 {
+        console.warn(cformat!(
+            "  There is <m,s>{}</> chapters that we failed to purchase",
+            failure_count
+        ));
+    }
+
+    // disable point claim for now
+    // if !chapter_point_back.is_empty() {
+    //     console.info(&cformat!(
+    //         "Claiming back point from <s>{}</> chapters...",
+    //         chapter_point_back.len(),
+    //     ));
+
+    //     for chapter in chapter_point_back {
+    //         let result = client.get_episode_viewer(&chapter).await;
+    //         match result {
+    //             Ok(_) => {
+    //                 console.info(&cformat!(
+    //                     "  Claiming back point from <m,s>{}</> ({})",
+    //                     chapter.title,
+    //                     chapter.id
+    //                 ));
+    //                 let claim_back_res = client.finish_episode_viewer(&chapter).await;
+    //                 match claim_back_res {
+    //                     Ok(finish_res) => {
+    //                         console.info(&cformat!(
+    //                             "   Claimed back <yellow,s>{}</> point from <m,s>{}</> ({})",
+    //                             finish_res.bonus_point,
+    //                             chapter.title,
+    //                             chapter.id
+    //                         ));
+    //                     }
+    //                     Err(error) => {
+    //                         console.error(&cformat!(
+    //                             "   Failed to claim back point from <m,s>{}</> ({}): <red,s>{}</>",
+    //                             chapter.title,
+    //                             chapter.id,
+    //                             error
+    //                         ));
+    //                     }
+    //                 }
+    //             }
+    //             Err(err) => {
+    //                 console.warn(&cformat!(
+    //                     "   Chapter <m,s>{}</> ({}) is not available: <red,s>{}</>",
+    //                     chapter.title,
+    //                     chapter.id,
+    //                     err
+    //                 ));
+    //             }
+    //         }
+    //     }
+    // }
+
+    Ok(())
 }
 
 pub(crate) async fn kmkc_purchased(
     client: &KMClient,
     account: &Config,
     console: &crate::term::Terminal,
-) -> ExitCode {
+) -> color_eyre::Result<()> {
     console.info(cformat!(
         "Getting user purchased title for <m,s>{}</>...",
         account.get_username()
     ));
-    let results = client.get_purchased().await;
 
-    match results {
-        Ok(results) => {
-            if results.is_empty() {
-                console.warn("No purchased title found");
-                return 1;
-            }
+    let results = client
+        .get_purchased()
+        .await
+        .context("Failed to get purchased title")?;
 
-            console.info(cformat!(
-                "Purchased title (<m,s>{}</> results):",
-                results.len()
-            ));
-
-            for result in results {
-                let manga_url = format!("https://{}/title/{}", BASE_HOST, result.id());
-                let linked = linkify!(&manga_url, result.title());
-
-                console.info(cformat!("  {} ({})", linked, result.id()));
-                console.info(format!("   {manga_url}"));
-            }
-
-            0
-        }
-        Err(error) => {
-            console.error(format!("Failed to get purchased title: {error}"));
-            1
-        }
+    if results.is_empty() {
+        console.warn("No purchased title found");
+        return Err(color_eyre::eyre::eyre!("No purchased title found"));
     }
+
+    console.info(cformat!(
+        "Purchased title (<m,s>{}</> results):",
+        results.len()
+    ));
+
+    for result in results {
+        let manga_url = format!("https://{}/title/{}", BASE_HOST, result.id());
+        let linked = linkify!(&manga_url, result.title());
+
+        console.info(cformat!("  {} ({})", linked, result.id()));
+        console.info(format!("   {manga_url}"));
+    }
+
+    Ok(())
 }
 
 pub(crate) async fn kmkc_purchase_precalculate(
@@ -239,76 +243,86 @@ pub(crate) async fn kmkc_purchase_precalculate(
     client: &KMClient,
     account: &Config,
     console: &mut crate::term::Terminal,
-) -> ExitCode {
-    let (results, _, _, user_point) =
-        common_purchase_select(title_id, client, account, false, false, false, console).await;
+) -> color_eyre::Result<()> {
+    let purchased_results =
+        common_purchase_select(title_id, client, account, false, false, false, console).await?;
 
-    match (results, user_point) {
-        (Ok(results), Some(user_point)) => {
-            if results.is_empty() {
-                return 1;
-            }
+    let results = purchased_results.episodes();
+    let user_point = purchased_results.balance();
 
-            let mut ticket_entry = user_point.ticket.clone();
-
-            let mut chapter_point_claim: Vec<EpisodeNode> = vec![];
-            let mut ticketing_claim: Vec<(EpisodeNode, TicketInfoType)> = vec![];
-            for chapter in results {
-                if chapter.is_available() {
-                    continue;
-                }
-
-                // For ticket, we simulate by removing the ticket from the entry, while for point
-                // we just add it into the list since we want to see how much point we need to spend
-                if chapter.is_ticketable() && ticket_entry.is_title_available() {
-                    ticketing_claim.push((
-                        chapter,
-                        TicketInfoType::Title(ticket_entry.info().title().unwrap()),
-                    ));
-                    ticket_entry.subtract_title();
-                } else if chapter.is_ticketable() && ticket_entry.is_premium_available() {
-                    ticketing_claim.push((
-                        chapter,
-                        TicketInfoType::Premium(ticket_entry.info().premium().unwrap()),
-                    ));
-                    ticket_entry.subtract_premium();
-                } else {
-                    chapter_point_claim.push(chapter);
-                }
-            }
-
-            let total_claim = chapter_point_claim.len() + ticketing_claim.len();
-
-            if total_claim == 0 {
-                console.warn("No chapter selected, aborting...");
-
-                return 1;
-            }
-
-            let coin_total = chapter_point_claim
-                .iter()
-                .map(|ch| ch.point())
-                .sum::<i32>()
-                .to_formatted_string(&Locale::en);
-            let ticket_total = ticketing_claim.len().to_formatted_string(&Locale::en);
-            let total_claim = total_claim.to_formatted_string(&Locale::en);
-            let use_title_ticket = ticketing_claim
-                .iter()
-                .filter(|(_, ticket)| matches!(ticket, TicketInfoType::Title(_)))
-                .count()
-                > 0;
-
-            console.info("Precalculated purchase cost:");
-            console.info(cformat!("  - <bold>Total</>: {}", total_claim));
-            console.info(cformat!("  - <bold>Coins</>: {}c", coin_total));
-            console.info(cformat!("  - <bold>Ticket</>: {}c", ticket_total));
-
-            if use_title_ticket {
-                console.info("     Will also use title ticket!")
-            }
-
-            0
-        }
-        _ => 1,
+    if results.is_empty() {
+        return Err(color_eyre::eyre::eyre!(
+            "No chapters to be purchased, aborting"
+        ));
     }
+
+    let mut ticket_entry = user_point.ticket.clone();
+
+    let mut chapter_point_claim: Vec<&EpisodeNode> = vec![];
+    let mut ticketing_claim: Vec<(&EpisodeNode, TicketInfoType)> = vec![];
+    for chapter in results {
+        if chapter.is_available() {
+            continue;
+        }
+
+        // For ticket, we simulate by removing the ticket from the entry, while for point
+        // we just add it into the list since we want to see how much point we need to spend
+        if chapter.is_ticketable() && ticket_entry.is_title_available() {
+            ticketing_claim.push((
+                chapter,
+                TicketInfoType::Title(
+                    ticket_entry
+                        .info()
+                        .title()
+                        .ok_or_eyre("Failed to get ticket title information")?,
+                ),
+            ));
+            ticket_entry.subtract_title();
+        } else if chapter.is_ticketable() && ticket_entry.is_premium_available() {
+            ticketing_claim.push((
+                chapter,
+                TicketInfoType::Premium(
+                    ticket_entry
+                        .info()
+                        .premium()
+                        .ok_or_eyre("Failed to get premium title information")?,
+                ),
+            ));
+            ticket_entry.subtract_premium();
+        } else {
+            chapter_point_claim.push(chapter);
+        }
+    }
+
+    let total_claim = chapter_point_claim.len() + ticketing_claim.len();
+
+    if total_claim == 0 {
+        console.warn("No chapter selected, aborting...");
+
+        return Err(color_eyre::eyre::eyre!("No chapter selected, aborting"));
+    }
+
+    let coin_total = chapter_point_claim
+        .iter()
+        .map(|ch| ch.point())
+        .sum::<i32>()
+        .to_formatted_string(&Locale::en);
+    let ticket_total = ticketing_claim.len().to_formatted_string(&Locale::en);
+    let total_claim = total_claim.to_formatted_string(&Locale::en);
+    let use_title_ticket = ticketing_claim
+        .iter()
+        .filter(|(_, ticket)| matches!(ticket, TicketInfoType::Title(_)))
+        .count()
+        > 0;
+
+    console.info("Precalculated purchase cost:");
+    console.info(cformat!("  - <bold>Total</>: {}", total_claim));
+    console.info(cformat!("  - <bold>Coins</>: {}c", coin_total));
+    console.info(cformat!("  - <bold>Ticket</>: {}c", ticket_total));
+
+    if use_title_ticket {
+        console.info("     Will also use title ticket!")
+    }
+
+    Ok(())
 }

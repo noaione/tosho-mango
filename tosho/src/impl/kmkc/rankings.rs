@@ -1,11 +1,10 @@
 use clap::ValueEnum;
+use color_eyre::eyre::Context;
 use color_print::cformat;
 use tosho_kmkc::{
     KMClient,
     constants::{RANKING_TABS, RankingTab},
 };
-
-use crate::cli::ExitCode;
 
 use super::common::do_print_search_information;
 
@@ -36,16 +35,17 @@ pub(crate) async fn kmkc_home_rankings(
     limit: Option<u32>,
     client: &KMClient,
     console: &crate::term::Terminal,
-) -> ExitCode {
+) -> color_eyre::Result<()> {
     let ranking = ranking.unwrap_or_default();
 
     let rank_tab = match ranking.get_tab() {
         Some(tab) => tab,
         None => {
             console.error(format!("Invalid ranking type: {ranking:?}"));
-            return 1;
+            return Err(color_eyre::eyre::eyre!("Invalid ranking type: {ranking:?}"));
         }
     };
+
     let limit = limit.unwrap_or(25);
 
     console.info(cformat!(
@@ -55,49 +55,40 @@ pub(crate) async fn kmkc_home_rankings(
 
     let results = client
         .get_all_rankings(rank_tab.id, Some(limit), Some(0))
-        .await;
+        .await
+        .context("Failed to fetch rankings information")?;
 
-    match results {
-        Err(err) => {
-            console.error(cformat!("Unable to connect to KMKC!: {}", err));
-            1
-        }
-        Ok(results) => {
-            if results.titles().is_empty() {
-                console.error("There are no rankings available for some reason.");
-                return 1;
-            }
-
-            console.info(cformat!(
-                "Fetching <m,s>{}</> titles from <m,s>{}</>",
-                results.titles().len(),
-                rank_tab.name
-            ));
-
-            let all_titles = client
-                .get_titles(results.titles().iter().map(|t| t.id()).collect())
-                .await;
-
-            match all_titles {
-                Err(err) => {
-                    console.error(cformat!("Failed when fetching title list: {}", err));
-                    1
-                }
-                Ok(titles) => {
-                    if titles.is_empty() {
-                        console.error("There are no titles available for some reason.");
-                        return 1;
-                    }
-
-                    console.info(cformat!(
-                        "Ranking <m,s>{}</> (<s>{}</> results)",
-                        rank_tab.name,
-                        titles.len()
-                    ));
-                    do_print_search_information(&titles, true, None);
-                    0
-                }
-            }
-        }
+    if results.titles().is_empty() {
+        console.error("There are no rankings available for some reason.");
+        return Err(color_eyre::eyre::eyre!(
+            "There are no rankings available for some reason."
+        ));
     }
+
+    console.info(cformat!(
+        "Fetching <m,s>{}</> titles from <m,s>{}</>",
+        results.titles().len(),
+        rank_tab.name
+    ));
+
+    let titles = client
+        .get_titles(results.titles().iter().map(|t| t.id()).collect())
+        .await
+        .context("Failed fetching title list of a ranking")?;
+
+    if titles.is_empty() {
+        console.error("There are no titles available for some reason.");
+        return Err(color_eyre::eyre::eyre!(
+            "There are no titles available for some reason."
+        ));
+    }
+
+    console.info(cformat!(
+        "Ranking <m,s>{}</> (<s>{}</> results)",
+        rank_tab.name,
+        titles.len()
+    ));
+    do_print_search_information(&titles, true, None);
+
+    Ok(())
 }

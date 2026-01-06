@@ -1,13 +1,14 @@
 use std::path::PathBuf;
 
+use color_eyre::eyre::{Context, OptionExt};
 use color_print::cformat;
 use num_format::{Locale, ToFormattedString};
-use tosho_common::{ToshoResult, make_error};
 use tosho_kmkc::{
     KMClient, KMConfigWeb,
     constants::BASE_HOST,
     models::{TitleNode, TitleTicketListNode, UserPointResponse},
 };
+use tosho_macros::AutoGetter;
 
 use crate::{
     linkify,
@@ -47,31 +48,57 @@ pub(super) fn do_print_search_information(
     }
 }
 
-pub(super) fn parse_netscape_cookies(cookie_path: PathBuf) -> KMConfigWeb {
-    let term = get_console(0);
+pub(super) fn parse_netscape_cookies(cookie_path: PathBuf) -> color_eyre::Result<KMConfigWeb> {
+    let read_cookie =
+        std::fs::read_to_string(&cookie_path).context("Failed to read cookie file")?;
+    let config: KMConfigWeb = read_cookie
+        .try_into()
+        .context("Failed to parse cookie file")?;
 
-    let read_cookie = match std::fs::read_to_string(cookie_path) {
-        Ok(read_cookie) => read_cookie,
-        Err(e) => {
-            term.error(format!("Failed to read cookie file: {e}"));
-            std::process::exit(1);
-        }
-    };
-
-    let config: KMConfigWeb = match read_cookie.try_into() {
-        Ok(config) => config,
-        Err(e) => {
-            term.error(format!("Failed to parse cookie file: {e}"));
-            std::process::exit(1);
-        }
-    };
-    config
+    Ok(config)
 }
 
 #[derive(Clone)]
 pub(super) struct PurchasePoint {
     pub(super) point: UserPointResponse,
     pub(super) ticket: TitleTicketListNode,
+}
+
+#[derive(Clone, AutoGetter)]
+pub(super) struct KMPurchaseResult {
+    episodes: Vec<tosho_kmkc::models::EpisodeNode>,
+    all_episodes: Vec<tosho_kmkc::models::EpisodeNode>,
+    title: tosho_kmkc::models::TitleNode,
+    balance: PurchasePoint,
+}
+
+impl KMPurchaseResult {
+    fn from_result_custom(
+        episodes: Vec<tosho_kmkc::models::EpisodeNode>,
+        all_episodes: Vec<tosho_kmkc::models::EpisodeNode>,
+        title: &tosho_kmkc::models::TitleNode,
+        balance: &PurchasePoint,
+    ) -> Self {
+        Self {
+            episodes,
+            all_episodes,
+            title: title.clone(),
+            balance: balance.clone(),
+        }
+    }
+
+    fn from_result_no_input(
+        all_episodes: Vec<tosho_kmkc::models::EpisodeNode>,
+        title: &tosho_kmkc::models::TitleNode,
+        balance: &PurchasePoint,
+    ) -> Self {
+        Self {
+            episodes: all_episodes.clone(),
+            all_episodes,
+            title: title.clone(),
+            balance: balance.clone(),
+        }
+    }
 }
 
 pub(super) async fn common_purchase_select(
@@ -82,57 +109,37 @@ pub(super) async fn common_purchase_select(
     show_all: bool,
     no_input: bool,
     console: &crate::term::Terminal,
-) -> (
-    ToshoResult<Vec<tosho_kmkc::models::EpisodeNode>>,
-    Option<TitleNode>,
-    Vec<tosho_kmkc::models::EpisodeNode>,
-    Option<PurchasePoint>,
-) {
+) -> color_eyre::Result<KMPurchaseResult> {
     console.info(cformat!(
         "Getting user point for <m,s>{}</>...",
         account.get_username()
     ));
-    let user_point = client.get_user_point().await;
-    if let Err(error) = user_point {
-        console.error(format!("Unable to get user point: {error}"));
-        return (Err(error), None, vec![], None);
-    }
-    let user_point = user_point.unwrap();
+    let user_point = client
+        .get_user_point()
+        .await
+        .context("Unable to get user point")?;
 
     console.info(cformat!(
         "Getting title information for ID <m,s>{}</>...",
         title_id
     ));
-    let results = client.get_titles(vec![title_id]).await;
-    if let Err(error) = results {
-        console.error(format!("Failed to get title information: {error}"));
-        return (Err(error), None, vec![], None);
-    }
+    let results = client
+        .get_titles(vec![title_id])
+        .await
+        .context("Failed to get title information")?;
 
-    let results = results.unwrap();
-    if results.is_empty() {
-        console.error("Unable to find title information");
-        return (
-            Err(make_error!("Unable to find title information")),
-            None,
-            vec![],
-            None,
-        );
-    }
-
-    let result = results.first().unwrap();
+    let result = results
+        .first()
+        .ok_or_eyre("Unable to find title information.")?;
 
     console.info(cformat!(
         "Fetching <m,s>{}</> title ticket...",
         result.title()
     ));
-    let ticket_entry = client.get_title_ticket(result.id()).await;
-    if let Err(error) = ticket_entry {
-        console.error(format!("Failed to get title ticket: {error}"));
-        return (Err(error), Some(result.clone()), vec![], None);
-    }
-
-    let ticket_entry = ticket_entry.unwrap();
+    let ticket_entry = client
+        .get_title_ticket(result.id())
+        .await
+        .context("Failed to get title ticket")?;
 
     let mut chapters_entry = vec![];
     console.info(cformat!(
@@ -140,23 +147,13 @@ pub(super) async fn common_purchase_select(
         result.title(),
         result.episode_ids().len()
     ));
-    for episodes in result.episode_ids().chunks(50) {
-        let chapters = client.get_episodes(episodes.to_vec()).await;
+    for (chunk_idx, episodes) in result.episode_ids().chunks(50).enumerate() {
+        let chapters = client
+            .get_episodes(episodes.to_vec())
+            .await
+            .context(format!("Failed to get chapters chunk #{}", chunk_idx + 1))?;
 
-        if let Err(error) = chapters {
-            console.error(format!("Failed to get chapters: {error}"));
-            return (
-                Err(error),
-                Some(result.clone()),
-                chapters_entry,
-                Some(PurchasePoint {
-                    point: user_point,
-                    ticket: ticket_entry,
-                }),
-            );
-        }
-
-        chapters_entry.extend(chapters.unwrap());
+        chapters_entry.extend(chapters);
     }
 
     console.info("Your current point balance:");
@@ -205,16 +202,17 @@ pub(super) async fn common_purchase_select(
         chapters_entry.len()
     ));
 
+    let purchase_point = PurchasePoint {
+        point: user_point,
+        ticket: ticket_entry,
+    };
+
     if no_input {
-        return (
-            Ok(chapters_entry.clone()),
-            Some(result.clone()),
+        return Ok(KMPurchaseResult::from_result_no_input(
             chapters_entry,
-            Some(PurchasePoint {
-                point: user_point,
-                ticket: ticket_entry,
-            }),
-        );
+            result,
+            &purchase_point,
+        ));
     }
 
     let select_choices: Vec<ConsoleChoice> = chapters_entry
@@ -250,12 +248,12 @@ pub(super) async fn common_purchase_select(
             let mapped_chapters: Vec<tosho_kmkc::models::EpisodeNode> = selected
                 .iter()
                 .map(|ch| {
-                    let ch_id = ch.name.parse::<i32>().unwrap();
+                    let ch_id = ch.name.parse::<i32>().expect("Must be integer");
 
                     chapters_entry
                         .iter()
                         .find(|ch| ch.id() == ch_id)
-                        .unwrap()
+                        .expect(&format!("Failed to find chapter ID: {}", ch_id))
                         .clone()
                 })
                 .collect();
@@ -263,38 +261,25 @@ pub(super) async fn common_purchase_select(
             if mapped_chapters.is_empty() {
                 console.warn("No chapters selected, aborting...");
 
-                return (
-                    Ok(vec![]),
-                    Some(result.clone()),
+                return Ok(KMPurchaseResult::from_result_custom(
+                    vec![],
                     chapters_entry,
-                    Some(PurchasePoint {
-                        point: user_point,
-                        ticket: ticket_entry,
-                    }),
-                );
+                    result,
+                    &purchase_point,
+                ));
             }
 
-            (
-                Ok(mapped_chapters),
-                Some(result.clone()),
+            Ok(KMPurchaseResult::from_result_custom(
+                mapped_chapters,
                 chapters_entry,
-                Some(PurchasePoint {
-                    point: user_point,
-                    ticket: ticket_entry,
-                }),
-            )
+                result,
+                &purchase_point,
+            ))
         }
         None => {
             console.warn("Aborted!");
-            (
-                Err(make_error!("Aborted!")),
-                Some(result.clone()),
-                chapters_entry,
-                Some(PurchasePoint {
-                    point: user_point,
-                    ticket: ticket_entry,
-                }),
-            )
+
+            Err(color_eyre::eyre::eyre!("Aborted by user"))
         }
     }
 }

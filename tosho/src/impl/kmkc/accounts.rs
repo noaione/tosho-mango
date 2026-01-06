@@ -1,13 +1,14 @@
 use std::path::PathBuf;
 
 use clap::ValueEnum;
+use color_eyre::eyre::{Context, OptionExt};
 use color_print::cformat;
 use num_format::{Locale, ToFormattedString};
+use tosho_common::{ToshoError, make_error};
 use tosho_kmkc::{KMClient, KMConfig, KMConfigMobile, KMConfigMobilePlatform};
 use tosho_macros::EnumName;
 
 use crate::{
-    cli::ExitCode,
     config::{get_all_config, save_config, try_remove_config},
     r#impl::client::make_kmkc_client,
     term::ConsoleChoice,
@@ -15,7 +16,7 @@ use crate::{
 
 use super::config::{Config, ConfigMobile, MobilePlatform};
 
-#[derive(Clone, Copy, PartialEq, EnumName)]
+#[derive(Debug, Clone, Copy, PartialEq, EnumName)]
 pub(crate) enum DeviceKind {
     /// Website platform.
     Web,
@@ -73,13 +74,15 @@ impl PartialEq<MobilePlatform> for DeviceKind {
 }
 
 impl TryFrom<DeviceKind> for KMConfigMobilePlatform {
-    type Error = String;
+    type Error = ToshoError;
 
     fn try_from(value: DeviceKind) -> Result<Self, Self::Error> {
         match value {
             DeviceKind::Android => Ok(KMConfigMobilePlatform::Android),
             DeviceKind::Apple => Ok(KMConfigMobilePlatform::Apple),
-            _ => Err("Invalid device kind!".to_string()),
+            _ => Err(make_error!(format!(
+                "Cannot convert {value:?} to KMConfigMobilePlatform"
+            ))),
         }
     }
 }
@@ -87,65 +90,54 @@ impl TryFrom<DeviceKind> for KMConfigMobilePlatform {
 pub(crate) async fn kmkc_account_login_web(
     cookies_path: PathBuf,
     console: &crate::term::Terminal,
-) -> ExitCode {
+) -> color_eyre::Result<()> {
     console.info("Authenticating your account...");
 
     // parse netscape cookies
-    let cookie_config = super::common::parse_netscape_cookies(cookies_path);
+    let cookie_config = super::common::parse_netscape_cookies(cookies_path)?;
     let all_configs = get_all_config(&crate::r#impl::Implementations::Kmkc, None);
 
-    match make_kmkc_client(&KMConfig::Web(cookie_config.clone())) {
-        Ok(client) => {
-            let account = client.get_account().await;
+    let client = make_kmkc_client(&KMConfig::Web(cookie_config.clone()))
+        .context("Failed to create client")?;
 
-            match account {
-                Ok(account) => {
-                    console.info(cformat!("Authenticated as <m,s>{}</>", account.email()));
-                    let old_config = all_configs.iter().find(|&c| match c {
-                        crate::config::ConfigImpl::Kmkc(super::config::Config::Web(cc)) => {
-                            cc.account_id == account.id() && cc.device_id == account.user_id()
-                        }
-                        _ => false,
-                    });
+    let account = client
+        .get_account()
+        .await
+        .context("Failed to authenticate your account")?;
 
-                    let mut acc_config =
-                        super::config::ConfigWeb::from(cookie_config).with_user_account(&account);
-
-                    if let Some(old_config) = old_config {
-                        console.warn("Session ID already exists!");
-                        let abort_it = console.confirm(Some("Do you want to replace it?"));
-                        if !abort_it {
-                            console.info("Aborting...");
-                            return 0;
-                        }
-
-                        match old_config {
-                            crate::config::ConfigImpl::Kmkc(super::config::Config::Web(cc)) => {
-                                acc_config = acc_config.with_id(cc.id.clone());
-                            }
-                            _ => unreachable!(),
-                        }
-                    }
-
-                    console.info("Authentication successful! Saving config...");
-                    save_config(
-                        crate::config::ConfigImpl::Kmkc(Config::Web(acc_config)),
-                        None,
-                    );
-                    0
-                }
-                Err(err) => {
-                    console.error(format!("Failed to authenticate your account: {err}"));
-
-                    1
-                }
-            }
+    console.info(cformat!("Authenticated as <m,s>{}</>", account.email()));
+    let old_config = all_configs.iter().find(|&c| match c {
+        crate::config::ConfigImpl::Kmkc(super::config::Config::Web(cc)) => {
+            cc.account_id == account.id() && cc.device_id == account.user_id()
         }
-        Err(err) => {
-            console.error(format!("Failed to create client: {err}"));
-            1
+        _ => false,
+    });
+
+    let mut acc_config = super::config::ConfigWeb::from(cookie_config).with_user_account(&account);
+
+    if let Some(old_config) = old_config {
+        console.warn("Session ID already exists!");
+        let abort_it = console.confirm(Some("Do you want to replace it?"));
+        if !abort_it {
+            console.info("Aborting...");
+            return Ok(());
+        }
+
+        match old_config {
+            crate::config::ConfigImpl::Kmkc(super::config::Config::Web(cc)) => {
+                acc_config = acc_config.with_id(cc.id.clone());
+            }
+            _ => unreachable!(),
         }
     }
+
+    console.info("Authentication successful! Saving config...");
+    save_config(
+        crate::config::ConfigImpl::Kmkc(Config::Web(acc_config)),
+        None,
+    );
+
+    Ok(())
 }
 
 pub(crate) async fn kmkc_account_login_mobile(
@@ -153,10 +145,10 @@ pub(crate) async fn kmkc_account_login_mobile(
     hash_key: String,
     platform: DeviceKind,
     console: &crate::term::Terminal,
-) -> ExitCode {
+) -> color_eyre::Result<()> {
     if platform == DeviceKind::Web {
         console.warn("Invalid platform!");
-        return 1;
+        return Err(color_eyre::eyre::eyre!("Invalid platform"));
     }
 
     console.info(cformat!(
@@ -182,7 +174,7 @@ pub(crate) async fn kmkc_account_login_mobile(
         let abort_it = console.confirm(Some("Do you want to replace it?"));
         if !abort_it {
             console.info("Aborting...");
-            return 0;
+            return Ok(());
         }
 
         match old_config {
@@ -193,42 +185,29 @@ pub(crate) async fn kmkc_account_login_mobile(
         }
     }
 
-    let config = KMConfigMobile::new(user_id.to_string(), &hash_key, platform.try_into().unwrap());
-    match make_kmkc_client(&KMConfig::Mobile(config.clone())) {
-        Ok(client) => {
-            let account = client.get_account().await;
+    let config = KMConfigMobile::new(user_id.to_string(), &hash_key, platform.try_into()?);
+    let client =
+        make_kmkc_client(&KMConfig::Mobile(config.clone())).context("Failed to create client")?;
 
-            match account {
-                Ok(account) => {
-                    console.info(cformat!("Authenticated as <m,s>{}</>", account.email()));
+    let account = client
+        .get_account()
+        .await
+        .context("Failed to authenticate your account")?;
+    console.info(cformat!("Authenticated as <m,s>{}</>", account.email()));
 
-                    let mut acc_config =
-                        super::config::ConfigMobile::from(config).with_user_account(&account);
+    let mut acc_config = super::config::ConfigMobile::from(config).with_user_account(&account);
 
-                    if let Some(old_id) = old_id {
-                        acc_config = acc_config.with_id(old_id);
-                    }
-
-                    console.info("Authentication successful! Saving config...");
-                    save_config(
-                        crate::config::ConfigImpl::Kmkc(Config::Mobile(acc_config)),
-                        None,
-                    );
-
-                    0
-                }
-                Err(err) => {
-                    console.error(format!("Failed to authenticate your account: {err}"));
-
-                    1
-                }
-            }
-        }
-        Err(err) => {
-            console.error(format!("Failed to create client: {err}"));
-            1
-        }
+    if let Some(old_id) = old_id {
+        acc_config = acc_config.with_id(old_id);
     }
+
+    console.info("Authentication successful! Saving config...");
+    save_config(
+        crate::config::ConfigImpl::Kmkc(Config::Mobile(acc_config)),
+        None,
+    );
+
+    Ok(())
 }
 
 pub async fn kmkc_account_login(
@@ -236,7 +215,7 @@ pub async fn kmkc_account_login(
     password: String,
     platform: DeviceKind,
     console: &crate::term::Terminal,
-) -> ExitCode {
+) -> color_eyre::Result<()> {
     console.info(cformat!(
         "Authenticating with email <m,s>{}</> and password <m,s>{}</>...",
         email,
@@ -259,7 +238,7 @@ pub async fn kmkc_account_login(
         let abort_it = console.confirm(Some("Do you want to replace it?"));
         if !abort_it {
             console.info("Aborting...");
-            return 0;
+            return Ok(());
         }
 
         match old_config {
@@ -277,47 +256,40 @@ pub async fn kmkc_account_login(
         DeviceKind::LegacyAndroid => Some(KMConfigMobilePlatform::AndroidLegacy),
     };
 
-    let config = KMClient::login(&email, &password, mobile_match).await;
+    let config = KMClient::login(&email, &password, mobile_match)
+        .await
+        .context("Failed to authenticate your account")?;
 
-    match config {
-        Ok(config) => {
-            console.info(cformat!(
-                "Authenticated as <m,s>{}</>",
-                config.account().email()
-            ));
+    console.info(cformat!(
+        "Authenticated as <m,s>{}</>",
+        config.account().email()
+    ));
 
-            let acc_config = match super::config::Config::from(config.config()) {
-                super::config::Config::Mobile(cc) => {
-                    Config::Mobile(cc.with_user_account(config.account()).with_id_opt(old_id))
-                }
-                super::config::Config::Web(cc) => {
-                    Config::Web(cc.with_user_account(config.account()).with_id_opt(old_id))
-                }
-            };
-
-            console.info(cformat!(
-                "Created session ID <m,s>{}</>, saving config...",
-                acc_config.get_id()
-            ));
-            save_config(crate::config::ConfigImpl::Kmkc(acc_config), None);
-
-            0
+    let acc_config = match super::config::Config::from(config.config()) {
+        super::config::Config::Mobile(cc) => {
+            Config::Mobile(cc.with_user_account(config.account()).with_id_opt(old_id))
         }
-        Err(err) => {
-            console.error(format!("Failed to authenticate your account: {err}"));
-
-            1
+        super::config::Config::Web(cc) => {
+            Config::Web(cc.with_user_account(config.account()).with_id_opt(old_id))
         }
-    }
+    };
+
+    console.info(cformat!(
+        "Created session ID <m,s>{}</>, saving config...",
+        acc_config.get_id()
+    ));
+    save_config(crate::config::ConfigImpl::Kmkc(acc_config), None);
+
+    Ok(())
 }
 
 pub async fn kmkc_account_login_adapt(
     platform: DeviceKind,
     console: &crate::term::Terminal,
-) -> ExitCode {
+) -> color_eyre::Result<()> {
     if platform == DeviceKind::Web {
         console.warn("Invalid platform!");
-        return 1;
+        return Err(color_eyre::eyre::eyre!("Invalid platform"));
     }
 
     let binding = get_all_config(&crate::r#impl::Implementations::Kmkc, None);
@@ -331,7 +303,7 @@ pub async fn kmkc_account_login_adapt(
 
     if web_configs.is_empty() {
         console.warn("There's no available web account to adapt!");
-        return 1;
+        return Err(color_eyre::eyre::eyre!("No available web account to adapt"));
     }
 
     let web_choices: Vec<ConsoleChoice> = web_configs
@@ -346,74 +318,70 @@ pub async fn kmkc_account_login_adapt(
     match select_acc {
         None => {
             console.warn("Aborted!");
-            1
+            Err(color_eyre::eyre::eyre!("Aborted by user"))
         }
         Some(selected) => {
             let config = web_configs
                 .iter()
                 .cloned()
                 .find(|&c| c.id == selected.name)
-                .unwrap();
+                .ok_or_eyre(format!("Failed to find account {}", selected.name))?;
 
-            match make_kmkc_client(&config.clone().into()) {
-                Ok(client) => {
-                    console.info(cformat!(
-                        "Re-Authenticating with email <m,s>{}</>...",
-                        config.email
-                    ));
+            let client = make_kmkc_client(
+                &config
+                    .clone()
+                    .try_into()
+                    .context("Failed to convert config")?,
+            )
+            .context("Failed to create client")?;
 
-                    let account = client.get_account().await;
+            console.info(cformat!(
+                "Re-Authenticating with email <m,s>{}</>...",
+                config.email
+            ));
 
-                    match account {
-                        Ok(account) => {
-                            let user_info = client.get_user(account.id()).await.unwrap();
+            let account = client
+                .get_account()
+                .await
+                .context("Failed to authenticate your account")?;
 
-                            console.info(cformat!("Authenticated as <m,s>{}</>", account.email()));
+            let user_info = client
+                .get_user(account.id())
+                .await
+                .context("Failed getting your user information")?;
 
-                            let mobile_config = KMConfigMobile::new(
-                                account.id().to_string(),
-                                user_info.hash_key(),
-                                platform.try_into().unwrap(),
-                            );
-                            let into_tosho: ConfigMobile = mobile_config.into();
-                            let final_config = into_tosho.with_user_account(&account);
+            console.info(cformat!("Authenticated as <m,s>{}</>", account.email()));
 
-                            console.info(cformat!(
-                                "Created session ID <m,s>{}</>, saving config...",
-                                final_config.id.clone()
-                            ));
+            let mobile_config = KMConfigMobile::new(
+                account.id().to_string(),
+                user_info.hash_key(),
+                platform.try_into()?,
+            );
+            let into_tosho: ConfigMobile = mobile_config.into();
+            let final_config = into_tosho.with_user_account(&account);
 
-                            save_config(final_config.into(), None);
+            console.info(cformat!(
+                "Created session ID <m,s>{}</>, saving config...",
+                final_config.id.clone()
+            ));
 
-                            0
-                        }
-                        Err(err) => {
-                            console.error(format!("Failed to authenticate your account: {err}"));
+            save_config(final_config.into(), None);
 
-                            1
-                        }
-                    }
-                }
-                Err(err) => {
-                    console.error(format!("Failed to create client: {err}"));
-                    1
-                }
-            }
+            Ok(())
         }
     }
 }
 
-pub(crate) fn kmkc_accounts(console: &crate::term::Terminal) -> ExitCode {
+pub(crate) fn kmkc_accounts(console: &crate::term::Terminal) -> color_eyre::Result<()> {
     let all_configs = get_all_config(&crate::r#impl::Implementations::Kmkc, None);
 
     match all_configs.len() {
         0 => {
             console.warn("No accounts found!");
-
-            1
+            Ok(())
         }
-        _ => {
-            console.info(format!("Found {} accounts:", all_configs.len()));
+        other => {
+            console.info(format!("Found {} accounts:", other));
             for (i, c) in all_configs.iter().enumerate() {
                 match c {
                     crate::config::ConfigImpl::Kmkc(c) => {
@@ -433,7 +401,7 @@ pub(crate) fn kmkc_accounts(console: &crate::term::Terminal) -> ExitCode {
                 }
             }
 
-            0
+            Ok(())
         }
     }
 }
@@ -442,98 +410,92 @@ pub(crate) async fn kmkc_account_info(
     client: &KMClient,
     acc_info: &Config,
     console: &crate::term::Terminal,
-) -> ExitCode {
+) -> color_eyre::Result<()> {
     console.info(cformat!(
         "Fetching account info for <magenta,bold>{}</>...",
         acc_info.get_id()
     ));
 
-    let account = client.get_account().await;
+    let account = client
+        .get_account()
+        .await
+        .context("Failed to fetch account info")?;
 
-    match account {
-        Ok(account) => {
+    console.info(cformat!(
+        "Account info for <magenta,bold>{}</>:",
+        acc_info.get_id()
+    ));
+
+    console.info(cformat!("  <s>ID:</>: {}", account.id()));
+    console.info(cformat!("  <s>User ID:</>: {}", account.user_id()));
+    let username = account.name().unwrap_or("Unknown");
+    console.info(cformat!("  <s>Username:</>: {}", username));
+    console.info(cformat!("  <s>Email:</>: {}", account.email()));
+    console.info(cformat!("  <s>Registered?</>: {}", account.registered()));
+
+    if !account.devices().is_empty() {
+        console.info(cformat!("  <s>Devices:</>"));
+        for device in account.devices() {
             console.info(cformat!(
-                "Account info for <magenta,bold>{}</>:",
-                acc_info.get_id()
+                "    - <s>{}</>: {} [{}]",
+                device.id(),
+                device.name(),
+                device.platform().to_name()
             ));
-
-            console.info(cformat!("  <s>ID:</>: {}", account.id()));
-            console.info(cformat!("  <s>User ID:</>: {}", account.user_id()));
-            let username = account.name().unwrap_or("Unknown");
-            console.info(cformat!("  <s>Username:</>: {}", username));
-            console.info(cformat!("  <s>Email:</>: {}", account.email()));
-            console.info(cformat!("  <s>Registered?</>: {}", account.registered()));
-
-            if !account.devices().is_empty() {
-                console.info(cformat!("  <s>Devices:</>"));
-                for device in account.devices() {
-                    console.info(cformat!(
-                        "    - <s>{}</>: {} [{}]",
-                        device.id(),
-                        device.name(),
-                        device.platform().to_name()
-                    ));
-                }
-            }
-
-            0
-        }
-        Err(err) => {
-            console.error(format!("Failed to fetch account info: {err}"));
-            1
         }
     }
+
+    Ok(())
 }
 
 pub(crate) async fn kmkc_balance(
     client: &KMClient,
     account: &Config,
     console: &crate::term::Terminal,
-) -> ExitCode {
+) -> color_eyre::Result<()> {
     console.info(cformat!(
         "Checking balance for <magenta,bold>{}</>...",
         account.get_id()
     ));
 
-    let balance = client.get_user_point().await;
-    match balance {
-        Err(err) => {
-            console.error(format!("Failed to fetch balance: {err}"));
-            1
-        }
-        Ok(balance) => {
-            console.info("Your current point balance:");
-            let point = balance.point();
-            let total_bal = point.total_point().to_formatted_string(&Locale::en);
-            let paid_point = point.paid_point().to_formatted_string(&Locale::en);
-            let free_point = point.free_point().to_formatted_string(&Locale::en);
-            let premium_ticket = balance
-                .ticket()
-                .total_num()
-                .to_formatted_string(&Locale::en);
-            console.info(cformat!(
-                "  - <bold>Total:</> <cyan!,bold><reverse>{}</>c</cyan!,bold>",
-                total_bal
-            ));
-            console.info(cformat!(
-                "  - <bold>Paid point:</> <g,bold><reverse>{}</>c</g,bold>",
-                paid_point
-            ));
-            console.info(cformat!(
-                "  - <bold>Free point:</> <cyan,bold><reverse>{}</>c</cyan,bold>",
-                free_point
-            ));
-            console.info(cformat!(
-                "  - <bold>Premium ticket:</> <yellow,bold><reverse>{}</> ticket</yellow,bold>",
-                premium_ticket
-            ));
+    let balance = client
+        .get_user_point()
+        .await
+        .context("Failed to fetch balance")?;
 
-            0
-        }
-    }
+    console.info("Your current point balance:");
+    let point = balance.point();
+    let total_bal = point.total_point().to_formatted_string(&Locale::en);
+    let paid_point = point.paid_point().to_formatted_string(&Locale::en);
+    let free_point = point.free_point().to_formatted_string(&Locale::en);
+    let premium_ticket = balance
+        .ticket()
+        .total_num()
+        .to_formatted_string(&Locale::en);
+    console.info(cformat!(
+        "  - <bold>Total:</> <cyan!,bold><reverse>{}</>c</cyan!,bold>",
+        total_bal
+    ));
+    console.info(cformat!(
+        "  - <bold>Paid point:</> <g,bold><reverse>{}</>c</g,bold>",
+        paid_point
+    ));
+    console.info(cformat!(
+        "  - <bold>Free point:</> <cyan,bold><reverse>{}</>c</cyan,bold>",
+        free_point
+    ));
+    console.info(cformat!(
+        "  - <bold>Premium ticket:</> <yellow,bold><reverse>{}</> ticket</yellow,bold>",
+        premium_ticket
+    ));
+
+    Ok(())
 }
 
-pub(crate) fn kmkc_account_revoke(account: &Config, console: &crate::term::Terminal) -> ExitCode {
+pub(crate) fn kmkc_account_revoke(
+    account: &Config,
+    console: &crate::term::Terminal,
+) -> color_eyre::Result<()> {
     let confirm = console.confirm(Some(&cformat!(
         "Are you sure you want to delete <m,s>{}</>?\nThis action is irreversible!",
         account.get_id()
@@ -541,20 +503,16 @@ pub(crate) fn kmkc_account_revoke(account: &Config, console: &crate::term::Termi
 
     if !confirm {
         console.warn("Aborted");
-        return 0;
+        return Ok(());
     }
 
-    match try_remove_config(account.get_id(), crate::r#impl::Implementations::Kmkc, None) {
-        Ok(_) => {
-            console.info(cformat!(
-                "Successfully deleted <magenta,bold>{}</>",
-                account.get_id()
-            ));
-            0
-        }
-        Err(err) => {
-            console.error(format!("Failed to delete account: {err}"));
-            1
-        }
-    }
+    try_remove_config(account.get_id(), crate::r#impl::Implementations::Kmkc, None)
+        .context("Failed to delete account")?;
+
+    console.info(cformat!(
+        "Successfully deleted <magenta,bold>{}</>",
+        account.get_id()
+    ));
+
+    Ok(())
 }

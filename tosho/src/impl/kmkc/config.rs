@@ -1,5 +1,6 @@
 #![allow(clippy::derive_partial_eq_without_eq)]
 
+use color_eyre::eyre::OptionExt;
 use prost::Message;
 use tosho_kmkc::{KMConfig, KMConfigMobilePlatform};
 use tosho_macros::EnumName;
@@ -196,14 +197,20 @@ pub struct ConfigWeb {
     pub privacy: ::core::option::Option<ConfigWebKeyValue>,
 }
 
-impl From<ConfigWeb> for tosho_kmkc::KMConfigWeb {
-    fn from(value: ConfigWeb) -> Self {
-        tosho_kmkc::KMConfigWeb::new(
+impl TryFrom<ConfigWeb> for tosho_kmkc::KMConfigWeb {
+    type Error = color_eyre::eyre::Report;
+
+    fn try_from(value: ConfigWeb) -> Result<Self, Self::Error> {
+        let birthday = value.birthday.ok_or_eyre("birthday cookie is empty")?;
+        let tos_adult = value.tos_adult.ok_or_eyre("tos_adult cookie is empty")?;
+        let privacy = value.privacy.ok_or_eyre("privacy cookie is empty")?;
+
+        Ok(tosho_kmkc::KMConfigWeb::new(
             &value.uwt,
-            value.birthday.clone().unwrap().into(),
-            value.tos_adult.clone().unwrap().into(),
-            value.privacy.clone().unwrap().into(),
-        )
+            birthday.into(),
+            tos_adult.into(),
+            privacy.into(),
+        ))
     }
 }
 
@@ -347,7 +354,10 @@ impl Config {
     {
         let conf_temp = ConfigBase::decode(&mut buf)?;
         // seek back to the start of the buffer
-        buf.seek(std::io::SeekFrom::Start(0)).unwrap();
+        match buf.seek(std::io::SeekFrom::Start(0)) {
+            Ok(_) => {}
+            Err(e) => return Err(prost::DecodeError::new(format!("Seek error: {}", e))),
+        }
 
         match conf_temp.r#type() {
             DeviceType::Web => {
@@ -373,9 +383,13 @@ impl From<ConfigWeb> for Config {
     }
 }
 
-impl From<ConfigWeb> for KMConfig {
-    fn from(value: ConfigWeb) -> Self {
-        KMConfig::Web(value.into())
+impl TryFrom<ConfigWeb> for KMConfig {
+    type Error = color_eyre::eyre::Report;
+
+    fn try_from(value: ConfigWeb) -> Result<Self, Self::Error> {
+        let res = KMConfig::Web(value.try_into()?);
+
+        Ok(res)
     }
 }
 
@@ -397,20 +411,28 @@ impl From<&KMConfig> for Config {
     }
 }
 
-impl From<Config> for KMConfig {
-    fn from(value: Config) -> Self {
-        match value {
+impl TryFrom<Config> for KMConfig {
+    type Error = color_eyre::eyre::Report;
+
+    fn try_from(value: Config) -> Result<Self, Self::Error> {
+        let res = match value {
             Config::Mobile(c) => KMConfig::Mobile(c.into()),
-            Config::Web(c) => KMConfig::Web(c.into()),
-        }
+            Config::Web(c) => KMConfig::Web(c.try_into()?),
+        };
+
+        Ok(res)
     }
 }
 
-impl From<&Config> for KMConfig {
-    fn from(value: &Config) -> Self {
-        match value {
+impl TryFrom<&Config> for KMConfig {
+    type Error = color_eyre::eyre::Report;
+
+    fn try_from(value: &Config) -> Result<Self, Self::Error> {
+        let res = match value {
             Config::Mobile(c) => KMConfig::Mobile(c.clone().into()),
-            Config::Web(c) => KMConfig::Web(c.clone().into()),
-        }
+            Config::Web(c) => KMConfig::Web(c.clone().try_into()?),
+        };
+
+        Ok(res)
     }
 }
