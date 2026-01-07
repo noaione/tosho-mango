@@ -8,6 +8,7 @@ Starting from Rust port of the project, all changes will be put into this file.
 - Change all `ExitCode` to use `color_eyre::Result<()>` instead to propagate errors better.
 - Reduce almost all `unwrap()` usage in CLI to use `?` operator instead.
 - `NI`: Fix issue with issue/comic sometimes does not have original publication date.
+- `Common`: Improve JSON error reporting by adding some more obvious information.
 
 ### Build
 - Change `ci` profile `opt-level` to `s` for smaller binary size with auto-vectorization.

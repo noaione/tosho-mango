@@ -102,13 +102,23 @@ impl std::fmt::Display for ToshoDetailedParseError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "with request from {} with status code {}: {}\n\nHeaders: {:#?}\nExcerpt: {}",
-            self.url,
-            self.status_code,
-            self.inner,
+            "with request from {} and status code {}",
+            self.url, self.status_code,
+        )?;
+
+        write!(f, "\nCaused by serde error: {}", self.inner.to_string())?;
+
+        write!(
+            f,
+            "\n\nHeaders: {:#?}\n\nExcerpt: {}",
             self.headers,
             self.get_json_excerpt()
-        )
+        )?;
+
+        // Get column location for error
+        let start_pos = self.inner.column().clamp(1, 24);
+        let pointer_line = format!("{:>width$}^ issues here", "", width = start_pos + 9);
+        write!(f, "\n{}", pointer_line)
     }
 }
 
