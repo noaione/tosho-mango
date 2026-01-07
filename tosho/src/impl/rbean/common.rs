@@ -61,12 +61,12 @@ pub(super) fn do_print_search_information(
     }
 }
 
-pub(super) fn save_session_config(client: &RBClient, config: &Config) {
+pub(super) fn save_session_config(client: &RBClient, config: &Config) -> color_eyre::Result<()> {
     let mut config = config.clone();
     config.access_token = client.get_token().to_string();
     if let Some(expiry_at) = client.get_expiry_at() {
         config.expiry = expiry_at;
     }
 
-    save_config(config.into(), None);
+    save_config(config.into(), None)
 }

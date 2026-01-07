@@ -111,7 +111,7 @@ pub(super) async fn common_purchase_select(
         .await
         .context("Unable to connect to AM")?;
 
-    save_session_config(client, account);
+    save_session_config(client, account)?;
 
     let balance = result.account();
     let total_ticket = balance.sum().to_formatted_string(&Locale::en);
@@ -228,7 +228,7 @@ pub(super) async fn common_purchase_select(
     }
 }
 
-pub(super) fn save_session_config(client: &AMClient, config: &Config) {
+pub(super) fn save_session_config(client: &AMClient, config: &Config) -> color_eyre::Result<()> {
     let mut config = config.clone();
     let store = client.get_cookie_store();
 
@@ -240,5 +240,5 @@ pub(super) fn save_session_config(client: &AMClient, config: &Config) {
         config.session = session.value().to_string();
     }
 
-    save_config(crate::config::ConfigImpl::Amap(config), None);
+    save_config(crate::config::ConfigImpl::Amap(config), None)
 }

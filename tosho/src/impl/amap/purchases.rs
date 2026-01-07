@@ -71,7 +71,7 @@ pub(crate) async fn amap_purchase(
                     continue;
                 }
 
-                super::common::save_session_config(client, account);
+                super::common::save_session_config(client, account)?;
 
                 // Sleep for 500ms to avoid being too fast
                 // and made the claiming failed

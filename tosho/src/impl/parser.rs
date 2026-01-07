@@ -167,7 +167,7 @@ mod tests {
     fn test_parse_comma_number() {
         let parsed = parse_comma_number("1,2,3,4,5");
         assert!(parsed.is_ok());
-        assert_eq!(parsed.unwrap(), vec![1, 2, 3, 4, 5]);
+        assert_eq!(parsed.expect("Should be parsed"), vec![1, 2, 3, 4, 5]);
     }
 
     #[test]

@@ -57,7 +57,7 @@ pub(crate) async fn musq_auth_session(
         DeviceKind::Web => DeviceType::Web,
     };
 
-    let all_configs = get_all_config(&crate::r#impl::Implementations::Musq, None);
+    let all_configs = get_all_config(&crate::r#impl::Implementations::Musq, None)?;
     let old_config = all_configs.iter().find(|&c| match c {
         crate::config::ConfigImpl::Musq(c) => c.session == session_id && c.r#type == r#type as i32,
         _ => false,
@@ -102,13 +102,13 @@ pub(crate) async fn musq_auth_session(
 
     // save config
     console.info("Authentication successful! Saving config...");
-    save_config(crate::config::ConfigImpl::Musq(config), None);
+    save_config(crate::config::ConfigImpl::Musq(config), None)?;
 
     Ok(())
 }
 
 pub(crate) fn musq_accounts(console: &crate::term::Terminal) -> color_eyre::Result<()> {
-    let all_configs = get_all_config(&crate::r#impl::Implementations::Musq, None);
+    let all_configs = get_all_config(&crate::r#impl::Implementations::Musq, None)?;
 
     match all_configs.len() {
         0 => {

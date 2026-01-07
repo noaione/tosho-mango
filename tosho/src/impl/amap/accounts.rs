@@ -21,7 +21,7 @@ pub async fn amap_account_login(
         password
     ));
 
-    let all_configs = get_all_config(&crate::r#impl::Implementations::Amap, None);
+    let all_configs = get_all_config(&crate::r#impl::Implementations::Amap, None)?;
 
     let old_config = all_configs.iter().find(|&c| match c {
         crate::config::ConfigImpl::Amap(cc) => cc.email == email,
@@ -77,13 +77,13 @@ pub async fn amap_account_login(
         final_config.id
     ));
 
-    save_config(crate::config::ConfigImpl::Amap(final_config), None);
+    save_config(crate::config::ConfigImpl::Amap(final_config), None)?;
 
     Ok(())
 }
 
 pub(crate) fn amap_accounts(console: &crate::term::Terminal) -> color_eyre::Result<()> {
-    let all_configs = get_all_config(&crate::r#impl::Implementations::Amap, None);
+    let all_configs = get_all_config(&crate::r#impl::Implementations::Amap, None)?;
 
     match all_configs.len() {
         0 => {
@@ -123,7 +123,7 @@ pub(crate) async fn amap_account_info(
         .await
         .context("Failed to fetch account info")?;
 
-    super::common::save_session_config(client, account);
+    super::common::save_session_config(client, account)?;
 
     let info = acc_resp.info();
 
@@ -153,7 +153,7 @@ pub(crate) async fn amap_account_balance(
         .await
         .context("Failed to fetch balance")?;
 
-    super::common::save_session_config(client, acc_info);
+    super::common::save_session_config(client, acc_info)?;
 
     let balance = remainder.info();
 

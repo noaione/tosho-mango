@@ -351,7 +351,7 @@ pub(crate) async fn rbean_download(
         .await
         .context("Failed to fetch user information")?;
 
-    save_session_config(client, account);
+    save_session_config(client, account)?;
 
     console.info(cformat!(
         "Fetching info for ID <magenta,bold>{}</>...",
@@ -363,7 +363,7 @@ pub(crate) async fn rbean_download(
         .await
         .context("Failed to fetch manga")?;
 
-    save_session_config(client, account);
+    save_session_config(client, account)?;
 
     console.info(cformat!(
         "Fetching chapters for <magenta,bold>{}</>...",
@@ -375,7 +375,7 @@ pub(crate) async fn rbean_download(
         .await
         .context("Failed to fetch chapters")?;
 
-    save_session_config(client, account);
+    save_session_config(client, account)?;
 
     let chapters: Vec<&Chapter> = chapter_meta
         .chapters()
@@ -453,9 +453,9 @@ pub(crate) async fn rbean_download(
             }
         };
 
-        save_session_config(client, account);
+        save_session_config(client, account)?;
 
-        if let Some(count) = check_downloaded_image_count(&image_dir, image_ext)
+        if let Some(count) = check_downloaded_image_count(&image_dir, image_ext)?
             && count >= view_req.data().pages().len()
         {
             console.warn(cformat!(

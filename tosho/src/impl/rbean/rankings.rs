@@ -1,4 +1,4 @@
-use color_eyre::eyre::Context;
+use color_eyre::eyre::{Context, OptionExt};
 use color_print::cformat;
 use tosho_rbean::{
     RBClient,
@@ -25,7 +25,7 @@ pub(crate) async fn rbean_home_page(
         .await
         .context("Unable to get home page information")?;
 
-    save_session_config(client, account);
+    save_session_config(client, account)?;
     console.info(cformat!("Home page for <m,s>{}</>", account.id));
 
     if let Some(hero_manga) = results.hero().manga() {
@@ -98,7 +98,7 @@ pub(crate) async fn rbean_home_page(
                         Carousel::MangaList(c) => c.title() == select.name,
                         Carousel::MangaWithChapters(c) => c.title() == select.name,
                     })
-                    .unwrap();
+                    .ok_or_eyre("Failed to find relevant rankings carousel")?;
 
                 let title = match ranking {
                     Carousel::ContinueReading(c) => c.title().to_string(),

@@ -26,7 +26,7 @@ pub async fn sjv_account_login(
         DeviceType::Web => SJPlatform::Web,
     };
 
-    let all_configs = get_all_config(&crate::r#impl::Implementations::Sjv, None);
+    let all_configs = get_all_config(&crate::r#impl::Implementations::Sjv, None)?;
 
     let old_config = all_configs.iter().find(|&c| match c {
         crate::config::ConfigImpl::Sjv(cc) => {
@@ -86,13 +86,13 @@ pub async fn sjv_account_login(
         new_config.id
     ));
 
-    save_config(crate::config::ConfigImpl::Sjv(new_config), None);
+    save_config(crate::config::ConfigImpl::Sjv(new_config), None)?;
 
     Ok(())
 }
 
 pub(crate) fn sjv_accounts(console: &crate::term::Terminal) -> color_eyre::Result<()> {
-    let all_configs = get_all_config(&crate::r#impl::Implementations::Sjv, None);
+    let all_configs = get_all_config(&crate::r#impl::Implementations::Sjv, None)?;
 
     match all_configs.len() {
         0 => {

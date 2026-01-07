@@ -25,9 +25,9 @@ macro_rules! config_reader {
                     if !user_conf.exists() {
                         None
                     } else {
-                        let mut file = std::fs::File::open(user_conf).unwrap();
+                        let mut file = std::fs::File::open(user_conf).ok()?;
                         let mut buffer = Vec::new();
-                        file.read_to_end(&mut buffer).unwrap();
+                        file.read_to_end(&mut buffer).ok()?;
                         drop(file);
                         <$crate::r#impl::$rimpl::config::Config>::decode(&mut Cursor::new(buffer)).ok()
                     }
@@ -73,11 +73,13 @@ macro_rules! save_config_impl {
                     let mut user_conf = $user_path.clone();
                     user_conf.push(format!("{}.{}.tmconf", $crate::r#impl::$prefix::config::PREFIX, config.get_id()));
 
-                    let mut file = std::fs::File::create(user_conf).unwrap();
+                    let mut file = std::fs::File::create(user_conf)?;
                     let mut buffer = Vec::new();
-                    config.encode(&mut buffer).unwrap();
-                    file.write_all(&buffer).unwrap();
+                    config.encode(&mut buffer)?;
+                    file.write_all(&buffer)?;
                     drop(file);
+
+                    Ok(())
                 }
             )*
         }
@@ -177,14 +179,19 @@ impl From<crate::r#impl::kmkc::config::ConfigMobile> for ConfigImpl {
 pub(crate) fn get_user_path() -> std::path::PathBuf {
     #[cfg(windows)]
     let user_path = {
-        let mut local_appdata: std::path::PathBuf =
-            BaseDirs::new().unwrap().config_local_dir().to_path_buf();
+        let mut local_appdata: std::path::PathBuf = BaseDirs::new()
+            .expect("Failed to get base dirs")
+            .config_local_dir()
+            .to_path_buf();
         local_appdata.push("ToshoMango");
         local_appdata
     };
     #[cfg(not(windows))]
     let user_path: std::path::PathBuf = {
-        let mut home = BaseDirs::new().unwrap().home_dir().to_path_buf();
+        let mut home = BaseDirs::new()
+            .expect("Failed to get base dirs")
+            .home_dir()
+            .to_path_buf();
         home.push(".toshomango");
         home
     };
@@ -218,11 +225,14 @@ pub fn get_config(
     )
 }
 
-pub fn get_all_config(r#impl: &Implementations, user_path: Option<PathBuf>) -> Vec<ConfigImpl> {
+pub fn get_all_config(
+    r#impl: &Implementations,
+    user_path: Option<PathBuf>,
+) -> color_eyre::Result<Vec<ConfigImpl>> {
     let user_path = user_path.unwrap_or(get_user_path());
 
     if !user_path.exists() {
-        std::fs::create_dir_all(user_path.clone()).unwrap();
+        std::fs::create_dir_all(user_path.clone())?;
     }
 
     // glob .tmconf files
@@ -234,7 +244,9 @@ pub fn get_all_config(r#impl: &Implementations, user_path: Option<PathBuf>) -> V
     );
     glob_path.push(format!("{prefix}.*.tmconf"));
 
-    glob::glob(glob_path.to_str().unwrap()).expect("Failed to read glob pattern")
+    let glob_pattern = glob_path.to_string_lossy();
+
+    let results = glob::glob(&glob_pattern)?
         .flatten()
         .filter_map(|entry| {
             config_match_expand!(
@@ -243,14 +255,16 @@ pub fn get_all_config(r#impl: &Implementations, user_path: Option<PathBuf>) -> V
                 KMConfRead::read_config MUConfRead::read_config AMConfRead::read_config SJVConfRead::read_config RBeanConfRead::read_config MPlusConfRead::read_config NIDSConfRead::read_config
             )
         })
-        .collect()
+        .collect();
+
+    Ok(results)
 }
 
-pub fn save_config(config: ConfigImpl, user_path: Option<PathBuf>) {
+pub fn save_config(config: ConfigImpl, user_path: Option<PathBuf>) -> color_eyre::Result<()> {
     let user_path = user_path.unwrap_or(get_user_path());
 
     if !user_path.exists() {
-        std::fs::create_dir_all(user_path.clone()).unwrap();
+        std::fs::create_dir_all(user_path.clone())?;
     }
 
     save_config_impl!(

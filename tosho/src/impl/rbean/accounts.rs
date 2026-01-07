@@ -27,7 +27,7 @@ pub async fn rbean_account_login(
         DeviceType::Web => RBPlatform::Web,
     };
 
-    let all_configs = get_all_config(&crate::r#impl::Implementations::Rbean, None);
+    let all_configs = get_all_config(&crate::r#impl::Implementations::Rbean, None)?;
 
     let old_config = all_configs.iter().find(|&c| match c {
         crate::config::ConfigImpl::Rbean(cc) => cc.email == email && cc.platform() == platform,
@@ -74,13 +74,13 @@ pub async fn rbean_account_login(
         new_config.id
     ));
 
-    save_config(new_config.into(), None);
+    save_config(new_config.into(), None)?;
 
     Ok(())
 }
 
 pub(crate) fn rbean_accounts(console: &crate::term::Terminal) -> color_eyre::Result<()> {
-    let all_configs = get_all_config(&crate::r#impl::Implementations::Rbean, None);
+    let all_configs = get_all_config(&crate::r#impl::Implementations::Rbean, None)?;
 
     match all_configs.len() {
         0 => {
@@ -120,7 +120,7 @@ pub(crate) async fn rbean_account_info(
         .await
         .context("Failed to get account info")?;
 
-    save_session_config(client, account);
+    save_session_config(client, account)?;
 
     console.info(cformat!(
         "Account info for <magenta,bold>{}</>:",

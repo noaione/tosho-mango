@@ -21,7 +21,7 @@ pub(crate) async fn rbean_read_list(
         .await
         .context("Unable to get your reading list")?;
 
-    save_session_config(client, account);
+    save_session_config(client, account)?;
     console.info(cformat!("Reading list for <m,s>{}</>", account.id));
 
     for result in results.iter() {

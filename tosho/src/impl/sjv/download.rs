@@ -339,7 +339,7 @@ pub(crate) async fn sjv_download(
             _ => "jpg",
         };
 
-        if let Some(count) = check_downloaded_image_count(&image_dir, image_ext)
+        if let Some(count) = check_downloaded_image_count(&image_dir, image_ext)?
             && count >= chapter.pages() as usize
         {
             console.warn(cformat!(

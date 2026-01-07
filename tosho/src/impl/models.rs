@@ -233,7 +233,8 @@ mod tests {
             "subName": "Sub Chapter"
         }"#;
 
-        let chapter: super::ChapterDetailDump = serde_json::from_str(json).unwrap();
+        let chapter: super::ChapterDetailDump =
+            serde_json::from_str(json).expect("Failed to deserialize chapter");
 
         assert_eq!(chapter.id, super::IdDump::Uuid("uuid".to_string()));
         assert_eq!(chapter.main_name, "Chapter 1");
@@ -250,7 +251,8 @@ mod tests {
             "subName": "Sub Chapter"
         }"#;
 
-        let chapter: super::ChapterDetailDump = serde_json::from_str(json).unwrap();
+        let chapter: super::ChapterDetailDump =
+            serde_json::from_str(json).expect("Failed to deserialize chapter");
 
         assert_eq!(chapter.id, super::IdDump::Number(1));
         assert_eq!(chapter.main_name, "Chapter 1");

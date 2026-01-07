@@ -348,7 +348,7 @@ pub(crate) async fn mplus_download(
                 let image_dir =
                     get_output_directory(&output_dir, title_id, Some(chapter.chapter_id()), false)?;
 
-                if let Some(count) = check_downloaded_image_count(&image_dir, "webp")
+                if let Some(count) = check_downloaded_image_count(&image_dir, "webp")?
                     && count >= chapter_images.len()
                 {
                     console.warn(cformat!(

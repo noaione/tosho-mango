@@ -19,7 +19,7 @@ static TITLE_REGEX: LazyLock<regex::Regex> = LazyLock::new(|| {
     regex::Regex::new(
         r"(?:[\w\.]+ |#|[\w]+)(?P<base>0?[\d]+)?(?:[\(-\. ][\(-\. ]?)?(?P<split>[\d]+)?(?:[\)])?",
     )
-    .unwrap()
+    .expect("Failed to create TITLE_REGEX")
 });
 
 const MODERN_IMAGE_EXT: [&str; 5] = ["avif", "jxl", "webp", "heif", "heic"];

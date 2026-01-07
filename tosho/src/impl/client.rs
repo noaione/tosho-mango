@@ -9,18 +9,18 @@ pub(crate) fn select_single_account(
     account_id: Option<&str>,
     implementation: super::Implementations,
     term: &crate::term::Terminal,
-) -> Option<crate::config::ConfigImpl> {
+) -> color_eyre::Result<Option<crate::config::ConfigImpl>> {
     if let Some(account_id) = account_id {
         let config = get_config(account_id, &implementation, None);
 
         if let Some(config) = config {
-            return Some(config.clone());
+            return Ok(Some(config.clone()));
         }
 
         term.warn(format!("Account ID {account_id} not found!"));
     }
 
-    let all_configs = get_all_config(&implementation, None);
+    let all_configs = get_all_config(&implementation, None)?;
     let all_choices: Vec<ConsoleChoice> = all_configs
         .iter()
         .map(|c| match c {
@@ -64,15 +64,9 @@ pub(crate) fn select_single_account(
             },
             crate::config::ConfigImpl::Mplus(c) => ConsoleChoice {
                 name: c.id.clone(),
-                value: if c.username.is_some() {
-                    format!(
-                        "{} - {} [{}]",
-                        c.id,
-                        c.username.as_ref().unwrap(),
-                        c.r#type().to_name()
-                    )
-                } else {
-                    format!("{} [{}]", c.id, c.r#type().to_name())
+                value: match &c.username {
+                    Some(username) => format!("{} - {} [{}]", c.id, username, c.r#type().to_name()),
+                    None => format!("{} [{}]", c.id, c.r#type().to_name()),
                 },
             },
             crate::config::ConfigImpl::Nids(c) => ConsoleChoice {
@@ -84,37 +78,35 @@ pub(crate) fn select_single_account(
 
     if all_configs.is_empty() {
         term.warn("No accounts found!");
-        return None;
+        return Ok(None);
     }
 
     // only 1? return
     if all_configs.len() == 1 {
-        return Some(all_configs[0].clone());
+        return Ok(Some(all_configs[0].clone()));
     }
 
     let selected = term.choice("Select an account:", all_choices);
-    match selected {
-        Some(selected) => {
-            let config = all_configs
-                .iter()
-                .find(|&c| match c {
-                    crate::config::ConfigImpl::Amap(c) => c.id == selected.name,
-                    crate::config::ConfigImpl::Kmkc(c) => match c {
-                        super::kmkc::config::Config::Mobile(cc) => cc.id == selected.name,
-                        super::kmkc::config::Config::Web(cc) => cc.id == selected.name,
-                    },
-                    crate::config::ConfigImpl::Musq(c) => c.id == selected.name,
-                    crate::config::ConfigImpl::Sjv(c) => c.id == selected.name,
-                    crate::config::ConfigImpl::Rbean(c) => c.id == selected.name,
-                    crate::config::ConfigImpl::Mplus(c) => c.id == selected.name,
-                    crate::config::ConfigImpl::Nids(c) => c.id == selected.name,
-                })
-                .unwrap();
-
-            Some(config.clone())
-        }
+    let resp = match selected {
+        Some(selected) => all_configs
+            .iter()
+            .find(|&c| match c {
+                crate::config::ConfigImpl::Amap(c) => c.id == selected.name,
+                crate::config::ConfigImpl::Kmkc(c) => match c {
+                    super::kmkc::config::Config::Mobile(cc) => cc.id == selected.name,
+                    super::kmkc::config::Config::Web(cc) => cc.id == selected.name,
+                },
+                crate::config::ConfigImpl::Musq(c) => c.id == selected.name,
+                crate::config::ConfigImpl::Sjv(c) => c.id == selected.name,
+                crate::config::ConfigImpl::Rbean(c) => c.id == selected.name,
+                crate::config::ConfigImpl::Mplus(c) => c.id == selected.name,
+                crate::config::ConfigImpl::Nids(c) => c.id == selected.name,
+            })
+            .cloned(),
         None => None,
-    }
+    };
+
+    Ok(resp)
 }
 
 pub(crate) fn make_musq_client(

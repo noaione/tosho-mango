@@ -45,7 +45,7 @@ pub(crate) async fn mplus_auth_session(
         DeviceKind::Android => DeviceType::Android,
     };
 
-    let all_configs = get_all_config(&crate::r#impl::Implementations::Mplus, None);
+    let all_configs = get_all_config(&crate::r#impl::Implementations::Mplus, None)?;
     let old_config = all_configs.iter().find(|&c| match c {
         crate::config::ConfigImpl::Musq(c) => {
             c.session == session_id && c.r#type == device_type as i32
@@ -104,7 +104,7 @@ pub(crate) async fn mplus_auth_session(
                 final_config.r#type().to_name()
             ));
 
-            save_config(crate::config::ConfigImpl::Mplus(final_config), None);
+            save_config(crate::config::ConfigImpl::Mplus(final_config), None)?;
 
             Ok(())
         }
@@ -116,7 +116,7 @@ pub(crate) async fn mplus_auth_session(
 }
 
 pub(crate) fn mplus_accounts(console: &crate::term::Terminal) -> color_eyre::Result<()> {
-    let all_configs = get_all_config(&crate::r#impl::Implementations::Mplus, None);
+    let all_configs = get_all_config(&crate::r#impl::Implementations::Mplus, None)?;
 
     match all_configs.len() {
         0 => {

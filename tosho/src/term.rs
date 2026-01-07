@@ -137,7 +137,7 @@ impl Terminal {
         spinner.enable_steady_tick(Duration::from_millis(120));
         spinner.set_style(
             ProgressStyle::with_template("{spinner:.blue} {msg}")
-                .unwrap()
+                .expect("Should not fail")
                 .tick_strings(&[
                     "⠋",
                     "⠙",
@@ -200,7 +200,7 @@ impl Terminal {
             indicatif::ProgressStyle::with_template(
                 "{spinner:.blue} {msg} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos}/{len}",
             )
-            .unwrap()
+            .expect("Should not fail")
             .progress_chars("#>-")
             .tick_strings(&["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏", " "]),
         );

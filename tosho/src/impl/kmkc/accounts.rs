@@ -95,7 +95,7 @@ pub(crate) async fn kmkc_account_login_web(
 
     // parse netscape cookies
     let cookie_config = super::common::parse_netscape_cookies(cookies_path)?;
-    let all_configs = get_all_config(&crate::r#impl::Implementations::Kmkc, None);
+    let all_configs = get_all_config(&crate::r#impl::Implementations::Kmkc, None)?;
 
     let client = make_kmkc_client(&KMConfig::Web(cookie_config.clone()))
         .context("Failed to create client")?;
@@ -135,7 +135,7 @@ pub(crate) async fn kmkc_account_login_web(
     save_config(
         crate::config::ConfigImpl::Kmkc(Config::Web(acc_config)),
         None,
-    );
+    )?;
 
     Ok(())
 }
@@ -158,7 +158,7 @@ pub(crate) async fn kmkc_account_login_mobile(
         platform.to_name()
     ));
 
-    let all_configs = get_all_config(&crate::r#impl::Implementations::Kmkc, None);
+    let all_configs = get_all_config(&crate::r#impl::Implementations::Kmkc, None)?;
 
     // find old config
     let old_config = all_configs.iter().find(|&c| match c {
@@ -205,7 +205,7 @@ pub(crate) async fn kmkc_account_login_mobile(
     save_config(
         crate::config::ConfigImpl::Kmkc(Config::Mobile(acc_config)),
         None,
-    );
+    )?;
 
     Ok(())
 }
@@ -222,7 +222,7 @@ pub async fn kmkc_account_login(
         password
     ));
 
-    let all_configs = get_all_config(&crate::r#impl::Implementations::Kmkc, None);
+    let all_configs = get_all_config(&crate::r#impl::Implementations::Kmkc, None)?;
 
     // find old config
     let old_config = all_configs.iter().find(|&c| match c {
@@ -278,7 +278,7 @@ pub async fn kmkc_account_login(
         "Created session ID <m,s>{}</>, saving config...",
         acc_config.get_id()
     ));
-    save_config(crate::config::ConfigImpl::Kmkc(acc_config), None);
+    save_config(crate::config::ConfigImpl::Kmkc(acc_config), None)?;
 
     Ok(())
 }
@@ -292,8 +292,8 @@ pub async fn kmkc_account_login_adapt(
         return Err(color_eyre::eyre::eyre!("Invalid platform"));
     }
 
-    let binding = get_all_config(&crate::r#impl::Implementations::Kmkc, None);
-    let web_configs = binding
+    let all_configs = get_all_config(&crate::r#impl::Implementations::Kmkc, None)?;
+    let web_configs = all_configs
         .iter()
         .filter_map(|c| match c {
             crate::config::ConfigImpl::Kmkc(super::config::Config::Web(cc)) => Some(cc),
@@ -365,7 +365,7 @@ pub async fn kmkc_account_login_adapt(
                 final_config.id.clone()
             ));
 
-            save_config(final_config.into(), None);
+            save_config(final_config.into(), None)?;
 
             Ok(())
         }
@@ -373,7 +373,7 @@ pub async fn kmkc_account_login_adapt(
 }
 
 pub(crate) fn kmkc_accounts(console: &crate::term::Terminal) -> color_eyre::Result<()> {
-    let all_configs = get_all_config(&crate::r#impl::Implementations::Kmkc, None);
+    let all_configs = get_all_config(&crate::r#impl::Implementations::Kmkc, None)?;
 
     match all_configs.len() {
         0 => {

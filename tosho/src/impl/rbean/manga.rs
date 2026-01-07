@@ -80,7 +80,7 @@ pub(crate) async fn rbean_search(
         .await
         .context("Failed to search")?;
 
-    super::common::save_session_config(client, account);
+    super::common::save_session_config(client, account)?;
 
     if results.results().is_empty() {
         console.warn("No results found!");
@@ -135,7 +135,7 @@ pub(crate) async fn rbean_title_info(
         .await
         .context(format!("Failed to fetch manga with ID: {}", uuid))?;
 
-    save_session_config(client, account);
+    save_session_config(client, account)?;
     let mut chapter_meta: Option<tosho_rbean::models::ChapterListResponse> = None;
 
     if show_chapters {
@@ -151,7 +151,7 @@ pub(crate) async fn rbean_title_info(
                 .context(format!("Failed to fetch chapters for {}", uuid))?,
         );
 
-        save_session_config(client, account);
+        save_session_config(client, account)?;
     }
 
     let manga_url = format!("https://{}/series/{}", BASE_HOST, result.slug());

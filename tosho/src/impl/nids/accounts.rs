@@ -44,7 +44,7 @@ pub(crate) async fn nids_auth_session(
         DeviceKind::Web => DeviceType::Web,
     };
 
-    let all_configs = get_all_config(&crate::r#impl::Implementations::Nids, None);
+    let all_configs = get_all_config(&crate::r#impl::Implementations::Nids, None)?;
 
     let cut_token = session_token.chars().take(8).collect::<String>();
     console.info(cformat!(
@@ -99,7 +99,7 @@ pub(crate) async fn nids_auth_session(
         "Created session ID <m,s>{}</>, saving config...",
         config.get_id()
     ));
-    save_config(crate::config::ConfigImpl::Nids(config), None);
+    save_config(crate::config::ConfigImpl::Nids(config), None)?;
 
     Ok(())
 }
@@ -117,7 +117,7 @@ pub(crate) async fn nids_auth_email(
 
     console.info(cformat!("Authenticating with email <m,s>{}</>...", &email));
 
-    let all_configs = get_all_config(&crate::r#impl::Implementations::Nids, None);
+    let all_configs = get_all_config(&crate::r#impl::Implementations::Nids, None)?;
 
     let token_results = tosho_nids::NIClient::login(email, password, proxy.cloned())
         .await
@@ -164,13 +164,13 @@ pub(crate) async fn nids_auth_email(
         "Created session ID <m,s>{}</>, saving config...",
         config.get_id()
     ));
-    save_config(crate::config::ConfigImpl::Nids(config), None);
+    save_config(crate::config::ConfigImpl::Nids(config), None)?;
 
     Ok(())
 }
 
 pub(crate) fn nids_accounts(console: &crate::term::Terminal) -> color_eyre::Result<()> {
-    let all_configs = get_all_config(&crate::r#impl::Implementations::Nids, None);
+    let all_configs = get_all_config(&crate::r#impl::Implementations::Nids, None)?;
 
     match all_configs.len() {
         0 => {
@@ -311,7 +311,7 @@ pub(crate) async fn nids_account_refresh(
         "Saving updated config for account <m,s>{}</>...",
         account.id
     ));
-    save_config(crate::config::ConfigImpl::Nids(new_account), None);
+    save_config(crate::config::ConfigImpl::Nids(new_account), None)?;
 
     Ok(())
 }

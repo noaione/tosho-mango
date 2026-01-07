@@ -340,7 +340,7 @@ pub(crate) async fn kmkc_download(
                     continue;
                 }
 
-                if let Some(count) = check_downloaded_image_count(&image_dir, "png")
+                if let Some(count) = check_downloaded_image_count(&image_dir, "png")?
                     && count <= web.pages().len()
                 {
                     console.warn(cformat!(
@@ -365,7 +365,7 @@ pub(crate) async fn kmkc_download(
                     continue;
                 }
 
-                if let Some(count) = check_downloaded_image_count(&image_dir, "jpg")
+                if let Some(count) = check_downloaded_image_count(&image_dir, "jpg")?
                     && count >= mobile.pages().len()
                 {
                     console.warn(cformat!(

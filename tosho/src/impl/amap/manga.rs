@@ -19,7 +19,7 @@ pub(crate) async fn amap_search(
         .await
         .context("Failed to fetch balance")?;
 
-    super::common::save_session_config(client, acc_info);
+    super::common::save_session_config(client, acc_info)?;
 
     if results.comics().is_empty() {
         console.warn("No results found");

@@ -207,7 +207,7 @@ pub(crate) async fn amap_download(
                         ticket_purse.subtract_bonus(consume.bonus);
                         ticket_purse.subtract_premium(consume.purchased);
                         ticket_purse.subtract_premium(consume.premium);
-                        super::common::save_session_config(client, account);
+                        super::common::save_session_config(client, account)?;
                     }
                 }
             }
@@ -270,11 +270,11 @@ pub(crate) async fn amap_download(
         }
 
         // save session_v2
-        super::common::save_session_config(client, account);
+        super::common::save_session_config(client, account)?;
 
         let ch_pages = ch_view.info().pages();
         let ch_dir = get_output_directory(&output_dir, title_id, Some(info.id()), false)?;
-        if let Some(count) = check_downloaded_image_count(&ch_dir, "jpg")
+        if let Some(count) = check_downloaded_image_count(&ch_dir, "jpg")?
             && count >= ch_pages.len()
         {
             console.warn(cformat!(

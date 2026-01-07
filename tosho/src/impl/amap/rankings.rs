@@ -18,7 +18,7 @@ pub(crate) async fn amap_discovery(
         .await
         .context("Failed to fetch home discovery")?;
 
-    super::common::save_session_config(client, acc_info);
+    super::common::save_session_config(client, acc_info)?;
 
     // updated
     for updated in results.updated().iter() {

@@ -143,7 +143,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
                 return early_act;
             }
 
-            let config = select_single_account(account_id.as_deref(), Implementations::Musq, &t);
+            let config = select_single_account(account_id.as_deref(), Implementations::Musq, &t)?;
             let config = match config {
                 Some(config) => match config {
                     config::ConfigImpl::Musq(c) => c,
@@ -311,7 +311,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
                 return exit_stat;
             }
 
-            let config = select_single_account(account_id.as_deref(), Implementations::Kmkc, &t);
+            let config = select_single_account(account_id.as_deref(), Implementations::Kmkc, &t)?;
             let config = match config {
                 Some(config) => match config {
                     config::ConfigImpl::Kmkc(c) => c,
@@ -478,7 +478,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
                 return exit_res; // Propagate error
             }
 
-            let config = select_single_account(account_id.as_deref(), Implementations::Amap, &t);
+            let config = select_single_account(account_id.as_deref(), Implementations::Amap, &t)?;
             let config = match config {
                 Some(config) => match config {
                     config::ConfigImpl::Amap(c) => c,
@@ -615,7 +615,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
                 return early_act;
             }
 
-            let config = select_single_account(account_id.as_deref(), Implementations::Sjv, &t);
+            let config = select_single_account(account_id.as_deref(), Implementations::Sjv, &t)?;
             let config = match config {
                 Some(config) => match config {
                     config::ConfigImpl::Sjv(c) => c,
@@ -732,7 +732,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
                 return early_act;
             }
 
-            let config = select_single_account(account_id.as_deref(), Implementations::Rbean, &t);
+            let config = select_single_account(account_id.as_deref(), Implementations::Rbean, &t)?;
             let config = match config {
                 Some(config) => match config {
                     config::ConfigImpl::Rbean(c) => c,
@@ -870,7 +870,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
                 return early_stat;
             }
 
-            let config = select_single_account(account_id.as_deref(), Implementations::Mplus, &t);
+            let config = select_single_account(account_id.as_deref(), Implementations::Mplus, &t)?;
             let config = match config {
                 Some(config) => match config {
                     config::ConfigImpl::Mplus(c) => c,
@@ -1159,7 +1159,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
                 return early_act;
             }
 
-            let config = select_single_account(account_id.as_deref(), Implementations::Nids, &t);
+            let config = select_single_account(account_id.as_deref(), Implementations::Nids, &t)?;
             let config = match config {
                 Some(config) => match config {
                     config::ConfigImpl::Nids(c) => c,
