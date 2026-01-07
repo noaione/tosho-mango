@@ -68,7 +68,7 @@ pub async fn nids_get_purchased_series(
                         current_page -= 1;
                     }
                 }
-                PaginateAction::Exit(_) => {
+                PaginateAction::Exit => {
                     break;
                 }
             }
@@ -197,7 +197,7 @@ pub async fn nids_get_purchased_issues(
                         current_page -= 1;
                     }
                 }
-                PaginateAction::Exit(_) => {
+                PaginateAction::Exit => {
                     break;
                 }
             }

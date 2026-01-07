@@ -59,7 +59,7 @@ pub async fn nids_get_series(
                         current_page -= 1;
                     }
                 }
-                PaginateAction::Exit(_) => {
+                PaginateAction::Exit => {
                     break;
                 }
             }

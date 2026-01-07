@@ -93,7 +93,7 @@ pub async fn nids_get_issues(
                         current_page -= 1;
                     }
                 }
-                PaginateAction::Exit(_) => {
+                PaginateAction::Exit => {
                     break;
                 }
             }

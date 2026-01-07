@@ -186,7 +186,7 @@ pub(crate) fn get_scope_dates() -> color_eyre::Result<(String, String)> {
 pub(super) enum PaginateAction {
     Next,
     Previous,
-    Exit(u32),
+    Exit,
 }
 
 pub(super) async fn pagination_helper(
@@ -214,15 +214,15 @@ pub(super) async fn pagination_helper(
         Some(choice) => match choice.name.as_str() {
             "next" => PaginateAction::Next,
             "prev" => PaginateAction::Previous,
-            "exit" => PaginateAction::Exit(0),
+            "exit" => PaginateAction::Exit,
             _ => {
                 console.warn("Invalid choice, exiting.");
-                PaginateAction::Exit(1)
+                PaginateAction::Exit
             }
         },
         None => {
             console.warn("Aborted by user, exiting.");
-            PaginateAction::Exit(0)
+            PaginateAction::Exit
         }
     }
 }

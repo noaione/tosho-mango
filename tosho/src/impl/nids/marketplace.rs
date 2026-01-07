@@ -150,7 +150,7 @@ pub async fn nids_get_marketplace_ungrouped(
                         current_page -= 1;
                     }
                 }
-                PaginateAction::Exit(_) => {
+                PaginateAction::Exit => {
                     break;
                 }
             }
@@ -232,7 +232,7 @@ pub async fn nids_get_marketplace_grouped(
                         current_page -= 1;
                     }
                 }
-                PaginateAction::Exit(_) => {
+                PaginateAction::Exit => {
                     break;
                 }
             }

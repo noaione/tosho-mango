@@ -98,7 +98,7 @@ pub async fn nids_get_publishers(
                         current_page -= 1;
                     }
                 }
-                PaginateAction::Exit(_) => {
+                PaginateAction::Exit => {
                     break;
                 }
             }
