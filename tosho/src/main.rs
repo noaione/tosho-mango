@@ -714,7 +714,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
             subcommand,
             account_id,
         } => {
-            let early_exit = match subcommand.clone() {
+            let early_act = match subcommand.clone() {
                 RBeanCommands::Auth {
                     email,
                     password,
@@ -728,8 +728,8 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
             };
 
             // early exit
-            if let Some(early_exit) = early_exit {
-                return Ok(early_exit);
+            if let Some(early_act) = early_act {
+                return early_act;
             }
 
             let config = select_single_account(account_id.as_deref(), Implementations::Rbean, &t);
@@ -740,7 +740,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
                 },
                 None => {
                     t.warn("Aborted!");
-                    return Ok(1);
+                    return Err(color_eyre::eyre::eyre!("Aborted by user"));
                 }
             };
 
@@ -753,16 +753,16 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
 
             client.set_expiry_at(Some(config.expiry));
 
-            let exit_code = match subcommand {
+            let exit_act = match subcommand {
                 RBeanCommands::Auth {
                     email: _,
                     password: _,
                     platform: _,
-                } => 0,
+                } => Ok(()),
                 RBeanCommands::Account => {
                     r#impl::rbean::accounts::rbean_account_info(&mut client, &config, &t).await
                 }
-                RBeanCommands::Accounts => 0,
+                RBeanCommands::Accounts => Ok(()),
                 RBeanCommands::AutoDownload {
                     uuid,
                     output,
@@ -782,7 +782,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
                     r#impl::rbean::download::rbean_download(
                         &uuid,
                         dl_config,
-                        output.unwrap_or_else(get_default_download_dir),
+                        output.unwrap_or(default_dir),
                         &mut client,
                         &config,
                         &mut t_mut,
@@ -809,7 +809,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
                     r#impl::rbean::download::rbean_download(
                         &uuid,
                         dl_config,
-                        output.unwrap_or_else(get_default_download_dir),
+                        output.unwrap_or(default_dir),
                         &mut client,
                         &config,
                         &mut t_mut,
@@ -849,7 +849,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
                 }
             };
 
-            Ok(exit_code)
+            exit_act
         }
         ToshoCommands::Mplus {
             account_id,

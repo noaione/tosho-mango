@@ -4,6 +4,7 @@ use std::{
 };
 
 use clap::ValueEnum;
+use color_eyre::eyre::{Context, OptionExt};
 use color_print::cformat;
 use tosho_macros::EnumName;
 use tosho_rbean::{
@@ -12,7 +13,6 @@ use tosho_rbean::{
 };
 
 use crate::{
-    cli::ExitCode,
     r#impl::{
         clean_filename,
         common::check_downloaded_image_count,
@@ -147,7 +147,7 @@ fn get_output_directory(
     title_id: String,
     chapter_id: Option<String>,
     create_folder: bool,
-) -> PathBuf {
+) -> color_eyre::Result<PathBuf> {
     let mut pathing = output_dir.to_path_buf();
     pathing.push(format!("RB_{title_id}"));
 
@@ -156,10 +156,10 @@ fn get_output_directory(
     }
 
     if create_folder {
-        std::fs::create_dir_all(&pathing).unwrap();
+        std::fs::create_dir_all(&pathing)?;
     }
 
-    pathing
+    Ok(pathing)
 }
 
 fn do_chapter_select(
@@ -340,19 +340,17 @@ pub(crate) async fn rbean_download(
     client: &mut RBClient,
     account: &Config,
     console: &mut crate::term::Terminal,
-) -> ExitCode {
+) -> color_eyre::Result<()> {
     console.info(cformat!(
         "Fetching user information for <magenta,bold>{}</>...",
         account.email
     ));
 
-    let acc_info = client.get_user().await;
-    if let Err(e) = acc_info {
-        console.error(format!("Failed to fetch user information: {e}"));
-        return 1;
-    }
+    let acc_info = client
+        .get_user()
+        .await
+        .context("Failed to fetch user information")?;
 
-    let acc_info = acc_info.unwrap();
     save_session_config(client, account);
 
     console.info(cformat!(
@@ -360,14 +358,11 @@ pub(crate) async fn rbean_download(
         uuid
     ));
 
-    let result = client.get_manga(uuid).await;
+    let result = client
+        .get_manga(uuid)
+        .await
+        .context("Failed to fetch manga")?;
 
-    if let Err(e) = result {
-        console.error(format!("Failed to fetch manga: {e}"));
-        return 1;
-    }
-
-    let result = result.unwrap();
     save_session_config(client, account);
 
     console.info(cformat!(
@@ -375,14 +370,11 @@ pub(crate) async fn rbean_download(
         result.title()
     ));
 
-    let chapter_meta = client.get_chapter_list(uuid).await;
+    let chapter_meta = client
+        .get_chapter_list(uuid)
+        .await
+        .context("Failed to fetch chapters")?;
 
-    if let Err(e) = chapter_meta {
-        console.error(format!("Failed to fetch chapters: {e}"));
-        return 1;
-    }
-
-    let chapter_meta = chapter_meta.unwrap();
     save_session_config(client, account);
 
     let chapters: Vec<&Chapter> = chapter_meta
@@ -393,7 +385,7 @@ pub(crate) async fn rbean_download(
 
     if chapters.is_empty() {
         console.error("No chapters available to download!");
-        return 1;
+        return Err(color_eyre::eyre::eyre!("No chapters available to download"));
     }
 
     let selected_chapters: Vec<Chapter> = if dl_config.no_input {
@@ -417,10 +409,12 @@ pub(crate) async fn rbean_download(
 
     if download_chapters.is_empty() {
         console.warn("No chapters after filtered by selected chapter ids");
-        return 1;
+        return Err(color_eyre::eyre::eyre!(
+            "No chapters after filtered by selected chapter ids"
+        ));
     }
 
-    let title_dir = get_output_directory(&output_dir, result.uuid().to_string(), None, true);
+    let title_dir = get_output_directory(&output_dir, result.uuid().to_string(), None, true)?;
     let dump_info = create_chapters_info(&result, chapter_meta.chapters());
 
     let title_dump_path = title_dir.join("_info.json");
@@ -440,25 +434,25 @@ pub(crate) async fn rbean_download(
             result.uuid().to_string(),
             Some(chapter.formatted_title()),
             false,
-        );
+        )?;
 
         let image_ext = match dl_config.format {
             CLIDownloadFormat::Jpeg => "jpg",
             CLIDownloadFormat::Webp => "webp",
         };
 
-        let view_req = client.get_chapter_viewer(chapter.uuid()).await;
+        let view_req = match client.get_chapter_viewer(chapter.uuid()).await {
+            Ok(view_req) => view_req,
+            Err(e) => {
+                console.error(cformat!(
+                    "Failed to fetch viewer for <m,s>{}</>: {}",
+                    chapter.formatted_title(),
+                    e
+                ));
+                continue;
+            }
+        };
 
-        if let Err(e) = view_req {
-            console.error(cformat!(
-                "Failed to fetch viewer for <m,s>{}</>: {}",
-                chapter.formatted_title(),
-                e
-            ));
-            continue;
-        }
-
-        let view_req = view_req.unwrap();
         save_session_config(client, account);
 
         if let Some(count) = check_downloaded_image_count(&image_dir, image_ext)
@@ -473,7 +467,7 @@ pub(crate) async fn rbean_download(
         }
 
         // create chapter dir
-        std::fs::create_dir_all(&image_dir).unwrap();
+        std::fs::create_dir_all(&image_dir)?;
 
         let total_img_count = view_req.data().pages().len() as u64;
 
@@ -486,7 +480,9 @@ pub(crate) async fn rbean_download(
                     CLIDownloadFormat::Jpeg => pages_data[0].image().jpg(),
                     CLIDownloadFormat::Webp => pages_data[0].image().webp(),
                 };
-                let first_image = img_source.first().unwrap();
+                let first_image = img_source
+                    .first()
+                    .ok_or_eyre("There is no image on the first page!")?;
                 console.info(cformat!(
                     "   Testing higher resolution images for <m,s>{}</>...",
                     chapter.formatted_title()
@@ -526,7 +522,7 @@ pub(crate) async fn rbean_download(
                     let semaphore = Arc::clone(&semaphore);
 
                     tokio::spawn(async move {
-                        let _permit = semaphore.acquire().await.unwrap();
+                        let _permit = semaphore.acquire().await.expect("Should acquire semaphore");
 
                         match rbean_actual_downloader(
                             DownloadNode {
@@ -582,5 +578,5 @@ pub(crate) async fn rbean_download(
         progress.finish_with_message("Downloaded");
     }
 
-    0
+    Ok(())
 }

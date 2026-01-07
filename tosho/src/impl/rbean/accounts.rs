@@ -1,10 +1,8 @@
+use color_eyre::eyre::Context;
 use color_print::cformat;
 use tosho_rbean::{RBClient, RBPlatform};
 
-use crate::{
-    cli::ExitCode,
-    config::{get_all_config, save_config, try_remove_config},
-};
+use crate::config::{get_all_config, save_config, try_remove_config};
 
 use super::{
     common::save_session_config,
@@ -16,7 +14,7 @@ pub async fn rbean_account_login(
     password: String,
     platform: DeviceType,
     console: &crate::term::Terminal,
-) -> ExitCode {
+) -> color_eyre::Result<()> {
     console.info(cformat!(
         "Authenticating with email <m,s>{}</> and password <m,s>{}</>...",
         email,
@@ -42,7 +40,7 @@ pub async fn rbean_account_login(
         let abort_it = console.confirm(Some("Do you want to replace it?"));
         if !abort_it {
             console.info("Aborting...");
-            return 0;
+            return Err(color_eyre::eyre::eyre!("Aborted by user"));
         }
 
         match old_config {
@@ -53,51 +51,44 @@ pub async fn rbean_account_login(
         }
     }
 
-    let login_results = RBClient::login(&email, &password, rb_platform).await;
+    let login_result = RBClient::login(&email, &password, rb_platform)
+        .await
+        .context("Failed to authenticate")?;
 
-    match login_results {
-        Ok(login_result) => {
-            let new_config: Config = login_result.into();
+    let new_config: Config = login_result.into();
 
-            console.info(cformat!(
-                "Authenticated as <m,s>{}</> ({})...",
-                new_config.username,
-                email
-            ));
+    console.info(cformat!(
+        "Authenticated as <m,s>{}</> ({})...",
+        new_config.username,
+        email
+    ));
 
-            let new_config = if let Some(old_id) = old_id {
-                new_config.with_id(&old_id)
-            } else {
-                new_config
-            };
+    let new_config = if let Some(old_id) = old_id {
+        new_config.with_id(&old_id)
+    } else {
+        new_config
+    };
 
-            console.info(cformat!(
-                "Created session ID <m,s>{}</>, saving config...",
-                new_config.id
-            ));
+    console.info(cformat!(
+        "Created session ID <m,s>{}</>, saving config...",
+        new_config.id
+    ));
 
-            save_config(new_config.into(), None);
+    save_config(new_config.into(), None);
 
-            0
-        }
-        Err(e) => {
-            console.error(format!("Failed to authenticate: {e}"));
-            1
-        }
-    }
+    Ok(())
 }
 
-pub(crate) fn rbean_accounts(console: &crate::term::Terminal) -> ExitCode {
+pub(crate) fn rbean_accounts(console: &crate::term::Terminal) -> color_eyre::Result<()> {
     let all_configs = get_all_config(&crate::r#impl::Implementations::Rbean, None);
 
     match all_configs.len() {
         0 => {
             console.warn("No accounts found!");
-
-            1
+            Ok(())
         }
-        _ => {
-            console.info(format!("Found {} accounts:", all_configs.len()));
+        other => {
+            console.info(format!("Found {} accounts:", other));
             for (i, c) in all_configs.iter().enumerate() {
                 match c {
                     crate::config::ConfigImpl::Rbean(c) => {
@@ -114,7 +105,7 @@ pub(crate) fn rbean_accounts(console: &crate::term::Terminal) -> ExitCode {
                 }
             }
 
-            0
+            Ok(())
         }
     }
 }
@@ -123,37 +114,35 @@ pub(crate) async fn rbean_account_info(
     client: &mut RBClient,
     account: &Config,
     console: &crate::term::Terminal,
-) -> ExitCode {
-    let acc_info = client.get_user().await;
+) -> color_eyre::Result<()> {
+    let acc_info = client
+        .get_user()
+        .await
+        .context("Failed to get account info")?;
 
-    match acc_info {
-        Ok(acc_info) => {
-            save_session_config(client, account);
+    save_session_config(client, account);
 
-            console.info(cformat!(
-                "Account info for <magenta,bold>{}</>:",
-                account.id
-            ));
+    console.info(cformat!(
+        "Account info for <magenta,bold>{}</>:",
+        account.id
+    ));
 
-            console.info(cformat!("  <s>ID</>: {}", acc_info.uuid()));
-            console.info(cformat!("  <s>Email</>: {}", acc_info.email()));
-            let username = acc_info.username().unwrap_or("[no username]");
-            console.info(cformat!("  <s>Username</>: {}", username));
+    console.info(cformat!("  <s>ID</>: {}", acc_info.uuid()));
+    console.info(cformat!("  <s>Email</>: {}", acc_info.email()));
+    let username = acc_info.username().unwrap_or("[no username]");
+    console.info(cformat!("  <s>Username</>: {}", username));
 
-            if let Some(date_at) = acc_info.premium_expiration_date() {
-                console.info(cformat!("  <s>Premium until</>: {}", date_at));
-            }
-
-            0
-        }
-        Err(e) => {
-            console.error(format!("Failed to get account info: {e}"));
-            1
-        }
+    if let Some(date_at) = acc_info.premium_expiration_date() {
+        console.info(cformat!("  <s>Premium until</>: {}", date_at));
     }
+
+    Ok(())
 }
 
-pub(crate) fn rbean_account_revoke(account: &Config, console: &crate::term::Terminal) -> ExitCode {
+pub(crate) fn rbean_account_revoke(
+    account: &Config,
+    console: &crate::term::Terminal,
+) -> color_eyre::Result<()> {
     let confirm = console.confirm(Some(&cformat!(
         "Are you sure you want to delete <m,s>{}</>?\nThis action is irreversible!",
         account.id
@@ -161,24 +150,20 @@ pub(crate) fn rbean_account_revoke(account: &Config, console: &crate::term::Term
 
     if !confirm {
         console.warn("Aborted");
-        return 0;
+        return Ok(());
     }
 
-    match try_remove_config(
+    try_remove_config(
         account.id.as_str(),
         crate::r#impl::Implementations::Rbean,
         None,
-    ) {
-        Ok(_) => {
-            console.info(cformat!(
-                "Successfully deleted <magenta,bold>{}</>",
-                account.id
-            ));
-            0
-        }
-        Err(err) => {
-            console.error(format!("Failed to delete account: {err}"));
-            1
-        }
-    }
+    )
+    .context("Failed to delete account")?;
+
+    console.info(cformat!(
+        "Successfully deleted <magenta,bold>{}</>",
+        account.get_id()
+    ));
+
+    Ok(())
 }

@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use clap::ValueEnum;
+use color_eyre::eyre::Context;
 use color_print::cformat;
 use tosho_rbean::{
     RBClient,
@@ -8,7 +9,7 @@ use tosho_rbean::{
     models::{Separator, SortOption},
 };
 
-use crate::{cli::ExitCode, linkify};
+use crate::linkify;
 
 use super::{
     common::{do_print_search_information, save_session_config},
@@ -71,37 +72,29 @@ pub(crate) async fn rbean_search(
     client: &mut RBClient,
     account: &Config,
     console: &crate::term::Terminal,
-) -> ExitCode {
+) -> color_eyre::Result<()> {
     console.info(cformat!("Searching for <magenta,bold>{}</>...", query));
 
     let results = client
         .search(query, Some(0), limit, sort_options.map(SortOption::from))
-        .await;
+        .await
+        .context("Failed to search")?;
 
-    match results {
-        Ok(results) => {
-            super::common::save_session_config(client, account);
+    super::common::save_session_config(client, account);
 
-            if results.results().is_empty() {
-                console.warn("No results found!");
-                return 0;
-            }
-
-            console.info(cformat!(
-                "Search results (<magenta,bold>{}</> results):",
-                results.results().len()
-            ));
-
-            do_print_search_information(results.results(), false, None);
-
-            0
-        }
-        Err(e) => {
-            console.error(format!("Failed to search: {e}"));
-
-            1
-        }
+    if results.results().is_empty() {
+        console.warn("No results found!");
+        return Ok(());
     }
+
+    console.info(cformat!(
+        "Search results (<magenta,bold>{}</> results):",
+        results.results().len()
+    ));
+
+    do_print_search_information(results.results(), false, None);
+
+    Ok(())
 }
 
 fn format_named_vec(items: Vec<String>) -> String {
@@ -116,7 +109,7 @@ fn format_named_vec(items: Vec<String>) -> String {
     if items.len() > 2 {
         // Author 1, Author 2, and Author 3
         let mut items = items.clone();
-        let last = items.pop().unwrap();
+        let last = items.pop().expect("Should have enough data");
         let first = items.join(", ");
         format!("{first}, and {last}")
     } else {
@@ -131,20 +124,16 @@ pub(crate) async fn rbean_title_info(
     client: &mut RBClient,
     account: &Config,
     console: &crate::term::Terminal,
-) -> ExitCode {
+) -> color_eyre::Result<()> {
     console.info(cformat!(
         "Fetching info for ID <magenta,bold>{}</>...",
         uuid
     ));
 
-    let result = client.get_manga(uuid).await;
-
-    if let Err(e) = result {
-        console.error(format!("Failed to fetch manga: {e}"));
-        return 1;
-    }
-
-    let result = result.unwrap();
+    let result = client
+        .get_manga(uuid)
+        .await
+        .context(format!("Failed to fetch manga with ID: {}", uuid))?;
 
     save_session_config(client, account);
     let mut chapter_meta: Option<tosho_rbean::models::ChapterListResponse> = None;
@@ -155,14 +144,13 @@ pub(crate) async fn rbean_title_info(
             result.title()
         ));
 
-        let fetch_chapters = client.get_chapter_list(uuid).await;
+        chapter_meta = Some(
+            client
+                .get_chapter_list(uuid)
+                .await
+                .context(format!("Failed to fetch chapters for {}", uuid))?,
+        );
 
-        if let Err(e) = fetch_chapters {
-            console.error(format!("Failed to fetch chapters: {e}"));
-            return 1;
-        }
-
-        chapter_meta = Some(fetch_chapters.unwrap());
         save_session_config(client, account);
     }
 
@@ -301,12 +289,11 @@ pub(crate) async fn rbean_title_info(
                 for (volume_uuid, chapters) in sorted_volume_chapters {
                     let volume = chapter_meta.volumes().get(volume_uuid);
 
-                    if let Some(volume) = volume {
-                        let first_last = format!(
-                            "Chapters {}-{}",
-                            chapters.first().unwrap(),
-                            chapters.last().unwrap()
-                        );
+                    if let Some(volume) = volume
+                        && let Some(first_ch) = chapters.first()
+                        && let Some(last_ch) = chapters.last()
+                    {
+                        let first_last = format!("Chapters {}-{}", first_ch, last_ch);
 
                         let vol_url_link = format!("{manga_url}/volumes");
                         let vol_url_linked = linkify!(&vol_url_link, volume.short_title());
@@ -347,5 +334,5 @@ pub(crate) async fn rbean_title_info(
         }
     }
 
-    0
+    Ok(())
 }

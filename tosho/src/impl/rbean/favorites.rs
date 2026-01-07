@@ -1,7 +1,8 @@
+use color_eyre::eyre::Context;
 use color_print::cformat;
 use tosho_rbean::{RBClient, constants::BASE_HOST};
 
-use crate::{cli::ExitCode, linkify};
+use crate::linkify;
 
 use super::common::{do_print_single_information, save_session_config};
 
@@ -9,42 +10,37 @@ pub(crate) async fn rbean_read_list(
     client: &mut RBClient,
     account: &super::config::Config,
     console: &crate::term::Terminal,
-) -> ExitCode {
+) -> color_eyre::Result<()> {
     console.info(cformat!(
         "Getting read list for user <m,s>{}</>",
         account.id
     ));
 
-    let results = client.get_reading_list().await;
+    let results = client
+        .get_reading_list()
+        .await
+        .context("Unable to get your reading list")?;
 
-    match results {
-        Err(e) => {
-            console.error(cformat!("Unable to get read list: {}", e));
-            1
-        }
-        Ok(results) => {
-            save_session_config(client, account);
-            console.info(cformat!("Reading list for <m,s>{}</>", account.id));
+    save_session_config(client, account);
+    console.info(cformat!("Reading list for <m,s>{}</>", account.id));
 
-            for result in results.iter() {
-                let manga = result.manga();
-                do_print_single_information(manga, 0, false, None);
+    for result in results.iter() {
+        let manga = result.manga();
+        do_print_single_information(manga, 0, false, None);
 
-                if let Some(chapter) = result.chapter() {
-                    let linked_ch = format!(
-                        "https://{}/series/{}/read/{}",
-                        BASE_HOST,
-                        manga.slug(),
-                        chapter.uuid()
-                    );
+        if let Some(chapter) = result.chapter() {
+            let linked_ch = format!(
+                "https://{}/series/{}/read/{}",
+                BASE_HOST,
+                manga.slug(),
+                chapter.uuid()
+            );
 
-                    let linked_url = linkify!(linked_ch, &format!("Chapter {}", chapter.name()));
+            let linked_url = linkify!(linked_ch, &format!("Chapter {}", chapter.name()));
 
-                    console.info(cformat!("   <s>{}:</> {}", linked_url, linked_ch));
-                }
-            }
-
-            0
+            console.info(cformat!("   <s>{}:</> {}", linked_url, linked_ch));
         }
     }
+
+    Ok(())
 }
