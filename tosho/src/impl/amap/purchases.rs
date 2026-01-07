@@ -36,25 +36,22 @@ pub(crate) async fn amap_purchase(
             results.len()
         ));
 
-        let consume = match ComicPurchase::from_episode_and_comic(
-            &comic,
-            chapter.info(),
-            &mut ticket_purse,
-        ) {
-            Some(consume) => consume,
-            None => {
-                console.warn(cformat!(
+        let consume =
+            match ComicPurchase::from_episode_and_comic(comic, chapter.info(), &mut ticket_purse) {
+                Some(consume) => consume,
+                None => {
+                    console.warn(cformat!(
                 "Unable to purchase chapter <magenta,bold>{}</> ({}), insufficient point balance!",
                 chapter.info().title(),
                 chapter.info().id()
             ));
-                failed_claimed.push((
-                    chapter.info().clone(),
-                    "Insufficient point balance".to_string(),
-                ));
-                continue;
-            }
-        };
+                    failed_claimed.push((
+                        chapter.info().clone(),
+                        "Insufficient point balance".to_string(),
+                    ));
+                    continue;
+                }
+            };
 
         let ch_view = client.get_comic_viewer(title_id, &consume).await;
 

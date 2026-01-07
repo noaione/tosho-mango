@@ -172,7 +172,7 @@ fn do_chapter_select(
                     flat_chapters
                         .iter()
                         .find(|&ch| ch.chapter_id() == ch_id)
-                        .expect(&format!("Failed to find chapter ID: {}", ch_id))
+                        .unwrap_or_else(|| panic!("Failed to find chapter ID: {}", ch_id))
                         .clone()
                 })
                 .collect();

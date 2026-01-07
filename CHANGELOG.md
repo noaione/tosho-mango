@@ -5,6 +5,8 @@ Starting from Rust port of the project, all changes will be put into this file.
 ## Unreleased
 ### Changes
 - Replace `anyhow` with `color-eyre` for better error reporting.
+- Change all `ExitCode` to use `color_eyre::Result<()>` instead to propagate errors better.
+- Reduce almost all `unwrap()` usage in CLI to use `?` operator instead.
 - `NI`: Fix issue with issue/comic sometimes does not have original publication date.
 
 ### Build

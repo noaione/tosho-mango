@@ -133,7 +133,7 @@ pub(crate) async fn musq_download(
 
     let results = purchase_results.chapters();
     let manga_detail = purchase_results.title();
-    let coin_purse = purchase_results.balance().clone();
+    let coin_purse = *purchase_results.balance();
 
     let results: Vec<&ChapterV2> = results
         .iter()

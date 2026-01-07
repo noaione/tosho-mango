@@ -147,7 +147,7 @@ pub(crate) async fn amap_download(
         }
 
         let consume = match ComicPurchase::from_episode_and_comic(
-            &manga_detail,
+            manga_detail,
             chapter.info(),
             &mut ticket_purse,
         ) {
@@ -223,7 +223,7 @@ pub(crate) async fn amap_download(
     download_chapters.sort_by(|&a, &b| a.info().id().cmp(&b.info().id()));
 
     let title_dir = get_output_directory(&output_dir, title_id, None, true)?;
-    let dump_info = create_chapters_info(&manga_detail);
+    let dump_info = create_chapters_info(manga_detail);
 
     let title_dump_path = title_dir.join("_info.json");
     dump_info

@@ -146,7 +146,7 @@ pub(super) async fn common_purchase_select(
     ));
 
     if no_input {
-        return Ok(AMPurchaseResult::from_result(&result, &balance));
+        return Ok(AMPurchaseResult::from_result(&result, balance));
     }
 
     let select_choices: Vec<ConsoleChoice> = result
@@ -176,7 +176,7 @@ pub(super) async fn common_purchase_select(
         return Ok(AMPurchaseResult::from_result_custom(
             vec![],
             result.info(),
-            &balance,
+            balance,
         ));
     }
 
@@ -195,7 +195,7 @@ pub(super) async fn common_purchase_select(
                 return Ok(AMPurchaseResult::from_result_custom(
                     vec![],
                     result.info(),
-                    &balance,
+                    balance,
                 ));
             }
 
@@ -217,7 +217,7 @@ pub(super) async fn common_purchase_select(
             Ok(AMPurchaseResult::from_result_custom(
                 selected_chapters,
                 result.info(),
-                &balance,
+                balance,
             ))
         }
         None => {

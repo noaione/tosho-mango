@@ -304,7 +304,7 @@ pub(crate) async fn kmkc_download(
     download_chapters.sort_by(|&a, &b| a.id().cmp(&b.id()));
 
     let title_dir = get_output_directory(&output_dir, title_id, None, true)?;
-    let dump_info = create_chapters_info(&title_detail, all_chapters);
+    let dump_info = create_chapters_info(title_detail, all_chapters);
 
     let title_dump_path = title_dir.join("_info.json");
     dump_info
@@ -438,10 +438,7 @@ pub(crate) async fn kmkc_download(
                         {
                             Ok(_) => {}
                             Err(e) => {
-                                cnsl.error(format!(
-                                    "    Failed to download image: {}",
-                                    e.to_string()
-                                ));
+                                cnsl.error(format!("    Failed to download image: {}", e));
                             }
                         }
                     })
@@ -467,7 +464,7 @@ pub(crate) async fn kmkc_download(
                 {
                     Ok(_) => {}
                     Err(e) => {
-                        console.error(format!("    Failed to download image: {}", e.to_string()));
+                        console.error(format!("    Failed to download image: {}", e));
                     }
                 }
             }

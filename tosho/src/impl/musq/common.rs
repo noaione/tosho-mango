@@ -69,7 +69,7 @@ impl MUPurchaseResult {
         Self {
             chapters: result.chapters().to_vec(),
             title: result.clone(),
-            balance: balance.clone(),
+            balance: *balance,
         }
     }
 
@@ -81,7 +81,7 @@ impl MUPurchaseResult {
         Self {
             chapters: episodes,
             title: title.clone(),
-            balance: balance.clone(),
+            balance: *balance,
         }
     }
 }

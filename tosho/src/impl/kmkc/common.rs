@@ -253,7 +253,7 @@ pub(super) async fn common_purchase_select(
                     chapters_entry
                         .iter()
                         .find(|ch| ch.id() == ch_id)
-                        .expect(&format!("Failed to find chapter ID: {}", ch_id))
+                        .unwrap_or_else(|| panic!("Failed to find chapter ID: {}", ch_id))
                         .clone()
                 })
                 .collect();

@@ -162,7 +162,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
                 client
             };
 
-            let early_act = match subcommand {
+            match subcommand {
                 MUSQCommands::Auth {
                     session_id: _,
                     r#type: _,
@@ -270,9 +270,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
 
                     r#impl::musq::manga::musq_search_weekly(weekday, &client, &t).await
                 }
-            };
-
-            early_act
+            }
         }
         ToshoCommands::Kmkc {
             account_id,
@@ -335,7 +333,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
                 client
             };
 
-            let exit_stat = match subcommand {
+            match subcommand {
                 KMKCCommands::Auth {
                     email: _,
                     password: _,
@@ -457,9 +455,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
 
                     r#impl::kmkc::manga::kmkc_search_weekly(weekday, &client, &t).await
                 }
-            };
-
-            exit_stat
+            }
         }
         ToshoCommands::Amap {
             account_id,
@@ -497,7 +493,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
                 client
             };
 
-            let exit_res = match subcommand {
+            match subcommand {
                 AMAPCommands::Auth {
                     email: _,
                     password: _,
@@ -588,9 +584,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
                 AMAPCommands::Search { query } => {
                     r#impl::amap::manga::amap_search(query.as_str(), &client, &config, &t).await
                 }
-            };
-
-            exit_res
+            }
         }
         ToshoCommands::Sjv {
             account_id,
@@ -634,7 +628,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
                 client
             };
 
-            let exit_act = match subcommand {
+            match subcommand {
                 SJVCommands::Auth {
                     email: _,
                     password: _,
@@ -706,9 +700,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
                 SJVCommands::Subscription => {
                     r#impl::sjv::accounts::sjv_account_subscriptions(&client, &config, &t).await
                 }
-            };
-
-            exit_act
+            }
         }
         ToshoCommands::Rbean {
             subcommand,
@@ -753,7 +745,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
 
             client.set_expiry_at(Some(config.expiry));
 
-            let exit_act = match subcommand {
+            match subcommand {
                 RBeanCommands::Auth {
                     email: _,
                     password: _,
@@ -847,9 +839,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
                     )
                     .await
                 }
-            };
-
-            exit_act
+            }
         }
         ToshoCommands::Mplus {
             account_id,
@@ -891,7 +881,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
             }
             .with_app_version(app_version);
 
-            let exit_stat = match subcommand {
+            match subcommand {
                 MPlusCommands::Auth {
                     session_id: _,
                     r#type: _,
@@ -971,9 +961,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
                 MPlusCommands::Search { query } => {
                     r#impl::mplus::manga::mplus_search(query.as_str(), &client, &t).await
                 }
-            };
-
-            exit_stat
+            }
         }
         ToshoCommands::Nids {
             account_id,
@@ -1178,7 +1166,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
                 client
             };
 
-            let exit_act = match subcommand {
+            match subcommand {
                 NIDSCommands::Auth { .. } => Ok(()),
                 NIDSCommands::AuthToken { .. } => Ok(()),
                 NIDSCommands::Account => {
@@ -1269,44 +1257,34 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<()> {
                 NIDSCommands::Revoke => r#impl::nids::accounts::nids_account_revoke(&config, &t),
                 NIDSCommands::SeriesRun { .. } => Ok(()),
                 NIDSCommands::SeriesRuns { .. } => Ok(()),
-            };
-
-            exit_act
+            }
         }
-        ToshoCommands::Tools { subcommand } => {
-            let exit_act = match subcommand {
-                ToolsCommands::AutoMerge {
-                    input_folder,
+        ToshoCommands::Tools { subcommand } => match subcommand {
+            ToolsCommands::AutoMerge {
+                input_folder,
+                skip_last,
+            } => {
+                let config = r#impl::tools::merger::ToolsMergeConfig {
                     skip_last,
-                } => {
-                    let config = r#impl::tools::merger::ToolsMergeConfig {
-                        skip_last,
-                        no_input: true,
-                        ignore_manual_info: true,
-                    };
+                    no_input: true,
+                    ignore_manual_info: true,
+                };
 
-                    r#impl::tools::merger::tools_split_merge(&input_folder, config, &mut t_mut)
-                        .await
-                }
-                ToolsCommands::ClearCache => {
-                    r#impl::tools::cache::tools_clear_cache(&mut t_mut).await
-                }
-                ToolsCommands::Merge {
-                    input_folder,
-                    ignore_manual_merge,
-                } => {
-                    let config = r#impl::tools::merger::ToolsMergeConfig {
-                        ignore_manual_info: ignore_manual_merge,
-                        ..Default::default()
-                    };
+                r#impl::tools::merger::tools_split_merge(&input_folder, config, &mut t_mut).await
+            }
+            ToolsCommands::ClearCache => r#impl::tools::cache::tools_clear_cache(&mut t_mut).await,
+            ToolsCommands::Merge {
+                input_folder,
+                ignore_manual_merge,
+            } => {
+                let config = r#impl::tools::merger::ToolsMergeConfig {
+                    ignore_manual_info: ignore_manual_merge,
+                    ..Default::default()
+                };
 
-                    r#impl::tools::merger::tools_split_merge(&input_folder, config, &mut t_mut)
-                        .await
-                }
-            };
-
-            exit_act
-        }
+                r#impl::tools::merger::tools_split_merge(&input_folder, config, &mut t_mut).await
+            }
+        },
         #[cfg(feature = "with-updater")]
         ToshoCommands::Update => updater::perform_update(&t).await,
     }

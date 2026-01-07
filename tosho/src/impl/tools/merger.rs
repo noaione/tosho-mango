@@ -320,7 +320,7 @@ pub fn manual_chapters_collector(
                         choice
                             .name
                             .parse::<IdDump>()
-                            .expect(&format!("Failed to parse IDs: {}", choice.name))
+                            .unwrap_or_else(|_| panic!("Failed to parse IDs: {}", choice.name))
                     })
                     .collect::<Vec<IdDump>>();
                 if chapter_ids.is_empty() {
@@ -334,7 +334,7 @@ pub fn manual_chapters_collector(
                     .map(|id| {
                         chapter_id_map
                             .remove(id)
-                            .expect(&format!("Failed to remove IDs: {}", id))
+                            .unwrap_or_else(|| panic!("Failed to remove IDs: {}", id))
                             .clone()
                     })
                     .collect::<Vec<ChapterDetailDump>>();
