@@ -461,11 +461,11 @@ pub(crate) async fn kmkc_account_info(
                 acc_info.get_id()
             ));
 
-            console.info(cformat!("  <s>ID:</>: {}", account.id()));
-            console.info(cformat!("  <s>User ID:</>: {}", account.user_id()));
+            console.info(cformat!("  <s>ID</>: {}", account.id()));
+            console.info(cformat!("  <s>User ID</>: {}", account.user_id()));
             let username = account.name().unwrap_or("Unknown");
-            console.info(cformat!("  <s>Username:</>: {}", username));
-            console.info(cformat!("  <s>Email:</>: {}", account.email()));
+            console.info(cformat!("  <s>Username</>: {}", username));
+            console.info(cformat!("  <s>Email</>: {}", account.email()));
             console.info(cformat!("  <s>Registered?</>: {}", account.registered()));
 
             if !account.devices().is_empty() {

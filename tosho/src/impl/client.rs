@@ -64,15 +64,9 @@ pub(crate) fn select_single_account(
             },
             crate::config::ConfigImpl::Mplus(c) => ConsoleChoice {
                 name: c.id.clone(),
-                value: if c.username.is_some() {
-                    format!(
-                        "{} - {} [{}]",
-                        c.id,
-                        c.username.as_ref().unwrap(),
-                        c.r#type().to_name()
-                    )
-                } else {
-                    format!("{} [{}]", c.id, c.r#type().to_name())
+                value: match &c.username {
+                    Some(username) => format!("{} - {} [{}]", c.id, username, c.r#type().to_name()),
+                    None => format!("{} [{}]", c.id, c.r#type().to_name()),
                 },
             },
             crate::config::ConfigImpl::Nids(c) => ConsoleChoice {
