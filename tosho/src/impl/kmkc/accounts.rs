@@ -367,11 +367,15 @@ pub async fn kmkc_account_login_adapt(
                     match account {
                         Ok(account) => {
                             let user_info = client.get_user(account.id()).await.unwrap();
+                            if user_info.hash_key().is_empty() {
+                                console.error("Failed to adapt account: Missing hash key!");
+                                return 1;
+                            }
 
                             console.info(cformat!("Authenticated as <m,s>{}</>", account.email()));
 
                             let mobile_config = KMConfigMobile::new(
-                                account.id().to_string(),
+                                account.user_id().to_string(),
                                 user_info.hash_key(),
                                 platform.try_into().unwrap(),
                             );

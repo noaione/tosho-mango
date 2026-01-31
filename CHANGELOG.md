@@ -6,7 +6,7 @@ Starting from Rust port of the project, all changes will be put into this file.
 ### Changes
 - Replace `anyhow` with `color-eyre` for better error reporting.
 - `NI`: Fix issue with issue/comic sometimes does not have original publication date.
-- `KM`: Fix issue with `login` not working
+- `KM`: Fix issue with `login` and `auth-adapt` not working
 
 ### Build
 - Change `ci` profile `opt-level` to `s` for smaller binary size with auto-vectorization.
