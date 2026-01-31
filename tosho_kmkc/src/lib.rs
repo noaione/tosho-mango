@@ -888,6 +888,20 @@ impl KMClient {
                 .parse()
                 .map_err(|e| make_error!("Failed to parse hash header: {}", e))?,
         );
+        extend_headers.insert(
+            HEADER_PLATFORM,
+            WEB_CONSTANTS
+                .platform_number
+                .to_string()
+                .parse()
+                .map_err(|e| make_error!("Failed to parse extended platform header: {}", e))?,
+        );
+        extend_headers.insert(
+            HEADER_CRAWLER,
+            "false"
+                .parse()
+                .map_err(|e| make_error!("Failed to parse extended crawler header: {}", e))?,
+        );
         let response = client
             .post(format!("{}/web/user/login", BASE_API))
             .form(&req_data)
