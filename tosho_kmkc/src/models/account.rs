@@ -230,4 +230,6 @@ pub struct UserInfoResponse {
     gender: Option<GenderType>,
     /// The user hash key
     hash_key: String,
+    /// The user UUID
+    original_uuid: Option<String>,
 }

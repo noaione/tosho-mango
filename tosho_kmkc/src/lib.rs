@@ -927,6 +927,9 @@ impl KMClient {
             Some(platform) => {
                 // Authenticate as mobile
                 let user_info = km_client.get_user(account.user_id()).await?;
+                if user_info.hash_key().is_empty() {
+                    return Err(make_error!("Failed to get mobile hash key from user info!"));
+                }
 
                 Ok(KMLoginResult {
                     config: KMConfig::Mobile(KMConfigMobile::new(
