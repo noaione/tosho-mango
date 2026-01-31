@@ -135,16 +135,17 @@ pub(crate) fn mplus_accounts(console: &crate::term::Terminal) -> ExitCode {
             console.info(format!("Found {} accounts:", all_configs.len()));
             for (i, c) in all_configs.iter().enumerate() {
                 match c {
-                    crate::config::ConfigImpl::Mplus(c) => {
-                        if c.username.is_some() {
+                    crate::config::ConfigImpl::Mplus(c) => match &c.username {
+                        Some(username) => {
                             console.info(format!(
                                 "{:02}. {} - {} ({})",
                                 i + 1,
                                 c.id,
-                                c.username.as_ref().unwrap(),
+                                username,
                                 c.r#type().to_name()
                             ));
-                        } else {
+                        }
+                        None => {
                             console.info(format!(
                                 "{:02}. {} ({})",
                                 i + 1,
@@ -152,7 +153,7 @@ pub(crate) fn mplus_accounts(console: &crate::term::Terminal) -> ExitCode {
                                 c.r#type().to_name()
                             ));
                         }
-                    }
+                    },
                     _ => unreachable!(),
                 }
             }

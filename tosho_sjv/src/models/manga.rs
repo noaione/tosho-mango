@@ -172,6 +172,7 @@ pub struct MangaDetail {
     total_volumes: u64,
 }
 
+/// Parse imprint with extra handling for undefined value
 fn parse_imprint_extra<'de, D>(d: D) -> Result<MangaImprint, D::Error>
 where
     D: Deserializer<'de>,

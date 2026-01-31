@@ -300,6 +300,7 @@ pub enum TitleRating {
     Unrecognized = -1,
 }
 
+/// Prettify enum name by splitting at uppercase letters and joining with the given separator.
 fn pretty_name_fmt(name: &str, sep: &str) -> String {
     let split_at_upper: Vec<_> = name.match_indices(char::is_uppercase).collect();
     let mut splitted_name: Vec<&str> = vec![];
