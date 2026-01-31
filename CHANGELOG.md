@@ -3,6 +3,10 @@
 Starting from Rust port of the project, all changes will be put into this file.
 
 ## Unreleased
+
+Nothing yet!
+
+## [0.9.2] (2026-01-31)
 ### Changes
 - Replace `anyhow` with `color-eyre` for better error reporting.
 - `NI`: Fix issue with issue/comic sometimes does not have original publication date.
