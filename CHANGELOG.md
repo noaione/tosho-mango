@@ -3,8 +3,10 @@
 Starting from Rust port of the project, all changes will be put into this file.
 
 ## Unreleased
-
-Nothing yet!
+### New Features
+- All sources: Add `--only-check-folder` option to `autodownload`
+  - This will only check if the chapter folder exists, if it does, it will skip downloading that chapter.
+  - This is useful for cronjob or scheduled task that run periodically to only download new chapters.
 
 ## [0.9.2] (2026-01-31)
 ### Changes
