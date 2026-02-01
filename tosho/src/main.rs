@@ -768,6 +768,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<ExitCode> {
                     quality,
                     parallel,
                     threads,
+                    only_check_folder,
                 } => {
                     let dl_config = RBDownloadConfigCli {
                         no_input: true,
@@ -775,6 +776,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<ExitCode> {
                         parallel,
                         quality,
                         threads: max_threads(threads),
+                        only_check_folder,
                         ..Default::default()
                     };
                     r#impl::rbean::download::rbean_download(

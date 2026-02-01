@@ -33,6 +33,9 @@ pub(crate) enum RBeanCommands {
     AutoDownload {
         /// UUID of the title
         uuid: String,
+        /// Skip folder contents checking and ONLY check for folder existence
+        #[arg(short = 'f', long)]
+        only_check_folder: bool,
         /// Output directory to use
         #[arg(short = 'o', long = "output", default_value = None)]
         output: Option<PathBuf>,

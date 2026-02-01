@@ -15,7 +15,7 @@ use crate::{
     cli::ExitCode,
     r#impl::{
         clean_filename,
-        common::check_downloaded_image_count,
+        common::{check_chapter_folder_existence, check_downloaded_image_count},
         models::{ChapterDetailDump, MangaDetailDump},
     },
     term::{ConsoleChoice, Terminal},
@@ -123,6 +123,9 @@ pub(crate) struct RBDownloadConfigCli {
     pub(crate) parallel: bool,
     // Threads to use for parallel download
     pub(crate) threads: usize,
+
+    /// Auto download ignore any images checking but just check for folder existence
+    pub(crate) only_check_folder: bool,
 }
 
 fn create_chapters_info(title: &Manga, chapters: &[Chapter]) -> MangaDetailDump {
@@ -461,7 +464,16 @@ pub(crate) async fn rbean_download(
         let view_req = view_req.unwrap();
         save_session_config(client, account);
 
-        if let Some(count) = check_downloaded_image_count(&image_dir, image_ext)
+        if dl_config.only_check_folder {
+            if check_chapter_folder_existence(&image_dir) {
+                console.info(cformat!(
+                    "   Chapter <m,s>{}</> (<s>{}</>) folder exists, skipping",
+                    chapter.formatted_title(),
+                    chapter.uuid()
+                ));
+                continue;
+            }
+        } else if let Some(count) = check_downloaded_image_count(&image_dir, image_ext)
             && count >= view_req.data().pages().len()
         {
             console.warn(cformat!(
