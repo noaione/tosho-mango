@@ -10,7 +10,7 @@ use tosho_amap::{
 use crate::{
     cli::ExitCode,
     r#impl::{
-        common::check_downloaded_image_count,
+        common::{check_chapter_folder_existence, check_downloaded_image_count},
         models::{ChapterDetailDump, MangaDetailDump},
     },
 };
@@ -37,6 +37,9 @@ pub(crate) struct AMDownloadCliConfig {
     // Ticket related
     pub(crate) no_premium: bool,
     pub(crate) no_purchased: bool,
+
+    /// Auto download ignore any images checking but just check for folder existence
+    pub(crate) only_check_folder: bool,
 }
 
 fn create_chapters_info(manga_detail: &ComicInfo) -> MangaDetailDump {
@@ -272,7 +275,17 @@ pub(crate) async fn amap_download(
 
                 let ch_pages = ch_view.info().pages();
                 let ch_dir = get_output_directory(&output_dir, title_id, Some(info.id()), false);
-                if let Some(count) = check_downloaded_image_count(&ch_dir, "jpg")
+
+                if dl_config.only_check_folder {
+                    if check_chapter_folder_existence(&ch_dir) {
+                        console.info(cformat!(
+                            "   Chapter <m,s>{}</> (<s>{}</>) folder exists, skipping",
+                            info.title(),
+                            info.id()
+                        ));
+                        continue;
+                    }
+                } else if let Some(count) = check_downloaded_image_count(&ch_dir, "jpg")
                     && count >= ch_pages.len()
                 {
                     console.warn(cformat!(

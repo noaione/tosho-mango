@@ -508,6 +508,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<ExitCode> {
                     no_paid_ticket,
                     no_premium_ticket,
                     output,
+                    only_check_folder,
                 } => {
                     let dl_config = AMDownloadCliConfig {
                         auto_purchase: !no_purchase,
@@ -516,6 +517,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<ExitCode> {
                         end_at: end_until,
                         no_premium: no_paid_ticket,
                         no_purchased: no_premium_ticket,
+                        only_check_folder,
                         ..Default::default()
                     };
 
