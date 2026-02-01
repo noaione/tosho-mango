@@ -902,12 +902,14 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<ExitCode> {
                     end_until,
                     quality,
                     output,
+                    only_check_folder,
                 } => {
                     let mplus_config = MPDownloadCliConfig {
                         no_input: true,
                         start_from,
                         end_at: end_until,
                         quality,
+                        only_check_folder,
                         ..Default::default()
                     };
 

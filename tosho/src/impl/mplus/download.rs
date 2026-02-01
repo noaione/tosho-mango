@@ -6,7 +6,7 @@ use color_print::cformat;
 use tosho_mplus::proto::{Chapter, ChapterPage, TitleDetail};
 use tosho_mplus::{APIResponse, ImageQuality, MPClient};
 
-use crate::r#impl::common::check_downloaded_image_count;
+use crate::r#impl::common::{check_chapter_folder_existence, check_downloaded_image_count};
 use crate::term::Terminal;
 use crate::{
     cli::ExitCode,
@@ -85,6 +85,9 @@ pub(crate) struct MPDownloadCliConfig {
     ///
     /// Used only when `no_input` is `true`.
     pub(crate) end_at: Option<u64>,
+
+    /// Auto download ignore any images checking but just check for folder existence
+    pub(crate) only_check_folder: bool,
 }
 
 fn create_chapters_info(title: &TitleDetail) -> MangaDetailDump {
@@ -343,7 +346,16 @@ pub(crate) async fn mplus_download(
                 let image_dir =
                     get_output_directory(&output_dir, title_id, Some(chapter.chapter_id()), false);
 
-                if let Some(count) = check_downloaded_image_count(&image_dir, "webp")
+                if dl_config.only_check_folder {
+                    if check_chapter_folder_existence(&image_dir) {
+                        console.info(cformat!(
+                            "   Chapter <m,s>{}</> (<s>{}</>) folder exists, skipping",
+                            chapter.as_chapter_title(),
+                            chapter.chapter_id()
+                        ));
+                        continue;
+                    }
+                } else if let Some(count) = check_downloaded_image_count(&image_dir, "webp")
                     && count >= chapter_images.len()
                 {
                     console.warn(cformat!(
