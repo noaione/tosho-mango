@@ -8,7 +8,7 @@ use tosho_kmkc::{
     models::{EpisodeNode, EpisodeViewerResponse, TicketInfoType, TitleNode},
 };
 
-use crate::r#impl::common::check_downloaded_image_count;
+use crate::r#impl::common::{check_chapter_folder_existence, check_downloaded_image_count};
 use crate::term::Terminal;
 use crate::{
     cli::ExitCode,
@@ -43,6 +43,9 @@ pub(crate) struct KMDownloadCliConfig {
 
     pub(crate) no_ticket: bool,
     pub(crate) no_point: bool,
+
+    /// Auto download ignore any images checking but just check for folder existence
+    pub(crate) only_check_folder: bool,
 }
 
 fn create_chapters_info(title: &TitleNode, chapters: &[EpisodeNode]) -> MangaDetailDump {
@@ -317,55 +320,55 @@ pub(crate) async fn kmkc_download(
                 let image_dir =
                     get_output_directory(&output_dir, title_id, Some(chapter.id()), false);
 
-                // precheck
-                match &viewer_info {
-                    EpisodeViewerResponse::Web(web) => {
-                        if web.pages().is_empty() {
-                            console.warn(cformat!(
-                                "   Chapter <m,s>{}</> (<s>{}</>) has no pages, skipping",
-                                chapter.title(),
-                                chapter.id()
-                            ));
-                            continue;
-                        }
-
-                        if let Some(count) = check_downloaded_image_count(&image_dir, "png")
-                            && count <= web.pages().len()
-                        {
-                            console.warn(cformat!(
-                                "   Chapter <m,s>{}</> (<s>{}</>) already downloaded, skipping",
-                                chapter.title(),
-                                chapter.id()
-                            ));
-                            continue;
-                        }
-
-                        if console.is_debug() {
-                            console.log(format!("    Seed: {}", web.scramble_seed()));
-                        }
-                    }
-                    EpisodeViewerResponse::Mobile(mobile) => {
-                        if mobile.pages().is_empty() {
-                            console.warn(cformat!(
-                                "   Chapter <m,s>{}</> (<s>{}</>) has no pages, skipping",
-                                chapter.title(),
-                                chapter.id()
-                            ));
-                            continue;
-                        }
-
-                        if let Some(count) = check_downloaded_image_count(&image_dir, "jpg")
-                            && count >= mobile.pages().len()
-                        {
-                            console.warn(cformat!(
-                                "   Chapter <m,s>{}</> (<s>{}</>) already downloaded, skipping",
-                                chapter.title(),
-                                chapter.id()
-                            ));
-                            continue;
-                        }
-                    }
+                let scramble_seed = match &viewer_info {
+                    EpisodeViewerResponse::Mobile(mob) => mob.scramble_seed(),
+                    EpisodeViewerResponse::Web(web) => Some(web.scramble_seed()),
                 };
+                let force_extensions = match scramble_seed {
+                    Some(_) => "png",
+                    None => "jpg",
+                };
+
+                if let Some(seed) = scramble_seed
+                    && console.is_debug()
+                {
+                    console.log(format!("    Seed: {}", seed));
+                }
+
+                // precheck
+                let total_count = match &viewer_info {
+                    EpisodeViewerResponse::Web(web) => web.pages().len(),
+                    EpisodeViewerResponse::Mobile(mobile) => mobile.pages().len(),
+                };
+
+                if total_count == 0 {
+                    console.warn(cformat!(
+                        "   Chapter <m,s>{}</> (<s>{}</>) has no pages, skipping",
+                        chapter.title(),
+                        chapter.id()
+                    ));
+                    continue;
+                }
+
+                if dl_config.only_check_folder {
+                    if check_chapter_folder_existence(&image_dir) {
+                        console.info(cformat!(
+                            "   Chapter <m,s>{}</> (<s>{}</>) folder exists, skipping",
+                            chapter.title(),
+                            chapter.id()
+                        ));
+                        continue;
+                    }
+                } else if let Some(count) = check_downloaded_image_count(&image_dir, "jpg")
+                    && count >= total_count
+                {
+                    console.warn(cformat!(
+                        "   Chapter <m,s>{}</> (<s>{}</>) already downloaded, skipping",
+                        chapter.title(),
+                        chapter.id()
+                    ));
+                    continue;
+                }
 
                 // create dir
                 std::fs::create_dir_all(&image_dir).unwrap();
@@ -376,14 +379,6 @@ pub(crate) async fn kmkc_download(
                         .iter()
                         .map(|p| p.into())
                         .collect::<Vec<tosho_kmkc::models::ImagePageNode>>(),
-                };
-                let scramble_seed = match &viewer_info {
-                    EpisodeViewerResponse::Mobile(mob) => mob.scramble_seed(),
-                    EpisodeViewerResponse::Web(web) => Some(web.scramble_seed()),
-                };
-                let force_extensions = match scramble_seed {
-                    Some(_) => "png",
-                    None => "jpg",
                 };
 
                 let total_image_count = image_blocks.len() as u64;

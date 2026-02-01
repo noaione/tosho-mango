@@ -39,3 +39,17 @@ pub(super) fn check_downloaded_image_count(image_dir: &PathBuf, extension: &str)
 
     Some(count)
 }
+
+pub(super) fn check_chapter_folder_existence(image_dir: &std::path::Path) -> bool {
+    // check if dir exist
+    if !image_dir.exists() {
+        return false;
+    }
+
+    // check if dir is dir
+    if !image_dir.is_dir() {
+        return false;
+    }
+
+    true
+}

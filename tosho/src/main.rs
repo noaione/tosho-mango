@@ -354,6 +354,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<ExitCode> {
                     output,
                     parallel,
                     threads,
+                    only_check_folder,
                 } => {
                     let main_config = KMDownloadCliConfig {
                         auto_purchase: !no_purchase,
@@ -364,6 +365,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<ExitCode> {
                         no_ticket,
                         parallel,
                         threads: max_threads(threads),
+                        only_check_folder,
                         ..Default::default()
                     };
 
