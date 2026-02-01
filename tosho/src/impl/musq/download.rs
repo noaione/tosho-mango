@@ -11,7 +11,7 @@ use tosho_musq::{
 use crate::{
     cli::ExitCode,
     r#impl::{
-        common::check_downloaded_image_count,
+        common::{check_chapter_folder_existence, check_downloaded_image_count},
         models::{ChapterDetailDump, MangaDetailDump},
     },
 };
@@ -81,6 +81,9 @@ pub(crate) struct MUDownloadCliConfig {
 
     pub(crate) no_paid_point: bool,
     pub(crate) no_xp_point: bool,
+
+    /// Auto download ignore any images checking but just check for folder existence
+    pub(crate) only_check_folder: bool,
 }
 
 fn create_chapters_info(manga_detail: MangaDetailV2) -> MangaDetailDump {
@@ -361,7 +364,17 @@ pub(crate) async fn musq_download(
                 }
 
                 let ch_dir = get_output_directory(&output_dir, title_id, Some(chapter.id()), false);
-                if let Some(count) = check_downloaded_image_count(&ch_dir, "avif")
+
+                if dl_config.only_check_folder {
+                    if check_chapter_folder_existence(&ch_dir) {
+                        console.info(cformat!(
+                            "   Chapter <m,s>{}</> (<s>{}</>) folder exists, skipping",
+                            chapter.title(),
+                            chapter.id()
+                        ));
+                        continue;
+                    }
+                } else if let Some(count) = check_downloaded_image_count(&ch_dir, "avif")
                     && count >= image_blocks.len()
                 {
                     console.warn(cformat!(

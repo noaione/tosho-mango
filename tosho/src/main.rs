@@ -177,6 +177,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<ExitCode> {
                     no_xp_coins,
                     quality,
                     output,
+                    only_check_folder,
                 } => {
                     let mu_config = MUDownloadCliConfig {
                         auto_purchase: !no_purchase,
@@ -186,6 +187,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<ExitCode> {
                         end_at: end_until,
                         no_paid_point: no_paid_coins,
                         no_xp_point: no_xp_coins,
+                        only_check_folder,
                         ..Default::default()
                     };
 

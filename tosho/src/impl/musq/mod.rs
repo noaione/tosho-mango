@@ -35,6 +35,9 @@ pub(crate) enum MUSQCommands {
         /// Disable the auto purchase feature and only download free/purchased chapter(s).
         #[arg(short = 'n', long)]
         no_purchase: bool,
+        /// Skip folder contents checking and ONLY check for folder existence
+        #[arg(short = 'f', long)]
+        only_check_folder: bool,
         /// Specify the starting chapter ID to download
         #[arg(short = 's', long, default_value = None)]
         start_from: Option<u64>,
