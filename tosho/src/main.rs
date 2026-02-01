@@ -648,6 +648,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<ExitCode> {
                     output,
                     parallel,
                     threads,
+                    only_check_folder,
                 } => {
                     let dl_config = SJDownloadCliConfig {
                         start_from,
@@ -655,6 +656,7 @@ async fn entrypoint(cli: ToshoCli) -> color_eyre::Result<ExitCode> {
                         no_input: true,
                         parallel,
                         threads: max_threads(threads),
+                        only_check_folder,
                         ..Default::default()
                     };
 

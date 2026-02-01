@@ -7,7 +7,7 @@ use tosho_sjv::{
     models::{AccountSubscription, MangaChapterDetail, MangaDetail, SubscriptionType},
 };
 
-use crate::r#impl::common::check_downloaded_image_count;
+use crate::r#impl::common::{check_chapter_folder_existence, check_downloaded_image_count};
 use crate::{
     cli::ExitCode,
     r#impl::{
@@ -39,6 +39,9 @@ pub(crate) struct SJDownloadCliConfig {
     ///
     /// Used only when `no_input` is `true`.
     pub(crate) end_at: Option<u32>,
+
+    /// Auto download ignore any images checking but just check for folder existence
+    pub(crate) only_check_folder: bool,
 }
 
 fn create_chapters_info(title: &MangaDetail, chapters: &[MangaChapterDetail]) -> MangaDetailDump {
@@ -343,7 +346,16 @@ pub(crate) async fn sjv_download(
                     _ => "jpg",
                 };
 
-                if let Some(count) = check_downloaded_image_count(&image_dir, image_ext)
+                if dl_config.only_check_folder {
+                    if check_chapter_folder_existence(&image_dir) {
+                        console.info(cformat!(
+                            "   Chapter <m,s>{}</> (<s>{}</>) folder exists, skipping",
+                            chapter.pretty_title(),
+                            chapter.id()
+                        ));
+                        continue;
+                    }
+                } else if let Some(count) = check_downloaded_image_count(&image_dir, image_ext)
                     && count >= chapter.pages() as usize
                 {
                     console.warn(cformat!(
