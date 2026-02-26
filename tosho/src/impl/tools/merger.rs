@@ -61,9 +61,6 @@ fn safe_float(input: &str) -> Option<f64> {
 #[derive(Clone)]
 struct NumberValidation;
 
-#[derive(Clone)]
-struct IntValidation;
-
 impl StringValidator for NumberValidation {
     fn validate(
         &self,
@@ -76,22 +73,6 @@ impl StringValidator for NumberValidation {
             }
         }
 
-        // try u64
-        if safe_int(input).is_some() {
-            return Ok(inquire::validator::Validation::Valid);
-        }
-
-        Ok(inquire::validator::Validation::Invalid(
-            "Invalid number (not a float or int)".into(),
-        ))
-    }
-}
-
-impl StringValidator for IntValidation {
-    fn validate(
-        &self,
-        input: &str,
-    ) -> Result<inquire::validator::Validation, inquire::CustomUserError> {
         // try u64
         if safe_int(input).is_some() {
             return Ok(inquire::validator::Validation::Valid);
@@ -232,6 +213,19 @@ pub fn auto_chapters_collector(
     Some(chapters_mapping)
 }
 
+fn format_chapter_number(ch_number: &str) -> Option<String> {
+    if ch_number.contains('.')
+        && let Some((base, floaty)) = ch_number.split_once('.')
+    {
+        let base = base.trim().parse::<u64>().ok()?;
+        let floaty = floaty.trim().parse::<u64>().ok()?;
+        Some(format!("c{base:03}.{floaty}"))
+    } else {
+        let base = ch_number.trim().parse::<u64>().ok()?;
+        Some(format!("c{base:03}"))
+    }
+}
+
 pub fn manual_chapters_collector(
     mut chapters_dump: Vec<ChapterDetailDump>,
     console: &mut crate::term::Terminal,
@@ -256,7 +250,7 @@ pub fn manual_chapters_collector(
     loop {
         let ch_number = Text::new("Chapter number")
             .with_validator(required!())
-            .with_validator(IntValidation)
+            .with_validator(NumberValidation)
             .prompt();
 
         let ch_number = match ch_number {
@@ -279,9 +273,9 @@ pub fn manual_chapters_collector(
             },
         };
 
-        let ch_number = match ch_number.parse::<u64>() {
-            Ok(ch_number) => ch_number,
-            Err(_) => {
+        let ch_number = match format_chapter_number(&ch_number) {
+            Some(parsed) => parsed,
+            None => {
                 console.error("  Failed to parse chapter number.");
                 continue;
             }
@@ -321,12 +315,14 @@ pub fn manual_chapters_collector(
                     continue;
                 }
                 selected_chapters.extend(chapter_ids.clone());
-                let name = format!("c{ch_number:03}");
                 let remapped = chapter_ids
                     .iter()
                     .map(|id| chapter_id_map.remove(id).unwrap().clone())
                     .collect::<Vec<ChapterDetailDump>>();
-                chapters_mapping.entry(name).or_default().extend(remapped);
+                chapters_mapping
+                    .entry(ch_number)
+                    .or_default()
+                    .extend(remapped);
             }
             None => {
                 console.warn("Aborted.");
