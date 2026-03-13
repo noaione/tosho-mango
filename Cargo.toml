@@ -24,25 +24,25 @@ rust-version = "1.88.0"
 
 [workspace.dependencies]
 # Tokio related
-tokio = { version = "1.49.0", features = ["full"] }
-futures-util = "0.3.31"
+tokio = { version = "1.50.0", features = ["full"] }
+futures-util = "0.3.32"
 
 # JSON/Protobuf related
 serde = { version = "1.0.228", features = ["derive"] }
-serde_json = "1.0.148"
+serde_json = "1.0.149"
 prost = "0.14.1"
 
 # Utilities
 color-eyre = { version = "0.6.5", default-features = false, features = ["track-caller"] }
 base64 = "0.22.1"
 sha2 = "0.10.9"
-time = "0.3.44"
-chrono = { version = "0.4.42", default-features = false, features = ["clock", "std"] }
+time = "0.3.47"
+chrono = { version = "0.4.44", default-features = false, features = ["clock", "std"] }
 rand = "0.9.2"
 md-5 = "0.10.6"
-uuid = { version = "1.19.0", features = ["v4", "fast-rng"] }
+uuid = { version = "=1.20.0", features = ["v4", "fast-rng"] }
 num-format = "0.4.4"
-regex = "1.12.2"
+regex = "1.12.3"
 aho-corasick = "1.1.4"
 secular = "1.0.1"
 
@@ -52,7 +52,7 @@ reqwest_cookie_store = "0.9.0"
 urlencoding = "2.1.3"
 
 # Image
-image = { version = "0.25.9", default-features = false, features = ["jpeg", "png"] }
+image = { version = "0.25.10", default-features = false, features = ["jpeg", "png"] }
 kamadak-exif = "0.6.1"
 
 # Filesystem related
@@ -65,11 +65,11 @@ aes = "0.8.4"
 cbc = "0.1.2"
 
 # CLI related
-clap = { version = "4.5.54", features = ["derive"] }
-anstream = "0.6.21"
+clap = { version = "4.6.0", features = ["derive"] }
+anstream = "1.0.0"
 color-print = "0.3.7"
-inquire = "0.9.1"
-indicatif = "0.18.3"
+inquire = "0.9.4"
+indicatif = "0.18.4"
 supports-hyperlinks = "3.2.0"
 self_update = { version = "0.42.0", default-features = false, features = ["rustls", "archive-tar", "archive-zip", "compression-flate2", "compression-zip-deflate"] }
 
