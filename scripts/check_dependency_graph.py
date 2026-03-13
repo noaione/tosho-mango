@@ -8,8 +8,8 @@ ROOT_DIR = CURRENT_DIR.parent
 cargo_lock = toml.load(ROOT_DIR / "Cargo.lock")
 
 
-def walk_up_deps(package: str, version: str):
-    deps_name = f"{package} {version}"
+def walk_up_deps(package_name: str, version: str):
+    deps_name = f"{package_name} {version}"
     package_rows = []
     for package in cargo_lock["package"]:
         if "dependencies" not in package:

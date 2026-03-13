@@ -3,7 +3,7 @@ import json
 import subprocess as sp
 import time
 from pathlib import Path
-from typing import Any, List, Tuple
+from typing import Any, List
 
 import requests
 import toml
@@ -54,7 +54,7 @@ ALL_CRATES = get_all_crate_members(ROOT_DIR / "Cargo.toml")
 
 print("Found:", ALL_CRATES)
 
-PUBLISH_CRATE: List[Tuple[str, str]] = []
+PUBLISH_CRATE: List[str] = []
 for crate in ALL_CRATES:
     crate_crate_toml = ROOT_DIR / crate / "Cargo.toml"
 
