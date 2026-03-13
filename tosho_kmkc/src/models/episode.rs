@@ -13,7 +13,7 @@ use super::{EpisodeBadge, FavoriteStatus, IntBool, TitleShare};
 pub struct EpisodeNode {
     /// The episode ID.
     #[serde(rename = "episode_id")]
-    id: i32,
+    id: u32,
     /// The episode title.
     #[serde(rename = "episode_name")]
     title: String,
@@ -33,7 +33,7 @@ pub struct EpisodeNode {
     #[copyable]
     ticket_rental: IntBool,
     /// The title ID associated with the episode.
-    title_id: i32,
+    title_id: u32,
     /// The episode start time or release time.
     #[serde(with = "super::datetime")]
     #[copyable]
@@ -214,12 +214,27 @@ impl ImagePageNodeStr {
     }
 }
 
+/// The scramble seed for the episode
+///
+/// There is two format that is used
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum ScrambleSeed {
+    /// The first implementation, this seed is already in u32 format so it can just be used directly.
+    Seed(u32),
+    /// The second implementation, this seed is in string format and need to be derived
+    /// from the title ID and episode ID using a specific algorithm.
+    ///
+    /// This would also result in the same seed as the first implementation.
+    Derived(String),
+}
+
 /// Represents the episode view response for mobile viewer.
 #[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
 pub struct MobileEpisodeViewerResponse {
     /// The episode ID.
     #[serde(rename = "episode_id")]
-    id: i32,
+    id: u32,
     /// The list of pages.
     #[serde(rename = "page_list")]
     pages: Vec<ImagePageNode>,
@@ -234,7 +249,7 @@ pub struct MobileEpisodeViewerResponse {
     prev_id: Option<i32>,
     /// The scramble seed for the epsiode
     #[serde(default)]
-    scramble_seed: Option<u32>,
+    scramble_seed: Option<ScrambleSeed>,
 }
 
 /// Represents the episode view response for web viewer.
@@ -242,16 +257,16 @@ pub struct MobileEpisodeViewerResponse {
 pub struct WebEpisodeViewerResponse {
     /// The episode ID.
     #[serde(rename = "episode_id")]
-    id: i32,
+    id: u32,
     /// The list of pages.
     #[serde(rename = "page_list")]
     pages: Vec<ImagePageNodeStr>,
     /// The bonus point of the episode.
     bonus_point: i32,
     /// The title ID associated with the episode.
-    title_id: i32,
+    title_id: u32,
     /// The scramble seed for the epsiode
-    scramble_seed: u32,
+    scramble_seed: ScrambleSeed,
 }
 
 /// Represents the episode view response.

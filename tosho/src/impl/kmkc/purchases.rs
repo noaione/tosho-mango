@@ -11,7 +11,7 @@ use crate::{cli::ExitCode, linkify};
 use super::{common::common_purchase_select, config::Config};
 
 pub(crate) async fn kmkc_purchase(
-    title_id: i32,
+    title_id: u32,
     client: &KMClient,
     account: &Config,
     console: &mut crate::term::Terminal,
@@ -235,7 +235,7 @@ pub(crate) async fn kmkc_purchased(
 }
 
 pub(crate) async fn kmkc_purchase_precalculate(
-    title_id: i32,
+    title_id: u32,
     client: &KMClient,
     account: &Config,
     console: &mut crate::term::Terminal,

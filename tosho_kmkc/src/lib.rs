@@ -31,6 +31,8 @@ use tosho_common::{
 };
 use tosho_macros::AutoGetter;
 
+use crate::{constants::SECURE_BASE_API, models::ScrambleSeed};
+
 /// Login result for the API.
 ///
 /// This will return either a [`KMConfig::Web`] or [`KMConfig::Mobile`] depending on the login type.
@@ -205,11 +207,18 @@ impl KMClient {
         data: Option<HashMap<String, String>>,
         params: Option<HashMap<String, String>>,
         headers: Option<reqwest::header::HeaderMap>,
+        is_secure: bool,
     ) -> ToshoResult<T>
     where
         T: serde::de::DeserializeOwned,
     {
-        let endpoint = format!("{}{}", BASE_API, endpoint);
+        let base_api_url = if is_secure && self.constants.support_secure {
+            SECURE_BASE_API
+        } else {
+            BASE_API
+        };
+
+        let endpoint = format!("{}{}", base_api_url, endpoint);
         let mut extend_headers = match headers {
             Some(headers) => headers,
             None => reqwest::header::HeaderMap::new(),
@@ -304,7 +313,7 @@ impl KMClient {
     ///
     /// # Arguments
     /// * `episodes` - The list of episode IDs to get
-    pub async fn get_episodes(&self, episodes: Vec<i32>) -> ToshoResult<Vec<EpisodeNode>> {
+    pub async fn get_episodes(&self, episodes: Vec<u32>) -> ToshoResult<Vec<EpisodeNode>> {
         let mut data = HashMap::new();
         let episode_str = episodes
             .iter()
@@ -319,6 +328,7 @@ impl KMClient {
                 Some(data),
                 None,
                 None,
+                self.constants.support_secure,
             )
             .await?;
 
@@ -329,7 +339,7 @@ impl KMClient {
     ///
     /// # Arguments
     /// * `titles` - The list of title IDs to get
-    pub async fn get_titles(&self, titles: Vec<i32>) -> ToshoResult<Vec<TitleNode>> {
+    pub async fn get_titles(&self, titles: Vec<u32>) -> ToshoResult<Vec<TitleNode>> {
         let mut data = HashMap::new();
         let title_str = titles
             .iter()
@@ -344,6 +354,7 @@ impl KMClient {
                 None,
                 Some(data),
                 None,
+                false,
             )
             .await?;
 
@@ -375,6 +386,7 @@ impl KMClient {
                         None,
                         Some(params),
                         None,
+                        self.constants.support_secure,
                     )
                     .await?;
 
@@ -388,6 +400,9 @@ impl KMClient {
                 if let Some(magazine_id) = episode.magazine_id() {
                     params.insert("magazine_id".to_string(), magazine_id.to_string());
                 }
+                params.insert("challenge".to_string(), "".to_string());
+                params.insert("token".to_string(), "".to_string());
+                params.insert("nonce".to_string(), "".to_string());
 
                 let response = self
                     .request::<MobileEpisodeViewerResponse>(
@@ -396,6 +411,7 @@ impl KMClient {
                         None,
                         Some(params),
                         None,
+                        self.constants.support_secure,
                     )
                     .await?;
 
@@ -425,6 +441,7 @@ impl KMClient {
                 None,
                 Some(params),
                 None,
+                self.constants.support_secure,
             )
             .await?;
 
@@ -435,7 +452,7 @@ impl KMClient {
     ///
     /// # Arguments
     /// * `title_id` - The title ID to get the ticket for
-    pub async fn get_title_ticket(&self, title_id: i32) -> ToshoResult<TitleTicketListNode> {
+    pub async fn get_title_ticket(&self, title_id: u32) -> ToshoResult<TitleTicketListNode> {
         let mut params = HashMap::new();
         params.insert("title_id_list".to_string(), title_id.to_string());
 
@@ -446,6 +463,7 @@ impl KMClient {
                 None,
                 Some(params),
                 None,
+                self.constants.support_secure,
             )
             .await?;
 
@@ -479,6 +497,11 @@ impl KMClient {
         let mut data = HashMap::new();
         data.insert("episode_id".to_owned(), episode.id().to_string());
         data.insert("check_point".to_owned(), episode.point().to_string());
+        if self.constants.support_secure {
+            data.insert("token".to_string(), "".to_string());
+            data.insert("nonce".to_string(), "".to_string());
+            data.insert("challenge".to_string(), "".to_string());
+        }
 
         let response = self
             .request::<EpisodePurchaseResponse>(
@@ -487,6 +510,7 @@ impl KMClient {
                 Some(data),
                 None,
                 None,
+                self.constants.support_secure,
             )
             .await?;
 
@@ -533,6 +557,11 @@ impl KMClient {
         data.insert("episode_id_list".to_owned(), episode_ids.join(","));
         data.insert("paid_point".to_owned(), paid_point.to_string());
         data.insert("point_back".to_owned(), bonus_point.to_string());
+        if self.constants.support_secure {
+            data.insert("token".to_string(), "".to_string());
+            data.insert("nonce".to_string(), "".to_string());
+            data.insert("challenge".to_string(), "".to_string());
+        }
 
         let response = self
             .request::<BulkEpisodePurchaseResponse>(
@@ -541,6 +570,7 @@ impl KMClient {
                 Some(data),
                 None,
                 None,
+                self.constants.support_secure,
             )
             .await?;
 
@@ -559,7 +589,7 @@ impl KMClient {
     /// * `ticket` - The ticket to use to claim the episode
     pub async fn claim_episode_with_ticket(
         &self,
-        episode_id: i32,
+        episode_id: u32,
         ticket: &TicketInfoType,
     ) -> ToshoResult<(StatusResponse, bool)> {
         let mut data = HashMap::new();
@@ -585,6 +615,7 @@ impl KMClient {
                 Some(data),
                 None,
                 None,
+                false,
             )
             .await?;
 
@@ -594,7 +625,14 @@ impl KMClient {
     /// Get the user's point.
     pub async fn get_user_point(&self) -> ToshoResult<UserPointResponse> {
         let response = self
-            .request::<UserPointResponse>(reqwest::Method::GET, "/account/point", None, None, None)
+            .request::<UserPointResponse>(
+                reqwest::Method::GET,
+                "/account/point",
+                None,
+                None,
+                None,
+                false,
+            )
             .await?;
 
         Ok(response)
@@ -622,6 +660,7 @@ impl KMClient {
                 None,
                 Some(params),
                 None,
+                false,
             )
             .await?;
 
@@ -631,7 +670,14 @@ impl KMClient {
     /// Get the weekly ranking/list.
     pub async fn get_weekly(&self) -> ToshoResult<WeeklyListResponse> {
         let response = self
-            .request::<WeeklyListResponse>(reqwest::Method::GET, "/title/weekly", None, None, None)
+            .request::<WeeklyListResponse>(
+                reqwest::Method::GET,
+                "/title/weekly",
+                None,
+                None,
+                None,
+                false,
+            )
             .await?;
 
         Ok(response)
@@ -640,7 +686,7 @@ impl KMClient {
     /// Get the current user's account information.
     pub async fn get_account(&self) -> ToshoResult<UserAccount> {
         let response = self
-            .request::<AccountResponse>(reqwest::Method::GET, "/account", None, None, None)
+            .request::<AccountResponse>(reqwest::Method::GET, "/account", None, None, None, false)
             .await?;
 
         Ok(response.account().clone())
@@ -655,7 +701,14 @@ impl KMClient {
         params.insert("user_id".to_owned(), user_id.to_string());
 
         let response = self
-            .request::<UserInfoResponse>(reqwest::Method::GET, "/user", None, Some(params), None)
+            .request::<UserInfoResponse>(
+                reqwest::Method::GET,
+                "/user",
+                None,
+                Some(params),
+                None,
+                self.constants.support_secure,
+            )
             .await?;
 
         Ok(response)
@@ -670,6 +723,7 @@ impl KMClient {
                 None,
                 None,
                 None,
+                false,
             )
             .await?;
 
@@ -691,6 +745,7 @@ impl KMClient {
                 None,
                 Some(params),
                 None,
+                false,
             )
             .await?;
 
@@ -709,6 +764,7 @@ impl KMClient {
                 None,
                 Some(params),
                 None,
+                false,
             )
             .await?;
 
@@ -724,6 +780,7 @@ impl KMClient {
                 None,
                 None,
                 None,
+                false,
             )
             .await?;
 
@@ -756,6 +813,7 @@ impl KMClient {
                 None,
                 Some(params),
                 None,
+                false,
             )
             .await?;
 
@@ -775,7 +833,9 @@ impl KMClient {
     pub async fn stream_download(
         &self,
         url: impl AsRef<str>,
-        scramble_seed: Option<u32>,
+        title_id: u32,
+        episode_id: u32,
+        scramble_seed: Option<ScrambleSeed>,
         mut writer: impl tokio::io::AsyncWrite + std::marker::Unpin,
     ) -> ToshoResult<()> {
         let res = self
@@ -800,7 +860,7 @@ impl KMClient {
             Some(scramble_seed) => {
                 let image_bytes = res.bytes().await?;
                 let descrambled = tokio::task::spawn_blocking(move || {
-                    imaging::descramble_image(&image_bytes, 4, scramble_seed)
+                    imaging::descramble_image(&image_bytes, 4, title_id, episode_id, scramble_seed)
                 })
                 .await
                 .map_err(|e| make_error!("Failed to execute blocking descrambling task: {}", e))?;

@@ -75,7 +75,7 @@ pub(super) struct PurchasePoint {
 }
 
 pub(super) async fn common_purchase_select(
-    title_id: i32,
+    title_id: u32,
     client: &KMClient,
     account: &Config,
     download_mode: bool,
@@ -250,7 +250,7 @@ pub(super) async fn common_purchase_select(
             let mapped_chapters: Vec<tosho_kmkc::models::EpisodeNode> = selected
                 .iter()
                 .map(|ch| {
-                    let ch_id = ch.name.parse::<i32>().unwrap();
+                    let ch_id = ch.name.parse::<u32>().unwrap();
 
                     chapters_entry
                         .iter()

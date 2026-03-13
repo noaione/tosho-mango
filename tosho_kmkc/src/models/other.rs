@@ -15,19 +15,19 @@ pub struct WeeklyListContent {
     weekday: i32,
     /// The list of titles.
     #[serde(rename = "title_id_list")]
-    titles: Vec<i32>,
+    titles: Vec<u32>,
     /// The featured title ID.
     #[serde(rename = "feature_title_id")]
-    featured_id: i32,
+    featured_id: u32,
     /// The list of title with bonus point.
     #[serde(rename = "bonus_point_title_id")]
-    bonus_titles: Vec<i32>,
+    bonus_titles: Vec<u32>,
     /// The list of popular titles.
     #[serde(rename = "popular_title_id_list")]
-    popular_titles: Vec<i32>,
+    popular_titles: Vec<u32>,
     /// The list of new titles.
     #[serde(rename = "new_title_id_list")]
-    new_titles: Vec<i32>,
+    new_titles: Vec<u32>,
 }
 
 /// Represents the weekly list response.

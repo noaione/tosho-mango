@@ -18,6 +18,10 @@ use std::io::Cursor;
 use image::{GenericImage, GenericImageView, ImageEncoder};
 use tosho_common::{ToshoDetailedImageError, ToshoImageError, ToshoResult, bail_on_error};
 
+use crate::models::ScrambleSeed;
+
+const ALPHABETS: [&'static str; 2] = ["svdk0m7acl", "q6jtf2xnog"];
+
 fn u32_to_f32(n: u32) -> f32 {
     if n > i32::MAX as u32 {
         panic!("u32_to_f32: u32 is too big");
@@ -59,9 +63,50 @@ fn seed_generator(seed: u32) -> impl Iterator<Item = u32> {
     })
 }
 
-fn generate_copy_targets(rectbox: u32, seed: u32) -> Vec<((u32, u32), (u32, u32))> {
+fn derive_seed(title_id: u32, episode_id: u32, seed: &str) -> ToshoResult<u32> {
+    let idx = title_id & 1;
+    let alphabet = ALPHABETS
+        .get(idx as usize)
+        .ok_or_else(|| tosho_common::make_error!("Failed to get alphabet for index {}", idx))?;
+
+    // iterate through all character in seed
+    let mut digits = String::new();
+    for c in seed.chars() {
+        // find mapped seed
+        if let Some(pos) = alphabet.find(c) {
+            digits.push_str(&pos.to_string());
+        } else {
+            if c.is_ascii_digit() {
+                digits.push(c);
+            } else {
+                bail_on_error!("Invalid character in seed: {}", c);
+            }
+        }
+    }
+
+    let digits = digits.parse::<u32>().map_err(|e| {
+        tosho_common::make_error!(
+            "Failed to parse derived seed from string: {}. Error: {}",
+            digits,
+            e
+        )
+    })?;
+
+    Ok(digits ^ (title_id + episode_id))
+}
+
+fn generate_copy_targets(
+    rectbox: u32,
+    title_id: u32,
+    episode_id: u32,
+    seed: ScrambleSeed,
+) -> ToshoResult<Vec<((u32, u32), (u32, u32))>> {
     let mut targets: Vec<((u32, u32), (u32, u32))> = Vec::new();
-    let mut seed_gen = seed_generator(seed);
+    let real_seed = match seed {
+        ScrambleSeed::Seed(s) => s,
+        ScrambleSeed::Derived(s) => derive_seed(title_id, episode_id, &s)?,
+    };
+    let mut seed_gen = seed_generator(real_seed);
 
     let mut seed_arrays = Vec::new();
     for i in 0..rectbox * rectbox {
@@ -84,7 +129,7 @@ fn generate_copy_targets(rectbox: u32, seed: u32) -> Vec<((u32, u32), (u32, u32)
         targets.push(((source_x, source_y), (target_x, target_y)));
     }
 
-    targets
+    Ok(targets)
 }
 
 /// Descramble image bytes, and return descrambled image bytes.
@@ -92,7 +137,9 @@ fn generate_copy_targets(rectbox: u32, seed: u32) -> Vec<((u32, u32), (u32, u32)
 /// # Arguments
 /// * `img_bytes` - Image bytes to descramble.
 /// * `rectbox` - How much block that divide the images, usually `4`.
-/// * `scramble_seed` - The seed used to scramble the image. Available in the [`crate::models::WebEpisodeViewerResponse`] response.
+/// * `title_id` - The title ID associated with the episode.
+/// * `episode_id` - The episode ID of the episode.
+/// * `scramble_seed` - The seed used to scramble the image. Available in the viewer response.
 ///
 /// # Example
 /// ```rust,no_run
@@ -105,7 +152,9 @@ fn generate_copy_targets(rectbox: u32, seed: u32) -> Vec<((u32, u32), (u32, u32)
 pub fn descramble_image(
     img_bytes: &[u8],
     rectbox: u32,
-    scramble_seed: u32,
+    title_id: u32,
+    episode_id: u32,
+    scramble_seed: ScrambleSeed,
 ) -> ToshoResult<Vec<u8>> {
     // read img_source as image
     let img = image::load_from_memory(img_bytes)?;
@@ -119,7 +168,7 @@ pub fn descramble_image(
                 image::DynamicImage::new(width_rect * rectbox, height_rect * rectbox, img.color());
 
             for ((source_x, source_y), (dest_x, dest_y)) in
-                generate_copy_targets(rectbox, scramble_seed)
+                generate_copy_targets(rectbox, title_id, episode_id, scramble_seed)?
             {
                 let source_x = source_x * width_rect;
                 let source_y = source_y * height_rect;
@@ -216,7 +265,7 @@ mod tests {
 
     #[test]
     fn test_generate_copy_targets() {
-        let copy_targets = generate_copy_targets(4, 749191485);
+        let copy_targets = generate_copy_targets(4, 0, 0, ScrambleSeed::Seed(749191485)).unwrap();
 
         let expect_targets: Vec<((u32, u32), (u32, u32))> = vec![
             ((1, 1), (0, 0)),
@@ -235,6 +284,40 @@ mod tests {
             ((2, 3), (1, 3)),
             ((2, 2), (2, 3)),
             ((1, 2), (3, 3)),
+        ];
+
+        assert_eq!(copy_targets, expect_targets);
+    }
+
+    #[test]
+    fn test_generate_copy_targets_from_derived() {
+        let copy_targets = generate_copy_targets(
+            4,
+            2611,
+            432587,
+            ScrambleSeed::Derived("f62ooffj6f".to_string()),
+        );
+
+        assert!(copy_targets.is_ok());
+
+        let copy_targets = copy_targets.unwrap();
+        let expect_targets: Vec<((u32, u32), (u32, u32))> = vec![
+            ((0, 0), (0, 0)),
+            ((2, 1), (1, 0)),
+            ((3, 2), (2, 0)),
+            ((1, 3), (3, 0)),
+            ((1, 1), (0, 1)),
+            ((3, 3), (1, 1)),
+            ((2, 0), (2, 1)),
+            ((0, 2), (3, 1)),
+            ((2, 2), (0, 2)),
+            ((0, 3), (1, 2)),
+            ((1, 0), (2, 2)),
+            ((3, 1), (3, 2)),
+            ((3, 0), (0, 3)),
+            ((1, 2), (1, 3)),
+            ((0, 1), (2, 3)),
+            ((2, 3), (3, 3)),
         ];
 
         assert_eq!(copy_targets, expect_targets);

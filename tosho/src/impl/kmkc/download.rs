@@ -2,7 +2,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use color_print::cformat;
-use tosho_kmkc::models::ImagePageNode;
+use tosho_kmkc::models::{ImagePageNode, ScrambleSeed};
 use tosho_kmkc::{
     KMClient,
     models::{EpisodeNode, EpisodeViewerResponse, TicketInfoType, TitleNode},
@@ -35,11 +35,11 @@ pub(crate) struct KMDownloadCliConfig {
     /// The start chapter range.
     ///
     /// Used only when `no_input` is `true`.
-    pub(crate) start_from: Option<i32>,
+    pub(crate) start_from: Option<u32>,
     /// The end chapter range.
     ///
     /// Used only when `no_input` is `true`.
-    pub(crate) end_at: Option<i32>,
+    pub(crate) end_at: Option<u32>,
 
     pub(crate) no_ticket: bool,
     pub(crate) no_point: bool,
@@ -61,8 +61,8 @@ fn create_chapters_info(title: &TitleNode, chapters: &[EpisodeNode]) -> MangaDet
 
 fn get_output_directory(
     output_dir: &Path,
-    title_id: i32,
-    chapter_id: Option<i32>,
+    title_id: u32,
+    chapter_id: Option<u32>,
     create_folder: bool,
 ) -> PathBuf {
     let mut pathing = output_dir.to_path_buf();
@@ -84,7 +84,9 @@ struct KMKCDownloadNode {
     image: ImagePageNode,
     idx: usize,
     extension: String,
-    seed: Option<u32>,
+    title_id: u32,
+    episode_id: u32,
+    seed: Option<ScrambleSeed>,
 }
 
 async fn kmkc_actual_downloader(
@@ -108,7 +110,13 @@ async fn kmkc_actual_downloader(
 
     match node
         .client
-        .stream_download(node.image.url(), node.seed, writer)
+        .stream_download(
+            node.image.url(),
+            node.title_id,
+            node.episode_id,
+            node.seed,
+            writer,
+        )
         .await
     {
         Ok(_) => {}
@@ -125,7 +133,7 @@ async fn kmkc_actual_downloader(
 }
 
 pub(crate) async fn kmkc_download(
-    title_id: i32,
+    title_id: u32,
     dl_config: KMDownloadCliConfig,
     output_dir: PathBuf,
     client: &KMClient,
@@ -332,7 +340,7 @@ pub(crate) async fn kmkc_download(
                 if let Some(seed) = scramble_seed
                     && console.is_debug()
                 {
-                    console.log(format!("    Seed: {}", seed));
+                    console.log(format!("    Seed: {:?}", seed));
                 }
 
                 // precheck
@@ -399,6 +407,9 @@ pub(crate) async fn kmkc_download(
                             let image = image.clone();
                             let progress = Arc::clone(&progress);
                             let semaphore = Arc::clone(&semaphore);
+                            let seeding = scramble_seed.cloned();
+                            let ch_id = chapter.id();
+                            let tit_id = chapter.title_id();
 
                             tokio::spawn(async move {
                                 let _permit = semaphore.acquire().await.unwrap();
@@ -409,7 +420,9 @@ pub(crate) async fn kmkc_download(
                                         image,
                                         idx,
                                         extension: force_extensions.to_string(),
-                                        seed: scramble_seed,
+                                        title_id: tit_id,
+                                        episode_id: ch_id,
+                                        seed: seeding,
                                     },
                                     image_dir,
                                     cnsl.clone(),
@@ -435,7 +448,9 @@ pub(crate) async fn kmkc_download(
                                 image: image.clone(),
                                 idx,
                                 extension: force_extensions.to_string(),
-                                seed: scramble_seed,
+                                title_id: chapter.title_id(),
+                                episode_id: chapter.id(),
+                                seed: scramble_seed.cloned(),
                             },
                             image_dir.clone(),
                             console.clone(),

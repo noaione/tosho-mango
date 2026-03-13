@@ -7,6 +7,10 @@ Starting from Rust port of the project, all changes will be put into this file.
 - All sources: Add `--only-check-folder` option to `autodownload`
   - This will only check if the chapter folder exists, if it does, it will skip downloading that chapter.
   - This is useful for cronjob or scheduled task that run periodically to only download new chapters.
+- `KM`: Version 3 of the app
+  - Introduce the new "secure" host
+  - Support the new format for scramble seed
+  - This version is more "iffy", I recommend opening a chapter viewer in the real app before using tosho
 
 ### Build
 - Bump dependencies to latest version (except reqwest and some other)
