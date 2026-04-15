@@ -41,7 +41,7 @@ pub struct ReaderFrame {
     /// The height of the box (0.0 - 1.0)
     height: f64,
     /// The opacity of the outer box (0.0 - 1.0)
-    opacity: f64,
+    opacity: Option<f64>,
     // TODO: `transition`, `color` whenever they figured out what they will do with this
 }
 
