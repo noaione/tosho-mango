@@ -518,6 +518,11 @@ impl KMClient {
             bonus_point += episode.bonus_point().try_into().unwrap_or(0);
         }
 
+        // Extra bonus point if the total paid is 1000 or more
+        if paid_point >= 1000 {
+            bonus_point += (paid_point as f64 * 0.1).ceil() as u64;
+        }
+
         let mut cloned_wallet = wallet.clone();
         cloned_wallet.add(bonus_point);
         if !cloned_wallet.can_purchase(paid_point) {

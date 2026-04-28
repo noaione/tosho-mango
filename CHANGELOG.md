@@ -8,6 +8,9 @@ Starting from Rust port of the project, all changes will be put into this file.
   - This will only check if the chapter folder exists, if it does, it will skip downloading that chapter.
   - This is useful for cronjob or scheduled task that run periodically to only download new chapters.
 
+### Changes
+- `KM`: Fix issues with 1k points point back purchase
+
 ### Build
 - Bump dependencies to latest version (except reqwest and some other)
 
