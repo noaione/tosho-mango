@@ -71,7 +71,7 @@ fn generate_copy_targets(rectbox: u32, seed: u32) -> Vec<((u32, u32), (u32, u32)
     drop(seed_gen);
 
     // sort by first element
-    seed_arrays.sort_by(|a, b| a.0.cmp(&b.0));
+    seed_arrays.sort_by_key(|a| a.0);
     let index_only: Vec<u32> = seed_arrays.iter().map(|x| x.1).collect::<Vec<u32>>();
 
     for (i, idx_seed) in index_only.iter().enumerate() {

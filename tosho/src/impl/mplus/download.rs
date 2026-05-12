@@ -302,7 +302,7 @@ pub(crate) async fn mplus_download(
                 return 1;
             }
 
-            download_chapters.sort_by(|&a, &b| a.published_at().cmp(&b.published_at()));
+            download_chapters.sort_by_key(|&a| a.published_at());
 
             let title_dir = get_output_directory(&output_dir, title_id, None, true);
             let dump_info = create_chapters_info(&results);

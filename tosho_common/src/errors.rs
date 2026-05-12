@@ -90,7 +90,6 @@ impl ToshoDetailedParseError {
         let end_idx = position.saturating_add(25);
 
         // Bound the start and end index
-        let start_idx = start_idx.max(0);
         let end_idx = end_idx.min(split_lines[row_line].len());
 
         split_lines[row_line][start_idx..end_idx].to_string()

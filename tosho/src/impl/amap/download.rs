@@ -222,7 +222,7 @@ pub(crate) async fn amap_download(
                 return 1;
             }
 
-            download_chapters.sort_by(|&a, &b| a.info().id().cmp(&b.info().id()));
+            download_chapters.sort_by_key(|&a| a.info().id());
 
             let title_dir = get_output_directory(&output_dir, title_id, None, true);
             let dump_info = create_chapters_info(&manga_detail);
