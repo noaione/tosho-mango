@@ -100,7 +100,11 @@ pub(crate) async fn kmkc_account_login_web(
 
             match account {
                 Ok(account) => {
-                    console.info(cformat!("Authenticated as <m,s>{}</>", account.email()));
+                    let uuid = account.user_id().to_string();
+                    console.info(cformat!(
+                        "Authenticated as <m,s>{}</>",
+                        account.email().unwrap_or(&uuid)
+                    ));
                     let old_config = all_configs.iter().find(|&c| match c {
                         crate::config::ConfigImpl::Kmkc(super::config::Config::Web(cc)) => {
                             cc.account_id == account.id() && cc.device_id == account.user_id()
@@ -200,7 +204,11 @@ pub(crate) async fn kmkc_account_login_mobile(
 
             match account {
                 Ok(account) => {
-                    console.info(cformat!("Authenticated as <m,s>{}</>", account.email()));
+                    let uuid = account.user_id().to_string();
+                    console.info(cformat!(
+                        "Authenticated as <m,s>{}</>",
+                        account.email().unwrap_or(&uuid)
+                    ));
 
                     let mut acc_config =
                         super::config::ConfigMobile::from(config).with_user_account(&account);
@@ -248,7 +256,7 @@ pub async fn kmkc_account_login(
     // find old config
     let old_config = all_configs.iter().find(|&c| match c {
         crate::config::ConfigImpl::Kmkc(super::config::Config::Mobile(cc)) => {
-            cc.email == email && platform == cc.platform()
+            cc.email() == email && platform == cc.platform()
         }
         _ => false,
     });
@@ -281,9 +289,10 @@ pub async fn kmkc_account_login(
 
     match config {
         Ok(config) => {
+            let uuid = config.account().user_id().to_string();
             console.info(cformat!(
                 "Authenticated as <m,s>{}</>",
-                config.account().email()
+                config.account().email().unwrap_or(&uuid)
             ));
 
             let acc_config = match super::config::Config::from(config.config()) {
@@ -357,10 +366,8 @@ pub async fn kmkc_account_login_adapt(
 
             match make_kmkc_client(&config.clone().into()) {
                 Ok(client) => {
-                    console.info(cformat!(
-                        "Re-Authenticating with email <m,s>{}</>...",
-                        config.email
-                    ));
+                    let uuid = config.email.clone().unwrap_or(config.id.clone());
+                    console.info(cformat!("Re-Authenticating <m,s>{}</>...", uuid));
 
                     let account = client.get_account().await;
 
@@ -372,7 +379,11 @@ pub async fn kmkc_account_login_adapt(
                                 return 1;
                             }
 
-                            console.info(cformat!("Authenticated as <m,s>{}</>", account.email()));
+                            let uuid = account.user_id().to_string();
+                            console.info(cformat!(
+                                "Authenticated as <m,s>{}</>",
+                                account.email().unwrap_or(&uuid)
+                            ));
 
                             let mobile_config = KMConfigMobile::new(
                                 account.user_id().to_string(),
@@ -465,7 +476,10 @@ pub(crate) async fn kmkc_account_info(
             console.info(cformat!("  <s>User ID</>: {}", account.user_id()));
             let username = account.name().unwrap_or("Unknown");
             console.info(cformat!("  <s>Username</>: {}", username));
-            console.info(cformat!("  <s>Email</>: {}", account.email()));
+            console.info(cformat!(
+                "  <s>Email</>: {}",
+                account.email().unwrap_or("Unknown")
+            ));
             console.info(cformat!("  <s>Registered?</>: {}", account.registered()));
 
             if !account.devices().is_empty() {

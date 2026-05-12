@@ -191,7 +191,7 @@ pub struct UserAccount {
     #[serde(rename = "nickname")]
     name: Option<String>,
     /// The user email
-    email: String,
+    email: Option<String>,
     /// The user gender
     #[copyable]
     gender: Option<GenderType>,

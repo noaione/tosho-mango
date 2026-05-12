@@ -74,8 +74,8 @@ pub struct ConfigMobile {
     #[prost(string, tag = "3")]
     pub username: ::prost::alloc::string::String,
     /// The email of the account/config.
-    #[prost(string, tag = "4")]
-    pub email: ::prost::alloc::string::String,
+    #[prost(string, optional, tag = "4")]
+    pub email: Option<::prost::alloc::string::String>,
     /// The account ID of the account/config.
     #[prost(uint32, tag = "5")]
     pub account_id: u32,
@@ -117,7 +117,7 @@ impl From<&tosho_kmkc::KMConfigMobile> for ConfigMobile {
             id,
             r#type: DeviceType::Mobile as i32,
             username: String::new(),
-            email: String::from("temp@kmkc.xyz"),
+            email: None,
             account_id: 0,
             device_id: 0,
             user_id: value.user_id().to_string(),
@@ -174,8 +174,8 @@ pub struct ConfigWeb {
     #[prost(string, tag = "3")]
     pub username: ::prost::alloc::string::String,
     /// The email of the account/config.
-    #[prost(string, tag = "4")]
-    pub email: ::prost::alloc::string::String,
+    #[prost(string, optional, tag = "4")]
+    pub email: Option<::prost::alloc::string::String>,
     /// The account ID of the account/config.
     #[prost(uint32, tag = "5")]
     pub account_id: u32,
@@ -214,7 +214,7 @@ impl From<&tosho_kmkc::KMConfigWeb> for ConfigWeb {
             id,
             r#type: DeviceType::Web as i32,
             username: String::new(),
-            email: String::from("temp@kmkc.xyz"),
+            email: None,
             account_id: 0,
             device_id: 0,
             uwt: value.uwt().to_string(),
@@ -237,7 +237,8 @@ impl ConfigWeb {
         let mut config = self.clone();
 
         config.username = account.name().unwrap_or("Unknown").to_string();
-        config.email.clone_from(&account.email().to_string());
+        let email_cloned = account.email().and_then(|c| Some(c.to_string()));
+        config.email = email_cloned;
         config.account_id = account.id();
         config.device_id = account.user_id();
 
@@ -268,7 +269,8 @@ impl ConfigMobile {
         let mut config = self.clone();
 
         config.username = account.name().unwrap_or("Unknown").to_string();
-        config.email.clone_from(&account.email().to_string());
+        let email_cloned = account.email().and_then(|c| Some(c.to_string()));
+        config.email = email_cloned;
         config.account_id = account.id();
         config.device_id = account.user_id();
 
