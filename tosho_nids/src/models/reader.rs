@@ -92,3 +92,110 @@ pub(crate) struct ReaderPagesResponse {
     #[deref_clone]
     data: ReaderPagesWithMeta,
 }
+
+/// Frameflow stream `error` response
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
+pub struct StreamFrameflowError {
+    /// The error message
+    message: String,
+}
+
+/// Frameflow stream `done` response
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
+pub struct StreamFrameflowDone {
+    /// Total pages count
+    pages_count: u64,
+}
+
+/// Frameflow stream `page` response
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
+pub struct StreamFrameflowPage {
+    /// The page index
+    index: u64,
+    /// The page information
+    page: ReaderPage,
+}
+
+/// Payload for the frameflow stream issue
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
+pub struct FrameflowStreamIssuePayload {
+    /// The issue ID
+    id: u32,
+    /// The issue UUID
+    uuid: String,
+    /// Reading direction
+    ///
+    /// TODO: Change to enum
+    reading_direction: String,
+    /// Cover image of the issue
+    #[serde(rename = "cover_image")]
+    cover: super::common::ImageReaderUrl,
+    /// The full title of the issue
+    #[serde(rename = "full_title")]
+    title: String,
+    /// The reader version
+    version: u32,
+    /// The total pages
+    total_pages: u64,
+}
+
+/// Frameflow stream issue information
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
+pub struct FrameflowStreamIssue {
+    /// The issue ID
+    id: u32,
+    /// The issue UUID
+    uuid: String,
+    /// The issue slug
+    slug: Option<String>,
+    /// The total pages
+    total_pages: Option<u64>,
+    /// The issue group UUID
+    issue_group_uuid: Option<String>,
+    /// The frameflow payload
+    frameflow: FrameflowStreamIssuePayload,
+}
+
+/// Frameflow stream `header` response
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
+pub struct StreamFrameflowHeader {
+    /// The issue information
+    issue: FrameflowStreamIssue,
+}
+
+/// Frameflow stream data event
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "type")]
+pub enum StreamFrameflowEvent {
+    /// Frameflow stream header
+    #[serde(rename = "header")]
+    Header(StreamFrameflowHeader),
+    /// Frameflow stream page
+    #[serde(rename = "page")]
+    Page(StreamFrameflowPage),
+    /// Frameflow stream done
+    #[serde(rename = "done")]
+    Done(StreamFrameflowDone),
+    /// Frameflow stream error
+    #[serde(rename = "error")]
+    Error(StreamFrameflowError),
+}
+
+/// Collected result from the frameflow NDJSON stream endpoint.
+///
+/// Contains the header metadata received in the `header` event,
+/// and all page data collected from `page` events, in arrival order.
+#[derive(Debug, Clone, AutoGetter, Serialize, Deserialize)]
+pub struct StreamedReaderPages {
+    /// The stream header, containing issue and frameflow metadata
+    header: StreamFrameflowHeader,
+    /// All pages collected from the stream, in arrival order
+    pages: Vec<ReaderPage>,
+}
+
+impl StreamedReaderPages {
+    /// Create a new instance
+    pub(crate) fn new(header: StreamFrameflowHeader, pages: Vec<ReaderPage>) -> Self {
+        Self { header, pages }
+    }
+}

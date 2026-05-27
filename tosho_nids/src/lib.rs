@@ -7,7 +7,8 @@ use std::collections::HashMap;
 use futures_util::TryStreamExt;
 use tokio::io::{self, AsyncWriteExt};
 use tosho_common::{
-    ToshoAuthError, ToshoClientError, ToshoResult, bail_on_error, parse_json_response_failable,
+    ToshoAuthError, ToshoClientError, ToshoResult, bail_on_error, make_error,
+    parse_json_response_failable,
 };
 
 use crate::{constants::BASE_API, models::ErrorResponse};
@@ -572,6 +573,115 @@ impl NIClient {
 
         // Instant deref clone
         Ok(response.data())
+    }
+
+    /// Get issue "streamed" reader information
+    ///
+    /// Consumes the NDJSON stream from `/frameflow/{issue_id}/stream`, collects all
+    /// events, and returns them as a [`models::reader::StreamedReaderPages`] containing
+    /// the header metadata and the full page list.
+    ///
+    /// This needs authentication.
+    ///
+    /// # Arguments
+    /// * `issue_id` - The issue ID to get the reader info for
+    pub async fn get_issue_reader_stream(
+        &self,
+        issue_id: u32,
+    ) -> ToshoResult<models::reader::StreamedReaderPages> {
+        let endpoint = format!("{}/api/v1/frameflow/{}/stream", BASE_API, issue_id);
+
+        let mut req_headers = self.auth_headers(false)?;
+        req_headers.insert(
+            reqwest::header::ACCEPT,
+            reqwest::header::HeaderValue::from_static(
+                "application/x-ndjson, application/json;q=0.8",
+            ),
+        );
+
+        let res = self
+            .inner
+            .get(&endpoint)
+            .headers(req_headers)
+            .send()
+            .await?;
+
+        // Non-OK: extract body error message then bail
+        if !res.status().is_success() {
+            let status = res.status();
+            let body = res.text().await.unwrap_or_default();
+            let msg = serde_json::from_str::<serde_json::Value>(&body)
+                .ok()
+                .and_then(|v| v.get("error")?.as_str().map(str::to_owned))
+                .unwrap_or_else(|| {
+                    if body.is_empty() {
+                        format!("Frameflow stream failed with status {}", status)
+                    } else {
+                        body
+                    }
+                });
+            return Err(make_error!("{}", msg));
+        }
+
+        let mut stream = res.bytes_stream();
+        let mut buffer = String::new();
+        let mut header: Option<models::reader::StreamFrameflowHeader> = None;
+        let mut pages: Vec<models::reader::ReaderPage> = Vec::new();
+
+        'stream: while let Some(chunk) = stream.try_next().await? {
+            buffer.push_str(&String::from_utf8_lossy(&chunk));
+
+            while let Some(pos) = buffer.find('\n') {
+                let line = buffer[..pos].to_owned();
+                buffer.drain(..=pos);
+
+                let trimmed = line.trim();
+                if trimmed.is_empty() {
+                    continue;
+                }
+
+                let event: models::reader::StreamFrameflowEvent =
+                    match serde_json::from_str(trimmed) {
+                        Ok(e) => e,
+                        Err(_) => continue, // drop unparseable lines (matches TS behaviour)
+                    };
+
+                match event {
+                    models::reader::StreamFrameflowEvent::Header(h) => {
+                        header = Some(h);
+                    }
+                    models::reader::StreamFrameflowEvent::Page(p) => {
+                        pages.push(p.page().clone());
+                    }
+                    models::reader::StreamFrameflowEvent::Done(_) => {
+                        break 'stream;
+                    }
+                    models::reader::StreamFrameflowEvent::Error(e) => {
+                        return Err(make_error!("Frameflow stream error: {}", e.message()));
+                    }
+                }
+            }
+        }
+
+        let trimmed = buffer.trim().to_owned();
+        if !trimmed.is_empty()
+            && let Ok(event) =
+                serde_json::from_str::<models::reader::StreamFrameflowEvent>(&trimmed)
+        {
+            match event {
+                models::reader::StreamFrameflowEvent::Header(h) => header = Some(h),
+                models::reader::StreamFrameflowEvent::Page(p) => pages.push(p.page().clone()),
+                models::reader::StreamFrameflowEvent::Done(_) => {}
+                models::reader::StreamFrameflowEvent::Error(e) => {
+                    return Err(make_error!("Frameflow stream error: {}", e.message()));
+                }
+            }
+        }
+
+        let header =
+            header.ok_or_else(|| make_error!("Frameflow stream ended without a header event"))?;
+
+        Ok(models::reader::StreamedReaderPages::new(header, pages))
     }
 
     /// Report a page as being viewed/read
