@@ -156,6 +156,7 @@ fn format_sale_status(status: SaleStatus) -> String {
     match status {
         SaleStatus::ForSale => cformat!("<g!,s>Available</g!,s>"),
         SaleStatus::PostSale => cformat!("<y!,s>Marketplace only</y!,s>"),
+        SaleStatus::Draft => cformat!("<r!,s>Draft</r!,s>"),
     }
 }
 
@@ -191,13 +192,13 @@ pub async fn nids_get_issue(
         None
     };
 
-    let issue_url = format!(
-        "https://{}/item/{}/{}",
-        BASE_HOST,
-        issue_detail.id(),
-        issue_detail.slug()
-    );
-    let linked_title = linkify!(&issue_url, issue_detail.full_title());
+    let linked_title = match issue_detail.slug() {
+        Some(slug) => {
+            let issue_url = format!("https://{}/item/{}/{}", BASE_HOST, issue_detail.id(), slug);
+            linkify!(&issue_url, issue_detail.full_title())
+        }
+        None => issue_detail.full_title().to_string(),
+    };
 
     console.info(cformat!(
         "Showing information for <m,s>{}</m,s>:",

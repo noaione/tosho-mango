@@ -19,7 +19,8 @@ pub struct IssueDetail {
     /// The series + issue full title
     full_title: String,
     /// The issue URL slug
-    slug: String,
+    #[serde(default)]
+    slug: Option<String>,
     /// The issue description
     description: Option<String>,
     /// The list of creators involved in this issue
@@ -36,15 +37,17 @@ pub struct IssueDetail {
     #[serde(rename = "publisher_imprint")]
     imprint: Option<super::common::Imprint>,
     /// The cover page image URLs
-    cover: super::common::ImageUrl,
+    #[serde(default)]
+    cover: Option<super::common::ImageUrl>,
     /// The price of the issue in USD
     ///
     /// This is normalized following Stripe currency convention (i.e. 199 = $1.99)
+    #[serde(default)]
     price_usd: u64,
     /// The sale price of the issue in USD if any
     ///
     /// This is normalized following Stripe currency convention (i.e. 199 = $1.99)
-    #[serde(rename = "compare_at_price_usd", default)]
+    #[serde(default, rename = "compare_at_price_usd")]
     original_price: Option<u64>,
     /// The release date of the issue in ISO 8601 format
     #[serde(with = "super::datetime")]
@@ -64,8 +67,10 @@ pub struct IssueDetail {
     /// The series run information of this issue
     series_run: SeriesRunIssue,
     /// The list of available variants for this issue
+    #[serde(default)]
     variants: Vec<IssueVariant>,
     /// The total variants of this issue
+    #[serde(default)]
     variants_count: u32,
     /// Is this issue remarquable?
     is_remarquable: bool,
@@ -75,6 +80,7 @@ pub struct IssueDetail {
     is_downloadable: bool,
     /// What type of PDF download is available, if any
     #[copyable]
+    #[serde(default)]
     download_type: Option<super::enums::DownloadType>,
     /// The status of the issue (e.g. "for-sale")
     ///
@@ -85,12 +91,14 @@ pub struct IssueDetail {
     active: bool,
     /// If this issue is resellable, when can this be resold again
     #[serde(
+        default,
         serialize_with = "super::datetime::serialize_opt",
         deserialize_with = "super::datetime::deserialize_opt"
     )]
     marketplace_enabled_date: Option<chrono::DateTime<chrono::FixedOffset>>,
     /// The sale end date of the issue in ISO 8601 format
     #[serde(
+        default,
         serialize_with = "super::datetime::serialize_opt",
         deserialize_with = "super::datetime::deserialize_opt"
     )]

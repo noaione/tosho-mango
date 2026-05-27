@@ -215,25 +215,11 @@ pub(crate) async fn nids_download(
     console: &mut crate::term::Terminal,
 ) -> ExitCode {
     console.info(cformat!(
-        "Fetching info for <magenta,bold>{}</>...",
+        "Fetching reader for issue <magenta,bold>{}</>...",
         issue_id
     ));
 
-    let results = match client.get_issue(issue_id).await {
-        Ok(res) => res,
-        Err(err) => {
-            console.error(format!("Failed to fetch issue info: {err}"));
-            return 1;
-        }
-    };
-
-    console.info(cformat!(
-        "Fetching reader for issue <m,s>{}</m,s> (<m,s>{}</m,s>)",
-        results.full_title(),
-        results.id()
-    ));
-
-    let pages_meta = match client.get_issue_reader(issue_id).await {
+    let pages_meta = match client.get_issue_reader_stream(issue_id).await {
         Ok(pages) => pages,
         Err(err) => {
             console.error(format!("Failed to fetch issue reader info: {err}"));
@@ -241,18 +227,41 @@ pub(crate) async fn nids_download(
         }
     };
 
-    let total_pages = pages_meta.total_pages().to_formatted_string(&Locale::en);
+    let issue_title = pages_meta.header().issue().frameflow().title();
+    console.info(cformat!(
+        "Fetching edition issue for <m,s>{}</m,s> (<m,s>{}</m,s>)",
+        issue_title,
+        issue_id
+    ));
+
+    let edition_issue = match client
+        .get_issue_editions_collections(pages_meta.header().issue().uuid())
+        .await
+    {
+        Ok(issue) => issue,
+        Err(err) => {
+            console.error(format!("Failed to fetch issue: {err}"));
+            return 1;
+        }
+    };
+
+    let total_pages = pages_meta
+        .header()
+        .issue()
+        .frameflow()
+        .total_pages()
+        .to_formatted_string(&Locale::en);
     console.info(cformat!(
         "Downloading issue <m,s>{}</m,s> with <m,s>{}</m,s> pages...",
-        results.full_title(),
+        issue_title,
         total_pages
     ));
 
     // Download cover first
     let default_dir = get_output_directory(
         &output_dir,
-        results.series_run().id(),
-        Some(results.id()),
+        edition_issue.issue().series_run().id(),
+        Some(edition_issue.issue().id()),
         false,
     );
     let output_dir = dl_config.output.clone().unwrap_or(default_dir);
@@ -274,14 +283,16 @@ pub(crate) async fn nids_download(
     ));
 
     // Try doing dumping reading frames
-    if let Err(err) = dump_reading_frames(&output_dir, pages_meta.pages().pages()) {
+    if let Err(err) = dump_reading_frames(&output_dir, pages_meta.pages()) {
         console.error(format!("   Failed to dump reading frames: {}", err));
     }
 
     // Try downloading cover
     let cover_url = match dl_config.quality {
-        DownloadImageQuality::Desktop => pages_meta.pages().cover().url(),
-        DownloadImageQuality::Mobile => pages_meta.pages().cover().mobile_url(),
+        DownloadImageQuality::Desktop => pages_meta.header().issue().frameflow().cover().url(),
+        DownloadImageQuality::Mobile => {
+            pages_meta.header().issue().frameflow().cover().mobile_url()
+        }
     };
     let cover_ext = extract_extensions_from_url(cover_url).unwrap_or("webp".to_string());
     let cover_path = output_dir.join(format!("cover.{}", cover_ext));
@@ -314,7 +325,10 @@ pub(crate) async fn nids_download(
     }
 
     let current_time = chrono::Local::now();
-    let progress = console.make_progress_arc(pages_meta.total_pages(), Some("Downloading"));
+    let progress = console.make_progress_arc(
+        pages_meta.header().issue().frameflow().total_pages(),
+        Some("Downloading"),
+    );
     if dl_config.parallel {
         let semaphore = Arc::new(tokio::sync::Semaphore::new(dl_config.threads));
 
@@ -323,7 +337,7 @@ pub(crate) async fn nids_download(
         // reporter tasks
         let throttle_duration = std::time::Duration::from_millis(1500); // every 1.5s we report
         let report_client = client.clone();
-        let issue_uuid = results.uuid().to_string();
+        let issue_uuid = pages_meta.header().issue().uuid().to_string();
         tokio::spawn(async move {
             let mut rx = rx;
             let mut last_run = Instant::now() - throttle_duration;
@@ -341,7 +355,6 @@ pub(crate) async fn nids_download(
         });
 
         let tasks: Vec<_> = pages_meta
-            .pages()
             .pages()
             .iter()
             .enumerate()
@@ -381,7 +394,8 @@ pub(crate) async fn nids_download(
 
         futures_util::future::join_all(tasks).await;
     } else {
-        for (idx, page) in pages_meta.pages().pages().iter().enumerate() {
+        let issue_uuid = pages_meta.header().issue().uuid().to_string();
+        for (idx, page) in pages_meta.pages().iter().enumerate() {
             let node = DownloadNode {
                 client: client.clone(),
                 page_url: page.image().url().to_string(),
@@ -395,7 +409,7 @@ pub(crate) async fn nids_download(
                     // report
                     let pg_num = (idx + 1) as u32;
                     if dl_config.report {
-                        let _ = nids_report_progress(results.uuid(), pg_num, client).await;
+                        let _ = nids_report_progress(&issue_uuid, pg_num, client).await;
                     }
                 }
                 Err(err) => {
@@ -411,7 +425,7 @@ pub(crate) async fn nids_download(
     progress.finish_with_message("Downloaded");
     console.info(cformat!(
         "Downloaded <m,s>{}</m,s> in <m,s>{}</m,s>",
-        results.full_title(),
+        issue_title,
         timedelta_to_humantime(duration)
     ));
 

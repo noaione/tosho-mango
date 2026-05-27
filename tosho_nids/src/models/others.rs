@@ -273,6 +273,7 @@ pub struct CollectedEditionList {
     #[serde(rename = "editions")]
     data: Vec<CollectedEdition>,
     /// The issue information of these editions
+    #[serde(rename = "book")]
     issue: super::issues::IssueDetail,
 }
 

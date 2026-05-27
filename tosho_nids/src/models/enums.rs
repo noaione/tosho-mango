@@ -26,6 +26,8 @@ pub enum SaleStatus {
     ///
     /// You could only get it from the marketplace.
     PostSale,
+    /// Draft, a.k.a "unpublished" issue.
+    Draft,
 }
 
 enum_error!(SaleStatusFromStrError);
@@ -37,6 +39,7 @@ impl FromStr for SaleStatus {
         match s.to_ascii_lowercase().as_str() {
             "for-sale" => Ok(SaleStatus::ForSale),
             "post-sale" => Ok(SaleStatus::PostSale),
+            "draft" => Ok(SaleStatus::Draft),
             _ => Err(SaleStatusFromStrError {
                 original: s.to_string(),
             }),
@@ -49,6 +52,7 @@ impl std::fmt::Display for SaleStatus {
         match self {
             SaleStatus::ForSale => write!(f, "for-sale"),
             SaleStatus::PostSale => write!(f, "post-sale"),
+            SaleStatus::Draft => write!(f, "draft"),
         }
     }
 }
