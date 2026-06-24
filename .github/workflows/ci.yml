@@ -158,6 +158,7 @@ jobs:
       - name: Build (Nightly-Android)
         if: env.BUILD_PROFILE == 'debug' && matrix.os[1] == 'android-build'
         run: |
+          export PATH="${{ steps.ndk.outputs.ndk-path }}/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH"
           if [ ${{ inputs.no_updater == true }} = true ]; then
             echo "Building without self-updater feature"
             cargo build --locked --verbose --bin tosho --target aarch64-linux-android --profile ci --no-default-features
@@ -170,7 +171,9 @@ jobs:
         shell: bash
         env:
           CC_aarch64_linux_android: ${{ steps.ndk.outputs.ndk-path }}/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android21-clang
+          AR_aarch64_linux_android: ${{ steps.ndk.outputs.ndk-path }}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar
           CC_armv7_linux_androideabi: ${{ steps.ndk.outputs.ndk-path }}/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi21-clang
+          AR_armv7_linux_androideabi: ${{ steps.ndk.outputs.ndk-path }}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar
 
       - name: Permissions (Nightly)
         if: env.BUILD_PROFILE == 'debug' && runner.os != 'Windows' && matrix.os[1] != 'android-build'
@@ -178,7 +181,7 @@ jobs:
           chmod +x target/${{ matrix.os[1] }}/ci/tosho
         shell: bash
 
-      - name: Permissions (+ moving) Android
+      - name: Permissions (Nightly-Android)
         if: env.BUILD_PROFILE == 'debug' && runner.os != 'Windows' && matrix.os[1] == 'android-build'
         run: |
           chmod +x target/aarch64-linux-android/ci/tosho
@@ -217,9 +220,10 @@ jobs:
         env:
           RELEASE: true
 
-      - name: Build (Release) Android
+      - name: Build (Release-Android)
         if: env.BUILD_PROFILE == 'release' && matrix.os[1] == 'android-build'
         run: |
+          export PATH="${{ steps.ndk.outputs.ndk-path }}/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH"
           if [ ${{ inputs.no_updater == true }} = true ]; then
             echo "Building without self-updater feature"
             cargo build --locked --verbose --bin tosho --target aarch64-linux-android --profile ci --no-default-features
@@ -233,7 +237,9 @@ jobs:
         env:
           RELEASE: true
           CC_aarch64_linux_android: ${{ steps.ndk.outputs.ndk-path }}/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android21-clang
+          AR_aarch64_linux_android: ${{ steps.ndk.outputs.ndk-path }}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar
           CC_armv7_linux_androideabi: ${{ steps.ndk.outputs.ndk-path }}/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi21-clang
+          AR_armv7_linux_androideabi: ${{ steps.ndk.outputs.ndk-path }}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar
 
       - name: Prepare release
         if: env.BUILD_PROFILE == 'release' && runner.os != 'Windows' && matrix.os[1] != 'android-build'
