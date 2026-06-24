@@ -83,6 +83,8 @@ jobs:
           - [windows-2025, x86_64-pc-windows-msvc]
           # Windows 11 ARM (ARM64)
           - [windows-11-arm, aarch64-pc-windows-msvc]
+          # Android via Ubuntu
+          - [ubuntu-26.04, android-build]
       fail-fast: false
 
     runs-on: ${{ matrix.os[0] }}
@@ -91,9 +93,17 @@ jobs:
         uses: actions/checkout@b9e0990d219a03df7633c93f6f005a8fecbcab22
 
       - name: Rust Target
+        if: matrix.os[1] != 'android-build'
         run: |
           rustup update stable
           rustup target add ${{ matrix.os[1] }}
+
+      - name: Rust Target (Android)
+        if: matrix.os[1] == 'android-build'
+        run: |
+          rustup update stable
+          rustup target add aarch64-linux-android
+          rustup target add armv7-linux-androideabi
 
       # In here, we set up the rust version used, the build mode (release or nightly/debug)
       # We can check for relase mode by checking refs/tags/v* or input.release_build
@@ -112,8 +122,29 @@ jobs:
         with:
           prefix-key: "rust-tosho-build-${{ env.BUILD_PROFILE }}-${{ runner.os }}-${{ matrix.os[1] }}-${{ env.RUST_VERSION }}"
 
+      - name: Setup Android NDK
+        if: matrix.os[1] == 'android-build'
+        id: ndk
+        uses: nttld/setup-ndk@ed92fe6cadad69be94a966a7ee3271275e62f779
+        with:
+          ndk-version: r27c
+          add-to-path: false
+
+      - name: Configure linker (Android)
+        if: matrix.os[1] == 'android-build'
+        run: |
+          mkdir -p .cargo
+
+          cat > .cargo/config.toml <<EOF
+          [target.aarch64-linux-android]
+          linker = "${{ steps.ndk.outputs.ndk-path }}/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android21-clang"
+
+          [target.armv7-linux-androideabi]
+          linker = "${{ steps.ndk.outputs.ndk-path }}/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi21-clang"
+          EOF
+
       - name: Build (Nightly)
-        if: env.BUILD_PROFILE == 'debug'
+        if: env.BUILD_PROFILE == 'debug' && matrix.os[1] != 'android-build'
         run: |
           if [ ${{ inputs.no_updater == true }} = true ]; then
             echo "Building without self-updater feature"
@@ -124,10 +155,41 @@ jobs:
           fi
         shell: bash
 
+      - name: Build (Nightly-Android)
+        if: env.BUILD_PROFILE == 'debug' && matrix.os[1] == 'android-build'
+        run: |
+          if [ ${{ inputs.no_updater == true }} = true ]; then
+            echo "Building without self-updater feature"
+            cargo build --locked --verbose --bin tosho --target aarch64-linux-android --profile ci --no-default-features
+            cargo build --locked --verbose --bin tosho --target armv7-linux-androideabi --profile ci --no-default-features
+          else
+            echo "Building with self-updater feature"
+            cargo build --locked --verbose --bin tosho --target aarch64-linux-android --profile ci
+            cargo build --locked --verbose --bin tosho --target armv7-linux-androideabi --profile ci
+          fi
+        shell: bash
+        env:
+          CC_aarch64_linux_android: ${{ steps.ndk.outputs.ndk-path }}/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android21-clang
+          CC_armv7_linux_androideabi: ${{ steps.ndk.outputs.ndk-path }}/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi21-clang
+
       - name: Permissions (Nightly)
-        if: env.BUILD_PROFILE == 'debug' && runner.os != 'Windows'
+        if: env.BUILD_PROFILE == 'debug' && runner.os != 'Windows' && matrix.os[1] != 'android-build'
         run: |
           chmod +x target/${{ matrix.os[1] }}/ci/tosho
+        shell: bash
+
+      - name: Permissions (+ moving) Android
+        if: env.BUILD_PROFILE == 'debug' && runner.os != 'Windows' && matrix.os[1] == 'android-build'
+        run: |
+          chmod +x target/aarch64-linux-android/ci/tosho
+          chmod +x target/armv7-linux-androideabi/ci/tosho
+
+          # Move both file to android-build folder
+          mkdir -p target/android-build/ci
+          mv target/aarch64-linux-android/ci/tosho target/android-build/ci/tosho-aarch64
+          mv target/armv7-linux-androideabi/ci/tosho target/android-build/ci/tosho-armv7
+          chmod +x target/android-build/ci/tosho-aarch64
+          chmod +x target/android-build/ci/tosho-armv7
         shell: bash
 
       - name: Upload artifact
@@ -138,9 +200,11 @@ jobs:
           path: |
             target/${{ matrix.os[1] }}/ci/tosho.exe
             target/${{ matrix.os[1] }}/ci/tosho
+            target/android-build/ci/tosho-aarch64
+            target/android-build/ci/tosho-armv7
 
       - name: Build (Release)
-        if: env.BUILD_PROFILE == 'release'
+        if: env.BUILD_PROFILE == 'release' && matrix.os[1] != 'android-build'
         run: |
           if [ ${{ inputs.no_updater == true }} = true ]; then
             echo "Building without self-updater feature"
@@ -153,13 +217,45 @@ jobs:
         env:
           RELEASE: true
 
+      - name: Build (Release) Android
+        if: env.BUILD_PROFILE == 'release' && matrix.os[1] == 'android-build'
+        run: |
+          if [ ${{ inputs.no_updater == true }} = true ]; then
+            echo "Building without self-updater feature"
+            cargo build --locked --verbose --bin tosho --target aarch64-linux-android --profile ci --no-default-features
+            cargo build --locked --verbose --bin tosho --target armv7-linux-androideabi --profile ci --no-default-features
+          else
+            echo "Building with self-updater feature"
+            cargo build --locked --verbose --bin tosho --target aarch64-linux-android --profile ci
+            cargo build --locked --verbose --bin tosho --target armv7-linux-androideabi --profile ci
+          fi
+        shell: bash
+        env:
+          RELEASE: true
+          CC_aarch64_linux_android: ${{ steps.ndk.outputs.ndk-path }}/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android21-clang
+          CC_armv7_linux_androideabi: ${{ steps.ndk.outputs.ndk-path }}/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi21-clang
+
       - name: Prepare release
-        if: env.BUILD_PROFILE == 'release' && runner.os != 'Windows'
+        if: env.BUILD_PROFILE == 'release' && runner.os != 'Windows' && matrix.os[1] != 'android-build'
         shell: bash
         run: |
           cd target/${{ matrix.os[1] }}/ci
           chmod +x tosho
           tar -czvf tosho-${{ matrix.os[1] }}.tar.gz tosho
+          mv tosho-${{ matrix.os[1] }}.tar.gz ../../..
+          cd ../../..
+
+      - name: Prepare release (Android)
+        if: env.BUILD_PROFILE == 'release' && runner.os != 'Windows' && matrix.os[1] == 'android-build'
+        shell: bash
+        run: |
+          mkdir -p target/android-build/ci
+          mv target/aarch64-linux-android/ci/tosho target/android-build/ci/tosho-aarch64
+          mv target/armv7-linux-androideabi/ci/tosho target/android-build/ci/tosho-armv7
+          chmod +x target/android-build/ci/tosho-aarch64
+          chmod +x target/android-build/ci/tosho-armv7
+          cd target/android-build/ci
+          tar -czvf tosho-${{ matrix.os[1] }}.tar.gz tosho-aarch64 tosho-armv7
           mv tosho-${{ matrix.os[1] }}.tar.gz ../../..
           cd ../../..
 

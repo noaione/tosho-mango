@@ -1,5 +1,6 @@
 use std::process::Command;
 
+#[cfg(windows)]
 extern crate winres;
 
 fn main() {
