@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   action:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: dessant/lock-threads@6627c354848b17df9a5ee9adcbecd1e231dda12f
         with:

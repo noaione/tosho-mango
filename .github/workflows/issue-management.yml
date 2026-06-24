@@ -7,7 +7,7 @@ on:
 
 jobs:
   auto-assign:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     # run on issue opened, and run in my repo
     if: github.event.issue.pull_request == null && github.event.repository.owner.login == 'noaione'
     permissions:

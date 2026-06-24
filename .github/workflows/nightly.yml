@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   build:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - name: Checkout repo
         uses: actions/checkout@b9e0990d219a03df7633c93f6f005a8fecbcab22
