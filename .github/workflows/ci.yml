@@ -186,25 +186,32 @@ jobs:
         run: |
           chmod +x target/aarch64-linux-android/ci/tosho
           chmod +x target/armv7-linux-androideabi/ci/tosho
-
-          # Move both file to android-build folder
-          mkdir -p target/android-build/ci
-          mv target/aarch64-linux-android/ci/tosho target/android-build/ci/tosho-aarch64
-          mv target/armv7-linux-androideabi/ci/tosho target/android-build/ci/tosho-armv7
-          chmod +x target/android-build/ci/tosho-aarch64
-          chmod +x target/android-build/ci/tosho-armv7
         shell: bash
 
       - name: Upload artifact
-        if: env.BUILD_PROFILE == 'debug'
+        if: env.BUILD_PROFILE == 'debug' && matrix.os[1] != 'android-build'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: tosho-${{ matrix.os[1] }}
           path: |
             target/${{ matrix.os[1] }}/ci/tosho.exe
             target/${{ matrix.os[1] }}/ci/tosho
-            target/android-build/ci/tosho-aarch64
-            target/android-build/ci/tosho-armv7
+
+      - name: Upload artifact (Android-aarch64)
+        if: env.BUILD_PROFILE == 'debug' && matrix.os[1] == 'android-build'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: tosho-aarch64-linux-android
+          path: |
+            target/aarch64-linux-android/ci/tosho
+
+      - name: Upload artifact (Android-armv7)
+        if: env.BUILD_PROFILE == 'debug' && matrix.os[1] == 'android-build'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: tosho-armv7-linux-androideabi
+          path: |
+            target/armv7-linux-androideabi/ci/tosho
 
       - name: Build (Release)
         if: env.BUILD_PROFILE == 'release' && matrix.os[1] != 'android-build'
@@ -255,15 +262,18 @@ jobs:
         if: env.BUILD_PROFILE == 'release' && runner.os != 'Windows' && matrix.os[1] == 'android-build'
         shell: bash
         run: |
-          mkdir -p target/android-build/ci
-          mv target/aarch64-linux-android/ci/tosho target/android-build/ci/tosho-aarch64
-          mv target/armv7-linux-androideabi/ci/tosho target/android-build/ci/tosho-armv7
-          chmod +x target/android-build/ci/tosho-aarch64
-          chmod +x target/android-build/ci/tosho-armv7
-          cd target/android-build/ci
-          tar -czvf tosho-${{ matrix.os[1] }}.tar.gz tosho-aarch64 tosho-armv7
-          mv tosho-${{ matrix.os[1] }}.tar.gz ../../..
-          cd ../../..
+          chmod +x target/aarch64-linux-android/ci/tosho
+          chmod +x target/armv7-linux-androideabi/ci/tosho
+
+          pushd target/aarch64-linux-android/ci
+          tar -czvf tosho-aarch64-linux-android.tar.gz tosho
+          mv tosho-aarch64-linux-android.tar.gz ../../..
+          popd
+
+          pushd target/armv7-linux-androideabi/ci
+          tar -czvf tosho-armv7-linux-androideabi.tar.gz tosho
+          mv tosho-armv7-linux-androideabi.tar.gz ../../..
+          popd
 
       - name: Prepare release (Win32)
         if: env.BUILD_PROFILE == 'release' && runner.os == 'Windows'
