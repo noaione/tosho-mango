@@ -38,10 +38,10 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@85e6279cec87321a52edac9c87bce653a07cf6c2
+        uses: actions/checkout@b9e0990d219a03df7633c93f6f005a8fecbcab22
 
       - name: Setup rust cache
-        uses: Swatinem/rust-cache@f0deed1e0edfc6a9be95417288c0e1099b1eeec3
+        uses: Swatinem/rust-cache@baf1a810e98b6a3001d0d7234864ed75a17c42fb
         with:
           prefix-key: "rust-tosho-lint-${{ runner.os }}"
 

@@ -14,7 +14,7 @@ jobs:
       issues: write
     steps:
       - name: Assign author
-        uses: pozil/auto-assign-issue@c015a6a3f410f12f58255c3d085fd774312f7a2f
+        uses: pozil/auto-assign-issue@af6beea6bdf1e8eb373f061c5bc168681fc6d011
         with:
           assignees: noaione
           numOfAssignee: 1

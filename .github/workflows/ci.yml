@@ -50,7 +50,7 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@85e6279cec87321a52edac9c87bce653a07cf6c2
+        uses: actions/checkout@b9e0990d219a03df7633c93f6f005a8fecbcab22
         with:
           submodules: 'true'
 
@@ -60,7 +60,7 @@ jobs:
           echo "RUST_VERSION=$(rustc --version | cut -d ' ' -f 2)" >> "$GITHUB_ENV"
 
       - name: Setup rust cache
-        uses: Swatinem/rust-cache@f0deed1e0edfc6a9be95417288c0e1099b1eeec3
+        uses: Swatinem/rust-cache@baf1a810e98b6a3001d0d7234864ed75a17c42fb
         with:
           prefix-key: "rust-tosho-tests-${{ runner.os }}-${{ env.RUST_VERSION }}"
 
@@ -88,7 +88,7 @@ jobs:
     runs-on: ${{ matrix.os[0] }}
     steps:
       - name: Checkout repo
-        uses: actions/checkout@85e6279cec87321a52edac9c87bce653a07cf6c2
+        uses: actions/checkout@b9e0990d219a03df7633c93f6f005a8fecbcab22
 
       - name: Rust Target
         run: |
@@ -108,7 +108,7 @@ jobs:
         shell: bash
 
       - name: Setup rust cache
-        uses: Swatinem/rust-cache@f0deed1e0edfc6a9be95417288c0e1099b1eeec3
+        uses: Swatinem/rust-cache@baf1a810e98b6a3001d0d7234864ed75a17c42fb
         with:
           prefix-key: "rust-tosho-build-${{ env.BUILD_PROFILE }}-${{ runner.os }}-${{ matrix.os[1] }}-${{ env.RUST_VERSION }}"
 
@@ -132,7 +132,7 @@ jobs:
 
       - name: Upload artifact
         if: env.BUILD_PROFILE == 'debug'
-        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: tosho-${{ matrix.os[1] }}
           path: |
@@ -173,7 +173,7 @@ jobs:
         shell: powershell
 
       - name: Upload artifact (Release)
-        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         if: env.BUILD_PROFILE == 'release'
         with:
           name: tosho-packages-${{ matrix.os[1] }}
@@ -196,17 +196,17 @@ jobs:
       attestations: write
     steps:
       - name: Checkout repo
-        uses: actions/checkout@85e6279cec87321a52edac9c87bce653a07cf6c2
+        uses: actions/checkout@b9e0990d219a03df7633c93f6f005a8fecbcab22
 
       - name: Download artifacts
-        uses: actions/download-artifact@7fba95161a0924506ed1ae69cdbae8371ee00b3f
+        uses: actions/download-artifact@484a0b528fb4d7bd804637ccb632e47a0e638317
         with:
           path: tosho-packages
           pattern: tosho-packages-*
           merge-multiple: true
 
       - name: Generate artifacts attestation
-        uses: actions/attest-build-provenance@00014ed6ed5efc5b1ab7f7f34a39eb55d41aa4f8
+        uses: actions/attest-build-provenance@f14352a605c57b0a66e0d49bba5825967f1dbedf
         id: attest
         with:
           subject-path: tosho-packages/*
@@ -223,7 +223,7 @@ jobs:
           ATTEST_URL: ${{ steps.attest.outputs.attestation-url }}
 
       - name: Release
-        uses: softprops/action-gh-release@67b6c38432c171b8aa64dc6f3f152d12da2d99fa
+        uses: softprops/action-gh-release@718ea10b132b3b2eba29c1007bb80653f286566b
         with:
           files: |
             tosho-packages/*
@@ -234,7 +234,7 @@ jobs:
           name: ${{ steps.prepare-change.outputs.version_subject }}
 
       - name: Create discussions
-        uses: nvdaes/build-discussion@b35678c64d2814f35a0b26c799e3c7a57bfb9a03
+        uses: nvdaes/build-discussion@2b1aa4c0c61edf44580576e491af5219be2b8ca6
         with:
           title: Release ${{ github.ref_name }}
           body: |
