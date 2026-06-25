@@ -32,8 +32,10 @@ pub(crate) async fn get_last_update_check_time() -> color_eyre::Result<i64> {
 }
 
 async fn write_last_update_check_time(time: i64) -> color_eyre::Result<()> {
-    let target_file = crate::config::get_user_path().join("last_update_check.tmd");
-
+    let user_path = crate::config::get_user_path();
+    let target_file = user_path.join("last_update_check.tmd");
+    // create folders
+    tokio::fs::create_dir_all(user_path).await?;
     tokio::fs::write(&target_file, time.to_string()).await?;
 
     Ok(())
