@@ -379,6 +379,18 @@ async fn get_last_page(target_dir: PathBuf) -> u64 {
     last_page
 }
 
+async fn read_dir_sorted(target_dir: PathBuf) -> tokio::io::Result<Vec<tokio::fs::DirEntry>> {
+    let mut read_dirs = tokio::fs::read_dir(target_dir).await?;
+    let mut entries = vec![];
+
+    while let Some(entry) = read_dirs.next_entry().await? {
+        entries.push(entry);
+    }
+
+    entries.sort_by_key(|entry| entry.file_name());
+    Ok(entries)
+}
+
 fn guess_from_ext(path: &Path) -> Option<String> {
     let suffix = path.extension();
     if let Some(suffix) = suffix {
@@ -554,29 +566,15 @@ pub(crate) async fn tools_split_merge(
                 continue;
             }
 
-            // iterate through the source directory
-            let mut read_dirs = match tokio::fs::read_dir(source_dir).await {
-                Ok(read_dirs) => read_dirs,
+            let files = match read_dir_sorted(source_dir).await {
+                Ok(files) => files,
                 Err(err) => {
                     console.error(format!("   Failed to read source directory: {err}"));
                     continue;
                 }
             };
 
-            loop {
-                let file = match read_dirs.next_entry().await {
-                    Ok(file) => file,
-                    Err(err) => {
-                        console.error(format!("   Failed to read source directory: {err}"));
-                        break;
-                    }
-                };
-
-                let file = match file {
-                    Some(file) => file,
-                    None => break,
-                };
-
+            for file in files {
                 let path = &file.path();
                 if path.is_file() && is_image(path) {
                     // move the file from "file" to target_dir / p{last_page}.{ext}
