@@ -138,7 +138,7 @@ pub struct MangaDetail {
     rating: MangaRating,
     /// Series thumbnail URL
     #[serde(rename = "link_img_url")]
-    thumbnail: String,
+    thumbnail: Option<String>,
     /// Series banner URL
     #[serde(rename = "keyart_url")]
     keyart: Option<String>,
