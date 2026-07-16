@@ -7,10 +7,11 @@
 //!
 //! ```rust,no_run
 //! use tosho_kmkc::imaging::descramble_image;
+//! use tosho_kmkc::models::ScrambleSeed;
 //!
 //! let img_bytes = [0_u8; 100];
 //!
-//! let descrambled_img_bytes = descramble_image(&img_bytes, 4, 749191485).unwrap();
+//! let descrambled_img_bytes = descramble_image(&img_bytes, 4, 0, 0, ScrambleSeed::Seed(749191485)).unwrap();
 //! ```
 
 use std::io::Cursor;
@@ -142,10 +143,11 @@ fn generate_copy_targets(
 /// # Example
 /// ```rust,no_run
 /// use tosho_kmkc::imaging::descramble_image;
+/// use tosho_kmkc::models::ScrambleSeed;
 ///
 /// let img_bytes = [0_u8; 100];
 ///
-/// let descrambled_img_bytes = descramble_image(&img_bytes, 4, 749191485).unwrap();
+/// let descrambled_img_bytes = descramble_image(&img_bytes, 4, 0, 0, ScrambleSeed::Seed(749191485)).unwrap();
 /// ```
 pub fn descramble_image(
     img_bytes: &[u8],
@@ -301,21 +303,21 @@ mod tests {
         let copy_targets = copy_targets.unwrap();
         let expect_targets: Vec<((u32, u32), (u32, u32))> = vec![
             ((0, 0), (0, 0)),
-            ((2, 1), (1, 0)),
+            ((1, 1), (1, 0)),
             ((3, 2), (2, 0)),
-            ((1, 3), (3, 0)),
-            ((1, 1), (0, 1)),
-            ((3, 3), (1, 1)),
-            ((2, 0), (2, 1)),
+            ((0, 3), (3, 0)),
+            ((1, 3), (0, 1)),
+            ((3, 1), (1, 1)),
+            ((2, 2), (2, 1)),
             ((0, 2), (3, 1)),
-            ((2, 2), (0, 2)),
-            ((0, 3), (1, 2)),
+            ((3, 0), (0, 2)),
+            ((2, 3), (1, 2)),
             ((1, 0), (2, 2)),
-            ((3, 1), (3, 2)),
-            ((3, 0), (0, 3)),
-            ((1, 2), (1, 3)),
-            ((0, 1), (2, 3)),
-            ((2, 3), (3, 3)),
+            ((1, 2), (3, 2)),
+            ((0, 1), (0, 3)),
+            ((2, 0), (1, 3)),
+            ((2, 1), (2, 3)),
+            ((3, 3), (3, 3)),
         ];
 
         assert_eq!(copy_targets, expect_targets);
