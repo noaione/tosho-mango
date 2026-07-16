@@ -75,7 +75,7 @@ where
     match String::deserialize(deserializer) {
         Ok(s) => {
             let datetime = NaiveDate::parse_from_str(&s, "%F").map_err(|err| {
-                serde::de::Error::custom(format!("Invalid date format: {} | Original: {}", err, &s))
+                serde::de::Error::custom(format!("Invalid date format: {} | Original: {}", err, s))
             })?;
             Ok(Some(datetime))
         }

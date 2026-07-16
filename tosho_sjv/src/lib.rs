@@ -94,7 +94,7 @@ impl SJClient {
         headers.insert(
             reqwest::header::HeaderName::from_static(HEADER_PIECE),
             reqwest::header::HeaderValue::from_str(&x_header).map_err(|_| {
-                ToshoClientError::HeaderParseError(format!("Header piece of {}", &x_header))
+                ToshoClientError::HeaderParseError(format!("Header piece of {}", x_header))
             })?,
         );
 
@@ -473,7 +473,7 @@ impl SJClient {
         headers.insert(
             reqwest::header::HeaderName::from_static(HEADER_PIECE),
             reqwest::header::HeaderValue::from_str(&x_header).map_err(|_| {
-                ToshoClientError::HeaderParseError(format!("Header piece of {}", &x_header))
+                ToshoClientError::HeaderParseError(format!("Header piece of {}", x_header))
             })?,
         );
 

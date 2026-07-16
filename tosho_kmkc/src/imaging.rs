@@ -21,7 +21,8 @@ use tosho_common::{ToshoDetailedImageError, ToshoImageError, ToshoResult, bail_o
 
 use crate::models::ScrambleSeed;
 
-const ALPHABETS: [&'static str; 2] = ["we7ru3ty8i", "h4xm9bqz1p"];
+type TargetPair = (u32, u32);
+const ALPHABETS: [&str; 2] = ["we7ru3ty8i", "h4xm9bqz1p"];
 
 fn u32_to_f32(n: u32) -> f32 {
     if n > i32::MAX as u32 {
@@ -101,8 +102,8 @@ fn generate_copy_targets(
     title_id: u32,
     episode_id: u32,
     seed: ScrambleSeed,
-) -> ToshoResult<Vec<((u32, u32), (u32, u32))>> {
-    let mut targets: Vec<((u32, u32), (u32, u32))> = Vec::new();
+) -> ToshoResult<Vec<(TargetPair, TargetPair)>> {
+    let mut targets: Vec<(TargetPair, TargetPair)> = Vec::new();
     let real_seed = match seed {
         ScrambleSeed::Seed(s) => s,
         ScrambleSeed::Derived(s) => derive_seed(title_id, episode_id, &s)?,
