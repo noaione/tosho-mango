@@ -584,7 +584,7 @@ impl MUClient {
 pub fn decrypt_image(image: &[u8], page: &proto::ChapterPage) -> ToshoResult<Vec<u8>> {
     use aes::Aes256;
     use aes::cipher::block_padding::Pkcs7;
-    use aes::cipher::{BlockDecryptMut, KeyIvInit};
+    use aes::cipher::{BlockModeDecrypt, KeyIvInit};
 
     let key_bytes = page.key_as_bytes()?;
     let iv_bytes = page.iv_as_bytes()?;
@@ -595,9 +595,11 @@ pub fn decrypt_image(image: &[u8], page: &proto::ChapterPage) -> ToshoResult<Vec
                 .map_err(|e| make_error!("Failed to create decryptor: {}", e))?;
 
             let mut dec_image = image.to_vec();
-            decryptor
-                .decrypt_padded_mut::<Pkcs7>(&mut dec_image)
+            let decrypted_len = decryptor
+                .decrypt_padded::<Pkcs7>(&mut dec_image)
                 .map_err(|e| make_error!("Failed to decrypt image: {}", e))?;
+            let decrypted_len = decrypted_len.len();
+            dec_image.truncate(decrypted_len);
 
             Ok(dec_image)
         }

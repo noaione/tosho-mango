@@ -28,6 +28,17 @@ pub mod models;
 
 const SCREEN_INCH: f64 = 61.1918658356194;
 
+fn encode_hex(bytes: &[u8]) -> String {
+    const HEX_DIGITS: &[u8; 16] = b"0123456789abcdef";
+
+    let mut encoded = String::with_capacity(bytes.len() * 2);
+    for &byte in bytes {
+        encoded.push(char::from(HEX_DIGITS[usize::from(byte >> 4)]));
+        encoded.push(char::from(HEX_DIGITS[usize::from(byte & 0x0f)]));
+    }
+    encoded
+}
+
 /// Main client for interacting with the AP AM
 ///
 /// # Example
@@ -604,7 +615,7 @@ fn make_header(
     let formulae = format!("{}{}{}", config.token(), current_unix, av);
 
     let formulae_hashed = <Sha256 as Digest>::digest(formulae.as_bytes());
-    let formulae_hashed = format!("{formulae_hashed:x}");
+    let formulae_hashed = encode_hex(&formulae_hashed);
 
     req_headers.insert(
         HEADER_NAMES.s,

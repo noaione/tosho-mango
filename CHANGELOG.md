@@ -18,6 +18,7 @@ Starting from Rust port of the project, all changes will be put into this file.
 
 ### Build
 - Bump dependencies to latest version (except reqwest and some other)
+  - Finally bump to reqwest 0.13
 
 ## [0.9.2] (2026-01-31)
 ### Changes

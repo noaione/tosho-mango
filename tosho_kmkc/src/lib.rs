@@ -32,6 +32,17 @@ use tosho_common::{
 };
 use tosho_macros::AutoGetter;
 
+fn encode_hex(bytes: &[u8]) -> String {
+    const HEX_DIGITS: &[u8; 16] = b"0123456789abcdef";
+
+    let mut encoded = String::with_capacity(bytes.len() * 2);
+    for &byte in bytes {
+        encoded.push(char::from(HEX_DIGITS[usize::from(byte >> 4)]));
+        encoded.push(char::from(HEX_DIGITS[usize::from(byte & 0x0f)]));
+    }
+    encoded
+}
+
 /// Login result for the API.
 ///
 /// This will return either a [`KMConfig::Web`] or [`KMConfig::Mobile`] depending on the login type.
@@ -1028,10 +1039,10 @@ fn create_request_hash(
             let birth_expire_hash = hash_kv(birthday, &expires);
 
             let merged_hash = <Sha512 as Digest>::digest(
-                format!("{qi_s_hashed:x}{birth_expire_hash}").as_bytes(),
+                format!("{}{birth_expire_hash}", encode_hex(&qi_s_hashed)).as_bytes(),
             );
 
-            Ok(format!("{merged_hash:x}"))
+            Ok(encode_hex(&merged_hash))
         }
         KMConfig::Mobile(mobile) => {
             let mut hasher = <Sha256 as Digest>::new();
@@ -1048,13 +1059,13 @@ fn create_request_hash(
                     make_error!("Key {} not found when hashing query params", key)
                 })?;
                 let hashed_value = <Md5 as Digest>::digest(value.as_bytes());
-                let hash_digest = format!("{hashed_value:x}");
+                let hash_digest = encode_hex(&hashed_value);
 
                 hasher.update(hash_digest);
             }
 
             let hashed = hasher.finalize();
-            Ok(format!("{hashed:x}"))
+            Ok(encode_hex(&hashed))
         }
     }
 }
@@ -1068,7 +1079,7 @@ fn hash_kv(key: &str, value: &str) -> String {
     let hasher256 = <Sha256 as Digest>::digest(key);
     let hasher512 = <Sha512 as Digest>::digest(value);
 
-    format!("{hasher256:x}_{hasher512:x}")
+    format!("{}_{}", encode_hex(&hasher256), encode_hex(&hasher512))
 }
 
 #[cfg(test)]
