@@ -13,7 +13,7 @@ use super::{FavoriteStatus, MagazineCategory, PublishCategory, SupportStatus};
 pub struct TitleNode {
     /// The title ID.
     #[serde(rename = "title_id")]
-    id: i32,
+    id: u32,
     /// The title name.
     #[serde(rename = "title_name")]
     title: String,
@@ -32,7 +32,7 @@ pub struct TitleNode {
     #[serde(rename = "notice_text")]
     notice: String,
     /// The first episode ID.
-    first_episode_id: i32,
+    first_episode_id: u32,
     /// The next update text for the title.
     #[serde(rename = "next_updated_text")]
     next_update: Option<String>,
@@ -57,12 +57,12 @@ pub struct TitleNode {
     episode_order: i32,
     /// The list of episode IDs.
     #[serde(rename = "episode_id_list")]
-    episode_ids: Vec<i32>,
+    episode_ids: Vec<u32>,
     /// The latest paid episode ID.
     #[serde(rename = "latest_paid_episode_id")]
-    latest_episode_ids: Vec<i32>,
+    latest_episode_ids: Vec<u32>,
     /// The latest free episode ID.
-    latest_free_episode_id: Option<i32>,
+    latest_free_episode_id: Option<u32>,
     /// The list of genre IDs.
     #[serde(rename = "genre_id_list")]
     genre_ids: Vec<i32>,
@@ -275,7 +275,7 @@ pub struct TitleShare {
 pub struct TitleFavoriteNode {
     /// The title ID.
     #[serde(rename = "title_id")]
-    id: i32,
+    id: u32,
     /// The update cycle for when new episodes are released.
     #[serde(
         rename = "paid_episode_updated",

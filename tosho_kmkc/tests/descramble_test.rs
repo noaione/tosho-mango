@@ -76,7 +76,14 @@ fn test_descramble_image() {
         .read_to_end(&mut buf)
         .expect("Failed to read image file");
 
-    let descrambled = descramble_image(buf.as_ref(), rectbox, seed).unwrap();
+    let descrambled = descramble_image(
+        buf.as_ref(),
+        rectbox,
+        0,
+        0,
+        tosho_kmkc::models::ScrambleSeed::Seed(seed),
+    )
+    .unwrap();
 
     // Test with the reference image
     let mut ref_file = open_assets_file("descramble_out.tmfxture").unwrap();
@@ -93,5 +100,12 @@ fn test_descramble_image() {
 fn test_1x1_image_with_4_rectbox() {
     let one_by_one = include_bytes!("1x1.png");
 
-    descramble_image(one_by_one, 4, 749191485).unwrap();
+    descramble_image(
+        one_by_one,
+        4,
+        0,
+        0,
+        tosho_kmkc::models::ScrambleSeed::Seed(749191485),
+    )
+    .unwrap();
 }

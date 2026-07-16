@@ -62,7 +62,7 @@ pub(crate) enum KMKCCommands {
     #[command(name = "autodownload")]
     AutoDownload {
         /// Title ID to use
-        title_id: i32,
+        title_id: u32,
         /// Disable the auto purchase feature and only download free/purchased chapter(s).
         #[arg(short = 'n', long)]
         no_purchase: bool,
@@ -71,10 +71,10 @@ pub(crate) enum KMKCCommands {
         only_check_folder: bool,
         /// Specify the starting chapter ID to download
         #[arg(short = 's', long, default_value = None)]
-        start_from: Option<i32>,
+        start_from: Option<u32>,
         /// Specify the end chapter ID to download
         #[arg(short = 'e', long, default_value = None)]
-        end_until: Option<i32>,
+        end_until: Option<u32>,
         /// Disable both title/premium ticket from being used to purchase chapters
         #[arg(long)]
         no_ticket: bool,
@@ -101,7 +101,7 @@ pub(crate) enum KMKCCommands {
     /// Download a chapters from a title
     Download {
         /// Title ID to use
-        title_id: i32,
+        title_id: u32,
         /// Specify the chapter ID to purchase (ex: 1,2,3,4,5)
         #[arg(short = 'c', long = "chapters", default_value = None, value_parser = parse_comma_number)]
         chapters: Option<CommaSeparatedNumber>,
@@ -131,7 +131,7 @@ pub(crate) enum KMKCCommands {
     /// Get a title information
     Info {
         /// Title ID to use
-        title_id: i32,
+        title_id: u32,
         /// Show each chapter detailed information
         #[arg(short = 'c', long = "chapters")]
         show_chapters: bool,
@@ -141,14 +141,14 @@ pub(crate) enum KMKCCommands {
     /// Purchases chapters for a title
     Purchase {
         /// Title ID to use
-        title_id: i32,
+        title_id: u32,
     },
     /// See purchased titles for an account
     Purchased,
     /// Precalculate the amount of points needed to purchase chapters for a title
     Precalculate {
         /// Title ID to use
-        title_id: i32,
+        title_id: u32,
     },
     /// Get the current title rankings
     Rankings {

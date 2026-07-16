@@ -12,7 +12,7 @@ use super::KMAPIError;
 #[derive(Debug, Clone, Copy, AutoGetter, Serialize, Deserialize)]
 pub struct SimpleId {
     /// The ID itself.
-    id: i32,
+    id: u32,
 }
 
 /// The base response for all API calls.

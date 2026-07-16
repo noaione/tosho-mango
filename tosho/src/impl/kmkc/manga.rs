@@ -54,7 +54,7 @@ pub(crate) async fn kmkc_search_weekly(
     let results = client.get_weekly().await;
     match results {
         Ok(results) => {
-            let mut title_ids_list: Vec<i32> = vec![];
+            let mut title_ids_list: Vec<u32> = vec![];
             for weekly_info in results.contents() {
                 if weekly_info.weekday() == weekday.indexed() {
                     title_ids_list = weekly_info.titles().to_vec();
@@ -113,7 +113,7 @@ fn format_tags(tags: &[GenreNode]) -> String {
 }
 
 pub(crate) async fn kmkc_title_info(
-    title_id: i32,
+    title_id: u32,
     show_chapters: bool,
     client: &KMClient,
     console: &crate::term::Terminal,

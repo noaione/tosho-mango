@@ -31,6 +31,8 @@ pub struct Constants {
     pub(crate) hash: &'static str,
     /// Platform number
     pub(crate) platform_number: u8,
+    /// Support secure?
+    pub(crate) support_secure: bool,
 }
 
 /// A ranking tab for KM.
@@ -59,6 +61,7 @@ pub static ANDROID_CONSTANTS: LazyLock<Constants> = LazyLock::new(|| Constants {
     display_version: Some("2.6.5"),
     hash: HASH_HEADER_MOBILE,
     platform_number: 2,
+    support_secure: false,
 });
 /// The constants used for legacy Android devices.
 ///
@@ -71,6 +74,7 @@ pub static ANDROID_LEGACY_CONSTANTS: LazyLock<Constants> = LazyLock::new(|| Cons
     display_version: Some("2.1.5"),
     hash: HASH_HEADER_MOBILE,
     platform_number: 2,
+    support_secure: false,
 });
 /// The constants used for iOS devices.
 pub static APPLE_CONSTANTS: LazyLock<Constants> = LazyLock::new(|| {
@@ -89,12 +93,14 @@ pub static APPLE_CONSTANTS: LazyLock<Constants> = LazyLock::new(|| {
         display_version: None,
         hash: hash_header,
         platform_number: 1,
+        support_secure: false,
     }
 });
 /// The constants used for web devices.
 pub static WEB_CONSTANTS: LazyLock<Constants> = LazyLock::new(|| {
     let hash_header = comptime_b64!("WC1LbWFuZ2EtSGFzaA==");
-    let chrome_ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36";
+    let chrome_ua =
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:152.0) Gecko/20100101 Firefox/152.0";
 
     Constants {
         ua: chrome_ua,
@@ -104,11 +110,14 @@ pub static WEB_CONSTANTS: LazyLock<Constants> = LazyLock::new(|| {
         display_version: None,
         hash: hash_header,
         platform_number: 3,
+        support_secure: true,
     }
 });
 
 /// The base API used for overall requests.
 pub const BASE_API: &str = comptime_b64!("aHR0cHM6Ly9hcGkua21hbmdhLmtvZGFuc2hhLmNvbQ==");
+/// The secure base API used for overall requests.
+pub const SECURE_BASE_API: &str = comptime_b64!("aHR0cHM6Ly9zZS1hcGkua21hbmdhLmtvZGFuc2hhLmNvbQ==");
 /// The base image URL used for image requests.
 pub const BASE_IMG: &str = comptime_b64!("aHR0cHM6Ly9jZG4ua21hbmdhLmtvZGFuc2hhLmNvbQ==");
 
