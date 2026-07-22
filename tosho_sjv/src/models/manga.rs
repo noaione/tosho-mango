@@ -81,8 +81,8 @@ pub struct MangaChapterDetail {
     /// Is this chapter featured
     featured: bool,
     /// Start page of the chapter
-    #[serde(rename = "contents_start_page")]
-    start_page: u32,
+    #[serde(rename = "contents_start_page", default)]
+    start_page: Option<u32>,
 }
 
 impl MangaChapterDetail {

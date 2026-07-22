@@ -384,7 +384,7 @@ pub(crate) async fn sjv_download(
                 // Determine total image count, if we start at 0
                 // then the total image count is the same as the chapter.pages
                 // If above 0, then we need to add that amount to the total image count
-                let start_page = chapter.start_page();
+                let start_page = chapter.start_page().unwrap_or(0);
                 let total_image_count = chapter.pages() + start_page;
 
                 let progress =
