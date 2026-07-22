@@ -56,13 +56,18 @@ pub struct MangaChapterDetail {
     #[serde(rename = "numpages")]
     pages: u32,
     /// Date of creation or added to the API
-    #[serde(with = "super::datetime")]
+    #[serde(
+        deserialize_with = "super::datetime::deserialize_opt",
+        serialize_with = "super::datetime::serialize_opt",
+        default
+    )]
     #[copyable]
-    created_at: DateTime<FixedOffset>,
+    created_at: Option<DateTime<FixedOffset>>,
     /// Date of last update
     #[serde(
         deserialize_with = "super::datetime::deserialize_opt",
-        serialize_with = "super::datetime::serialize_opt"
+        serialize_with = "super::datetime::serialize_opt",
+        default
     )]
     #[copyable]
     updated_at: Option<DateTime<FixedOffset>>,

@@ -220,8 +220,10 @@ pub(crate) async fn sjv_title_info(
                     }
                     console.info(&base_txt);
 
-                    let created_at = chapter.created_at().format("%b %d, %Y").to_string();
-                    console.info(cformat!("     <s>Published</>: {}", created_at));
+                    if let Some(created_at) = chapter.created_at() {
+                        let created_at = created_at.format("%b %d, %Y").to_string();
+                        console.info(cformat!("     <s>Published</>: {}", created_at));
+                    }
                     if let Some(expiry_at) = chapter.expiry_at() {
                         let expiry_at =
                             unix_timestamp_to_string(expiry_at).unwrap_or("N/A".to_string());
