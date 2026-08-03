@@ -554,11 +554,10 @@ impl MPClient {
         }
     }
 
-    /// Replace the image host with the valid and correct host.
+    /// Get the actual image host from the URL.
     ///
-    /// Sometimes the API would return a URL with cloudfront host,
-    /// which can't be accessed directly but need to use the "mirror" host
-    /// provided by the client.
+    /// Since it looks like they're not static anymore.
+    /// Fallback to the default host.
     fn get_image_host(&self, url: &str) -> ToshoResult<String> {
         let parsed_uri = ::reqwest::Url::parse(url).map_err(|err| {
             ToshoError::new(format!(
