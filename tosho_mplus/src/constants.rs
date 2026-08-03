@@ -30,8 +30,8 @@ pub struct Constants {
 /// The constants used for Android devices.
 pub static ANDROID_CONSTANTS: LazyLock<Constants> = LazyLock::new(|| {
     Constants {
-        image_ua: "Dalvik/2.1.0 (Linux; U; Android 14; SM-A156E Build/UP1A.231005.007)".to_string(),
-        api_ua: "okhttp/4.9.0".to_string(),
+        image_ua: "ktor-client".to_string(),
+        api_ua: "ktor-client".to_string(),
         os_ver: "34", // Android SDK 14
         app_ver: "1024",
         os_name: "android",
@@ -49,6 +49,11 @@ pub const BASE_HOST: &str = comptime_b64!("bWFuZ2FwbHVzLnNodWVpc2hhLmNvLmpw");
 pub const API_HOST: &str = comptime_b64!("anVtcGctYXBpLnRva3lvLWNkbi5jb20=");
 /// The image host used for image requests.
 pub const IMAGE_HOST: &str = comptime_b64!("anVtcGctYXNzZXRzLnRva3lvLWNkbi5jb20=");
+
+/// The cookie token
+pub const VIEW_TOKEN_KEY: &str = comptime_b64!("cGx1c192d190b2tlbg==");
+/// The token header
+pub const VIEW_TOKEN_HEADER: &str = comptime_b64!("UGx1cy1Wdy1Ub2tlbg==");
 
 /// Returns the constants for the given device type.
 ///

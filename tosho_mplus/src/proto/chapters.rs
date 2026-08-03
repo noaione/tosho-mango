@@ -357,6 +357,10 @@ pub struct ChapterViewer {
     #[prost(string, tag = "14")]
     #[skip_field]
     plan_type: ::prost::alloc::string::String,
+    /// Viewer token
+    #[prost(string, optional, tag = "19")]
+    #[skip_field]
+    viewer_token: ::core::option::Option<::prost::alloc::string::String>,
 }
 
 impl ChapterViewer {
@@ -369,5 +373,15 @@ impl ChapterViewer {
             Ok(plan) => plan,
             Err(_) => SubscriptionPlan::Basic,
         }
+    }
+
+    /// Get the viewer token with optionality
+    pub fn opt_viewer_token(&self) -> Option<&str> {
+        self.viewer_token.as_deref()
+    }
+
+    /// Set a new view token
+    pub fn set_viewer_token(&mut self, token: impl Into<String>) {
+        self.viewer_token = Some(token.into())
     }
 }

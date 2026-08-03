@@ -198,6 +198,7 @@ struct MPDownloadNode {
     image: ChapterPage,
     idx: usize,
     extension: String,
+    view_token: String,
 }
 
 async fn mplus_actual_downloader(
@@ -219,7 +220,11 @@ async fn mplus_actual_downloader(
         ));
     }
 
-    match node.client.stream_download(node.image.url(), writer).await {
+    match node
+        .client
+        .stream_download(node.image.url(), node.view_token, writer)
+        .await
+    {
         Ok(_) => {}
         Err(err) => {
             console.error(format!("    Failed to download image: {err}"));
@@ -337,6 +342,15 @@ pub(crate) async fn mplus_download(
 
                 let viewer = viewer.unwrap();
 
+                // Get viewer token
+                let view_token = viewer.opt_viewer_token().map(|x| x.to_string());
+                let view_token = if let Some(token) = view_token {
+                    token
+                } else {
+                    console.error("Failed to get viewer token");
+                    return 1;
+                };
+
                 let chapter_images: Vec<tosho_mplus::proto::ChapterPage> = viewer
                     .pages()
                     .iter()
@@ -384,6 +398,7 @@ pub(crate) async fn mplus_download(
                             let image_dir = image_dir.clone();
                             let cnsl = console.clone();
                             let image = image.clone();
+                            let view_tok = view_token.clone();
                             let progress = Arc::clone(&progress);
                             let semaphore = Arc::clone(&semaphore);
 
@@ -395,6 +410,7 @@ pub(crate) async fn mplus_download(
                                         client: wrap_client,
                                         image,
                                         idx,
+                                        view_token: view_tok,
                                         extension: "webp".to_string(),
                                     },
                                     image_dir,
@@ -421,6 +437,7 @@ pub(crate) async fn mplus_download(
                                 image: image.clone(),
                                 idx,
                                 extension: "webp".to_string(),
+                                view_token: view_token.clone(),
                             },
                             image_dir.clone(),
                             console.clone(),

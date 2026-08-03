@@ -12,11 +12,11 @@ use tosho_common::{
     parse_protobuf_response,
 };
 
-use constants::{API_HOST, Constants, IMAGE_HOST};
+use constants::{API_HOST, Constants};
 use helper::RankingType;
 use proto::{CommentList, ErrorResponse, Language, SuccessOrError};
 
-use crate::constants::BASE_API;
+use crate::constants::{BASE_API, IMAGE_HOST, VIEW_TOKEN_HEADER, VIEW_TOKEN_KEY};
 pub use crate::helper::ImageQuality;
 
 /// Main client for interacting with the M+ API.
@@ -91,6 +91,10 @@ impl MPClient {
     ) -> ToshoResult<Self> {
         let mut headers = reqwest::header::HeaderMap::new();
         headers.insert("Host", reqwest::header::HeaderValue::from_static(API_HOST));
+        headers.insert(
+            "Accept",
+            reqwest::header::HeaderValue::from_static("application/x-protobuf"),
+        );
         headers.insert(
             "User-Agent",
             reqwest::header::HeaderValue::from_static(&constants.api_ua),
@@ -271,7 +275,7 @@ impl MPClient {
     pub async fn get_all_titles(&self) -> ToshoResult<APIResponse<proto::TitleListOnlyV2>> {
         let request = self
             .inner
-            .get(self.build_url("title_list/all_v2"))
+            .get(self.build_url("title_list/allV2"))
             .query(&self.empty_params(false))
             .send()
             .await?;
@@ -485,16 +489,39 @@ impl MPClient {
 
         let request = self
             .inner
-            .get(self.build_url("manga_viewer"))
+            .get(self.build_url("manga_viewer_v3"))
             .query(&query_params)
             .send()
             .await?;
+
+        // get set-cookie header and find VIEW_TOKEN_KEY=, throw error if not found
+        let headers = request.headers().clone();
+        let token = headers
+            .get("set-cookie")
+            .and_then(|cookie| cookie.to_str().ok())
+            .and_then(|cookie| {
+                cookie
+                    .split(';')
+                    .find(|c| c.contains(VIEW_TOKEN_KEY))
+                    .and_then(|c| c.split('=').nth(1))
+            });
 
         let response = parse_response(request).await?;
 
         match response {
             SuccessOrError::Success(data) => match data.chapter_viewer() {
-                Some(inner_data) => Ok(APIResponse::Success(Box::new(inner_data))),
+                Some(inner_data) => {
+                    // set view token
+                    if inner_data.viewer_token().is_empty()
+                        && let Some(view_tok) = token
+                    {
+                        let mut copied_data = inner_data.clone();
+                        copied_data.set_viewer_token(view_tok);
+                        Ok(APIResponse::Success(Box::new(copied_data)))
+                    } else {
+                        Ok(APIResponse::Success(Box::new(inner_data)))
+                    }
+                }
                 None => Err(ToshoParseError::expect("chapter viewer")),
             },
             SuccessOrError::Error(error) => Ok(APIResponse::Error(error)),
@@ -527,6 +554,22 @@ impl MPClient {
         }
     }
 
+    /// Replace the image host with the valid and correct host.
+    ///
+    /// Sometimes the API would return a URL with cloudfront host,
+    /// which can't be accessed directly but need to use the "mirror" host
+    /// provided by the client.
+    fn get_image_host(&self, url: &str) -> ToshoResult<String> {
+        let parsed_uri = ::reqwest::Url::parse(url).map_err(|err| {
+            ToshoError::new(format!(
+                "Failed to parse URL {} to get host: {:?}",
+                url, err
+            ))
+        })?;
+        let host = parsed_uri.host_str().unwrap_or(IMAGE_HOST);
+        Ok(host.to_string())
+    }
+
     /// Stream download the image from the given URL.
     ///
     /// The URL can be obtained from [`get_chapter_images`](#method.get_chapter_images).
@@ -537,24 +580,36 @@ impl MPClient {
     pub async fn stream_download(
         &self,
         url: impl AsRef<str>,
+        view_token: impl AsRef<str>,
         mut writer: impl io::AsyncWrite + Unpin,
     ) -> ToshoResult<()> {
+        // extract the host
+        let img_url = url.as_ref();
+        let img_host = self.get_image_host(img_url)?;
+
         let res = self
             .inner
-            .get(url.as_ref())
+            .get(img_url)
             .headers({
                 let mut headers = reqwest::header::HeaderMap::new();
                 headers.insert(
                     "Host",
-                    reqwest::header::HeaderValue::from_static(IMAGE_HOST),
+                    reqwest::header::HeaderValue::from_str(&img_host).map_err(|_| {
+                        ToshoClientError::HeaderParseError(format!("host for {}", img_host))
+                    })?,
                 );
                 headers.insert(
                     "User-Agent",
                     reqwest::header::HeaderValue::from_static(&self.constants.image_ua),
                 );
                 headers.insert(
-                    "Cache-Control",
-                    reqwest::header::HeaderValue::from_static("no-cache"),
+                    VIEW_TOKEN_HEADER,
+                    reqwest::header::HeaderValue::from_str(view_token.as_ref()).map_err(|_| {
+                        ToshoClientError::HeaderParseError(format!(
+                            "view-token for {}",
+                            view_token.as_ref()
+                        ))
+                    })?,
                 );
                 headers
             })

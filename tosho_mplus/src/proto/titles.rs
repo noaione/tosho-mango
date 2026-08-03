@@ -152,11 +152,18 @@ pub struct TitleDetail {
     /// Is the first time reading would be free?
     #[prost(bool, tag = "35")]
     first_time_free: bool,
+    /// Chapter list without stupid grouping
+    #[prost(message, repeated, tag = "38")]
+    chapters: ::prost::alloc::vec::Vec<Chapter>,
 }
 
 impl TitleDetail {
     /// Flatten the chapters group more into a single [`Vec`] list
     pub fn flat_chapters_group(&self) -> Vec<Chapter> {
+        // if chapters exist, we use that
+        if !self.chapters.is_empty() {
+            return self.chapters.clone();
+        }
         self.chapter_groups
             .iter()
             .flat_map(|group| group.flatten())
