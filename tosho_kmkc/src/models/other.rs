@@ -85,7 +85,8 @@ pub struct GenreNode {
     #[serde(rename = "genre_name")]
     name: String,
     /// The genre image URL.
-    image_url: String,
+    #[serde(default)]
+    image_url: Option<String>,
 }
 
 /// Represents the genre search response.
