@@ -9,8 +9,8 @@ pub mod constants;
 pub mod imaging;
 pub mod models;
 use constants::{
-    API_HOST, BASE_API, HEADER_CRAWLER, HEADER_PLATFORM, IMAGE_HOST, SECURE_BASE_API,
-    WEB_CONSTANTS, get_constants,
+    API_HOST, BASE_API, HEADER_CLIENT_ID, HEADER_CRAWLER, HEADER_PLATFORM, IMAGE_HOST,
+    SECURE_BASE_API, WEB_CONSTANTS, get_constants,
 };
 use futures_util::TryStreamExt;
 use md5::Md5;
@@ -218,6 +218,7 @@ impl KMClient {
         params: Option<HashMap<String, String>>,
         headers: Option<reqwest::header::HeaderMap>,
         is_secure: bool,
+        require_client_id: bool,
     ) -> ToshoResult<T>
     where
         T: serde::de::DeserializeOwned,
@@ -286,6 +287,24 @@ impl KMClient {
                 .parse()
                 .map_err(|e| make_error!("Failed to parse extended crawler header: {}", e))?,
         );
+        if require_client_id {
+            empty_headers.insert(
+                HEADER_CLIENT_ID,
+                self.config
+                    .user_id()
+                    .to_string()
+                    .parse()
+                    .map_err(|e| make_error!("Failed to parse empty client ID header: {}", e))?,
+            );
+            extend_headers.insert(
+                HEADER_CLIENT_ID,
+                self.config
+                    .user_id()
+                    .to_string()
+                    .parse()
+                    .map_err(|e| make_error!("Failed to parse extended client ID header: {}", e))?,
+            );
+        }
 
         let request = match (data.clone(), params.clone()) {
             (None, None) => self
@@ -339,6 +358,7 @@ impl KMClient {
                 None,
                 None,
                 false,
+                true,
             )
             .await?;
 
@@ -364,6 +384,7 @@ impl KMClient {
                 None,
                 Some(data),
                 None,
+                false,
                 false,
             )
             .await?;
@@ -397,6 +418,7 @@ impl KMClient {
                         Some(params),
                         None,
                         self.constants.support_secure,
+                        true,
                     )
                     .await?;
 
@@ -419,6 +441,7 @@ impl KMClient {
                         Some(params),
                         None,
                         self.constants.support_secure,
+                        false,
                     )
                     .await?;
 
@@ -449,6 +472,7 @@ impl KMClient {
                 Some(params),
                 None,
                 false,
+                false,
             )
             .await?;
 
@@ -470,6 +494,7 @@ impl KMClient {
                 None,
                 Some(params),
                 None,
+                false,
                 false,
             )
             .await?;
@@ -513,6 +538,7 @@ impl KMClient {
                 None,
                 None,
                 false,
+                true,
             )
             .await?;
 
@@ -573,6 +599,7 @@ impl KMClient {
                 None,
                 None,
                 false,
+                true,
             )
             .await?;
 
@@ -618,6 +645,7 @@ impl KMClient {
                 None,
                 None,
                 false,
+                false,
             )
             .await?;
 
@@ -633,6 +661,7 @@ impl KMClient {
                 None,
                 None,
                 None,
+                false,
                 false,
             )
             .await?;
@@ -663,6 +692,7 @@ impl KMClient {
                 Some(params),
                 None,
                 false,
+                false,
             )
             .await?;
 
@@ -679,6 +709,7 @@ impl KMClient {
                 None,
                 None,
                 false,
+                false,
             )
             .await?;
 
@@ -688,7 +719,15 @@ impl KMClient {
     /// Get the current user's account information.
     pub async fn get_account(&self) -> ToshoResult<UserAccount> {
         let response = self
-            .request::<AccountResponse>(reqwest::Method::GET, "/account", None, None, None, false)
+            .request::<AccountResponse>(
+                reqwest::Method::GET,
+                "/account",
+                None,
+                None,
+                None,
+                false,
+                false,
+            )
             .await?;
 
         Ok(response.account().clone())
@@ -710,6 +749,7 @@ impl KMClient {
                 Some(params),
                 None,
                 false,
+                false,
             )
             .await?;
 
@@ -725,6 +765,7 @@ impl KMClient {
                 None,
                 None,
                 None,
+                false,
                 false,
             )
             .await?;
@@ -748,6 +789,7 @@ impl KMClient {
                 Some(params),
                 None,
                 false,
+                false,
             )
             .await?;
 
@@ -767,6 +809,7 @@ impl KMClient {
                 Some(params),
                 None,
                 false,
+                false,
             )
             .await?;
 
@@ -782,6 +825,7 @@ impl KMClient {
                 None,
                 None,
                 None,
+                false,
                 false,
             )
             .await?;
@@ -815,6 +859,7 @@ impl KMClient {
                 None,
                 Some(params),
                 None,
+                false,
                 false,
             )
             .await?;
@@ -995,7 +1040,7 @@ impl KMClient {
 
                 Ok(KMLoginResult {
                     config: KMConfig::Mobile(KMConfigMobile::new(
-                        user_info.id().to_string(),
+                        account.user_id(),
                         user_info.hash_key(),
                         platform,
                     )),

@@ -155,6 +155,8 @@ pub struct KMConfigWeb {
     tos_adult: KMConfigWebKV,
     /// Account privacy policy agreement status.
     privacy: KMConfigWebKV,
+    /// Device ID/account user ID
+    user_id: u32,
 }
 
 impl KMConfigWeb {
@@ -164,12 +166,14 @@ impl KMConfigWeb {
         birthday: KMConfigWebKV,
         tos_adult: KMConfigWebKV,
         privacy: KMConfigWebKV,
+        user_id: u32,
     ) -> Self {
         Self {
             uwt: uwt.into(),
             birthday,
             tos_adult,
             privacy,
+            user_id,
         }
     }
 }
@@ -212,6 +216,7 @@ impl TryFrom<reqwest_cookie_store::CookieStore> for KMConfigWeb {
             birthday,
             tos_adult,
             privacy,
+            user_id: 0,
         })
     }
 }
@@ -318,6 +323,7 @@ impl Default for KMConfigWeb {
             birthday,
             tos_adult: tos_toggle.clone(),
             privacy: tos_toggle,
+            user_id: 0,
         }
     }
 }
@@ -338,7 +344,7 @@ pub enum KMConfigMobilePlatform {
 #[derive(Debug, Clone, AutoGetter)]
 pub struct KMConfigMobile {
     /// The user ID
-    user_id: String,
+    user_id: u32,
     /// The user hash key information
     hash_key: String,
     /// The user platform
@@ -349,12 +355,12 @@ pub struct KMConfigMobile {
 impl KMConfigMobile {
     /// Create a new instance of [`KMConfigMobile`]
     pub fn new(
-        user_id: impl Into<String>,
+        user_id: u32,
         hash_key: impl Into<String>,
         platform: KMConfigMobilePlatform,
     ) -> Self {
         Self {
-            user_id: user_id.into(),
+            user_id,
             hash_key: hash_key.into(),
             platform,
         }
@@ -368,6 +374,16 @@ pub enum KMConfig {
     Web(KMConfigWeb),
     /// Mobile configuration
     Mobile(KMConfigMobile),
+}
+
+impl KMConfig {
+    /// Get the user ID
+    pub fn user_id(&self) -> u32 {
+        match self {
+            KMConfig::Web(web) => web.user_id,
+            KMConfig::Mobile(mobile) => mobile.user_id,
+        }
+    }
 }
 
 impl From<KMConfigWeb> for KMConfig {
@@ -433,6 +449,7 @@ impl TryFrom<String> for KMConfigWeb {
             birthday,
             tos_adult,
             privacy,
+            user_id: 0,
         })
     }
 }

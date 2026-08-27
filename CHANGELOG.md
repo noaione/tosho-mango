@@ -12,6 +12,7 @@ Starting from Rust port of the project, all changes will be put into this file.
 ### Changes
 - `KM`: Fix issues with 1k points point back purchase
 - `KM`: New v3 API for scramble seed
+- `KM`: Adapt to new header design for some endpoints
 - `NI`: New stream reader
 - `M+`: Update to new API design
 - `SJ/V`: Fix issue with some fields missing

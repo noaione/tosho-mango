@@ -197,7 +197,7 @@ pub(crate) async fn kmkc_account_login_mobile(
         }
     }
 
-    let config = KMConfigMobile::new(user_id.to_string(), &hash_key, platform.try_into().unwrap());
+    let config = KMConfigMobile::new(user_id, &hash_key, platform.try_into().unwrap());
     match make_kmkc_client(&KMConfig::Mobile(config.clone())) {
         Ok(client) => {
             let account = client.get_account().await;
@@ -386,7 +386,7 @@ pub async fn kmkc_account_login_adapt(
                             ));
 
                             let mobile_config = KMConfigMobile::new(
-                                account.user_id().to_string(),
+                                account.user_id(),
                                 user_info.hash_key(),
                                 platform.try_into().unwrap(),
                             );

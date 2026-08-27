@@ -96,7 +96,7 @@ pub struct ConfigMobile {
 impl From<ConfigMobile> for tosho_kmkc::KMConfigMobile {
     fn from(value: ConfigMobile) -> Self {
         tosho_kmkc::config::KMConfigMobile::new(
-            &value.user_id,
+            value.device_id,
             &value.user_secret,
             value.platform().into(),
         )
@@ -203,6 +203,7 @@ impl From<ConfigWeb> for tosho_kmkc::KMConfigWeb {
             value.birthday.clone().unwrap().into(),
             value.tos_adult.clone().unwrap().into(),
             value.privacy.clone().unwrap().into(),
+            value.device_id,
         )
     }
 }

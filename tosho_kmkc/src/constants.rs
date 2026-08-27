@@ -100,7 +100,7 @@ pub static APPLE_CONSTANTS: LazyLock<Constants> = LazyLock::new(|| {
 pub static WEB_CONSTANTS: LazyLock<Constants> = LazyLock::new(|| {
     let hash_header = comptime_b64!("WC1LbWFuZ2EtSGFzaA==");
     let chrome_ua =
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:152.0) Gecko/20100101 Firefox/152.0";
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:154.0) Gecko/20100101 Firefox/154.0";
 
     Constants {
         ua: chrome_ua,
@@ -130,8 +130,10 @@ pub const IMAGE_HOST: &str = comptime_b64!("Y2RuLmttYW5nYS5rb2RhbnNoYS5jb20=");
 
 /// The header value used for crawler requests.
 pub const HEADER_CRAWLER: &str = comptime_b64!("eC1rbWFuZ2EtaXMtY3Jhd2xlcg==");
-/// The header value used for crawler requests.
+/// The header value used for platform requests.
 pub const HEADER_PLATFORM: &str = comptime_b64!("eC1rbWFuZ2EtcGxhdGZvcm0=");
+/// The header value used for client ID requests.
+pub const HEADER_CLIENT_ID: &str = comptime_b64!("eC1rbWFuZ2EtY2xpZW50LWlk");
 
 /// The ranking tabs used for the ranking endpoint.
 ///
