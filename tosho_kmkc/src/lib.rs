@@ -210,6 +210,7 @@ impl KMClient {
     /// * `data` - The data to send in the request body (as form data)
     /// * `params` - The query params to send in the request
     /// * `headers` - The headers to send in the request
+    /// * `secure_and_client_id` - A tuple of (is_secure, needs_client_id)
     async fn request<T>(
         &self,
         method: reqwest::Method,
@@ -217,12 +218,12 @@ impl KMClient {
         data: Option<HashMap<String, String>>,
         params: Option<HashMap<String, String>>,
         headers: Option<reqwest::header::HeaderMap>,
-        is_secure: bool,
-        require_client_id: bool,
+        secure_and_client_id: (bool, bool),
     ) -> ToshoResult<T>
     where
         T: serde::de::DeserializeOwned,
     {
+        let (is_secure, needs_client_id) = secure_and_client_id;
         let base_api_url = if is_secure && self.constants.support_secure {
             SECURE_BASE_API
         } else {
@@ -287,7 +288,7 @@ impl KMClient {
                 .parse()
                 .map_err(|e| make_error!("Failed to parse extended crawler header: {}", e))?,
         );
-        if require_client_id {
+        if needs_client_id {
             empty_headers.insert(
                 HEADER_CLIENT_ID,
                 self.config
@@ -357,8 +358,7 @@ impl KMClient {
                 Some(data),
                 None,
                 None,
-                false,
-                true,
+                (false, true),
             )
             .await?;
 
@@ -384,8 +384,7 @@ impl KMClient {
                 None,
                 Some(data),
                 None,
-                false,
-                false,
+                (false, false),
             )
             .await?;
 
@@ -417,8 +416,7 @@ impl KMClient {
                         None,
                         Some(params),
                         None,
-                        self.constants.support_secure,
-                        true,
+                        (self.constants.support_secure, true),
                     )
                     .await?;
 
@@ -440,8 +438,7 @@ impl KMClient {
                         None,
                         Some(params),
                         None,
-                        self.constants.support_secure,
-                        false,
+                        (self.constants.support_secure, false),
                     )
                     .await?;
 
@@ -471,8 +468,7 @@ impl KMClient {
                 None,
                 Some(params),
                 None,
-                false,
-                false,
+                (false, false),
             )
             .await?;
 
@@ -494,8 +490,7 @@ impl KMClient {
                 None,
                 Some(params),
                 None,
-                false,
-                false,
+                (false, false),
             )
             .await?;
 
@@ -537,8 +532,7 @@ impl KMClient {
                 Some(data),
                 None,
                 None,
-                false,
-                true,
+                (false, true),
             )
             .await?;
 
@@ -598,8 +592,7 @@ impl KMClient {
                 Some(data),
                 None,
                 None,
-                false,
-                true,
+                (false, true),
             )
             .await?;
 
@@ -644,8 +637,7 @@ impl KMClient {
                 Some(data),
                 None,
                 None,
-                false,
-                false,
+                (false, false),
             )
             .await?;
 
@@ -661,8 +653,7 @@ impl KMClient {
                 None,
                 None,
                 None,
-                false,
-                false,
+                (false, false),
             )
             .await?;
 
@@ -691,8 +682,7 @@ impl KMClient {
                 None,
                 Some(params),
                 None,
-                false,
-                false,
+                (false, false),
             )
             .await?;
 
@@ -708,8 +698,7 @@ impl KMClient {
                 None,
                 None,
                 None,
-                false,
-                false,
+                (false, false),
             )
             .await?;
 
@@ -725,8 +714,7 @@ impl KMClient {
                 None,
                 None,
                 None,
-                false,
-                false,
+                (false, false),
             )
             .await?;
 
@@ -748,8 +736,7 @@ impl KMClient {
                 None,
                 Some(params),
                 None,
-                false,
-                false,
+                (false, false),
             )
             .await?;
 
@@ -765,8 +752,7 @@ impl KMClient {
                 None,
                 None,
                 None,
-                false,
-                false,
+                (false, false),
             )
             .await?;
 
@@ -788,8 +774,7 @@ impl KMClient {
                 None,
                 Some(params),
                 None,
-                false,
-                false,
+                (false, false),
             )
             .await?;
 
@@ -808,8 +793,7 @@ impl KMClient {
                 None,
                 Some(params),
                 None,
-                false,
-                false,
+                (false, false),
             )
             .await?;
 
@@ -825,8 +809,7 @@ impl KMClient {
                 None,
                 None,
                 None,
-                false,
-                false,
+                (false, false),
             )
             .await?;
 
@@ -859,8 +842,7 @@ impl KMClient {
                 None,
                 Some(params),
                 None,
-                false,
-                false,
+                (false, false),
             )
             .await?;
 
