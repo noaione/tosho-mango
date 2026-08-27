@@ -15,7 +15,7 @@ use tosho_kmkc::{KMClient, KMConfig, KMConfigMobile, KMConfigMobilePlatform};
 
 #[tokio::main]
 async fn main() {
-    let config = KMConfigMobile::new("123", "abcxyz", KMConfigMobilePlatform::Android);
+    let config = KMConfigMobile::new(123, "abcxyz", KMConfigMobilePlatform::Android);
     let client = KMClient::new(KMConfig::Mobile(config)).unwrap();
 
     let manga = client.get_titles(vec![10007]).await.unwrap();

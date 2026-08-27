@@ -3,7 +3,7 @@
 //! ```rust
 //! use tosho_kmkc::{KMConfigMobile, KMConfigMobilePlatform};
 //!
-//! let config = KMConfigMobile::new("123", "abcxyz", KMConfigMobilePlatform::Android);
+//! let config = KMConfigMobile::new(123, "abcxyz", KMConfigMobilePlatform::Android);
 //! ```
 
 use reqwest::Url;
