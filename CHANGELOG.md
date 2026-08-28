@@ -3,6 +3,10 @@
 Starting from Rust port of the project, all changes will be put into this file.
 
 ## Unreleased
+
+Nothing yet!
+
+## [0.10.0] (2026-08-28)
 ### New Features
 - All sources: Add `--only-check-folder` option to `autodownload`
   - This will only check if the chapter folder exists, if it does, it will skip downloading that chapter.
