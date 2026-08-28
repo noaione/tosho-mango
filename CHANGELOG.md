@@ -7,7 +7,7 @@ Starting from Rust port of the project, all changes will be put into this file.
 - All sources: Add `--only-check-folder` option to `autodownload`
   - This will only check if the chapter folder exists, if it does, it will skip downloading that chapter.
   - This is useful for cronjob or scheduled task that run periodically to only download new chapters.
-- Android build is now available.
+- **Android build is now available.**
 
 ### Changes
 - `KM`: Fix issues with 1k points point back purchase
