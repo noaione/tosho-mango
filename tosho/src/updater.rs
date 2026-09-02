@@ -5,7 +5,7 @@ const UPDATE_CHECK_EVERY: i64 = 60 * 60 * 24; // 24 hours in seconds
 
 fn create_updater(
     debug: bool,
-) -> Result<Box<dyn self_update::update::ReleaseUpdate>, self_update::errors::Error> {
+) -> Result<self_update::backends::github::Update, self_update::errors::Error> {
     self_update::backends::github::Update::configure()
         .repo_owner("noaione")
         .repo_name("tosho-mango")
@@ -50,20 +50,14 @@ pub(crate) async fn check_for_update(console: &crate::term::Terminal) -> color_e
     }
 
     let is_debug = console.is_debug();
-    let (latest_version, current_version) =
-        tokio::task::spawn_blocking(move || match create_updater(is_debug) {
-            Ok(updater) => match updater.get_latest_release() {
-                Ok(latest) => Ok((latest, updater.current_version())),
-                Err(e) => Err(e),
-            },
-            Err(e) => Err(e),
-        })
-        .await??;
+    let latest_release =
+        tokio::task::spawn_blocking(move || create_updater(is_debug)?.is_update_available())
+            .await??;
 
-    if self_update::version::bump_is_greater(&current_version, &latest_version.version)? {
+    if let Some(latest_release) = latest_release {
         console.info(cformat!(
             "There is a new version available: <m,s>{}</>",
-            latest_version.version
+            latest_release.version()
         ));
         console.info(cformat!(
             "Update now by running <m,s>tosho update</> or <m,s>cargo [b]install tosho</>!",
@@ -86,15 +80,16 @@ pub(crate) async fn perform_update(console: &crate::term::Terminal) -> color_eyr
     .await??;
 
     match status {
-        self_update::Status::UpToDate(v) => {
+        self_update::VersionStatus::UpToDate(v) => {
             console.info(cformat!(
                 "You are already using the latest version: <m,s>{}</>",
                 v
             ));
         }
-        self_update::Status::Updated(v) => {
+        self_update::VersionStatus::Updated(v) => {
             console.info(cformat!("Updated to version: <m,s>{}</>", v));
         }
+        _ => console.info("Update completed successfully."),
     }
 
     Ok(())

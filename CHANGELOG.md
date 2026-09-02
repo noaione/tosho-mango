@@ -3,8 +3,8 @@
 Starting from Rust port of the project, all changes will be put into this file.
 
 ## Unreleased
-
-Nothing yet!
+### Build
+- Bump dependencies to latest version
 
 ## [0.10.0] (2026-08-28)
 ### New Features
@@ -24,8 +24,8 @@ Nothing yet!
 - `Tools`: pre-sort merge list before actually merging
 
 ### Build
-- Bump dependencies to latest version (except reqwest and some other)
-  - Finally bump to reqwest 0.13
+- Bump dependencies to latest version
+- Add Android to CI
 
 ## [0.9.2] (2026-01-31)
 ### Changes
