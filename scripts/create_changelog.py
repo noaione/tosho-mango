@@ -35,7 +35,7 @@ tosho update
 Which will automatically download the latest version of `tosho` and replace the old one.
 
 ## Changelog
-"""  # noqa: E501
+"""  # ruff: ignore[line-too-long]
 
 OUTER_DESC = """
 ---
@@ -47,6 +47,8 @@ Following are the files included in this release:
 - `tosho-aarch64-unknown-linux-gnu.tar.gz` (Linux arm64)
 - `tosho-x86_64-pc-windows-msvc.zip` (Windows x86_64)
 - `tosho-aarch64-pc-windows-msvc.zip` (Windows arm64)
+- `tosho-aarch64-unknown-linux-gnu.tar.gz` (Android arm64)
+- `tosho-armv7-linux-androideabi.tar.gz` (Android armv7)
 
 Please make sure to download the correct file for your system.
 
