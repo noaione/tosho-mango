@@ -23,7 +23,8 @@ pub struct MangaChapterDetail {
     #[serde(
         rename = "publication_date",
         deserialize_with = "super::datetime::deserialize_opt",
-        serialize_with = "super::datetime::serialize_opt"
+        serialize_with = "super::datetime::serialize_opt",
+        default
     )]
     #[copyable]
     published_at: Option<DateTime<FixedOffset>>,
