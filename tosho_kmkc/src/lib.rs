@@ -430,6 +430,9 @@ impl KMClient {
                 if let Some(magazine_id) = episode.magazine_id() {
                     params.insert("magazine_id".to_string(), magazine_id.to_string());
                 }
+                params.insert("challenge".to_string(), "".to_string());
+                params.insert("token".to_string(), "".to_string());
+                params.insert("nonce".to_string(), "".to_string());
 
                 let response = self
                     .request::<MobileEpisodeViewerResponse>(

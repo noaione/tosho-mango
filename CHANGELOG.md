@@ -3,6 +3,10 @@
 Starting from Rust port of the project, all changes will be put into this file.
 
 ## Unreleased
+### Changes
+- **Breaking Changes**: `KM`: Bump android to use latest version.
+  - This might break if you use mobile version.
+
 ### Build
 - Bump dependencies to latest version
 
