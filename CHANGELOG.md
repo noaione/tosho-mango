@@ -3,6 +3,15 @@
 Starting from Rust port of the project, all changes will be put into this file.
 
 ## Unreleased
+
+Nothing yet!
+
+## [0.10.1] (2026-10-21)
+
+**Please update to this version IMMEDIATELY**
+
+This fix issue with [RUSTSEC-2026-0381](https://rustsec.org/advisories/RUSTSEC-2026-0381.html)
+
 ### Changes
 - **Breaking Changes**: `KM`: Bump android to use latest version.
   - This might break if you use mobile version.
