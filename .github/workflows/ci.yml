@@ -60,7 +60,7 @@ jobs:
           echo "RUST_VERSION=$(rustc --version | cut -d ' ' -f 2)" >> "$GITHUB_ENV"
 
       - name: Setup rust cache
-        uses: Swatinem/rust-cache@baf1a810e98b6a3001d0d7234864ed75a17c42fb
+        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6
         with:
           prefix-key: "rust-tosho-tests-${{ runner.os }}-${{ env.RUST_VERSION }}"
 
@@ -118,7 +118,7 @@ jobs:
         shell: bash
 
       - name: Setup rust cache
-        uses: Swatinem/rust-cache@baf1a810e98b6a3001d0d7234864ed75a17c42fb
+        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6
         with:
           prefix-key: "rust-tosho-build-${{ env.BUILD_PROFILE }}-${{ runner.os }}-${{ matrix.os[1] }}-${{ env.RUST_VERSION }}"
 

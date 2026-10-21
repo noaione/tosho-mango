@@ -92,7 +92,25 @@ fn test_descramble_image() {
         .read_to_end(&mut ref_buf)
         .expect("Failed to read reference image file");
 
-    assert_eq!(descrambled, ref_buf);
+    // PNG compression can produce different byte streams for identical pixels
+    // across image crate versions. Compare the decoded images instead.
+    let descrambled_image = image::load_from_memory(&descrambled)
+        .expect("Failed to decode descrambled image")
+        .to_rgb8();
+    let reference_image = image::load_from_memory(&ref_buf)
+        .expect("Failed to decode reference image")
+        .to_rgb8();
+
+    assert_eq!(
+        descrambled_image.dimensions(),
+        reference_image.dimensions(),
+        "descrambled image dimensions differ from reference"
+    );
+    assert_eq!(
+        descrambled_image.as_raw(),
+        reference_image.as_raw(),
+        "descrambled pixels differ from reference"
+    );
 }
 
 #[test]
