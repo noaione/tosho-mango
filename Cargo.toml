@@ -34,13 +34,13 @@ prost = "0.14.4"
 
 # Utilities
 color-eyre = { version = "0.6.5", default-features = false, features = ["track-caller"] }
-base64 = "0.22.1"
-sha2 = "0.11.0"
+base64 = "0.23.1"
+sha2 = "0.11.1"
 time = "0.3.55"
 chrono = { version = "0.4.45", default-features = false, features = ["clock", "std"] }
 rand = "0.10.2"
 md-5 = "0.11.0"
-uuid = { version = "=1.26.0", features = ["v4", "fast-rng"] }
+uuid = { version = "1.28.0", features = ["v4", "fast-rng"] }
 num-format = "0.4.4"
 regex = "1.13.1"
 aho-corasick = "1.1.5"
