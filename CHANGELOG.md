@@ -18,6 +18,7 @@ This fix issue with [RUSTSEC-2026-0381](https://rustsec.org/advisories/RUSTSEC-2
 
 ### Build
 - Bump dependencies to latest version
+- Drop macOS Intel build
 
 ## [0.10.0] (2026-08-28)
 ### New Features
