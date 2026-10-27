@@ -4,7 +4,8 @@ Starting from Rust port of the project, all changes will be put into this file.
 
 ## Unreleased
 
-Nothing yet!
+### Build
+- Bump dependencies to latest version
 
 ## [0.10.1] (2026-10-21)
 
