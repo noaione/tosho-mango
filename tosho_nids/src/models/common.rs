@@ -66,6 +66,9 @@ impl ImageUrl {
 pub struct ImageReaderUrl {
     /// The original image URL
     url: String,
+    /// Another "original" image URL
+    #[serde(default)]
+    full_url: Option<String>,
     /// Thumbnail sized image URL
     thumbnail_url: String,
     /// Mobile sized image URL

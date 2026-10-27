@@ -16,6 +16,8 @@ pub(crate) enum DownloadImageQuality {
     /// Desktop quality (full resolution)
     #[default]
     Desktop,
+    /// Alternative desktop quality
+    DesktopAlt,
     /// Mobile quality (smaller)
     Mobile,
 }
@@ -29,6 +31,7 @@ impl ValueEnum for DownloadImageQuality {
         };
         match input.as_str() {
             "desktop" | "high" => Ok(Self::Desktop),
+            "desktop-alt" | "high-alt" => Ok(Self::DesktopAlt),
             "mobile" | "normal" => Ok(Self::Mobile),
             _ => Err(format!("Invalid image quality: {input}")),
         }
@@ -37,6 +40,9 @@ impl ValueEnum for DownloadImageQuality {
     fn to_possible_value(&self) -> Option<clap::builder::PossibleValue> {
         match self {
             Self::Desktop => Some(clap::builder::PossibleValue::new("desktop").alias("high")),
+            Self::DesktopAlt => {
+                Some(clap::builder::PossibleValue::new("desktop-alt").alias("high-alt"))
+            }
             Self::Mobile => Some(clap::builder::PossibleValue::new("mobile").alias("normal")),
         }
     }
@@ -290,6 +296,13 @@ pub(crate) async fn nids_download(
     // Try downloading cover
     let cover_url = match dl_config.quality {
         DownloadImageQuality::Desktop => pages_meta.header().issue().frameflow().cover().url(),
+        DownloadImageQuality::DesktopAlt => pages_meta
+            .header()
+            .issue()
+            .frameflow()
+            .cover()
+            .full_url()
+            .unwrap_or(pages_meta.header().issue().frameflow().cover().url()),
         DownloadImageQuality::Mobile => {
             pages_meta.header().issue().frameflow().cover().mobile_url()
         }
@@ -366,6 +379,11 @@ pub(crate) async fn nids_download(
                 let semaphore = Arc::clone(&semaphore);
                 let page_url = match dl_config.quality {
                     DownloadImageQuality::Desktop => page.image().url().to_string(),
+                    DownloadImageQuality::DesktopAlt => page
+                        .image()
+                        .full_url()
+                        .unwrap_or(page.image().url())
+                        .to_string(),
                     DownloadImageQuality::Mobile => page.image().mobile_url().to_string(),
                 };
 
