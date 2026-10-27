@@ -48,7 +48,7 @@ impl ValueEnum for DownloadImageQuality {
     }
 
     fn value_variants<'a>() -> &'a [Self] {
-        &[Self::Desktop, Self::Mobile]
+        &[Self::Desktop, Self::DesktopAlt, Self::Mobile]
     }
 }
 

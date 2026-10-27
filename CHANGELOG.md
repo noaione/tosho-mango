@@ -4,6 +4,9 @@ Starting from Rust port of the project, all changes will be put into this file.
 
 ## Unreleased
 
+### Changes
+- Add new quality for `NI` (`high-alt` or `desktop-alt`)
+
 ### Build
 - Bump dependencies to latest version
 
